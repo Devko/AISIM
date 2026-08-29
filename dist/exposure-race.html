@@ -2776,6 +2776,12 @@ footer code {
       schedule();
     });
 
+    /* The metric toggle is markup-default "Compromise"; a shared link may say
+     * otherwise, and the chart would then disagree with its own button. */
+    document.querySelectorAll('[data-metric]').forEach(function (x) {
+      x.classList.toggle('on', x.dataset.metric === METRIC);
+    });
+
     ['race', 'funnel', 'routes', 'surv', 'torn', 'sweep', 'severity', 'volume'].forEach(wireExport);
 
     document.querySelectorAll('[data-snapshot]').forEach(function (e) {
