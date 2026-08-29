@@ -1,0 +1,378 @@
+{
+ "generated_at": "2026-08-27T04:29:47Z",
+ "min_known_duration": 30,
+ "queue": {
+  "median_days": 4.0,
+  "n_known_duration": 5439
+ },
+ "history": [
+  {
+   "date": "2026-07-12",
+   "received_new": 82,
+   "entered_awaiting": 0,
+   "analyzed_from_awaiting": 0,
+   "deferred_from_awaiting": 0,
+   "resweep": false
+  },
+  {
+   "date": "2026-07-13",
+   "received_new": 70,
+   "entered_awaiting": 0,
+   "analyzed_from_awaiting": 0,
+   "deferred_from_awaiting": 0,
+   "resweep": false
+  },
+  {
+   "date": "2026-07-14",
+   "received_new": 88,
+   "entered_awaiting": 58,
+   "analyzed_from_awaiting": 104,
+   "deferred_from_awaiting": 173,
+   "resweep": false
+  },
+  {
+   "date": "2026-07-15",
+   "received_new": 236,
+   "entered_awaiting": 659,
+   "analyzed_from_awaiting": 141,
+   "deferred_from_awaiting": 29,
+   "resweep": false
+  },
+  {
+   "date": "2026-07-16",
+   "received_new": 72,
+   "entered_awaiting": 768,
+   "analyzed_from_awaiting": 146,
+   "deferred_from_awaiting": 148,
+   "resweep": true
+  },
+  {
+   "date": "2026-07-17",
+   "received_new": 71,
+   "entered_awaiting": 66,
+   "analyzed_from_awaiting": 0,
+   "deferred_from_awaiting": 0,
+   "resweep": true
+  },
+  {
+   "date": "2026-07-18",
+   "received_new": 111,
+   "entered_awaiting": 75,
+   "analyzed_from_awaiting": 333,
+   "deferred_from_awaiting": 51,
+   "resweep": false
+  },
+  {
+   "date": "2026-07-19",
+   "received_new": 98,
+   "entered_awaiting": 0,
+   "analyzed_from_awaiting": 0,
+   "deferred_from_awaiting": 0,
+   "resweep": false
+  },
+  {
+   "date": "2026-07-20",
+   "received_new": 449,
+   "entered_awaiting": 0,
+   "analyzed_from_awaiting": 15,
+   "deferred_from_awaiting": 0,
+   "resweep": false
+  },
+  {
+   "date": "2026-07-21",
+   "received_new": 253,
+   "entered_awaiting": 14,
+   "analyzed_from_awaiting": 180,
+   "deferred_from_awaiting": 70,
+   "resweep": false
+  },
+  {
+   "date": "2026-07-22",
+   "received_new": 1267,
+   "entered_awaiting": 135,
+   "analyzed_from_awaiting": 174,
+   "deferred_from_awaiting": 67,
+   "resweep": false
+  },
+  {
+   "date": "2026-07-23",
+   "received_new": 82,
+   "entered_awaiting": 92,
+   "analyzed_from_awaiting": 133,
+   "deferred_from_awaiting": 60,
+   "resweep": false
+  },
+  {
+   "date": "2026-07-24",
+   "received_new": 4,
+   "entered_awaiting": 11,
+   "analyzed_from_awaiting": 0,
+   "deferred_from_awaiting": 0,
+   "resweep": true
+  },
+  {
+   "date": "2026-07-25",
+   "received_new": 177,
+   "entered_awaiting": 502,
+   "analyzed_from_awaiting": 193,
+   "deferred_from_awaiting": 163,
+   "resweep": false
+  },
+  {
+   "date": "2026-07-26",
+   "received_new": 287,
+   "entered_awaiting": 0,
+   "analyzed_from_awaiting": 0,
+   "deferred_from_awaiting": 0,
+   "resweep": false
+  },
+  {
+   "date": "2026-07-27",
+   "received_new": 13,
+   "entered_awaiting": 0,
+   "analyzed_from_awaiting": 0,
+   "deferred_from_awaiting": 0,
+   "resweep": false
+  },
+  {
+   "date": "2026-07-28",
+   "received_new": 304,
+   "entered_awaiting": 257,
+   "analyzed_from_awaiting": 229,
+   "deferred_from_awaiting": 35,
+   "resweep": false
+  },
+  {
+   "date": "2026-07-29",
+   "received_new": 147,
+   "entered_awaiting": 97,
+   "analyzed_from_awaiting": 173,
+   "deferred_from_awaiting": 61,
+   "resweep": false
+  },
+  {
+   "date": "2026-07-30",
+   "received_new": 653,
+   "entered_awaiting": 0,
+   "analyzed_from_awaiting": 206,
+   "deferred_from_awaiting": 0,
+   "resweep": false
+  },
+  {
+   "date": "2026-07-31",
+   "received_new": 55,
+   "entered_awaiting": 8,
+   "analyzed_from_awaiting": 0,
+   "deferred_from_awaiting": 0,
+   "resweep": true
+  },
+  {
+   "date": "2026-08-01",
+   "received_new": 230,
+   "entered_awaiting": 534,
+   "analyzed_from_awaiting": 273,
+   "deferred_from_awaiting": 295,
+   "resweep": false
+  },
+  {
+   "date": "2026-08-03",
+   "received_new": 326,
+   "entered_awaiting": 0,
+   "analyzed_from_awaiting": 27,
+   "deferred_from_awaiting": 0,
+   "resweep": false
+  },
+  {
+   "date": "2026-08-04",
+   "received_new": 175,
+   "entered_awaiting": 43,
+   "analyzed_from_awaiting": 418,
+   "deferred_from_awaiting": 0,
+   "resweep": false
+  },
+  {
+   "date": "2026-08-05",
+   "received_new": 254,
+   "entered_awaiting": 23,
+   "analyzed_from_awaiting": 105,
+   "deferred_from_awaiting": 0,
+   "resweep": false
+  },
+  {
+   "date": "2026-08-06",
+   "received_new": 428,
+   "entered_awaiting": 0,
+   "analyzed_from_awaiting": 178,
+   "deferred_from_awaiting": 0,
+   "resweep": false
+  },
+  {
+   "date": "2026-08-07",
+   "received_new": 443,
+   "entered_awaiting": 105,
+   "analyzed_from_awaiting": 283,
+   "deferred_from_awaiting": 0,
+   "resweep": false
+  },
+  {
+   "date": "2026-08-08",
+   "received_new": 29,
+   "entered_awaiting": 5,
+   "analyzed_from_awaiting": 0,
+   "deferred_from_awaiting": 0,
+   "resweep": true
+  },
+  {
+   "date": "2026-08-09",
+   "received_new": 245,
+   "entered_awaiting": 4,
+   "analyzed_from_awaiting": 158,
+   "deferred_from_awaiting": 0,
+   "resweep": false
+  },
+  {
+   "date": "2026-08-10",
+   "received_new": 78,
+   "entered_awaiting": 0,
+   "analyzed_from_awaiting": 12,
+   "deferred_from_awaiting": 0,
+   "resweep": false
+  },
+  {
+   "date": "2026-08-11",
+   "received_new": 704,
+   "entered_awaiting": 0,
+   "analyzed_from_awaiting": 106,
+   "deferred_from_awaiting": 0,
+   "resweep": false
+  },
+  {
+   "date": "2026-08-12",
+   "received_new": 532,
+   "entered_awaiting": 222,
+   "analyzed_from_awaiting": 139,
+   "deferred_from_awaiting": 0,
+   "resweep": false
+  },
+  {
+   "date": "2026-08-13",
+   "received_new": 331,
+   "entered_awaiting": 210,
+   "analyzed_from_awaiting": 180,
+   "deferred_from_awaiting": 452,
+   "resweep": false
+  },
+  {
+   "date": "2026-08-14",
+   "received_new": 568,
+   "entered_awaiting": 32,
+   "analyzed_from_awaiting": 329,
+   "deferred_from_awaiting": 0,
+   "resweep": false
+  },
+  {
+   "date": "2026-08-15",
+   "received_new": 142,
+   "entered_awaiting": 89,
+   "analyzed_from_awaiting": 158,
+   "deferred_from_awaiting": 136,
+   "resweep": false
+  },
+  {
+   "date": "2026-08-16",
+   "received_new": 738,
+   "entered_awaiting": 2,
+   "analyzed_from_awaiting": 0,
+   "deferred_from_awaiting": 0,
+   "resweep": true
+  },
+  {
+   "date": "2026-08-17",
+   "received_new": 307,
+   "entered_awaiting": 0,
+   "analyzed_from_awaiting": 0,
+   "deferred_from_awaiting": 0,
+   "resweep": false
+  },
+  {
+   "date": "2026-08-18",
+   "received_new": 338,
+   "entered_awaiting": 1,
+   "analyzed_from_awaiting": 230,
+   "deferred_from_awaiting": 0,
+   "resweep": false
+  },
+  {
+   "date": "2026-08-19",
+   "received_new": 1346,
+   "entered_awaiting": 60,
+   "analyzed_from_awaiting": 108,
+   "deferred_from_awaiting": 0,
+   "resweep": false
+  },
+  {
+   "date": "2026-08-20",
+   "received_new": 672,
+   "entered_awaiting": 0,
+   "analyzed_from_awaiting": 222,
+   "deferred_from_awaiting": 0,
+   "resweep": false
+  },
+  {
+   "date": "2026-08-21",
+   "received_new": 411,
+   "entered_awaiting": 308,
+   "analyzed_from_awaiting": 48,
+   "deferred_from_awaiting": 351,
+   "resweep": false
+  },
+  {
+   "date": "2026-08-22",
+   "received_new": 250,
+   "entered_awaiting": 26,
+   "analyzed_from_awaiting": 222,
+   "deferred_from_awaiting": 0,
+   "resweep": false
+  },
+  {
+   "date": "2026-08-23",
+   "received_new": 244,
+   "entered_awaiting": 0,
+   "analyzed_from_awaiting": 0,
+   "deferred_from_awaiting": 0,
+   "resweep": false
+  },
+  {
+   "date": "2026-08-24",
+   "received_new": 12,
+   "entered_awaiting": 1,
+   "analyzed_from_awaiting": 0,
+   "deferred_from_awaiting": 0,
+   "resweep": true
+  },
+  {
+   "date": "2026-08-25",
+   "received_new": 302,
+   "entered_awaiting": 57,
+   "analyzed_from_awaiting": 309,
+   "deferred_from_awaiting": 62,
+   "resweep": false
+  },
+  {
+   "date": "2026-08-26",
+   "received_new": 727,
+   "entered_awaiting": 0,
+   "analyzed_from_awaiting": 274,
+   "deferred_from_awaiting": 0,
+   "resweep": false
+  },
+  {
+   "date": "2026-08-27",
+   "received_new": 352,
+   "entered_awaiting": 204,
+   "analyzed_from_awaiting": 168,
+   "deferred_from_awaiting": 1113,
+   "resweep": false
+  }
+ ]
+}

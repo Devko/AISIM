@@ -1,0 +1,775 @@
+{
+ "generated_at": "2026-08-27T04:29:47Z",
+ "min_n": 10,
+ "months": [
+  {
+   "month": "2022-04",
+   "due_date": 0,
+   "ransomware_flag": 0,
+   "text": 279,
+   "removed": 0,
+   "total": 279
+  },
+  {
+   "month": "2022-05",
+   "due_date": 0,
+   "ransomware_flag": 0,
+   "text": 0,
+   "removed": 0,
+   "total": 0
+  },
+  {
+   "month": "2022-06",
+   "due_date": 1,
+   "ransomware_flag": 0,
+   "text": 6,
+   "removed": 0,
+   "total": 7
+  },
+  {
+   "month": "2022-07",
+   "due_date": 0,
+   "ransomware_flag": 0,
+   "text": 0,
+   "removed": 0,
+   "total": 0
+  },
+  {
+   "month": "2022-08",
+   "due_date": 0,
+   "ransomware_flag": 0,
+   "text": 9,
+   "removed": 0,
+   "total": 9
+  },
+  {
+   "month": "2022-09",
+   "due_date": 0,
+   "ransomware_flag": 0,
+   "text": 0,
+   "removed": 0,
+   "total": 0
+  },
+  {
+   "month": "2022-10",
+   "due_date": 0,
+   "ransomware_flag": 0,
+   "text": 0,
+   "removed": 0,
+   "total": 0
+  },
+  {
+   "month": "2022-11",
+   "due_date": 4,
+   "ransomware_flag": 0,
+   "text": 12,
+   "removed": 0,
+   "total": 16
+  },
+  {
+   "month": "2022-12",
+   "due_date": 0,
+   "ransomware_flag": 0,
+   "text": 0,
+   "removed": 0,
+   "total": 0
+  },
+  {
+   "month": "2023-01",
+   "due_date": 0,
+   "ransomware_flag": 0,
+   "text": 0,
+   "removed": 0,
+   "total": 0
+  },
+  {
+   "month": "2023-02",
+   "due_date": 0,
+   "ransomware_flag": 0,
+   "text": 0,
+   "removed": 0,
+   "total": 0
+  },
+  {
+   "month": "2023-03",
+   "due_date": 0,
+   "ransomware_flag": 0,
+   "text": 17,
+   "removed": 0,
+   "total": 17
+  },
+  {
+   "month": "2023-04",
+   "due_date": 0,
+   "ransomware_flag": 0,
+   "text": 0,
+   "removed": 0,
+   "total": 0
+  },
+  {
+   "month": "2023-05",
+   "due_date": 0,
+   "ransomware_flag": 0,
+   "text": 24,
+   "removed": 0,
+   "total": 24
+  },
+  {
+   "month": "2023-06",
+   "due_date": 0,
+   "ransomware_flag": 0,
+   "text": 691,
+   "removed": 0,
+   "total": 691
+  },
+  {
+   "month": "2023-07",
+   "due_date": 0,
+   "ransomware_flag": 0,
+   "text": 0,
+   "removed": 0,
+   "total": 0
+  },
+  {
+   "month": "2023-08",
+   "due_date": 0,
+   "ransomware_flag": 0,
+   "text": 0,
+   "removed": 0,
+   "total": 0
+  },
+  {
+   "month": "2023-09",
+   "due_date": 0,
+   "ransomware_flag": 0,
+   "text": 4,
+   "removed": 0,
+   "total": 4
+  },
+  {
+   "month": "2023-10",
+   "due_date": 0,
+   "ransomware_flag": 0,
+   "text": 0,
+   "removed": 0,
+   "total": 0
+  },
+  {
+   "month": "2023-11",
+   "due_date": 0,
+   "ransomware_flag": 0,
+   "text": 0,
+   "removed": 0,
+   "total": 0
+  },
+  {
+   "month": "2023-12",
+   "due_date": 0,
+   "ransomware_flag": 206,
+   "text": 134,
+   "removed": 6,
+   "total": 346
+  },
+  {
+   "month": "2024-01",
+   "due_date": 0,
+   "ransomware_flag": 0,
+   "text": 0,
+   "removed": 0,
+   "total": 0
+  },
+  {
+   "month": "2024-02",
+   "due_date": 0,
+   "ransomware_flag": 4,
+   "text": 110,
+   "removed": 0,
+   "total": 114
+  },
+  {
+   "month": "2024-03",
+   "due_date": 0,
+   "ransomware_flag": 0,
+   "text": 2,
+   "removed": 0,
+   "total": 2
+  },
+  {
+   "month": "2024-04",
+   "due_date": 0,
+   "ransomware_flag": 2,
+   "text": 0,
+   "removed": 0,
+   "total": 2
+  },
+  {
+   "month": "2024-05",
+   "due_date": 0,
+   "ransomware_flag": 0,
+   "text": 0,
+   "removed": 0,
+   "total": 0
+  },
+  {
+   "month": "2024-06",
+   "due_date": 0,
+   "ransomware_flag": 3,
+   "text": 38,
+   "removed": 0,
+   "total": 41
+  },
+  {
+   "month": "2024-07",
+   "due_date": 0,
+   "ransomware_flag": 0,
+   "text": 0,
+   "removed": 0,
+   "total": 0
+  },
+  {
+   "month": "2024-08",
+   "due_date": 0,
+   "ransomware_flag": 1,
+   "text": 15,
+   "removed": 0,
+   "total": 16
+  },
+  {
+   "month": "2024-09",
+   "due_date": 0,
+   "ransomware_flag": 0,
+   "text": 1170,
+   "removed": 0,
+   "total": 1170
+  },
+  {
+   "month": "2024-10",
+   "due_date": 0,
+   "ransomware_flag": 0,
+   "text": 0,
+   "removed": 0,
+   "total": 0
+  },
+  {
+   "month": "2024-11",
+   "due_date": 0,
+   "ransomware_flag": 6,
+   "text": 0,
+   "removed": 1,
+   "total": 7
+  },
+  {
+   "month": "2024-12",
+   "due_date": 0,
+   "ransomware_flag": 1,
+   "text": 1,
+   "removed": 0,
+   "total": 2
+  },
+  {
+   "month": "2025-01",
+   "due_date": 0,
+   "ransomware_flag": 0,
+   "text": 0,
+   "removed": 0,
+   "total": 0
+  },
+  {
+   "month": "2025-02",
+   "due_date": 0,
+   "ransomware_flag": 0,
+   "text": 1,
+   "removed": 0,
+   "total": 1
+  },
+  {
+   "month": "2025-03",
+   "due_date": 0,
+   "ransomware_flag": 4,
+   "text": 44,
+   "removed": 0,
+   "total": 48
+  },
+  {
+   "month": "2025-04",
+   "due_date": 0,
+   "ransomware_flag": 9,
+   "text": 8,
+   "removed": 0,
+   "total": 17
+  },
+  {
+   "month": "2025-05",
+   "due_date": 0,
+   "ransomware_flag": 19,
+   "text": 7,
+   "removed": 0,
+   "total": 26
+  },
+  {
+   "month": "2025-06",
+   "due_date": 0,
+   "ransomware_flag": 7,
+   "text": 2,
+   "removed": 1,
+   "total": 10
+  },
+  {
+   "month": "2025-07",
+   "due_date": 0,
+   "ransomware_flag": 0,
+   "text": 0,
+   "removed": 0,
+   "total": 0
+  },
+  {
+   "month": "2025-08",
+   "due_date": 0,
+   "ransomware_flag": 0,
+   "text": 0,
+   "removed": 0,
+   "total": 0
+  },
+  {
+   "month": "2025-09",
+   "due_date": 0,
+   "ransomware_flag": 0,
+   "text": 0,
+   "removed": 0,
+   "total": 0
+  },
+  {
+   "month": "2025-10",
+   "due_date": 0,
+   "ransomware_flag": 5,
+   "text": 2,
+   "removed": 0,
+   "total": 7
+  },
+  {
+   "month": "2025-11",
+   "due_date": 0,
+   "ransomware_flag": 2,
+   "text": 0,
+   "removed": 1,
+   "total": 3
+  },
+  {
+   "month": "2025-12",
+   "due_date": 15,
+   "ransomware_flag": 1,
+   "text": 7,
+   "removed": 0,
+   "total": 23
+  },
+  {
+   "month": "2026-01",
+   "due_date": 0,
+   "ransomware_flag": 4,
+   "text": 0,
+   "removed": 0,
+   "total": 4
+  },
+  {
+   "month": "2026-02",
+   "due_date": 0,
+   "ransomware_flag": 1,
+   "text": 1,
+   "removed": 0,
+   "total": 2
+  },
+  {
+   "month": "2026-03",
+   "due_date": 0,
+   "ransomware_flag": 2,
+   "text": 2,
+   "removed": 0,
+   "total": 4
+  },
+  {
+   "month": "2026-04",
+   "due_date": 0,
+   "ransomware_flag": 1,
+   "text": 3,
+   "removed": 0,
+   "total": 4
+  },
+  {
+   "month": "2026-05",
+   "due_date": 0,
+   "ransomware_flag": 5,
+   "text": 2,
+   "removed": 0,
+   "total": 7
+  },
+  {
+   "month": "2026-06",
+   "due_date": 0,
+   "ransomware_flag": 1,
+   "text": 0,
+   "removed": 0,
+   "total": 1
+  },
+  {
+   "month": "2026-07",
+   "due_date": 0,
+   "ransomware_flag": 4,
+   "text": 1,
+   "removed": 0,
+   "total": 5
+  },
+  {
+   "month": "2026-08",
+   "due_date": 0,
+   "ransomware_flag": 20,
+   "text": 3,
+   "removed": 0,
+   "total": 23
+  }
+ ],
+ "flips": {
+  "total": 308,
+  "reversals": 0,
+  "by_month": [
+   {
+    "month": "2023-12",
+    "flips": 206,
+    "cumulative": 206
+   },
+   {
+    "month": "2024-01",
+    "flips": 0,
+    "cumulative": 206
+   },
+   {
+    "month": "2024-02",
+    "flips": 4,
+    "cumulative": 210
+   },
+   {
+    "month": "2024-03",
+    "flips": 0,
+    "cumulative": 210
+   },
+   {
+    "month": "2024-04",
+    "flips": 2,
+    "cumulative": 212
+   },
+   {
+    "month": "2024-05",
+    "flips": 0,
+    "cumulative": 212
+   },
+   {
+    "month": "2024-06",
+    "flips": 3,
+    "cumulative": 215
+   },
+   {
+    "month": "2024-07",
+    "flips": 0,
+    "cumulative": 215
+   },
+   {
+    "month": "2024-08",
+    "flips": 1,
+    "cumulative": 216
+   },
+   {
+    "month": "2024-09",
+    "flips": 0,
+    "cumulative": 216
+   },
+   {
+    "month": "2024-10",
+    "flips": 0,
+    "cumulative": 216
+   },
+   {
+    "month": "2024-11",
+    "flips": 6,
+    "cumulative": 222
+   },
+   {
+    "month": "2024-12",
+    "flips": 1,
+    "cumulative": 223
+   },
+   {
+    "month": "2025-01",
+    "flips": 0,
+    "cumulative": 223
+   },
+   {
+    "month": "2025-02",
+    "flips": 0,
+    "cumulative": 223
+   },
+   {
+    "month": "2025-03",
+    "flips": 4,
+    "cumulative": 227
+   },
+   {
+    "month": "2025-04",
+    "flips": 9,
+    "cumulative": 236
+   },
+   {
+    "month": "2025-05",
+    "flips": 19,
+    "cumulative": 255
+   },
+   {
+    "month": "2025-06",
+    "flips": 7,
+    "cumulative": 262
+   },
+   {
+    "month": "2025-07",
+    "flips": 0,
+    "cumulative": 262
+   },
+   {
+    "month": "2025-08",
+    "flips": 0,
+    "cumulative": 262
+   },
+   {
+    "month": "2025-09",
+    "flips": 0,
+    "cumulative": 262
+   },
+   {
+    "month": "2025-10",
+    "flips": 5,
+    "cumulative": 267
+   },
+   {
+    "month": "2025-11",
+    "flips": 2,
+    "cumulative": 269
+   },
+   {
+    "month": "2025-12",
+    "flips": 1,
+    "cumulative": 270
+   },
+   {
+    "month": "2026-01",
+    "flips": 4,
+    "cumulative": 274
+   },
+   {
+    "month": "2026-02",
+    "flips": 1,
+    "cumulative": 275
+   },
+   {
+    "month": "2026-03",
+    "flips": 2,
+    "cumulative": 277
+   },
+   {
+    "month": "2026-04",
+    "flips": 1,
+    "cumulative": 278
+   },
+   {
+    "month": "2026-05",
+    "flips": 5,
+    "cumulative": 283
+   },
+   {
+    "month": "2026-06",
+    "flips": 1,
+    "cumulative": 284
+   },
+   {
+    "month": "2026-07",
+    "flips": 4,
+    "cumulative": 288
+   },
+   {
+    "month": "2026-08",
+    "flips": 20,
+    "cumulative": 308
+   }
+  ],
+  "lag": {
+   "n": 308,
+   "median_days": 626.0,
+   "p25_days": 377.0,
+   "p75_days": 768.0
+  }
+ },
+ "board": {
+  "most_edited": [
+   {
+    "cve": "CVE-2019-11510",
+    "vendor": "Ivanti",
+    "product": "Pulse Connect Secure",
+    "edits": 12,
+    "last_change": "2025-12-22"
+   },
+   {
+    "cve": "CVE-2020-1472",
+    "vendor": "Microsoft",
+    "product": "Netlogon",
+    "edits": 10,
+    "last_change": "2025-12-22"
+   },
+   {
+    "cve": "CVE-2021-22893",
+    "vendor": "Ivanti",
+    "product": "Pulse Connect Secure",
+    "edits": 10,
+    "last_change": "2025-12-22"
+   },
+   {
+    "cve": "CVE-2020-8260",
+    "vendor": "Ivanti",
+    "product": "Pulse Connect Secure",
+    "edits": 9,
+    "last_change": "2025-12-22"
+   },
+   {
+    "cve": "CVE-2021-21193",
+    "vendor": "Google",
+    "product": "Chromium Blink",
+    "edits": 9,
+    "last_change": "2024-09-27"
+   },
+   {
+    "cve": "CVE-2021-22894",
+    "vendor": "Ivanti",
+    "product": "Pulse Connect Secure",
+    "edits": 9,
+    "last_change": "2025-12-22"
+   },
+   {
+    "cve": "CVE-2021-22899",
+    "vendor": "Ivanti",
+    "product": "Pulse Connect Secure",
+    "edits": 9,
+    "last_change": "2025-12-22"
+   },
+   {
+    "cve": "CVE-2021-30554",
+    "vendor": "Google",
+    "product": "Chromium WebGL",
+    "edits": 9,
+    "last_change": "2024-09-27"
+   },
+   {
+    "cve": "CVE-2021-37973",
+    "vendor": "Google",
+    "product": "Chromium Portals",
+    "edits": 9,
+    "last_change": "2024-09-27"
+   },
+   {
+    "cve": "CVE-2021-38000",
+    "vendor": "Google",
+    "product": "Chromium Intents",
+    "edits": 9,
+    "last_change": "2024-09-27"
+   },
+   {
+    "cve": "CVE-2019-11539",
+    "vendor": "Ivanti",
+    "product": "Pulse Connect Secure and Pulse Policy Secure",
+    "edits": 8,
+    "last_change": "2024-09-27"
+   },
+   {
+    "cve": "CVE-2019-1215",
+    "vendor": "Microsoft",
+    "product": "Windows",
+    "edits": 8,
+    "last_change": "2024-09-27"
+   }
+  ],
+  "removals": [
+   {
+    "cve": "CVE-2022-28958",
+    "vendor": "D-Link",
+    "product": "DIR-816L",
+    "listed": "2022-09-08",
+    "removed": "2023-12-11"
+   },
+   {
+    "cve": "CVE-2022-31459",
+    "vendor": "Owl Labs",
+    "product": "Meeting Owl",
+    "listed": "2023-09-18",
+    "removed": "2023-12-11"
+   },
+   {
+    "cve": "CVE-2022-31460",
+    "vendor": "Owl Labs",
+    "product": "Meeting Owl Pro and Whiteboard Owl",
+    "listed": "2022-06-08",
+    "removed": "2023-12-11"
+   },
+   {
+    "cve": "CVE-2022-31461",
+    "vendor": "Owl Labs",
+    "product": "Meeting Owl",
+    "listed": "2023-09-18",
+    "removed": "2023-12-11"
+   },
+   {
+    "cve": "CVE-2022-31462",
+    "vendor": "Owl Labs",
+    "product": "Meeting Owl",
+    "listed": "2023-09-18",
+    "removed": "2023-12-11"
+   },
+   {
+    "cve": "CVE-2022-31463",
+    "vendor": "Owl Labs",
+    "product": "Meeting Owl",
+    "listed": "2023-09-18",
+    "removed": "2023-12-11"
+   },
+   {
+    "cve": "CVE-2021-4043",
+    "vendor": "Motion Spell",
+    "product": "GPAC",
+    "listed": "2024-09-30",
+    "removed": "2024-11-23"
+   },
+   {
+    "cve": "CVE-2025-4664",
+    "vendor": "Google",
+    "product": "Chromium",
+    "listed": "2025-05-15",
+    "removed": "2025-06-24"
+   },
+   {
+    "cve": "CVE-2025-6264",
+    "vendor": "Rapid7",
+    "product": "Velociraptor",
+    "listed": "2025-10-14",
+    "removed": "2025-11-13"
+   }
+  ]
+ },
+ "catalog": {
+  "entries": 1682,
+  "removed_total": 9,
+  "events_total": 4312,
+  "edits_total": 2932,
+  "additions_excluded": 1380,
+  "first_observed": "2021-12-23",
+  "last_observed": "2026-08-27",
+  "backfill_captures": 53
+ },
+ "headline": {
+  "edits_total": 2932,
+  "edits_per_100_entries": 174.3,
+  "pct_flag_flips": 10.5
+ }
+}

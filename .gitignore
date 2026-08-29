@@ -1,0 +1,13 @@
+# Local tooling
+.claude/
+node_modules/
+
+# Reference material — CISA pages saved locally while building the model.
+# Cited by URL in the README rather than mirrored here.
+bod2604.html
+bod2604ig.html
+
+# OS noise
+Thumbs.db
+.DS_Store
+desktop.ini

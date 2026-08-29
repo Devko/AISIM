@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Exposure Race — does the exploit arrive before your patch?</title>
+<meta name="description" content="A Monte Carlo model of the race between exploit availability and patch deployment, calibrated to measured CVE, exploit-catalogue and KEV data rather than to CVSS severity labels.">
+<meta name="color-scheme" content="dark light">
+<meta property="og:title" content="Exposure Race — does the exploit arrive before your patch?">
+<meta property="og:description" content="Severity labels do not predict exploitation. This model runs on whether a working exploit exists — measured, not assumed.">
+<meta property="og:type" content="article">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/app.css">
+<script>
+  /* set the theme before first paint so there is no flash */
+  try {
+    var t = localStorage.getItem('er-theme');
+    if (t) document.documentElement.setAttribute('data-theme', t);
+  } catch (e) {}
+</script>
+</head>
+<body>
+
+<header><div class="wrap">
+  <div class="eyebrow">
+    <span>exposure race</span><span>monte carlo</span><span>v3</span>
+    <span>calibrated <span data-snapshot>—</span></span>
+    <span class="topbar">
+      <button id="theme-btn" class="icon-btn ghost" type="button">☾ Dark</button>
+      <button id="share-btn" class="icon-btn ghost" type="button">⇗ Copy link</button>
+      <button id="reset-btn" class="icon-btn ghost" type="button">↺ Reset</button>
+    </span>
+  </div>
+  <h1>Does the exploit arrive <em>before</em> your patch?</h1>
+  <p class="sub">One race, resimulated every time you move a slider. On one side, when a working
+  exploit exists for something you expose. On the other, when you have actually closed it.
+  The attacker's clock here is <b>not assumed</b> — it is the measured distribution of time from
+  CVE publication to public exploit code, from the CyberMon corpus. Roughly a fifth of that
+  race is over before your clock starts.</p>
+</div></header>
+
+<div class="wrap grid">
+
+  <!-- ══════════════════ CONTROLS ══════════════════ -->
+  <div class="rail">
+    <div class="card def">
+      <h2 class="d">Your side</h2>
+      <p class="note">Tick everything that is true of you, then change any slider.</p>
+
+      <div class="seg">
+        <div class="seg-l">What applies to you <span class="seg-hint">pick any</span></div>
+        <div class="presets" id="sel-profile"></div>
+        <p class="seg-d" id="desc-profile"></p>
+      </div>
+      <div class="seg">
+        <div class="seg-l">How well it is run</div>
+        <div class="presets" id="sel-maturity"></div>
+      </div>
+      <div class="seg">
+        <div class="seg-l">What you can see</div>
+        <div class="presets" id="sel-detection"></div>
+        <p class="seg-d" id="desc-detection"></p>
+      </div>
+
+      <div id="cd"></div>
+      <details class="more"><summary>More defender detail</summary><div id="cd-adv"></div></details>
+    </div>
+
+    <div class="card att">
+      <h2 class="a">Their side</h2>
+      <p class="note">What you don't.</p>
+      <div id="ca"></div>
+      <details class="more"><summary>More attacker detail</summary><div id="ca-adv"></div></details>
+    </div>
+  </div>
+
+  <!-- ══════════════════ RESULTS ══════════════════ -->
+  <div>
+
+    <div class="stats">
+      <div class="stat">
+        <span class="k">Compromise of an exposed system, 12 months</span>
+        <div class="v" id="s-p">—</div><div class="ci" id="s-p-ci"></div>
+      </div>
+      <div class="stat">
+        <span class="k">…that runs long enough to become an incident</span>
+        <div class="v" id="s-i">—</div><div class="ci" id="s-i-ci"></div>
+      </div>
+      <div class="stat plain">
+        <span class="k">Systems compromised per year</span>
+        <div class="v" id="s-n">—</div><div class="ci" id="s-n-ci"></div>
+      </div>
+      <div class="stat plain">
+        <span class="k">Half of years breached by</span>
+        <div class="v" id="s-t">—</div><div class="ci" id="s-t-ci"></div>
+      </div>
+    </div>
+
+    <!-- ── the race ── -->
+    <div class="panel">
+      <div class="panel-head">
+        <div>
+          <h3>The race</h3>
+          <p class="lead">Day zero is the day a patch becomes available. Everything left of it is
+          exploitation that began before you had anything to install. The hatched area is not
+          decoration: it is the probability that a working exploit exists before you have closed
+          the hole.</p>
+        </div>
+        <div class="tools">
+          <button class="icon-btn" data-copy="race" type="button">⧉ Copy</button>
+          <button class="icon-btn" data-dl="race" type="button">↓ PNG</button>
+        </div>
+      </div>
+      <div class="legend">
+        <span><i style="background:var(--def)"></i>you close it</span>
+        <span><i style="background:var(--att)"></i>exploit exists</span>
+        <span><i style="background:var(--zero)"></i>before disclosure</span>
+        <span><i style="background:var(--bad)"></i>you lost the race</span>
+      </div>
+      <svg id="race" class="chart" role="img" aria-label="Exploit availability against patch completion"></svg>
+      <p class="lead" id="race-note" style="margin-top:12px;margin-bottom:0"></p>
+    </div>
+
+    <!-- ── funnel ── -->
+    <div class="panel">
+      <div class="panel-head">
+        <div>
+          <h3>Where the year goes</h3>
+          <p class="lead">Every stage below is a subset of the one above it. The two biggest
+          losses are not in your patch process at all: most published criticals are in software
+          you do not run, and most of the rest never get a working exploit.</p>
+        </div>
+        <div class="tools">
+          <button class="icon-btn" data-copy="funnel" type="button">⧉ Copy</button>
+          <button class="icon-btn" data-dl="funnel" type="button">↓ PNG</button>
+        </div>
+      </div>
+      <svg id="funnel" class="chart" role="img" aria-label="Attrition funnel from published vulnerabilities to compromise"></svg>
+      <p class="lead" id="wild-note" style="margin-top:10px;margin-bottom:0"></p>
+    </div>
+
+    <!-- ── sensitivity ── -->
+    <div class="panel">
+      <div class="panel-head">
+        <div>
+          <h3>What actually moves it</h3>
+          <p class="lead">Each bar swings one input across a realistic range and holds everything
+          else still. Switch the metric — <b>compromise</b> and <b>incident</b> have different
+          top levers, and that difference is the most useful thing on this page.</p>
+        </div>
+        <div class="tools">
+          <button class="icon-btn on" data-metric="p" type="button">Compromise</button>
+          <button class="icon-btn" data-metric="incident" type="button">Incident</button>
+          <button class="icon-btn" data-copy="torn" type="button">⧉</button>
+          <button class="icon-btn" data-dl="torn" type="button">↓</button>
+        </div>
+      </div>
+      <svg id="torn" class="chart" role="img" aria-label="Sensitivity of the outcome to each input"></svg>
+    </div>
+
+    <div class="panel">
+      <h3>Where the next hour goes</h3>
+      <p class="lead">The five changes that move your <span id="acts-metric">annual chance of
+      compromise</span> most, at your current settings.</p>
+      <ul class="acts" id="acts"></ul>
+    </div>
+
+    <!-- ── routes + survival ── -->
+    <div class="two">
+      <div class="panel">
+        <div class="panel-head">
+          <div><h3>How they got in</h3>
+          <p class="lead">Route of the <em>first</em> compromise, counted once per simulated year.</p></div>
+          <div class="tools"><button class="icon-btn" data-dl="routes" type="button">↓</button></div>
+        </div>
+        <svg id="routes" class="chart" role="img" aria-label="Route of first compromise"></svg>
+      </div>
+      <div class="panel">
+        <div class="panel-head">
+          <div><h3>How long you last</h3>
+          <p class="lead">Share of simulated years still clean, day by day.</p></div>
+          <div class="tools"><button class="icon-btn" data-dl="surv" type="button">↓</button></div>
+        </div>
+        <svg id="surv" class="chart" role="img" aria-label="Survival curve over twelve months"></svg>
+      </div>
+    </div>
+
+    <!-- ── compression what-if ── -->
+    <div class="panel">
+      <div class="panel-head">
+        <div>
+          <h3>The compression what-if</h3>
+          <p class="lead">The exploit clock in this model defaults to <b>what was measured</b>, not
+          to a forecast. This curve is the hypothesis: what happens if exploits arrive faster, more
+          of them get written, and more land before disclosure. Note that the measured record does
+          not currently show that compression — see the anchors below.</p>
+        </div>
+        <div class="tools">
+          <button class="icon-btn" data-copy="sweep" type="button">⧉ Copy</button>
+          <button class="icon-btn" data-dl="sweep" type="button">↓ PNG</button>
+        </div>
+      </div>
+      <svg id="sweep" class="chart" role="img" aria-label="Outcome against hypothetical exploit-clock compression"></svg>
+    </div>
+
+    <!-- ── evidence ── -->
+    <div class="panel">
+      <div class="panel-head">
+        <div>
+          <h3>Why this model ignores severity</h3>
+          <p class="lead">The obvious way to build this would be to count Critical CVEs. The data
+          says not to. Below is every scored CVE, bucketed by CVSS band, against how many of them
+          ever reached the confirmed-exploited catalogue.</p>
+        </div>
+        <div class="tools">
+          <button class="icon-btn" data-copy="severity" type="button">⧉ Copy</button>
+          <button class="icon-btn" data-dl="severity" type="button">↓ PNG</button>
+        </div>
+      </div>
+      <svg id="severity" class="chart" role="img" aria-label="Share of each CVSS severity band ever confirmed exploited"></svg>
+      <div class="scroll-x" style="margin-top:16px">
+        <table class="tbl">
+          <thead><tr><th>CVSS band</th><th>Scored CVEs</th><th>Confirmed exploited</th><th>Rate</th></tr></thead>
+          <tbody id="ev-body"></tbody>
+        </table>
+      </div>
+      <p class="lead" id="ev-foot" style="margin-top:14px;margin-bottom:0"></p>
+      <p class="lead" style="margin-top:12px;margin-bottom:0;border-top:1px solid var(--rule);padding-top:12px">
+      <b>This is no longer a contrarian position.</b> CISA's Binding Operational
+      Directive <b>26-04</b> (10 June 2026) supersedes BOD 22-01 and drops severity
+      as the trigger entirely. It prioritises on four decision points instead — is
+      it in the KEV catalogue, is the asset publicly exposed, is exploitation
+      <em>automatable</em>, and what technical impact does it give — with the
+      shortest tier at three days plus forensic triage, and the lowest at
+      &ldquo;fix on system upgrade&rdquo;. Its published heuristic for
+      <em>automatable</em> is a public proof-of-concept that achieves remote code
+      execution and reliably runs. That is the same primitive this model measures,
+      arrived at independently.</p>
+    </div>
+
+    <!-- ── volume ── -->
+    <div class="panel">
+      <div class="panel-head">
+        <div>
+          <h3>And the label is inflating</h3>
+          <p class="lead">The count of Critical-rated CVEs is growing faster than the corpus that
+          contains it. A model anchored to "criticals per year" silently gets more pessimistic
+          every year for reasons that have nothing to do with your estate — which is the second
+          reason this one is not.</p>
+        </div>
+        <div class="tools">
+          <button class="icon-btn" data-copy="volume" type="button">⧉ Copy</button>
+          <button class="icon-btn" data-dl="volume" type="button">↓ PNG</button>
+        </div>
+      </div>
+      <svg id="volume" class="chart" role="img" aria-label="Published CVEs and the critical slice, year over year"></svg>
+      <p class="lead" style="margin-top:12px;margin-bottom:0">Part of that rise is scoring policy
+      rather than vulnerability reality: CNAs assign their own scores, and the share they rate 9.0+
+      varies from near zero to roughly two in five for the same scale. Meanwhile NVD has stopped
+      analysing a growing share of the corpus outright.</p>
+    </div>
+
+    <!-- ── anchors ── -->
+    <div class="panel">
+      <h3>What the model is anchored on</h3>
+      <p class="lead">Every coefficient is either <span class="tag m">measured</span> — read
+      directly off a dated public corpus — or <span class="tag a">assumed</span>, in which case it
+      is drawn from the stated range on every single trial. That is where the credible bands on the
+      headline numbers come from. If you disagree with an assumption, the range is the argument to
+      have.</p>
+      <div class="anchors" id="anchors"></div>
+    </div>
+
+    <footer>
+      <p><b>Method.</b> One race, simulated 14,000 times per parameter change. The attacker clock is
+      sampled from the measured distribution of days between CVE publication and public exploit code;
+      the defender clock is built from your awareness delay, emergency path and routine cadence.
+      Compromise is drawn as a correlated campaign arrival rather than as independent per-system coin
+      flips, because independent draws would pin the answer at 100% and lie to you.</p>
+      <p><b>Provenance.</b> Vulnerability, exploit-catalogue, EPSS and KEV figures are from the
+      <a href="https://devko.github.io/CyberMon/">CyberMon</a> snapshot
+      <code data-snapshot>—</code>, vendored under <code>data/cybermon/</code> so every number here is
+      reproducible offline. Regenerate with <code>node tools/refresh-data.js &amp;&amp; node
+      tools/derive-calibration.js</code>. Verify the model with <code>node test/model.test.js</code>.</p>
+      <p><b>Scope.</b> This models vulnerability exploitation only. Credential abuse, phishing and
+      insider routes are absent, so treat the output as a lower bound on intrusion risk rather than a
+      picture of it. Run-rate figures are linear extrapolation of a partial year.</p>
+    </footer>
+
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="js/calibration.js"></script>
+<script src="js/model.js"></script>
+<script src="js/charts.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

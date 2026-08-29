@@ -1,0 +1,14 @@
+# Normalise everything to LF in the repository.
+#
+# This is load-bearing, not cosmetic: CI regenerates js/calibration.js and
+# dist/exposure-race.html on Linux and diffs them against what is committed.
+# If the working tree carried CRLF, that check would fail on every push from
+# a Windows machine for reasons that have nothing to do with the model.
+* text=auto eol=lf
+
+*.json  text eol=lf
+*.js    text eol=lf
+*.html  text eol=lf
+*.css   text eol=lf
+*.md    text eol=lf
+*.yml   text eol=lf

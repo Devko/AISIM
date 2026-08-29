@@ -1,0 +1,36 @@
+name: model
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Run the model test suite
+        run: node test/model.test.js
+
+      # The calibration module is generated from the vendored snapshot. If it
+      # drifts from the data it claims to describe, the page is quoting numbers
+      # that are not in the corpus any more — so fail the build.
+      - name: Verify calibration is reproducible from the snapshot
+        run: |
+          cp js/calibration.js /tmp/calibration.before.js
+          node tools/derive-calibration.js
+          diff -q /tmp/calibration.before.js js/calibration.js \
+            || { echo "::error::js/calibration.js is stale — run: node tools/derive-calibration.js"; exit 1; }
+
+      - name: Verify the single-file build is current
+        run: |
+          cp dist/exposure-race.html /tmp/dist.before.html
+          node tools/build.js
+          diff -q /tmp/dist.before.html dist/exposure-race.html \
+            || { echo "::error::dist/exposure-race.html is stale — run: node tools/build.js"; exit 1; }

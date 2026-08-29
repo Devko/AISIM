@@ -1,0 +1,124 @@
+{
+ "generated_at": "2026-08-27T04:29:47Z",
+ "grid": [
+  {
+   "cvss_bucket": "0.1-3.9",
+   "epss_bucket": "<0.1%",
+   "n": 180
+  },
+  {
+   "cvss_bucket": "0.1-3.9",
+   "epss_bucket": "0.1-1%",
+   "n": 7655
+  },
+  {
+   "cvss_bucket": "0.1-3.9",
+   "epss_bucket": "1-10%",
+   "n": 707
+  },
+  {
+   "cvss_bucket": "0.1-3.9",
+   "epss_bucket": ">10%",
+   "n": 34
+  },
+  {
+   "cvss_bucket": "4.0-6.9",
+   "epss_bucket": "<0.1%",
+   "n": 1522
+  },
+  {
+   "cvss_bucket": "4.0-6.9",
+   "epss_bucket": "0.1-1%",
+   "n": 80870
+  },
+  {
+   "cvss_bucket": "4.0-6.9",
+   "epss_bucket": "1-10%",
+   "n": 7805
+  },
+  {
+   "cvss_bucket": "4.0-6.9",
+   "epss_bucket": ">10%",
+   "n": 848
+  },
+  {
+   "cvss_bucket": "7.0-8.9",
+   "epss_bucket": "<0.1%",
+   "n": 852
+  },
+  {
+   "cvss_bucket": "7.0-8.9",
+   "epss_bucket": "0.1-1%",
+   "n": 57371
+  },
+  {
+   "cvss_bucket": "7.0-8.9",
+   "epss_bucket": "1-10%",
+   "n": 13744
+  },
+  {
+   "cvss_bucket": "7.0-8.9",
+   "epss_bucket": ">10%",
+   "n": 2196
+  },
+  {
+   "cvss_bucket": "9.0-10.0",
+   "epss_bucket": "<0.1%",
+   "n": 12
+  },
+  {
+   "cvss_bucket": "9.0-10.0",
+   "epss_bucket": "0.1-1%",
+   "n": 12859
+  },
+  {
+   "cvss_bucket": "9.0-10.0",
+   "epss_bucket": "1-10%",
+   "n": 5773
+  },
+  {
+   "cvss_bucket": "9.0-10.0",
+   "epss_bucket": ">10%",
+   "n": 1711
+  }
+ ],
+ "cvss_buckets": [
+  "0.1-3.9",
+  "4.0-6.9",
+  "7.0-8.9",
+  "9.0-10.0"
+ ],
+ "epss_buckets": [
+  "<0.1%",
+  "0.1-1%",
+  "1-10%",
+  ">10%"
+ ],
+ "headline": {
+  "pct_critical_epss_below_1pct": 63.2,
+  "n_critical_with_epss": 20355
+ },
+ "kev": {
+  "total": 1682,
+  "below_high": 210,
+  "pct_below_high": 12.5,
+  "cvss_distribution": [
+   {
+    "bucket": "0.1-3.9",
+    "n": 7
+   },
+   {
+    "bucket": "4.0-6.9",
+    "n": 203
+   },
+   {
+    "bucket": "7.0-8.9",
+    "n": 888
+   },
+   {
+    "bucket": "9.0-10.0",
+    "n": 584
+   }
+  ]
+ }
+}

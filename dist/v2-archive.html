@@ -1,0 +1,643 @@
+
+<!-- saved from url=(0053)file:///C:/Users/User/Downloads/exposure-race-v2.html -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Exposure Race — does the exploit arrive before your patch?</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap');
+:root{
+  --ink:#080F0E; --panel:#0D1817; --sunk:#0A1413; --rule:#1B2E2C; --rule2:#26403D;
+  --txt:#E2EDEA; --mut:#7A9490; --dim:#42605C;
+  --att:#FF6B4A; --def:#4FD5C2; --bad:#FF3D5E; --zero:#B85CFF; --warn:#FFC24D;
+  --disp:'Bricolage Grotesque',system-ui,sans-serif;
+  --body:'IBM Plex Sans',system-ui,sans-serif;
+  --mono:'IBM Plex Mono',ui-monospace,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--ink);color:var(--txt);font-family:var(--body);-webkit-font-smoothing:antialiased}
+body{padding:0 0 70px}
+.wrap{max-width:1360px;margin:0 auto;padding:0 22px}
+header{border-bottom:1px solid var(--rule);padding:40px 0 28px;margin-bottom:24px}
+.eyebrow{font-family:var(--mono);font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--mut);display:flex;gap:14px;align-items:center}
+.eyebrow::after{content:"";flex:1;height:1px;background:var(--rule)}
+h1{font-family:var(--disp);font-weight:800;font-size:clamp(32px,5vw,60px);line-height:.95;letter-spacing:-.032em;margin:16px 0 0;max-width:16ch}
+h1 em{font-style:normal;color:var(--att)}
+.sub{color:var(--mut);max-width:64ch;margin-top:14px;font-size:14.5px;line-height:1.6}
+.grid{display:grid;grid-template-columns:320px 1fr;gap:24px;align-items:start}
+@media(max-width:1000px){.grid{grid-template-columns:1fr}}
+.rail{position:sticky;top:16px;max-height:calc(100vh - 32px);overflow-y:auto;padding-right:4px}
+@media(max-width:1000px){.rail{position:static;max-height:none;overflow:visible}}
+.rail::-webkit-scrollbar{width:6px}.rail::-webkit-scrollbar-thumb{background:var(--rule2);border-radius:3px}
+.card{background:var(--panel);border:1px solid var(--rule);border-radius:3px;padding:17px 17px 19px}
+.card+.card{margin-top:12px}
+.card h2{font-family:var(--mono);font-size:10.5px;letter-spacing:.17em;text-transform:uppercase;margin:0 0 3px;font-weight:600}
+.card h2.d{color:var(--def)} .card h2.a{color:var(--att)}
+.card .note{color:var(--dim);font-size:11px;margin:0 0 15px;line-height:1.45}
+.ctrl{margin-bottom:14px}.ctrl:last-child{margin-bottom:2px}
+.ctrl .row{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.ctrl label{font-size:12.5px;line-height:1.3}
+.ctrl .val{font-family:var(--mono);font-size:12px;font-weight:600;white-space:nowrap}
+.ctrl .hint{font-size:10.5px;color:var(--dim);margin-top:2px;line-height:1.4}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:18px;margin:4px 0 0;background:transparent;cursor:pointer;display:block}
+input[type=range]::-webkit-slider-runnable-track{height:2px;background:var(--rule2)}
+input[type=range]::-moz-range-track{height:2px;background:var(--rule2)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;margin-top:-5px;border-radius:50%;background:var(--txt);border:none}
+input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;background:var(--txt);border:none}
+input[type=range]:focus-visible{outline:2px solid var(--def);outline-offset:3px}
+.def input[type=range]::-webkit-slider-thumb{background:var(--def)}
+.def input[type=range]::-moz-range-thumb{background:var(--def)}
+.att input[type=range]::-webkit-slider-thumb{background:var(--att)}
+.att input[type=range]::-moz-range-thumb{background:var(--att)}
+.presets{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:14px}
+.presets button{font-family:var(--mono);font-size:10px;letter-spacing:.04em;background:transparent;color:var(--mut);border:1px solid var(--rule2);border-radius:2px;padding:6px 8px;cursor:pointer}
+.presets button:hover{color:var(--txt);border-color:var(--dim)}
+.presets button:focus-visible{outline:2px solid var(--def);outline-offset:2px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--rule);border:1px solid var(--rule);border-radius:3px;overflow:hidden;margin-bottom:12px}
+@media(max-width:760px){.stats{grid-template-columns:repeat(2,1fr)}}
+.stat{background:var(--panel);padding:14px 15px 15px}
+.stat .k{font-family:var(--mono);font-size:9px;letter-spacing:.13em;text-transform:uppercase;color:var(--mut);line-height:1.35;min-height:25px;display:block}
+.stat .v{font-family:var(--disp);font-weight:800;font-size:31px;letter-spacing:-.025em;line-height:1;margin-top:8px;display:block;font-variant-numeric:tabular-nums}
+.stat .u{font-family:var(--mono);font-size:10.5px;color:var(--mut);margin-left:3px;font-weight:400;letter-spacing:0}
+.stat.h1 .v{color:var(--att)} .stat.h2 .v{color:var(--bad)}
+.panel{background:var(--panel);border:1px solid var(--rule);border-radius:3px;padding:19px 20px 13px;margin-bottom:12px}
+.panel h3{font-family:var(--disp);font-weight:700;font-size:18px;letter-spacing:-.012em;margin:0}
+.ttl{display:flex;justify-content:space-between;align-items:baseline;gap:16px;flex-wrap:wrap}
+.cap{color:var(--mut);font-size:12.5px;line-height:1.55;margin:6px 0 14px;max-width:80ch}
+.legend{display:flex;gap:14px;font-family:var(--mono);font-size:10px;color:var(--mut);flex-wrap:wrap}
+.legend i{display:inline-block;width:9px;height:9px;margin-right:5px;vertical-align:-1px;border-radius:1px}
+svg{display:block;width:100%;height:auto;overflow:visible}
+text{font-family:var(--mono);fill:var(--mut)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:900px){.two{grid-template-columns:1fr}}
+ol.act{list-style:none;margin:0;padding:0;counter-reset:a}
+ol.act li{counter-increment:a;display:grid;grid-template-columns:22px 1fr auto;gap:13px;padding:12px 0;border-top:1px solid var(--rule);align-items:baseline}
+ol.act li:first-child{border-top:none}
+ol.act li::before{content:counter(a);font-family:var(--mono);font-size:11px;color:var(--dim)}
+ol.act .a-t{font-size:13.5px;line-height:1.45}
+ol.act .a-t b{font-weight:600} ol.act .a-t span{color:var(--mut);display:block;font-size:12px;margin-top:3px}
+ol.act .a-d{font-family:var(--mono);font-size:12.5px;font-weight:600;color:var(--def);white-space:nowrap}
+dl.anch{margin:0;font-size:12px;line-height:1.5}
+dl.anch div{display:grid;grid-template-columns:1fr auto;gap:14px;padding:8px 0;border-top:1px solid var(--rule);align-items:baseline}
+dl.anch div:first-child{border-top:none}
+dl.anch dt{color:var(--mut);margin:0} dl.anch dt b{color:var(--txt);font-weight:600}
+dl.anch dd{margin:0;font-family:var(--mono);font-size:11.5px;color:var(--def);text-align:right;white-space:nowrap}
+footer{color:var(--dim);font-size:11.5px;line-height:1.65;margin-top:20px;border-top:1px solid var(--rule);padding-top:16px;max-width:92ch}
+footer b{color:var(--mut)}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+</head><body><header><div class="wrap">
+  <div class="eyebrow">exposure race · monte carlo · v0.2 · calibrated to 2025–26 incident data</div>
+  <h1>Does the exploit arrive <em>before</em> your patch?</h1>
+  <p class="sub">One race, resimulated every time you move a slider. On one side, when a working exploit
+  exists for something you expose. On the other, when you have actually closed it. AI moves three things at
+  once on the attacker's side, and the honest answer is that a third of the race is already over before your
+  clock starts.</p>
+</div></header>
+
+<div class="wrap grid">
+  <div class="rail">
+    <div class="card def">
+      <h2 class="d">Your side</h2><p class="note">What you control.</p>
+      <div class="presets">
+        <button data-preset="typical">Typical</button>
+        <button data-preset="tight">Well run</button>
+        <button data-preset="loose">Sprawling</button>
+      </div>
+      <div id="cd"><div class="ctrl"><div class="row"><label for="i-exposed">Internet-exposed systems</label><span class="val" id="v-exposed">100</span></div>
+    <input type="range" id="i-exposed" min="5" max="2000" step="5" value="100">
+    <div class="hint">Anything an unauthenticated attacker can reach.</div></div><div class="ctrl"><div class="row"><label for="i-edge">…that are edge appliances</label><span class="val" id="v-edge">25%</span></div>
+    <input type="range" id="i-edge" min="0" max="100" step="5" value="25">
+    <div class="hint">VPN, firewall, gateway, file transfer. No EDR, slower to patch, hit hardest.</div></div><div class="ctrl"><div class="row"><label for="i-cadence">Routine patch cycle</label><span class="val" id="v-cadence">14 d</span></div>
+    <input type="range" id="i-cadence" min="1" max="90" step="1" value="14">
+    <div class="hint">Days between scheduled windows.</div></div><div class="ctrl"><div class="row"><label for="i-emerg">Emergency patch speed</label><span class="val" id="v-emerg">72 h</span></div>
+    <input type="range" id="i-emerg" min="0" max="336" step="6" value="72">
+    <div class="hint">Out-of-band fix for a critical. Zero means you wait for the cycle.</div></div><div class="ctrl"><div class="row"><label for="i-emergHit">Criticals that trigger it</label><span class="val" id="v-emergHit">60%</span></div>
+    <input type="range" id="i-emergHit" min="0" max="100" step="5" value="60">
+    <div class="hint">You have to know it applies to you first.</div></div><div class="ctrl"><div class="row"><label for="i-inventory">Exposed systems you know about</label><span class="val" id="v-inventory">96%</span></div>
+    <input type="range" id="i-inventory" min="80" max="100" step="1" value="96">
+    <div class="hint">The rest belong to no patch cycle at all.</div></div><div class="ctrl"><div class="row"><label for="i-virtual">Held off by WAF / IPS rule</label><span class="val" id="v-virtual">20%</span></div>
+    <input type="range" id="i-virtual" min="0" max="80" step="5" value="20">
+    <div class="hint">Buys the window back. Does not apply to appliances.</div></div><div class="ctrl"><div class="row"><label for="i-detect">Time to detect a compromise</label><span class="val" id="v-detect">14 d</span></div>
+    <input type="range" id="i-detect" min="0.1" max="60" step="0.1" value="14">
+    <div class="hint">Median dwell. Decides whether a compromise becomes an incident.</div></div></div>
+    </div>
+    <div class="card att">
+      <h2 class="a">Their side</h2><p class="note">What you don't.</p>
+      <div id="ca"><div class="ctrl"><div class="row"><label for="i-criticals">Critical vulns per year in your stack</label><span class="val" id="v-criticals">14</span></div>
+    <input type="range" id="i-criticals" min="0" max="60" step="1" value="14">
+    <div class="hint">Published criticals in software you actually expose.</div></div><div class="ctrl"><div class="row"><label for="i-exploited">…that ever get truly exploited</label><span class="val" id="v-exploited">7%</span></div>
+    <input type="range" id="i-exploited" min="1" max="40" step="1" value="7">
+    <div class="hint">Most criticals are never used against anyone. This is the filter that matters most.</div></div><div class="ctrl"><div class="row"><label for="i-ai">AI offensive capability</label><span class="val" id="v-ai">40  (5.0d · 26% pre-disc)</span></div>
+    <input type="range" id="i-ai" min="0" max="100" step="1" value="40">
+    <div class="hint">Moves three things: exploit build time, share of bugs weaponised, share used before disclosure.</div></div><div class="ctrl"><div class="row"><label for="i-scan">Mass-exploitation pressure</label><span class="val" id="v-scan">50</span></div>
+    <input type="range" id="i-scan" min="0" max="100" step="1" value="50">
+    <div class="hint">How fast opportunistic exploitation reaches you once an exploit is out.</div></div><div class="ctrl"><div class="row"><label for="i-campaigns">Agent campaigns aimed at you / yr</label><span class="val" id="v-campaigns">6</span></div>
+    <input type="range" id="i-campaigns" min="0" max="100" step="1" value="6">
+    <div class="hint">Autonomous runs that enumerate your surface rather than scanning the world.</div></div><div class="ctrl"><div class="row"><label for="i-agentSkill">Agent success vs a patched surface</label><span class="val" id="v-agentSkill">1%</span></div>
+    <input type="range" id="i-agentSkill" min="0" max="10" step="0.5" value="1">
+    <div class="hint">Per campaign. Misconfiguration, chained logic flaws, novel bugs.</div></div><div class="ctrl"><div class="row"><label for="i-supply">Supply-chain hits reaching you / yr</label><span class="val" id="v-supply">0.12</span></div>
+    <input type="range" id="i-supply" min="0" max="3" step="0.05" value="0.12">
+    <div class="hint">Poisoned dependency or signed update. Your patch cadence is irrelevant to these.</div></div></div>
+    </div>
+  </div>
+
+  <div>
+    <div class="stats">
+      <div class="stat h1"><span class="k">Compromise of an exposed system, 12 mo</span><span class="v" id="s-p">43<span class="u">%</span></span></div>
+      <div class="stat h2"><span class="k">…that runs long enough to matter</span><span class="v" id="s-m">43<span class="u">%</span></span></div>
+      <div class="stat"><span class="k">Incidents per year, expected</span><span class="v" id="s-n">1.9</span></div>
+      <div class="stat"><span class="k">Half of years breached by</span><span class="v" id="s-t">—<span class="u">not reached</span></span></div>
+    </div>
+
+    <div class="panel">
+      <div class="ttl"><h3>The race</h3><div class="legend">
+        <span><i style="background:var(--def)"></i>you close it</span>
+        <span><i style="background:var(--att)"></i>exploit exists</span>
+        <span><i style="background:var(--zero)"></i>before disclosure</span>
+        <span><i style="background:var(--bad)"></i>you lost</span></div></div>
+      <p class="cap">Day zero is the day a patch becomes available. Everything left of it is exploitation that
+      began before you had anything to install. The hatched area is not decoration: it is
+      <span style="font-family:var(--mono);font-size:11.5px">∫ f<sub>patch</sub>(t)·F<sub>exploit</sub>(t) dt</span>,
+      exactly the probability that a working exploit exists before you have closed the hole.</p>
+      <svg id="race" viewBox="0 0 920 360" role="img" aria-label="Exploit availability versus patch completion"><defs><pattern id="hx" patternUnits="userSpaceOnUse" width="7" height="7" patternTransform="rotate(48)"><line x1="0" y1="0" x2="0" y2="7" stroke="#FF3D5E" stroke-width="2"></line></pattern></defs><rect x="54" y="30" width="318.05190644024356" height="286" fill="#B85CFF" fill-opacity="0.05"></rect><line x1="372.05190644024356" y1="24" x2="372.05190644024356" y2="320" stroke="#B85CFF" stroke-width="1.5"></line><text x="364.05190644024356" y="18" font-size="10.5" text-anchor="end" fill="#B85CFF" letter-spacing=".09em">← EXPLOITED BEFORE A PATCH EXISTS</text><text x="380.05190644024356" y="18" font-size="10.5" text-anchor="start" fill="#B85CFF" letter-spacing=".09em">PATCH AVAILABLE · DAY 0</text><line x1="82.91380967638577" y1="30" x2="82.91380967638577" y2="316" stroke="#1B2E2C"></line><text x="82.91380967638577" y="335" font-size="11" text-anchor="middle" fill="#7A9490">-20d</text><line x1="227.48285805831463" y1="30" x2="227.48285805831463" y2="316" stroke="#1B2E2C"></line><text x="227.48285805831463" y="335" font-size="11" text-anchor="middle" fill="#7A9490">-10d</text><line x1="516.6209548221724" y1="30" x2="516.6209548221724" y2="316" stroke="#1B2E2C"></line><text x="516.6209548221724" y="335" font-size="11" text-anchor="middle" fill="#7A9490">+10d</text><line x1="661.1900032041012" y1="30" x2="661.1900032041012" y2="316" stroke="#1B2E2C"></line><text x="661.1900032041012" y="335" font-size="11" text-anchor="middle" fill="#7A9490">+20d</text><line x1="805.7590515860302" y1="30" x2="805.7590515860302" y2="316" stroke="#1B2E2C"></line><text x="805.7590515860302" y="335" font-size="11" text-anchor="middle" fill="#7A9490">+30d</text><line x1="54" y1="210" x2="900" y2="210" stroke="#42605C"></line><path d="M54.0 210.0 L54.0 210.0 L59.6 210.0 L65.3 210.0 L70.9 210.0 L76.6 210.0 L82.2 210.0 L87.8 210.0 L93.5 210.0 L99.1 210.0 L104.8 210.0 L110.4 210.0 L116.0 210.0 L121.7 210.0 L127.3 210.0 L133.0 210.0 L138.6 210.0 L144.2 210.0 L149.9 210.0 L155.5 210.0 L161.2 210.0 L166.8 210.0 L172.4 210.0 L178.1 210.0 L183.7 210.0 L189.4 210.0 L195.0 210.0 L200.6 210.0 L206.3 210.0 L211.9 210.0 L217.6 210.0 L223.2 210.0 L228.8 210.0 L234.5 210.0 L240.1 210.0 L245.8 210.0 L251.4 210.0 L257.0 210.0 L262.7 210.0 L268.3 210.0 L274.0 210.0 L279.6 210.0 L285.2 210.0 L290.9 210.0 L296.5 210.0 L302.2 210.0 L307.8 210.0 L313.4 210.0 L319.1 210.0 L324.7 210.0 L330.4 210.0 L336.0 210.0 L341.6 210.0 L347.3 210.0 L352.9 210.0 L358.6 210.0 L364.2 210.0 L369.8 210.0 L375.5 210.0 L381.1 209.1 L386.8 206.1 L392.4 199.1 L398.0 189.1 L403.7 161.3 L409.3 121.9 L415.0 80.2 L420.6 48.1 L426.2 48.0 L431.9 50.8 L437.5 60.1 L443.2 86.7 L448.8 102.8 L454.4 118.5 L460.1 132.9 L465.7 147.7 L471.4 153.9 L477.0 161.2 L482.6 168.1 L488.3 170.1 L493.9 175.5 L499.6 178.7 L505.2 184.1 L510.8 183.6 L516.5 181.1 L522.1 185.0 L527.8 183.1 L533.4 185.1 L539.0 187.3 L544.7 185.5 L550.3 186.7 L556.0 188.9 L561.6 185.7 L567.2 186.7 L572.9 183.5 L578.5 188.0 L584.2 189.9 L589.8 190.3 L595.4 195.6 L601.1 200.4 L606.7 201.2 L612.4 202.7 L618.0 203.3 L623.6 204.5 L629.3 205.1 L634.9 205.8 L640.6 205.9 L646.2 205.3 L651.8 204.2 L657.5 205.1 L663.1 204.9 L668.8 203.4 L674.4 204.1 L680.0 204.7 L685.7 204.6 L691.3 204.6 L697.0 205.3 L702.6 206.1 L708.2 204.8 L713.9 206.2 L719.5 206.5 L725.2 206.6 L730.8 209.4 L736.4 208.7 L742.1 209.2 L747.7 209.9 L753.4 209.9 L759.0 209.8 L764.6 209.9 L770.3 209.8 L775.9 210.0 L781.6 210.0 L787.2 209.9 L792.8 209.9 L798.5 210.0 L804.1 210.0 L809.8 210.0 L815.4 210.0 L821.0 210.0 L826.7 210.0 L832.3 210.0 L838.0 210.0 L843.6 210.0 L849.2 210.0 L854.9 210.0 L860.5 210.0 L866.2 210.0 L871.8 210.0 L877.4 210.0 L883.1 210.0 L888.7 210.0 L894.4 210.0 L900.0 210.0 Z" fill="#4FD5C2" fill-opacity="0.12" stroke="#4FD5C2" stroke-width="2" stroke-linejoin="round"></path><path d="M54.0 210.0 L54.0 210.0 L59.6 210.0 L65.3 210.0 L70.9 210.0 L76.6 210.0 L82.2 210.0 L87.8 210.0 L93.5 210.0 L99.1 210.0 L104.8 210.0 L110.4 210.0 L116.0 210.0 L121.7 210.0 L127.3 210.0 L133.0 210.0 L138.6 210.0 L144.2 210.0 L149.9 210.0 L155.5 210.0 L161.2 210.0 L166.8 210.0 L172.4 210.0 L178.1 210.0 L183.7 210.0 L189.4 210.0 L195.0 210.0 L200.6 210.0 L206.3 210.0 L211.9 210.0 L217.6 210.0 L223.2 210.0 L228.8 210.0 L234.5 210.0 L240.1 210.0 L245.8 210.0 L251.4 210.0 L257.0 210.0 L262.7 210.0 L268.3 210.0 L274.0 210.0 L279.6 210.0 L285.2 210.0 L290.9 210.0 L296.5 210.0 L302.2 210.0 L307.8 210.0 L313.4 210.0 L319.1 210.0 L324.7 210.0 L330.4 210.0 L336.0 210.0 L341.6 210.0 L347.3 210.0 L352.9 210.0 L358.6 210.0 L364.2 210.0 L369.8 210.0 L375.5 210.0 L381.1 209.7 L386.8 208.8 L392.4 206.1 L398.0 201.6 L403.7 188.4 L409.3 167.1 L415.0 141.9 L420.6 119.3 L426.2 114.1 L431.9 111.1 L437.5 112.7 L443.2 126.8 L448.8 135.2 L454.4 144.3 L460.1 153.2 L465.7 163.0 L471.4 166.8 L477.0 171.6 L482.6 176.5 L488.3 177.6 L493.9 181.7 L499.6 183.9 L505.2 188.2 L510.8 187.5 L516.5 185.1 L522.1 188.3 L527.8 186.5 L533.4 188.1 L539.0 189.8 L544.7 188.1 L550.3 189.1 L556.0 190.9 L561.6 187.9 L567.2 188.8 L572.9 185.8 L578.5 189.8 L584.2 191.5 L589.8 191.8 L595.4 196.6 L601.1 201.0 L606.7 201.8 L612.4 203.2 L618.0 203.7 L623.6 204.8 L629.3 205.4 L634.9 206.1 L640.6 206.1 L646.2 205.6 L651.8 204.5 L657.5 205.4 L663.1 205.2 L668.8 203.7 L674.4 204.4 L680.0 205.0 L685.7 204.9 L691.3 204.9 L697.0 205.5 L702.6 206.2 L708.2 205.0 L713.9 206.4 L719.5 206.6 L725.2 206.7 L730.8 209.4 L736.4 208.8 L742.1 209.3 L747.7 209.9 L753.4 209.9 L759.0 209.8 L764.6 209.9 L770.3 209.8 L775.9 210.0 L781.6 210.0 L787.2 209.9 L792.8 209.9 L798.5 210.0 L804.1 210.0 L809.8 210.0 L815.4 210.0 L821.0 210.0 L826.7 210.0 L832.3 210.0 L838.0 210.0 L843.6 210.0 L849.2 210.0 L854.9 210.0 L860.5 210.0 L866.2 210.0 L871.8 210.0 L877.4 210.0 L883.1 210.0 L888.7 210.0 L894.4 210.0 L900.0 210.0 Z" fill="url(#hx)" fill-opacity="0.5" stroke="none"></path><path d="M54.0 210.0 L59.6 210.0 L65.3 210.0 L70.9 210.0 L76.6 210.0 L82.2 210.0 L87.8 210.0 L93.5 210.0 L99.1 210.0 L104.8 210.0 L110.4 210.0 L116.0 210.0 L121.7 210.0 L127.3 210.0 L133.0 210.0 L138.6 210.0 L144.2 210.0 L149.9 210.0 L155.5 210.0 L161.2 210.0 L166.8 210.0 L172.4 210.0 L178.1 210.0 L183.7 210.0 L189.4 210.0 L195.0 210.0 L200.6 210.0 L206.3 210.0 L211.9 210.0 L217.6 210.0 L223.2 210.0 L228.8 210.0 L234.5 210.0 L240.1 210.0 L245.8 210.0 L251.4 210.0 L257.0 210.0 L262.7 210.0 L268.3 210.0 L274.0 210.0 L279.6 210.0 L285.2 210.0 L290.9 210.0 L296.5 210.0 L302.2 210.0 L307.8 210.0 L313.4 210.0 L319.1 210.0 L324.7 210.0 L330.4 210.0 L336.0 210.0 L341.6 210.0 L347.3 210.0 L352.9 210.0 L358.6 210.0 L364.2 210.0 L369.8 210.0 L375.5 210.0 L381.1 209.7 L386.8 208.8 L392.4 206.1 L398.0 201.6 L403.7 188.4 L409.3 167.1 L415.0 141.9 L420.6 119.3 L426.2 114.1 L431.9 111.1 L437.5 112.7 L443.2 126.8 L448.8 135.2 L454.4 144.3 L460.1 153.2 L465.7 163.0 L471.4 166.8 L477.0 171.6 L482.6 176.5 L488.3 177.6 L493.9 181.7 L499.6 183.9 L505.2 188.2 L510.8 187.5 L516.5 185.1 L522.1 188.3 L527.8 186.5 L533.4 188.1 L539.0 189.8 L544.7 188.1 L550.3 189.1 L556.0 190.9 L561.6 187.9 L567.2 188.8 L572.9 185.8 L578.5 189.8 L584.2 191.5 L589.8 191.8 L595.4 196.6 L601.1 201.0 L606.7 201.8 L612.4 203.2 L618.0 203.7 L623.6 204.8 L629.3 205.4 L634.9 206.1 L640.6 206.1 L646.2 205.6 L651.8 204.5 L657.5 205.4 L663.1 205.2 L668.8 203.7 L674.4 204.4 L680.0 205.0 L685.7 204.9 L691.3 204.9 L697.0 205.5 L702.6 206.2 L708.2 205.0 L713.9 206.4 L719.5 206.6 L725.2 206.7 L730.8 209.4 L736.4 208.8 L742.1 209.3 L747.7 209.9 L753.4 209.9 L759.0 209.8 L764.6 209.9 L770.3 209.8 L775.9 210.0 L781.6 210.0 L787.2 209.9 L792.8 209.9 L798.5 210.0 L804.1 210.0 L809.8 210.0 L815.4 210.0 L821.0 210.0 L826.7 210.0 L832.3 210.0 L838.0 210.0 L843.6 210.0 L849.2 210.0 L854.9 210.0 L860.5 210.0 L866.2 210.0 L871.8 210.0 L877.4 210.0 L883.1 210.0 L888.7 210.0 L894.4 210.0" fill="none" stroke="#FF3D5E" stroke-width="1.2" stroke-opacity="0.8"></path><path d="M54.0 210.0 L54.0 212.6 L59.6 212.0 L65.3 212.5 L70.9 212.1 L76.6 211.7 L82.2 212.3 L87.8 213.9 L93.5 212.8 L99.1 212.1 L104.8 213.6 L110.4 213.3 L116.0 213.2 L121.7 213.4 L127.3 214.3 L133.0 214.4 L138.6 214.7 L144.2 214.7 L149.9 214.5 L155.5 216.1 L161.2 216.2 L166.8 215.6 L172.4 215.9 L178.1 215.6 L183.7 217.4 L189.4 216.8 L195.0 218.7 L200.6 217.3 L206.3 218.1 L211.9 218.2 L217.6 217.9 L223.2 218.1 L228.8 219.2 L234.5 220.2 L240.1 222.9 L245.8 220.6 L251.4 222.2 L257.0 223.0 L262.7 224.7 L268.3 222.9 L274.0 224.4 L279.6 227.2 L285.2 226.4 L290.9 227.6 L296.5 226.7 L302.2 230.9 L307.8 230.2 L313.4 232.9 L319.1 233.8 L324.7 234.9 L330.4 233.1 L336.0 232.0 L341.6 228.3 L347.3 227.2 L352.9 223.3 L358.6 215.6 L364.2 211.2 L369.8 210.2 L375.5 228.8 L381.1 261.9 L386.8 280.4 L392.4 295.0 L398.0 302.0 L403.7 293.8 L409.3 301.5 L415.0 291.1 L420.6 285.4 L426.2 278.5 L431.9 272.5 L437.5 268.7 L443.2 264.0 L448.8 259.5 L454.4 253.1 L460.1 248.2 L465.7 248.5 L471.4 244.6 L477.0 243.4 L482.6 237.7 L488.3 236.1 L493.9 231.3 L499.6 233.3 L505.2 231.4 L510.8 230.5 L516.5 228.6 L522.1 225.6 L527.8 225.0 L533.4 224.5 L539.0 225.1 L544.7 220.9 L550.3 220.6 L556.0 220.0 L561.6 218.8 L567.2 216.8 L572.9 218.3 L578.5 217.0 L584.2 218.3 L589.8 216.6 L595.4 215.2 L601.1 214.0 L606.7 215.3 L612.4 214.4 L618.0 214.5 L623.6 213.7 L629.3 213.7 L634.9 213.1 L640.6 214.0 L646.2 211.9 L651.8 212.5 L657.5 212.5 L663.1 212.5 L668.8 212.8 L674.4 211.9 L680.0 212.3 L685.7 212.3 L691.3 212.1 L697.0 212.0 L702.6 211.5 L708.2 211.7 L713.9 210.9 L719.5 211.5 L725.2 210.9 L730.8 211.6 L736.4 211.6 L742.1 211.1 L747.7 212.0 L753.4 210.8 L759.0 211.1 L764.6 211.1 L770.3 210.9 L775.9 211.0 L781.6 210.9 L787.2 210.9 L792.8 210.9 L798.5 210.7 L804.1 210.3 L809.8 210.4 L815.4 210.7 L821.0 210.6 L826.7 210.6 L832.3 210.2 L838.0 210.9 L843.6 210.7 L849.2 210.5 L854.9 210.3 L860.5 210.7 L866.2 210.5 L871.8 210.3 L877.4 210.5 L883.1 210.2 L888.7 210.5 L894.4 210.3 L900.0 210.0 Z" fill="#FF6B4A" fill-opacity="0.15" stroke="#FF6B4A" stroke-width="2" stroke-linejoin="round"></path><text x="54" y="44" font-size="11" text-anchor="start" fill="#4FD5C2" letter-spacing=".09em">WHEN YOU HAVE CLOSED IT</text><text x="54" y="354" font-size="11" text-anchor="start" fill="#FF6B4A" letter-spacing=".09em">WHEN A WORKING EXPLOIT EXISTS</text><g><rect x="650" y="34" width="248" height="66" fill="#0A1413" stroke="#1B2E2C"></rect><text x="666" y="64" font-size="30" fill="#FF3D5E" font-weight="800" font-family="Bricolage Grotesque, sans-serif">71%</text><text x="666" y="84" font-size="10" fill="#7A9490" letter-spacing=".08em">OF EXPLOITED BUGS: THEY WIN THE RACE</text></g><text x="900" y="354" font-size="11" text-anchor="end" fill="#7A9490">28% start pre-disclosure · n-day median 5.0d</text></svg>
+    </div>
+
+    <div class="panel">
+      <div class="ttl"><h3>Where the year goes</h3></div>
+      <p class="cap">Every critical vulnerability that lands in your exposed stack, and what happens to it.
+      Most die at the first step. The step with the smallest drop is where you have the least defence.</p>
+      <svg id="funnel" viewBox="0 0 920 250" role="img" aria-label="Attrition funnel"><text x="316" y="31" font-size="11.5" text-anchor="end" fill="#7A9490">Criticals in your exposed stack</text><rect x="330" y="16" width="560" height="20" fill="#0A1413"></rect><rect x="330" y="16" width="560" height="20" fill="#42605C" fill-opacity="0.75"></rect><text x="898" y="31" font-size="12" text-anchor="start" fill="#42605C" font-weight="600">14.1</text><text x="316" y="68" font-size="11.5" text-anchor="end" fill="#7A9490">Ever actually exploited anywhere</text><rect x="330" y="53" width="560" height="20" fill="#0A1413"></rect><rect x="330" y="53" width="159.32630612443396" height="20" fill="#4FD5C2" fill-opacity="0.75"></rect><text x="497.3263061244339" y="68" font-size="12" text-anchor="start" fill="#4FD5C2" font-weight="600">1.1</text><text x="316" y="54" font-size="9.5" text-anchor="end" fill="#42605C">−92%</text><text x="316" y="105" font-size="11.5" text-anchor="end" fill="#7A9490">Affect systems you run</text><rect x="330" y="90" width="560" height="20" fill="#0A1413"></rect><rect x="330" y="90" width="158.87431569282828" height="20" fill="#4FD5C2" fill-opacity="0.75"></rect><text x="496.8743156928283" y="105" font-size="12" text-anchor="start" fill="#4FD5C2" font-weight="600">1.1</text><text x="316" y="91" font-size="9.5" text-anchor="end" fill="#42605C">−1%</text><text x="316" y="142" font-size="11.5" text-anchor="end" fill="#7A9490">A window is open when the exploit lands</text><rect x="330" y="127" width="560" height="20" fill="#0A1413"></rect><rect x="330" y="127" width="123.81282593145878" height="20" fill="#FFC24D" fill-opacity="0.75"></rect><text x="461.81282593145875" y="142" font-size="12" text-anchor="start" fill="#FFC24D" font-weight="600">0.69</text><text x="316" y="128" font-size="9.5" text-anchor="end" fill="#42605C">−39%</text><text x="316" y="179" font-size="11.5" text-anchor="end" fill="#7A9490">A campaign reaches your estate</text><rect x="330" y="164" width="560" height="20" fill="#0A1413"></rect><rect x="330" y="164" width="108.83754985951082" height="20" fill="#FFC24D" fill-opacity="0.75"></rect><text x="446.83754985951083" y="179" font-size="12" text-anchor="start" fill="#FFC24D" font-weight="600">0.53</text><text x="316" y="165" font-size="9.5" text-anchor="end" fill="#42605C">−23%</text><text x="316" y="216" font-size="11.5" text-anchor="end" fill="#E2EDEA">The exploit works and they are in</text><rect x="330" y="201" width="560" height="20" fill="#0A1413"></rect><rect x="330" y="201" width="93.7317470725899" height="20" fill="#FF3D5E" fill-opacity="1"></rect><text x="431.7317470725899" y="216" font-size="12" text-anchor="start" fill="#FF3D5E" font-weight="600">0.39</text><text x="316" y="202" font-size="9.5" text-anchor="end" fill="#42605C">−26%</text><text x="330" y="252" font-size="10" text-anchor="start" fill="#42605C">per simulated year · bar width is √-scaled</text></svg>
+    </div>
+
+    <div class="two">
+      <div class="panel">
+        <div class="ttl"><h3>The AI curve</h3></div>
+        <p class="cap">Your current settings, swept across attacker capability. The line is not straight.</p>
+        <svg id="sweep" viewBox="0 0 430 250" role="img" aria-label="Compromise probability against AI capability"><line x1="44" y1="14" x2="418" y2="14" stroke="#1B2E2C"></line><text x="36" y="18" font-size="10" text-anchor="end" fill="#7A9490">76%</text><line x1="44" y1="59.5" x2="418" y2="59.5" stroke="#1B2E2C"></line><text x="36" y="63.5" font-size="10" text-anchor="end" fill="#7A9490">57%</text><line x1="44" y1="105" x2="418" y2="105" stroke="#1B2E2C"></line><text x="36" y="109" font-size="10" text-anchor="end" fill="#7A9490">38%</text><line x1="44" y1="150.5" x2="418" y2="150.5" stroke="#1B2E2C"></line><text x="36" y="154.5" font-size="10" text-anchor="end" fill="#7A9490">19%</text><line x1="44" y1="196" x2="418" y2="196" stroke="#1B2E2C"></line><text x="36" y="200" font-size="10" text-anchor="end" fill="#7A9490">0%</text><text x="44" y="214" font-size="10" text-anchor="middle" fill="#7A9490">0</text><text x="137.5" y="214" font-size="10" text-anchor="middle" fill="#7A9490">25</text><text x="231" y="214" font-size="10" text-anchor="middle" fill="#7A9490">50</text><text x="324.5" y="214" font-size="10" text-anchor="middle" fill="#7A9490">75</text><text x="418" y="214" font-size="10" text-anchor="middle" fill="#7A9490">100</text><path d="M44.0 132.1 L81.4 128.7 L118.8 113.7 L156.2 98.7 L193.6 90.7 L231.0 74.3 L268.4 68.6 L305.8 59.4 L343.2 52.9 L380.6 38.2 L418.0 33.5 L 418 196 L 44 196 Z" fill="#FF6B4A" fill-opacity="0.09"></path><path d="M44.0 132.1 L81.4 128.7 L118.8 113.7 L156.2 98.7 L193.6 90.7 L231.0 74.3 L268.4 68.6 L305.8 59.4 L343.2 52.9 L380.6 38.2 L418.0 33.5" fill="none" stroke="#FF6B4A" stroke-width="2.2"></path><line x1="193.6" y1="14" x2="193.6" y2="196" stroke="#E2EDEA" stroke-dasharray="3 3"></line><circle cx="193.6" cy="92.73815359477126" r="4.5" fill="#E2EDEA"></circle><text x="201.6" y="84.73815359477126" font-size="10.5" text-anchor="start" fill="#E2EDEA">you are here</text><text x="44" y="230" font-size="10" text-anchor="start" fill="#7A9490">attacker capability →</text></svg>
+      </div>
+      <div class="panel">
+        <div class="ttl"><h3>How long you last</h3></div>
+        <p class="cap">Share of simulated years still clean, day by day.</p>
+        <svg id="surv" viewBox="0 0 430 250" role="img" aria-label="Survival curve"><line x1="44" y1="14" x2="418" y2="14" stroke="#1B2E2C"></line><text x="36" y="18" font-size="10" text-anchor="end" fill="#7A9490">100%</text><line x1="44" y1="59.5" x2="418" y2="59.5" stroke="#1B2E2C"></line><text x="36" y="63.5" font-size="10" text-anchor="end" fill="#7A9490">75%</text><line x1="44" y1="105" x2="418" y2="105" stroke="#1B2E2C"></line><text x="36" y="109" font-size="10" text-anchor="end" fill="#7A9490">50%</text><line x1="44" y1="150.5" x2="418" y2="150.5" stroke="#1B2E2C"></line><text x="36" y="154.5" font-size="10" text-anchor="end" fill="#7A9490">25%</text><line x1="44" y1="196" x2="418" y2="196" stroke="#1B2E2C"></line><text x="36" y="200" font-size="10" text-anchor="end" fill="#7A9490">0%</text><text x="44" y="214" font-size="10" text-anchor="middle" fill="#7A9490">day 0</text><text x="166.95890410958904" y="214" font-size="10" text-anchor="middle" fill="#7A9490">d120</text><text x="289.9178082191781" y="214" font-size="10" text-anchor="middle" fill="#7A9490">d240</text><text x="418" y="214" font-size="10" text-anchor="middle" fill="#7A9490">d365</text><path d="M44.0 14.0 L45.0 14.1 L46.0 14.4 L47.1 14.6 L48.1 14.7 L49.1 14.9 L50.1 15.2 L51.2 15.3 L52.2 15.6 L53.2 15.9 L54.2 16.1 L55.3 16.5 L56.3 16.6 L57.3 16.8 L58.3 17.0 L59.4 17.2 L60.4 17.4 L61.4 17.6 L62.4 17.7 L63.5 18.0 L64.5 18.2 L65.5 18.5 L66.5 18.7 L67.6 18.9 L68.6 19.2 L69.6 19.7 L70.6 20.0 L71.7 20.1 L72.7 20.4 L73.7 20.6 L74.7 20.9 L75.8 21.2 L76.8 21.5 L77.8 21.6 L78.8 21.8 L79.9 22.1 L80.9 22.2 L81.9 22.5 L82.9 22.8 L84.0 23.1 L85.0 23.3 L86.0 23.6 L87.0 23.9 L88.1 24.1 L89.1 24.4 L90.1 24.6 L91.1 25.0 L92.2 25.2 L93.2 25.4 L94.2 25.6 L95.2 25.8 L96.3 26.0 L97.3 26.3 L98.3 26.6 L99.3 26.8 L100.4 27.1 L101.4 27.4 L102.4 27.5 L103.4 27.9 L104.5 28.2 L105.5 28.5 L106.5 28.8 L107.5 29.1 L108.6 29.4 L109.6 29.6 L110.6 29.8 L111.6 30.1 L112.7 30.3 L113.7 30.5 L114.7 30.7 L115.7 30.9 L116.8 31.1 L117.8 31.4 L118.8 31.7 L119.8 32.0 L120.8 32.3 L121.9 32.7 L122.9 32.8 L123.9 33.1 L124.9 33.5 L126.0 33.8 L127.0 34.0 L128.0 34.2 L129.0 34.4 L130.1 34.8 L131.1 35.1 L132.1 35.5 L133.1 35.7 L134.2 36.0 L135.2 36.2 L136.2 36.4 L137.2 36.5 L138.3 36.9 L139.3 37.0 L140.3 37.3 L141.3 37.5 L142.4 37.7 L143.4 37.9 L144.4 38.2 L145.4 38.5 L146.5 38.8 L147.5 39.0 L148.5 39.1 L149.5 39.5 L150.6 39.8 L151.6 40.0 L152.6 40.2 L153.6 40.4 L154.7 40.8 L155.7 41.0 L156.7 41.2 L157.7 41.5 L158.8 41.6 L159.8 41.8 L160.8 42.0 L161.8 42.2 L162.9 42.6 L163.9 42.7 L164.9 43.0 L165.9 43.2 L167.0 43.5 L168.0 43.7 L169.0 44.0 L170.0 44.2 L171.1 44.4 L172.1 44.7 L173.1 45.0 L174.1 45.3 L175.2 45.6 L176.2 45.8 L177.2 46.0 L178.2 46.3 L179.3 46.5 L180.3 46.7 L181.3 47.1 L182.3 47.4 L183.4 47.6 L184.4 47.9 L185.4 48.1 L186.4 48.3 L187.5 48.4 L188.5 48.6 L189.5 48.8 L190.5 49.0 L191.6 49.1 L192.6 49.3 L193.6 49.5 L194.6 49.8 L195.6 50.0 L196.7 50.2 L197.7 50.4 L198.7 50.5 L199.7 50.7 L200.8 51.0 L201.8 51.2 L202.8 51.4 L203.8 51.6 L204.9 51.8 L205.9 52.1 L206.9 52.3 L207.9 52.5 L209.0 52.8 L210.0 53.1 L211.0 53.4 L212.0 53.6 L213.1 53.9 L214.1 54.1 L215.1 54.3 L216.1 54.4 L217.2 54.5 L218.2 54.7 L219.2 54.9 L220.2 55.2 L221.3 55.4 L222.3 55.5 L223.3 55.8 L224.3 56.1 L225.4 56.4 L226.4 56.6 L227.4 57.0 L228.4 57.2 L229.5 57.3 L230.5 57.5 L231.5 57.8 L232.5 58.0 L233.6 58.2 L234.6 58.4 L235.6 58.6 L236.6 58.7 L237.7 59.0 L238.7 59.3 L239.7 59.6 L240.7 59.8 L241.8 60.0 L242.8 60.1 L243.8 60.3 L244.8 60.6 L245.9 60.7 L246.9 61.0 L247.9 61.2 L248.9 61.5 L250.0 61.7 L251.0 61.8 L252.0 62.1 L253.0 62.2 L254.1 62.5 L255.1 62.7 L256.1 63.0 L257.1 63.3 L258.2 63.5 L259.2 63.7 L260.2 63.9 L261.2 64.2 L262.3 64.3 L263.3 64.4 L264.3 64.7 L265.3 64.9 L266.4 65.1 L267.4 65.3 L268.4 65.5 L269.4 65.7 L270.4 66.0 L271.5 66.2 L272.5 66.4 L273.5 66.6 L274.5 66.8 L275.6 67.0 L276.6 67.2 L277.6 67.5 L278.6 67.6 L279.7 67.9 L280.7 68.0 L281.7 68.2 L282.7 68.3 L283.8 68.5 L284.8 68.5 L285.8 68.7 L286.8 68.8 L287.9 69.0 L288.9 69.2 L289.9 69.5 L290.9 69.7 L292.0 69.9 L293.0 70.1 L294.0 70.4 L295.0 70.5 L296.1 70.6 L297.1 70.9 L298.1 71.1 L299.1 71.2 L300.2 71.6 L301.2 71.7 L302.2 71.9 L303.2 72.1 L304.3 72.3 L305.3 72.4 L306.3 72.6 L307.3 72.8 L308.4 73.0 L309.4 73.3 L310.4 73.4 L311.4 73.6 L312.5 73.8 L313.5 74.0 L314.5 74.2 L315.5 74.5 L316.6 74.5 L317.6 74.7 L318.6 75.1 L319.6 75.3 L320.7 75.4 L321.7 75.5 L322.7 75.7 L323.7 75.9 L324.8 76.1 L325.8 76.3 L326.8 76.5 L327.8 76.7 L328.9 76.8 L329.9 76.9 L330.9 77.2 L331.9 77.3 L333.0 77.5 L334.0 77.7 L335.0 78.0 L336.0 78.1 L337.1 78.4 L338.1 78.7 L339.1 78.9 L340.1 79.1 L341.2 79.2 L342.2 79.4 L343.2 79.6 L344.2 79.8 L345.2 80.0 L346.3 80.1 L347.3 80.3 L348.3 80.4 L349.3 80.6 L350.4 80.9 L351.4 81.0 L352.4 81.3 L353.4 81.4 L354.5 81.6 L355.5 81.8 L356.5 81.9 L357.5 82.2 L358.6 82.3 L359.6 82.6 L360.6 82.7 L361.6 82.9 L362.7 83.1 L363.7 83.3 L364.7 83.5 L365.7 83.6 L366.8 83.8 L367.8 83.9 L368.8 84.1 L369.8 84.3 L370.9 84.6 L371.9 84.7 L372.9 84.8 L373.9 85.0 L375.0 85.1 L376.0 85.3 L377.0 85.4 L378.0 85.6 L379.1 85.9 L380.1 86.2 L381.1 86.4 L382.1 86.6 L383.2 86.8 L384.2 87.0 L385.2 87.2 L386.2 87.4 L387.3 87.6 L388.3 87.8 L389.3 88.0 L390.3 88.2 L391.4 88.5 L392.4 88.7 L393.4 88.9 L394.4 89.0 L395.5 89.2 L396.5 89.4 L397.5 89.6 L398.5 89.9 L399.6 90.1 L400.6 90.2 L401.6 90.3 L402.6 90.5 L403.7 90.7 L404.7 90.8 L405.7 90.9 L406.7 91.1 L407.8 91.2 L408.8 91.4 L409.8 91.6 L410.8 91.9 L411.9 91.9 L412.9 92.0 L413.9 92.2 L414.9 92.3 L416.0 92.4 L417.0 92.6 L418.0 92.6 L 418 196 L 44 196 Z" fill="#4FD5C2" fill-opacity="0.08"></path><path d="M44.0 14.0 L45.0 14.1 L46.0 14.4 L47.1 14.6 L48.1 14.7 L49.1 14.9 L50.1 15.2 L51.2 15.3 L52.2 15.6 L53.2 15.9 L54.2 16.1 L55.3 16.5 L56.3 16.6 L57.3 16.8 L58.3 17.0 L59.4 17.2 L60.4 17.4 L61.4 17.6 L62.4 17.7 L63.5 18.0 L64.5 18.2 L65.5 18.5 L66.5 18.7 L67.6 18.9 L68.6 19.2 L69.6 19.7 L70.6 20.0 L71.7 20.1 L72.7 20.4 L73.7 20.6 L74.7 20.9 L75.8 21.2 L76.8 21.5 L77.8 21.6 L78.8 21.8 L79.9 22.1 L80.9 22.2 L81.9 22.5 L82.9 22.8 L84.0 23.1 L85.0 23.3 L86.0 23.6 L87.0 23.9 L88.1 24.1 L89.1 24.4 L90.1 24.6 L91.1 25.0 L92.2 25.2 L93.2 25.4 L94.2 25.6 L95.2 25.8 L96.3 26.0 L97.3 26.3 L98.3 26.6 L99.3 26.8 L100.4 27.1 L101.4 27.4 L102.4 27.5 L103.4 27.9 L104.5 28.2 L105.5 28.5 L106.5 28.8 L107.5 29.1 L108.6 29.4 L109.6 29.6 L110.6 29.8 L111.6 30.1 L112.7 30.3 L113.7 30.5 L114.7 30.7 L115.7 30.9 L116.8 31.1 L117.8 31.4 L118.8 31.7 L119.8 32.0 L120.8 32.3 L121.9 32.7 L122.9 32.8 L123.9 33.1 L124.9 33.5 L126.0 33.8 L127.0 34.0 L128.0 34.2 L129.0 34.4 L130.1 34.8 L131.1 35.1 L132.1 35.5 L133.1 35.7 L134.2 36.0 L135.2 36.2 L136.2 36.4 L137.2 36.5 L138.3 36.9 L139.3 37.0 L140.3 37.3 L141.3 37.5 L142.4 37.7 L143.4 37.9 L144.4 38.2 L145.4 38.5 L146.5 38.8 L147.5 39.0 L148.5 39.1 L149.5 39.5 L150.6 39.8 L151.6 40.0 L152.6 40.2 L153.6 40.4 L154.7 40.8 L155.7 41.0 L156.7 41.2 L157.7 41.5 L158.8 41.6 L159.8 41.8 L160.8 42.0 L161.8 42.2 L162.9 42.6 L163.9 42.7 L164.9 43.0 L165.9 43.2 L167.0 43.5 L168.0 43.7 L169.0 44.0 L170.0 44.2 L171.1 44.4 L172.1 44.7 L173.1 45.0 L174.1 45.3 L175.2 45.6 L176.2 45.8 L177.2 46.0 L178.2 46.3 L179.3 46.5 L180.3 46.7 L181.3 47.1 L182.3 47.4 L183.4 47.6 L184.4 47.9 L185.4 48.1 L186.4 48.3 L187.5 48.4 L188.5 48.6 L189.5 48.8 L190.5 49.0 L191.6 49.1 L192.6 49.3 L193.6 49.5 L194.6 49.8 L195.6 50.0 L196.7 50.2 L197.7 50.4 L198.7 50.5 L199.7 50.7 L200.8 51.0 L201.8 51.2 L202.8 51.4 L203.8 51.6 L204.9 51.8 L205.9 52.1 L206.9 52.3 L207.9 52.5 L209.0 52.8 L210.0 53.1 L211.0 53.4 L212.0 53.6 L213.1 53.9 L214.1 54.1 L215.1 54.3 L216.1 54.4 L217.2 54.5 L218.2 54.7 L219.2 54.9 L220.2 55.2 L221.3 55.4 L222.3 55.5 L223.3 55.8 L224.3 56.1 L225.4 56.4 L226.4 56.6 L227.4 57.0 L228.4 57.2 L229.5 57.3 L230.5 57.5 L231.5 57.8 L232.5 58.0 L233.6 58.2 L234.6 58.4 L235.6 58.6 L236.6 58.7 L237.7 59.0 L238.7 59.3 L239.7 59.6 L240.7 59.8 L241.8 60.0 L242.8 60.1 L243.8 60.3 L244.8 60.6 L245.9 60.7 L246.9 61.0 L247.9 61.2 L248.9 61.5 L250.0 61.7 L251.0 61.8 L252.0 62.1 L253.0 62.2 L254.1 62.5 L255.1 62.7 L256.1 63.0 L257.1 63.3 L258.2 63.5 L259.2 63.7 L260.2 63.9 L261.2 64.2 L262.3 64.3 L263.3 64.4 L264.3 64.7 L265.3 64.9 L266.4 65.1 L267.4 65.3 L268.4 65.5 L269.4 65.7 L270.4 66.0 L271.5 66.2 L272.5 66.4 L273.5 66.6 L274.5 66.8 L275.6 67.0 L276.6 67.2 L277.6 67.5 L278.6 67.6 L279.7 67.9 L280.7 68.0 L281.7 68.2 L282.7 68.3 L283.8 68.5 L284.8 68.5 L285.8 68.7 L286.8 68.8 L287.9 69.0 L288.9 69.2 L289.9 69.5 L290.9 69.7 L292.0 69.9 L293.0 70.1 L294.0 70.4 L295.0 70.5 L296.1 70.6 L297.1 70.9 L298.1 71.1 L299.1 71.2 L300.2 71.6 L301.2 71.7 L302.2 71.9 L303.2 72.1 L304.3 72.3 L305.3 72.4 L306.3 72.6 L307.3 72.8 L308.4 73.0 L309.4 73.3 L310.4 73.4 L311.4 73.6 L312.5 73.8 L313.5 74.0 L314.5 74.2 L315.5 74.5 L316.6 74.5 L317.6 74.7 L318.6 75.1 L319.6 75.3 L320.7 75.4 L321.7 75.5 L322.7 75.7 L323.7 75.9 L324.8 76.1 L325.8 76.3 L326.8 76.5 L327.8 76.7 L328.9 76.8 L329.9 76.9 L330.9 77.2 L331.9 77.3 L333.0 77.5 L334.0 77.7 L335.0 78.0 L336.0 78.1 L337.1 78.4 L338.1 78.7 L339.1 78.9 L340.1 79.1 L341.2 79.2 L342.2 79.4 L343.2 79.6 L344.2 79.8 L345.2 80.0 L346.3 80.1 L347.3 80.3 L348.3 80.4 L349.3 80.6 L350.4 80.9 L351.4 81.0 L352.4 81.3 L353.4 81.4 L354.5 81.6 L355.5 81.8 L356.5 81.9 L357.5 82.2 L358.6 82.3 L359.6 82.6 L360.6 82.7 L361.6 82.9 L362.7 83.1 L363.7 83.3 L364.7 83.5 L365.7 83.6 L366.8 83.8 L367.8 83.9 L368.8 84.1 L369.8 84.3 L370.9 84.6 L371.9 84.7 L372.9 84.8 L373.9 85.0 L375.0 85.1 L376.0 85.3 L377.0 85.4 L378.0 85.6 L379.1 85.9 L380.1 86.2 L381.1 86.4 L382.1 86.6 L383.2 86.8 L384.2 87.0 L385.2 87.2 L386.2 87.4 L387.3 87.6 L388.3 87.8 L389.3 88.0 L390.3 88.2 L391.4 88.5 L392.4 88.7 L393.4 88.9 L394.4 89.0 L395.5 89.2 L396.5 89.4 L397.5 89.6 L398.5 89.9 L399.6 90.1 L400.6 90.2 L401.6 90.3 L402.6 90.5 L403.7 90.7 L404.7 90.8 L405.7 90.9 L406.7 91.1 L407.8 91.2 L408.8 91.4 L409.8 91.6 L410.8 91.9 L411.9 91.9 L412.9 92.0 L413.9 92.2 L414.9 92.3 L416.0 92.4 L417.0 92.6 L418.0 92.6" fill="none" stroke="#4FD5C2" stroke-width="2.2"></path><text x="418" y="26" font-size="10.5" text-anchor="end" fill="#7A9490">57% of years clean</text></svg>
+      </div>
+    </div>
+
+    <div class="two">
+      <div class="panel">
+        <div class="ttl"><h3>How they got in</h3></div>
+        <p class="cap">Route taken on the first compromise of each simulated year.</p>
+        <svg id="routes" viewBox="0 0 430 200" role="img" aria-label="Routes"><text x="10" y="14" font-size="10.5" text-anchor="start" fill="#E2EDEA">Opportunistic — mass exploitation in your window</text><rect x="10" y="22" width="410" height="13" fill="#0A1413"></rect><rect x="10" y="22" width="287.9689163295721" height="13" fill="#FF6B4A"></rect><text x="10" y="52" font-size="13" text-anchor="start" fill="#FF6B4A" font-weight="600">70%</text><text x="10" y="72" font-size="10.5" text-anchor="start" fill="#E2EDEA">Targeted agent campaign</text><rect x="10" y="80" width="410" height="13" fill="#0A1413"></rect><rect x="10" y="80" width="46.35086225250159" height="13" fill="#FFC24D"></rect><text x="10" y="110" font-size="13" text-anchor="start" fill="#FFC24D" font-weight="600">11%</text><text x="10" y="130" font-size="10.5" text-anchor="start" fill="#E2EDEA">Supply chain — patching is irrelevant</text><rect x="10" y="138" width="410" height="13" fill="#0A1413"></rect><rect x="10" y="138" width="75.68022141792633" height="13" fill="#B85CFF"></rect><text x="10" y="168" font-size="13" text-anchor="start" fill="#B85CFF" font-weight="600">18%</text></svg>
+      </div>
+      <div class="panel">
+        <div class="ttl"><h3>What actually moves it</h3></div>
+        <p class="cap">Swing in 12-month probability when each input is pushed either way.</p>
+        <svg id="torn" viewBox="0 0 430 330" role="img" aria-label="Sensitivity"><line x1="250" y1="7" x2="250" y2="300" stroke="#42605C"></line><text x="122" y="24" font-size="10.5" text-anchor="end" fill="#E2EDEA">Share of bugs weaponised</text><rect x="202.2779795311984" y="14" width="47.72202046880158" height="13" fill="#4FD5C2" fill-opacity="0.85"></rect><rect x="250" y="14" width="92.98976559920764" height="13" fill="#FF6B4A" fill-opacity="0.85"></rect><text x="376" y="24" font-size="10" text-anchor="start" fill="#7A9490">30→70</text><text x="122" y="48" font-size="10.5" text-anchor="end" fill="#E2EDEA">Supply-chain hits</text><rect x="231.72928359194455" y="38" width="18.27071640805546" height="13" fill="#4FD5C2" fill-opacity="0.85"></rect><rect x="250" y="38" width="118" height="13" fill="#FF6B4A" fill-opacity="0.85"></rect><text x="376" y="48" font-size="10" text-anchor="start" fill="#7A9490">38→77</text><text x="122" y="72" font-size="10.5" text-anchor="end" fill="#E2EDEA">AI capability</text><rect x="194.56454275338396" y="62" width="55.43545724661603" height="13" fill="#4FD5C2" fill-opacity="0.85"></rect><rect x="250" y="62" width="79.6665566193463" height="13" fill="#FF6B4A" fill-opacity="0.85"></rect><text x="376" y="72" font-size="10" text-anchor="start" fill="#7A9490">27→66</text><text x="122" y="96" font-size="10.5" text-anchor="end" fill="#E2EDEA">Critical vulns / yr</text><rect x="197.3694288544074" y="86" width="52.630571145592604" height="13" fill="#4FD5C2" fill-opacity="0.85"></rect><rect x="250" y="86" width="77.79663255199735" height="13" fill="#FF6B4A" fill-opacity="0.85"></rect><text x="376" y="96" font-size="10" text-anchor="start" fill="#7A9490">28→65</text><text x="122" y="120" font-size="10.5" text-anchor="end" fill="#E2EDEA">Exposed systems</text><rect x="212.32882139319906" y="110" width="37.67117860680092" height="13" fill="#4FD5C2" fill-opacity="0.85"></rect><rect x="250" y="110" width="35.957081545064355" height="13" fill="#FF6B4A" fill-opacity="0.85"></rect><text x="376" y="120" font-size="10" text-anchor="start" fill="#7A9490">32→53</text><text x="122" y="144" font-size="10.5" text-anchor="end" fill="#E2EDEA">Agent campaigns</text><rect x="233.83294816771212" y="134" width="16.16705183228788" height="13" fill="#4FD5C2" fill-opacity="0.85"></rect><rect x="250" y="134" width="47.64410696599535" height="13" fill="#FF6B4A" fill-opacity="0.85"></rect><text x="376" y="144" font-size="10" text-anchor="start" fill="#7A9490">39→57</text><text x="122" y="168" font-size="10.5" text-anchor="end" fill="#E2EDEA">Edge appliance share</text><rect x="238.50775833608452" y="158" width="11.492241663915488" height="13" fill="#4FD5C2" fill-opacity="0.85"></rect><rect x="250" y="158" width="51.85143611753052" height="13" fill="#FF6B4A" fill-opacity="0.85"></rect><text x="376" y="168" font-size="10" text-anchor="start" fill="#7A9490">40→58</text><text x="122" y="192" font-size="10.5" text-anchor="end" fill="#E2EDEA">Inventory coverage</text><rect x="234.30042918454936" y="182" width="15.69957081545065" height="13" fill="#4FD5C2" fill-opacity="0.85"></rect><rect x="250" y="182" width="20.763948497854077" height="13" fill="#FF6B4A" fill-opacity="0.85"></rect><text x="376" y="192" font-size="10" text-anchor="start" fill="#7A9490">39→49</text><text x="122" y="216" font-size="10.5" text-anchor="end" fill="#E2EDEA">Patch cycle</text><rect x="237.80653681082865" y="206" width="12.193463189171348" height="13" fill="#4FD5C2" fill-opacity="0.85"></rect><rect x="250" y="206" width="18.89402443050511" height="13" fill="#FF6B4A" fill-opacity="0.85"></rect><text x="376" y="216" font-size="10" text-anchor="start" fill="#7A9490">40→49</text><text x="122" y="240" font-size="10.5" text-anchor="end" fill="#E2EDEA">WAF / virtual patching</text><rect x="233.5992076592935" y="230" width="16.40079234070649" height="13" fill="#4FD5C2" fill-opacity="0.85"></rect><rect x="250" y="230" width="7.908220534829974" height="13" fill="#FF6B4A" fill-opacity="0.85"></rect><text x="376" y="240" font-size="10" text-anchor="start" fill="#7A9490">39→45</text><text x="122" y="264" font-size="10.5" text-anchor="end" fill="#E2EDEA">Emergency trigger rate</text><rect x="244.58501155496864" y="254" width="5.414988445031357" height="13" fill="#4FD5C2" fill-opacity="0.85"></rect><rect x="250" y="254" width="14.92043578738858" height="13" fill="#FF6B4A" fill-opacity="0.85"></rect><text x="376" y="264" font-size="10" text-anchor="start" fill="#7A9490">42→47</text><text x="122" y="288" font-size="10.5" text-anchor="end" fill="#E2EDEA">Emergency patching</text><rect x="250" y="278" width="1.129745790690002" height="13" fill="#4FD5C2" fill-opacity="0.85"></rect><rect x="250" y="278" width="12.816771211620999" height="13" fill="#FF6B4A" fill-opacity="0.85"></rect><text x="376" y="288" font-size="10" text-anchor="start" fill="#7A9490">44→47</text><text x="122" y="316" font-size="9.5" text-anchor="end" fill="#4FD5C2">better</text><text x="376" y="316" font-size="9.5" text-anchor="end" fill="#FF6B4A">worse</text></svg>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="ttl"><h3>Where the next hour goes</h3></div>
+      <p class="cap">Ranked by measured effect on your own numbers. Rewrites itself as you move the sliders.</p>
+      <ol class="act" id="acts"><li><div class="a-t"><b>You cannot move this one — plan around it</b><span>The share of bugs that get weaponised is a property of the ecosystem, not your programme.</span></div>
+      <div class="a-d">−14 pts</div></li><li><div class="a-t"><b>Verify what you install</b><span>Nothing in your patch cadence touches this route.</span></div>
+      <div class="a-d">−5 pts</div></li><li><div class="a-t"><b>Assume the exploit clock keeps compressing</b><span>Not yours to move. Plan the defender clock around it.</span></div>
+      <div class="a-d">−16 pts</div></li><li><div class="a-t"><b>Change what you expose, not only how you patch it</b><span>Vuln rate is a property of your product choices at the edge.</span></div>
+      <div class="a-d">−15 pts</div></li><li><div class="a-t"><b>Cut the exposed surface</b><span>Fewer reachable systems shrinks every other term at once.</span></div>
+      <div class="a-d">−11 pts</div></li></ol>
+    </div>
+
+    <div class="panel">
+      <div class="ttl"><h3>What the model is anchored on</h3></div>
+      <p class="cap">Coefficients are not invented where public data exists. These are the load-bearing ones.
+      Disagree with any of them and the conclusion changes, which is the point of listing them.</p>
+      <dl class="anch" id="anch"><div><dt>Median time-to-exploit for n-days, <b>21 d → under 1 d</b> across the AI slider<br><span style="font-size:11px;color:#42605C">63 d (2018) → 32 d (2021–22) → ~5 d (2023, outlier-adjusted)</span></dt>
+    <dd>Mandiant M-Trends</dd></div><div><dt>Share exploited <b>before</b> a patch exists, 12% → 47%<br><span style="font-size:11px;color:#42605C">29% of 2025 KEV additions exploited on or before CVE publication, up from 23.6%</span></dt>
+    <dd>VulnCheck</dd></div><div><dt>Share of published criticals ever exploited, default <b>7%</b><br><span style="font-size:11px;color:#42605C">~6% of all published CVEs have been exploited in the wild</span></dt>
+    <dd>Cyentia/EPSS</dd></div><div><dt>Edge appliances patch slower and are exploited faster<br><span style="font-size:11px;color:#42605C">median disclosure-to-mass-exploitation for edge devices is zero days; 54% of perimeter vulns fully remediated within the year</span></dt>
+    <dd>Verizon DBIR</dd></div><div><dt>Detection converts a compromise into an incident<br><span style="font-size:11px;color:#42605C">median dwell 14 d (2025); eCrime breakout averages 29 minutes</span></dt>
+    <dd>M-Trends</dd></div><div><dt>Supply chain bypasses the patch cycle entirely<br><span style="font-size:11px;color:#42605C">454,648 new malicious packages in 2025; one npm worm hit 500+ packages in days</span></dt>
+    <dd>Sonatype</dd></div></dl>
+    </div>
+
+    <footer><b>What this is and is not.</b> A structural model. It is built to show the shape of the
+    relationship and to rank your own levers against each other, not to produce an authoritative percentage.
+    Absolute numbers inherit the uncertainty of every input above and of the anchors below. Treat the
+    ranking as the output and the headline figure as an order of magnitude. Three things the model does not
+    contain: credential-based intrusion, insider action, and physical access. It answers one question only,
+    about exploitation of things you expose. Runs entirely in this page.</footer>
+  </div>
+</div>
+
+<script>
+/* ═══════════ PARAMETERS ═══════════ */
+const SPEC={def:[
+ {k:'exposed',  l:'Internet-exposed systems',min:5,max:2000,step:5,v:100,f:v=>v,
+  h:'Anything an unauthenticated attacker can reach.'},
+ {k:'edge',     l:'…that are edge appliances',min:0,max:100,step:5,v:25,f:v=>v+'%',
+  h:'VPN, firewall, gateway, file transfer. No EDR, slower to patch, hit hardest.'},
+ {k:'cadence',  l:'Routine patch cycle',min:1,max:90,step:1,v:14,f:v=>v+' d',
+  h:'Days between scheduled windows.'},
+ {k:'emerg',    l:'Emergency patch speed',min:0,max:336,step:6,v:72,f:v=>v===0?'none':v+' h',
+  h:'Out-of-band fix for a critical. Zero means you wait for the cycle.'},
+ {k:'emergHit', l:'Criticals that trigger it',min:0,max:100,step:5,v:60,f:v=>v+'%',
+  h:'You have to know it applies to you first.'},
+ {k:'inventory',l:'Exposed systems you know about',min:80,max:100,step:1,v:96,f:v=>v+'%',
+  h:'The rest belong to no patch cycle at all.'},
+ {k:'virtual',  l:'Held off by WAF / IPS rule',min:0,max:80,step:5,v:20,f:v=>v+'%',
+  h:'Buys the window back. Does not apply to appliances.'},
+ {k:'detect',   l:'Time to detect a compromise',min:.1,max:60,step:.1,v:14,
+  f:v=>v<1?(v*24).toFixed(0)+' h':v.toFixed(0)+' d',
+  h:'Median dwell. Decides whether a compromise becomes an incident.'}
+],att:[
+ {k:'criticals',l:'Critical vulns per year in your stack',min:0,max:60,step:1,v:14,f:v=>v,
+  h:'Published criticals in software you actually expose.'},
+ {k:'exploited',l:'…that ever get truly exploited',min:1,max:40,step:1,v:7,f:v=>v+'%',
+  h:'Most criticals are never used against anyone. This is the filter that matters most.'},
+ {k:'ai',       l:'AI offensive capability',min:0,max:100,step:1,v:40,
+  f:v=>v+'  ('+fmtD(wmed(v))+' · '+(zdShare(v)*100).toFixed(0)+'% pre-disc)',
+  h:'Moves three things: exploit build time, share of bugs weaponised, share used before disclosure.'},
+ {k:'scan',     l:'Mass-exploitation pressure',min:0,max:100,step:1,v:50,f:v=>v,
+  h:'How fast opportunistic exploitation reaches you once an exploit is out.'},
+ {k:'campaigns',l:'Agent campaigns aimed at you / yr',min:0,max:100,step:1,v:6,f:v=>v,
+  h:'Autonomous runs that enumerate your surface rather than scanning the world.'},
+ {k:'agentSkill',l:'Agent success vs a patched surface',min:0,max:10,step:.5,v:1,f:v=>v+'%',
+  h:'Per campaign. Misconfiguration, chained logic flaws, novel bugs.'},
+ {k:'supply',   l:'Supply-chain hits reaching you / yr',min:0,max:3,step:.05,v:.12,f:v=>v.toFixed(2),
+  h:'Poisoned dependency or signed update. Your patch cadence is irrelevant to these.'}
+]};
+const PRESETS={
+ typical:{exposed:100,edge:25,cadence:14,emerg:72,emergHit:60,inventory:96,virtual:20,detect:14,
+          criticals:14,exploited:7,ai:40,scan:50,campaigns:6,agentSkill:1,supply:.12},
+ tight:  {exposed:50,edge:15,cadence:3,emerg:12,emergHit:92,inventory:100,virtual:60,detect:.25,
+          criticals:9,exploited:7,ai:40,scan:50,campaigns:6,agentSkill:1,supply:.05},
+ loose:  {exposed:600,edge:40,cadence:45,emerg:168,emergHit:30,inventory:84,virtual:5,detect:45,
+          criticals:26,exploited:9,ai:40,scan:65,campaigns:18,agentSkill:2.5,supply:.8}};
+const P={}; [...SPEC.def,...SPEC.att].forEach(s=>P[s.k]=s.v);
+
+/* ═══════════ AI COUPLINGS ═══════════ */
+const wmed    = ai=>21*Math.exp(-0.036*ai);            // n-day median time-to-exploit
+const weapMult= ai=>0.55+0.015*ai;                     // multiplier on the weaponised share
+const zdShare = ai=>Math.min(.75,0.12+0.0035*ai);      // share exploited before disclosure
+const scanHaz = s =>0.0030*Math.exp(0.044*s);
+const containP= d =>Math.exp(-d/0.6);
+
+/* ═══════════ RANDOM ═══════════ */
+let _s=0;
+function seed(n){_s=n>>>0;}
+function rnd(){_s|=0;_s=_s+0x6D2B79F5|0;let t=Math.imul(_s^_s>>>15,1|_s);
+  t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;}
+function norm(){let u=0,v=0;while(u===0)u=rnd();while(v===0)v=rnd();
+  return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);}
+function lnorm(m,s){return m*Math.exp(s*norm());}
+function expo(m){return -m*Math.log(1-rnd());}
+function pois(l){if(l<=0)return 0;if(l>30)return Math.max(0,Math.round(l+Math.sqrt(l)*norm()));
+  let L=Math.exp(-l),k=0,p=1;do{k++;p*=rnd();}while(p>L);return k-1;}
+function binom(n,p){if(p<=0||n<=0)return 0;if(p>=1)return n;
+  if(n*p>12&&n*(1-p)>12)return Math.min(n,Math.max(0,Math.round(n*p+Math.sqrt(n*p*(1-p))*norm())));
+  if(n*p<12)return Math.min(n,pois(n*p));
+  return Math.max(0,n-Math.min(n,pois(n*(1-p))));}
+
+/* ═══════════ MODEL ═══════════ */
+const H=365;
+function simulate(p,trials,sd,wantSurv=true){
+  seed(sd);
+  const surv=new Float64Array(H+1);
+  let hit=0,mat=0,events=0,expDays=0;
+  const firsts=[],route=[0,0,0],fn=[0,0,0,0,0,0];
+  const nEdge=Math.round(p.exposed*p.edge/100), nWeb=p.exposed-nEdge, inv=p.inventory/100;
+  const eI=Math.round(nEdge*inv), eD=nEdge-eI, wI=Math.round(nWeb*inv), wD=nWeb-wI;
+  const hz=scanHaz(p.scan), wm=wmed(p.ai), wsig=Math.max(.45,.95-.0035*p.ai);
+  const wMul=weapMult(p.ai), zd=zdShare(p.ai), cP=containP(p.detect);
+
+  for(let t=0;t<trials;t++){
+    let first=Infinity,firstMat=Infinity,n=0,ed=0;
+    const K=pois(p.criticals); fn[0]+=K;
+    for(let i=0;i<K;i++){
+      if(rnd()>=Math.min(.9,p.exploited/100*wMul))continue;           // never actually exploited
+      fn[1]++;
+      const day0=rnd()*H, isEdge=rnd()<p.edge/100;
+      const tX=rnd()<Math.min(.85,zd*(isEdge?1.35:1)) ? -lnorm(7,.9)
+                                                      : lnorm(wm*(isEdge?.55:1),wsig);
+      const af=isEdge?0.30+0.60*rnd():0.04+0.40*rnd()*rnd();
+      const popI=isEdge?eI:wI, popD=isEdge?eD:wD;
+      const nIA=binom(popI,af), nDA=binom(popD,af);
+      if(nIA+nDA<1)continue; fn[2]++;
+
+      const aware=lnorm(isEdge?1.4:1.0,.6);
+      let tp;
+      if(p.emerg>0&&rnd()<(p.emergHit/100)*(isEdge?.8:1))
+        tp=aware+(p.emerg/24)*Math.exp(.3*norm())*(isEdge?1.5:1);
+      else tp=aware+rnd()*p.cadence*(isEdge?1.6:1)+lnorm(.6,.5);
+      const shield=!isEdge&&rnd()<p.virtual/100;
+      const win=shield?0:Math.max(0,tp-tX);
+      if(win>0)fn[3]++;
+      ed+=win*nIA;
+
+      const hm=Math.exp(1.0*norm())*(isEdge?2.2:1);
+      const reach=(cnt,w)=>{ if(cnt<1||w<=0)return null;
+        const h=hz*hm*Math.pow(cnt,.4);
+        if(rnd()>=1-Math.exp(-h*Math.min(w,H)))return null;
+        return {c:Math.max(1,binom(cnt,.7)),t:Math.min(w,expo(1/h))}; };
+      const land=(r,off)=>{ const c=binom(r.c,.5); if(c<1)return false;
+        n+=c; const when=day0+Math.max(0,tX)+r.t+off;
+        if(when<first){first=when;route[0]++;}
+        if(rnd()>=cP&&when<firstMat)firstMat=when; return true; };
+
+      let landed=false,won=false;
+      const rI=reach(nIA,win); if(rI){landed=true; if(land(rI,0))won=true;}
+      if(nDA>0){
+        const tpD=rnd()<.5?aware+rnd()*90+lnorm(.6,.5):aware+expo(300);
+        const wDk=Math.max(0,tpD-tX); ed+=Math.min(wDk,H)*nDA;
+        const rD=reach(nDA,wDk); if(rD){landed=true; if(land(rD,0))won=true;}
+      }
+      if(landed)fn[4]++; if(won)fn[5]++;
+    }
+    const frac=Math.min(1,ed/(H*Math.max(1,p.exposed)));
+    const pw=frac*.7+(1-frac)*(p.agentSkill/100);
+    for(let i=0,C=pois(p.campaigns);i<C;i++) if(rnd()<pw){
+      n++;const w=rnd()*H;if(w<first){first=w;route[1]++;}
+      if(rnd()>=cP&&w<firstMat)firstMat=w;}
+    for(let i=0,S=pois(p.supply);i<S;i++){
+      n++;const w=rnd()*H;if(w<first){first=w;route[2]++;}
+      if(rnd()>=cP&&w<firstMat)firstMat=w;}
+
+    events+=n; expDays+=ed;
+    if(first<H){hit++;firsts.push(first);}
+    if(firstMat<H)mat++;
+    if(wantSurv){const stop=first<H?Math.ceil(first):H+1;
+      for(let d=0;d<stop&&d<=H;d++)surv[d]++;}
+  }
+  firsts.sort((a,b)=>a-b);
+  const tot=route[0]+route[1]+route[2]||1;
+  return{p:hit/trials,mat:mat/trials,med:hit/trials>=.5?firsts[Math.floor(trials*.5)]:null,
+    events:events/trials,expDays:expDays/trials,surv:Array.from(surv,v=>v/trials),
+    routes:route.map(v=>v/tot),fn:fn.map(v=>v/trials),
+    se:Math.sqrt(hit/trials*(1-hit/trials)/trials)};
+}
+
+/* densities for the race chart, including negative (pre-disclosure) time */
+function densities(p){
+  const N=26000, wm=wmed(p.ai), wsig=Math.max(.45,.95-.0035*p.ai), zd=zdShare(p.ai);
+  const x0=-22, x1=Math.max(20,Math.min(110,p.cadence*1.7*(1+p.edge/160)+p.emerg/24+6));
+  const B=150, dx=(x1-x0)/B;
+  const A=new Float64Array(B), D=new Float64Array(B);
+  seed(7); let zdN=0;
+  for(let i=0;i<N;i++){
+    const isEdge=rnd()<p.edge/100;
+    let tX; if(rnd()<Math.min(.85,zd*(isEdge?1.35:1))){tX=-lnorm(7,.9);zdN++;}
+    else tX=lnorm(wm*(isEdge?.55:1),wsig);
+    const b=Math.floor((tX-x0)/dx); if(b>=0&&b<B)A[b]++;
+    const aware=lnorm(isEdge?1.4:1.0,.6);
+    let tp;
+    if(p.emerg>0&&rnd()<(p.emergHit/100)*(isEdge?.8:1))
+      tp=aware+(p.emerg/24)*Math.exp(.3*norm())*(isEdge?1.5:1);
+    else tp=aware+rnd()*p.cadence*(isEdge?1.6:1)+lnorm(.6,.5);
+    const b2=Math.floor((tp-x0)/dx); if(b2>=0&&b2<B)D[b2]++;
+  }
+  const F=new Float64Array(B); let c=0;
+  for(let i=0;i<B;i++){c+=A[i]/N;F[i]=c;}
+  const ov=new Float64Array(B); let pLate=0;
+  for(let i=0;i<B;i++){ov[i]=D[i]/N*F[i];pLate+=ov[i];}
+  const nz=v=>{const m=Math.max(...v);return Array.from(v,x=>m?x/m:0);};
+  return{A:nz(A),D:nz(D),ov:Array.from(ov),ovMax:Math.max(...D)/N,x0,x1,B,dx,pLate,
+         zdFrac:zdN/N,attMed:wm};
+}
+
+/* ═══════════ DRAW ═══════════ */
+const NS='http://www.w3.org/2000/svg';
+const el=(t,a)=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);return e;};
+const clr=s=>{while(s.firstChild)s.removeChild(s.firstChild);};
+const pth=p=>p.map((q,i)=>(i?'L':'M')+q[0].toFixed(1)+' '+q[1].toFixed(1)).join(' ');
+function txt(s,x,y,t,o={}){const e=el('text',Object.assign({x,y,'font-size':o.fs||11,
+  'text-anchor':o.a||'start',fill:o.c||'#7A9490'},o.w?{'font-weight':o.w}:{},
+  o.ff?{'font-family':o.ff}:{},o.ls?{'letter-spacing':o.ls}:{}));e.textContent=t;s.appendChild(e);return e;}
+
+function drawRace(){
+  const s=document.getElementById('race'); clr(s);
+  const d=densities(P), L=54,R=900,T=30,MID=210,BOT=316,h=162;
+  const defs=el('defs');
+  const pat=el('pattern',{id:'hx',patternUnits:'userSpaceOnUse',width:7,height:7,patternTransform:'rotate(48)'});
+  pat.appendChild(el('line',{x1:0,y1:0,x2:0,y2:7,stroke:'#FF3D5E','stroke-width':2}));
+  defs.appendChild(pat); s.appendChild(defs);
+  const X=v=>L+(R-L)*((v-d.x0)/(d.x1-d.x0)), Xi=i=>X(d.x0+i*d.dx);
+
+  /* pre-disclosure zone */
+  s.appendChild(el('rect',{x:L,y:T,width:X(0)-L,height:BOT-T,fill:'#B85CFF','fill-opacity':.05}));
+  s.appendChild(el('line',{x1:X(0),y1:T-6,x2:X(0),y2:BOT+4,stroke:'#B85CFF','stroke-width':1.5}));
+  txt(s,X(0)-8,T-12,'← EXPLOITED BEFORE A PATCH EXISTS',{a:'end',c:'#B85CFF',fs:10.5,ls:'.09em'});
+  txt(s,X(0)+8,T-12,'PATCH AVAILABLE · DAY 0',{c:'#B85CFF',fs:10.5,ls:'.09em'});
+
+  niceTicks(d.x0,d.x1).forEach(t=>{
+    if(Math.abs(t)<1e-9)return;
+    const x=X(t); if(x<L||x>R)return;
+    s.appendChild(el('line',{x1:x,y1:T,x2:x,y2:BOT,stroke:'#1B2E2C'}));
+    txt(s,x,BOT+19,(t>0?'+':'')+t+'d',{a:'middle'});
+  });
+  s.appendChild(el('line',{x1:L,y1:MID,x2:R,y2:MID,stroke:'#42605C'}));
+
+  const dp=[[L,MID]]; for(let i=0;i<d.B;i++)dp.push([Xi(i),MID-d.D[i]*h]); dp.push([R,MID]);
+  s.appendChild(el('path',{d:pth(dp)+' Z',fill:'#4FD5C2','fill-opacity':.12,stroke:'#4FD5C2',
+    'stroke-width':2,'stroke-linejoin':'round'}));
+  const sc=d.ovMax?h/d.ovMax:0;
+  const op=[[L,MID]]; for(let i=0;i<d.B;i++)op.push([Xi(i),MID-d.ov[i]*sc]); op.push([R,MID]);
+  s.appendChild(el('path',{d:pth(op)+' Z',fill:'url(#hx)','fill-opacity':.5,stroke:'none'}));
+  s.appendChild(el('path',{d:pth(op.slice(1,-1)),fill:'none',stroke:'#FF3D5E','stroke-width':1.2,'stroke-opacity':.8}));
+
+  const ap=[[L,MID]]; for(let i=0;i<d.B;i++)ap.push([Xi(i),MID+d.A[i]*(BOT-MID-14)]); ap.push([R,MID]);
+  s.appendChild(el('path',{d:pth(ap)+' Z',fill:'#FF6B4A','fill-opacity':.15,stroke:'#FF6B4A',
+    'stroke-width':2,'stroke-linejoin':'round'}));
+
+  txt(s,L,T+14,'WHEN YOU HAVE CLOSED IT',{c:'#4FD5C2',fs:11,ls:'.09em'});
+  txt(s,L,BOT+38,'WHEN A WORKING EXPLOIT EXISTS',{c:'#FF6B4A',fs:11,ls:'.09em'});
+
+  const g=el('g');
+  g.appendChild(el('rect',{x:R-250,y:T+4,width:248,height:66,fill:'#0A1413',stroke:'#1B2E2C'}));
+  const n1=el('text',{x:R-234,y:T+34,'font-size':30,fill:'#FF3D5E','font-weight':800,
+    'font-family':'Bricolage Grotesque, sans-serif'}); n1.textContent=(d.pLate*100).toFixed(0)+'%';
+  g.appendChild(n1);
+  const n2=el('text',{x:R-234,y:T+54,'font-size':10,fill:'#7A9490','letter-spacing':'.08em'});
+  n2.textContent='OF EXPLOITED BUGS: THEY WIN THE RACE'; g.appendChild(n2);
+  s.appendChild(g);
+  txt(s,R,BOT+38,(d.zdFrac*100).toFixed(0)+'% start pre-disclosure · n-day median '+fmtD(d.attMed),{a:'end'});
+}
+
+const FN=['Criticals in your exposed stack','Ever actually exploited anywhere',
+ 'Affect systems you run','A window is open when the exploit lands',
+ 'A campaign reaches your estate','The exploit works and they are in'];
+function drawFunnel(r){
+  const s=document.getElementById('funnel'); clr(s);
+  const L=330,R=890,T=16,rh=37, m=Math.max(...r.fn,0.001);
+  r.fn.forEach((v,i)=>{
+    const y=T+i*rh, w=Math.max(1,(R-L)*Math.sqrt(v/m));
+    const col=i===0?'#42605C':i<3?'#4FD5C2':i<5?'#FFC24D':'#FF3D5E';
+    txt(s,L-14,y+15,FN[i],{a:'end',c:i===5?'#E2EDEA':'#7A9490',fs:11.5});
+    s.appendChild(el('rect',{x:L,y:y,width:R-L,height:20,fill:'#0A1413'}));
+    s.appendChild(el('rect',{x:L,y:y,width:w,height:20,fill:col,'fill-opacity':i===5?1:.75}));
+    txt(s,L+w+8,y+15,v<1?v.toFixed(2):v.toFixed(1),{c:col,fs:12,w:600});
+    if(i){const drop=r.fn[i-1]>0?(1-v/r.fn[i-1])*100:0;
+      txt(s,L-14,y+1,'−'+drop.toFixed(0)+'%',{a:'end',c:'#42605C',fs:9.5});}
+  });
+  txt(s,L,T+6*rh+14,'per simulated year · bar width is √-scaled',{c:'#42605C',fs:10});
+}
+
+function drawSweep(base){
+  const s=document.getElementById('sweep'); clr(s);
+  const L=44,R=418,T=14,B=196;
+  const pts=[];
+  for(let a=0;a<=100;a+=10) pts.push([a,simulate({...P,ai:a},2200,7,false).p]);
+  const mx=Math.max(.05,...pts.map(p=>p[1]))*1.12;
+  for(let i=0;i<=4;i++){const y=T+(B-T)*i/4;
+    s.appendChild(el('line',{x1:L,y1:y,x2:R,y2:y,stroke:'#1B2E2C'}));
+    txt(s,L-8,y+4,(mx*(1-i/4)*100).toFixed(0)+'%',{a:'end',fs:10});}
+  [0,25,50,75,100].forEach(a=>txt(s,L+(R-L)*a/100,B+18,a,{a:'middle',fs:10}));
+  const XY=p=>[L+(R-L)*p[0]/100, T+(B-T)*(1-p[1]/mx)];
+  const P2=pts.map(XY);
+  s.appendChild(el('path',{d:pth(P2)+` L ${R} ${B} L ${L} ${B} Z`,fill:'#FF6B4A','fill-opacity':.09}));
+  s.appendChild(el('path',{d:pth(P2),fill:'none',stroke:'#FF6B4A','stroke-width':2.2}));
+  const cur=XY([P.ai,base]);
+  s.appendChild(el('line',{x1:cur[0],y1:T,x2:cur[0],y2:B,stroke:'#E2EDEA','stroke-dasharray':'3 3'}));
+  s.appendChild(el('circle',{cx:cur[0],cy:cur[1],r:4.5,fill:'#E2EDEA'}));
+  txt(s,cur[0]+8,Math.max(T+12,cur[1]-8),'you are here',{c:'#E2EDEA',fs:10.5});
+  txt(s,L,B+34,'attacker capability →',{fs:10});
+}
+
+function drawSurv(r){
+  const s=document.getElementById('surv'); clr(s);
+  const L=44,R=418,T=14,B=196;
+  for(let i=0;i<=4;i++){const y=T+(B-T)*i/4;
+    s.appendChild(el('line',{x1:L,y1:y,x2:R,y2:y,stroke:'#1B2E2C'}));
+    txt(s,L-8,y+4,(100-i*25)+'%',{a:'end',fs:10});}
+  [0,120,240,365].forEach(d=>txt(s,L+(R-L)*d/365,B+18,d?'d'+d:'day 0',{a:'middle',fs:10}));
+  const pts=r.surv.map((v,i)=>[L+(R-L)*i/365,T+(B-T)*(1-v)]);
+  s.appendChild(el('path',{d:pth(pts)+` L ${R} ${B} L ${L} ${B} Z`,fill:'#4FD5C2','fill-opacity':.08}));
+  s.appendChild(el('path',{d:pth(pts),fill:'none',stroke:'#4FD5C2','stroke-width':2.2}));
+  let hl=-1; for(let i=0;i<=365;i++) if(r.surv[i]<=.5){hl=i;break;}
+  if(hl>0){const x=L+(R-L)*hl/365;
+    s.appendChild(el('line',{x1:x,y1:T,x2:x,y2:B,stroke:'#FF3D5E','stroke-dasharray':'3 3'}));
+    txt(s,x+6,T+12,'d'+hl,{c:'#FF3D5E',fs:10.5});}
+  txt(s,R,T+12,(r.surv[365]*100).toFixed(0)+'% of years clean',{a:'end',fs:10.5});
+}
+
+function drawRoutes(r){
+  const s=document.getElementById('routes'); clr(s);
+  const nm=['Opportunistic — mass exploitation in your window','Targeted agent campaign',
+            'Supply chain — patching is irrelevant'];
+  const co=['#FF6B4A','#FFC24D','#B85CFF'], L=10,R=420;
+  r.routes.forEach((v,i)=>{const y=22+i*58;
+    txt(s,L,y-8,nm[i],{c:'#E2EDEA',fs:10.5});
+    s.appendChild(el('rect',{x:L,y,width:R-L,height:13,fill:'#0A1413'}));
+    s.appendChild(el('rect',{x:L,y,width:Math.max(0,(R-L)*v),height:13,fill:co[i]}));
+    txt(s,L,y+30,(v*100).toFixed(0)+'%',{c:co[i],fs:13,w:600});});
+}
+
+const TK=[
+ {k:'inventory',lo:100,hi:86,l:'Inventory coverage'},
+ {k:'exploited',lo:3,hi:18,l:'Share of bugs weaponised'},
+ {k:'edge',lo:0,hi:70,l:'Edge appliance share'},
+ {k:'exposed',lo:25,hi:400,l:'Exposed systems'},
+ {k:'cadence',lo:2,hi:60,l:'Patch cycle'},
+ {k:'emerg',lo:12,hi:0,l:'Emergency patching'},
+ {k:'emergHit',lo:95,hi:25,l:'Emergency trigger rate'},
+ {k:'virtual',lo:70,hi:0,l:'WAF / virtual patching'},
+ {k:'ai',lo:10,hi:90,l:'AI capability'},
+ {k:'criticals',lo:5,hi:30,l:'Critical vulns / yr'},
+ {k:'campaigns',lo:0,hi:30,l:'Agent campaigns'},
+ {k:'supply',lo:0,hi:1,l:'Supply-chain hits'}];
+function drawTornado(base){
+  const s=document.getElementById('torn'); clr(s);
+  const rows=TK.map(t=>{
+    const lo=simulate({...P,[t.k]:t.lo},1500,7,false).p;
+    const hi=simulate({...P,[t.k]:t.hi},1500,7,false).p;
+    return{...t,lo,hi,span:Math.abs(hi-lo)};}).sort((a,b)=>b.span-a.span);
+  const m=Math.max(.02,...rows.map(r=>Math.max(Math.abs(r.hi-base),Math.abs(base-r.lo))));
+  const CX=250,W=118,T=12,rh=24;
+  s.appendChild(el('line',{x1:CX,y1:T-5,x2:CX,y2:T+rows.length*rh,stroke:'#42605C'}));
+  rows.forEach((r,i)=>{const y=T+i*rh;
+    txt(s,CX-W-10,y+12,r.l,{a:'end',c:'#E2EDEA',fs:10.5});
+    [[(r.lo-base)/m*W,'#4FD5C2'],[(r.hi-base)/m*W,'#FF6B4A']].forEach(([d,c])=>{
+      const w=Math.abs(d); if(w<.6)return;
+      s.appendChild(el('rect',{x:d<0?CX-w:CX,y:y+2,width:w,height:13,fill:c,'fill-opacity':.85}));});
+    txt(s,CX+W+8,y+12,(r.lo*100).toFixed(0)+'→'+(r.hi*100).toFixed(0),{fs:10});});
+  txt(s,CX-W-10,T+rows.length*rh+16,'better',{a:'end',c:'#4FD5C2',fs:9.5});
+  txt(s,CX+W+8,T+rows.length*rh+16,'worse',{a:'end',c:'#FF6B4A',fs:9.5});
+  return rows;
+}
+
+const ADV={
+ inventory:['Close the inventory gap on exposed assets','A system in no patch cycle is exposed for months, not days. This is usually the largest single term.'],
+ exploited:['You cannot move this one — plan around it','The share of bugs that get weaponised is a property of the ecosystem, not your programme.'],
+ edge:['Reduce or ring-fence edge appliances','They patch slower, take no EDR, and are the class where mass exploitation starts on day zero.'],
+ exposed:['Cut the exposed surface','Fewer reachable systems shrinks every other term at once.'],
+ cadence:['Shorten the routine cycle','Helps, but it has a floor: a share of exploitation predates the patch entirely.'],
+ emerg:['Build a real out-of-band path','Without one, every critical inherits the full routine cadence.'],
+ emergHit:['Fix the trigger, not the speed','Patching in hours does not help if you do not know the bug touches you.'],
+ virtual:['Put exposed services where a rule can be pushed in minutes','Buys the window back while the real fix ships. Does not cover appliances.'],
+ ai:['Assume the exploit clock keeps compressing','Not yours to move. Plan the defender clock around it.'],
+ criticals:['Change what you expose, not only how you patch it','Vuln rate is a property of your product choices at the edge.'],
+ campaigns:['Instrument the edge for enumeration','Targeted campaigns look different from background scanning, if anyone is looking.'],
+ supply:['Verify what you install','Nothing in your patch cadence touches this route.'],
+ detect:['Detect faster','Does not stop a compromise. Decides whether it becomes an incident.']};
+function renderActions(rows,base){
+  const o=document.getElementById('acts'); o.innerHTML='';
+  const items=rows.filter(r=>base-r.lo>0.005).slice(0,5);
+  items.forEach(r=>{const li=document.createElement('li'),a=ADV[r.k];
+    li.innerHTML=`<div class="a-t"><b>${a[0]}</b><span>${a[1]}</span></div>
+      <div class="a-d">−${((base-r.lo)*100).toFixed(0)} pts</div>`; o.appendChild(li);});
+  if(!items.length) o.innerHTML='<li><div class="a-t"><b>Nothing on your side moves this much.</b>'+
+    '<span>At these settings the outcome is driven by routes your patch process does not touch. '+
+    'Look at the route split.</span></div><div class="a-d">—</div></li>';
+}
+
+const ANCH=[
+ ['Median time-to-exploit for n-days, <b>21 d → under 1 d</b> across the AI slider','Mandiant M-Trends: 63 d (2018) → 32 d (2021–22) → ~5 d (2023, outlier-adjusted)'],
+ ['Share exploited <b>before</b> a patch exists, 12% → 47%','VulnCheck: 29% of 2025 KEV additions exploited on or before CVE publication, up from 23.6%'],
+ ['Share of published criticals ever exploited, default <b>7%</b>','Cyentia/EPSS: ~6% of all published CVEs have been exploited in the wild'],
+ ['Edge appliances patch slower and are exploited faster','Verizon DBIR: median disclosure-to-mass-exploitation for edge devices is zero days; 54% of perimeter vulns fully remediated within the year'],
+ ['Detection converts a compromise into an incident','M-Trends: median dwell 14 d (2025); eCrime breakout averages 29 minutes'],
+ ['Supply chain bypasses the patch cycle entirely','Sonatype: 454,648 new malicious packages in 2025; one npm worm hit 500+ packages in days']];
+
+/* ═══════════ HELPERS ═══════════ */
+function niceTicks(a,b){const st=(b-a)/7,p=Math.pow(10,Math.floor(Math.log10(st)));
+  const s=[1,2,2.5,5,10].map(x=>x*p).find(x=>x>=st)||p*10;
+  const out=[];for(let v=Math.ceil(a/s)*s;v<=b+1e-9;v+=s)out.push(+v.toFixed(3));return out;}
+function fmtD(d){const x=Math.abs(d);return x<1?(x*24).toFixed(0)+'h':x<10?x.toFixed(1)+'d':x.toFixed(0)+'d';}
+function big(v){return v>=1000?(v/1000).toFixed(1)+'k':v>=10?Math.round(v):v.toFixed(1);}
+
+/* ═══════════ WIRING ═══════════ */
+function build(list,host){list.forEach(s=>{
+  const d=document.createElement('div'); d.className='ctrl';
+  d.innerHTML=`<div class="row"><label for="i-${s.k}">${s.l}</label><span class="val" id="v-${s.k}"></span></div>
+    <input type="range" id="i-${s.k}" min="${s.min}" max="${s.max}" step="${s.step}" value="${s.v}">
+    <div class="hint">${s.h}</div>`;
+  host.appendChild(d);
+  d.querySelector('input').addEventListener('input',e=>{P[s.k]=+e.target.value;setV(s);sched();});
+  setV(s);});}
+const setV=s=>document.getElementById('v-'+s.k).textContent=s.f(P[s.k]);
+const syncAll=()=>[...SPEC.def,...SPEC.att].forEach(s=>{
+  document.getElementById('i-'+s.k).value=P[s.k];setV(s);});
+
+let raf=null,slow=null;
+function sched(){if(raf)cancelAnimationFrame(raf);raf=requestAnimationFrame(fast);
+  clearTimeout(slow);slow=setTimeout(heavy,240);}
+function head(r){
+  document.getElementById('s-p').innerHTML=(r.p*100).toFixed(0)+'<span class="u">%</span>';
+  document.getElementById('s-m').innerHTML=(r.mat*100).toFixed(0)+'<span class="u">%</span>';
+  document.getElementById('s-n').innerHTML=big(r.events);
+  document.getElementById('s-t').innerHTML=r.med==null?'—<span class="u">not reached</span>'
+    :Math.round(r.med)+'<span class="u">days</span>';}
+function fast(){const r=simulate(P,2500,1234);head(r);drawRace();drawSurv(r);drawRoutes(r);drawFunnel(r);}
+function heavy(){const r=simulate(P,9000,1234);head(r);drawSurv(r);drawRoutes(r);drawFunnel(r);
+  drawSweep(r.p); renderActions(drawTornado(r.p),r.p);}
+
+build(SPEC.def,document.getElementById('cd'));
+build(SPEC.att,document.getElementById('ca'));
+document.querySelectorAll('.presets button').forEach(b=>b.addEventListener('click',()=>{
+  Object.assign(P,PRESETS[b.dataset.preset]);syncAll();sched();}));
+document.getElementById('anch').innerHTML=ANCH.map(([a,b])=>{
+  const i=b.indexOf(':');
+  return `<div><dt>${a}<br><span style="font-size:11px;color:#42605C">${b.slice(i+1).trim()}</span></dt>
+    <dd>${b.slice(0,i)}</dd></div>`;}).join('');
+fast(); heavy();
+</script>
+</body></html>

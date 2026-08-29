@@ -1,0 +1,487 @@
+{
+ "generated_at": "2026-08-27T04:29:47Z",
+ "min_n": 10,
+ "min_vendor_entries": 5,
+ "years": [
+  {
+   "year": 2021,
+   "total": 311,
+   "security": 44,
+   "pct_security": 14.1
+  },
+  {
+   "year": 2022,
+   "total": 555,
+   "security": 37,
+   "pct_security": 6.7
+  },
+  {
+   "year": 2023,
+   "total": 187,
+   "security": 20,
+   "pct_security": 10.7
+  },
+  {
+   "year": 2024,
+   "total": 186,
+   "security": 32,
+   "pct_security": 17.2
+  },
+  {
+   "year": 2025,
+   "total": 245,
+   "security": 37,
+   "pct_security": 15.1
+  },
+  {
+   "year": 2026,
+   "total": 198,
+   "security": 31,
+   "pct_security": 15.7
+  }
+ ],
+ "vendors": [
+  {
+   "vendor": "Microsoft",
+   "entries": 386,
+   "security_entries": 7,
+   "pct_security": 1.8,
+   "first_added": "2021-11-03",
+   "last_added": "2026-08-26",
+   "median_gap_days": 0.0
+  },
+  {
+   "vendor": "Cisco",
+   "entries": 96,
+   "security_entries": 21,
+   "pct_security": 21.9,
+   "first_added": "2021-11-03",
+   "last_added": "2026-08-11",
+   "median_gap_days": 0.0
+  },
+  {
+   "vendor": "Apple",
+   "entries": 94,
+   "security_entries": 0,
+   "pct_security": 0.0,
+   "first_added": "2021-11-03",
+   "last_added": "2026-08-18",
+   "median_gap_days": 0.0
+  },
+  {
+   "vendor": "Adobe",
+   "entries": 80,
+   "security_entries": 0,
+   "pct_security": 0.0,
+   "first_added": "2021-11-03",
+   "last_added": "2026-07-07",
+   "median_gap_days": 0.0
+  },
+  {
+   "vendor": "Google",
+   "entries": 72,
+   "security_entries": 0,
+   "pct_security": 0.0,
+   "first_added": "2021-11-03",
+   "last_added": "2026-06-09",
+   "median_gap_days": 7.0
+  },
+  {
+   "vendor": "Oracle",
+   "entries": 46,
+   "security_entries": 0,
+   "pct_security": 0.0,
+   "first_added": "2021-11-03",
+   "last_added": "2026-08-24",
+   "median_gap_days": 11.0
+  },
+  {
+   "vendor": "Apache",
+   "entries": 40,
+   "security_entries": 0,
+   "pct_security": 0.0,
+   "first_added": "2021-11-03",
+   "last_added": "2026-08-04",
+   "median_gap_days": 20.0
+  },
+  {
+   "vendor": "Ivanti",
+   "entries": 35,
+   "security_entries": 29,
+   "pct_security": 82.9,
+   "first_added": "2021-11-03",
+   "last_added": "2026-06-11",
+   "median_gap_days": 7.5
+  },
+  {
+   "vendor": "Fortinet",
+   "entries": 29,
+   "security_entries": 29,
+   "pct_security": 100.0,
+   "first_added": "2021-11-03",
+   "last_added": "2026-07-27",
+   "median_gap_days": 42.0
+  },
+  {
+   "vendor": "Linux",
+   "entries": 27,
+   "security_entries": 0,
+   "pct_security": 0.0,
+   "first_added": "2021-12-10",
+   "last_added": "2026-08-26",
+   "median_gap_days": 37.5
+  },
+  {
+   "vendor": "D-Link",
+   "entries": 26,
+   "security_entries": 0,
+   "pct_security": 0.0,
+   "first_added": "2021-11-03",
+   "last_added": "2026-04-24",
+   "median_gap_days": 11.0
+  },
+  {
+   "vendor": "VMware",
+   "entries": 26,
+   "security_entries": 1,
+   "pct_security": 3.8,
+   "first_added": "2021-11-03",
+   "last_added": "2025-03-04",
+   "median_gap_days": 8.0
+  },
+  {
+   "vendor": "Citrix",
+   "entries": 23,
+   "security_entries": 17,
+   "pct_security": 73.9,
+   "first_added": "2021-11-03",
+   "last_added": "2026-08-26",
+   "median_gap_days": 5.5
+  },
+  {
+   "vendor": "Synacor",
+   "entries": 19,
+   "security_entries": 0,
+   "pct_security": 0.0,
+   "first_added": "2022-01-10",
+   "last_added": "2026-08-21",
+   "median_gap_days": 76.5
+  },
+  {
+   "vendor": "Android",
+   "entries": 17,
+   "security_entries": 0,
+   "pct_security": 0.0,
+   "first_added": "2021-11-03",
+   "last_added": "2026-06-02",
+   "median_gap_days": 90.5
+  },
+  {
+   "vendor": "SonicWall",
+   "entries": 17,
+   "security_entries": 17,
+   "pct_security": 100.0,
+   "first_added": "2021-11-03",
+   "last_added": "2026-07-14",
+   "median_gap_days": 20.0
+  },
+  {
+   "vendor": "Palo Alto Networks",
+   "entries": 15,
+   "security_entries": 15,
+   "pct_security": 100.0,
+   "first_added": "2022-01-10",
+   "last_added": "2026-05-29",
+   "median_gap_days": 32.5
+  },
+  {
+   "vendor": "Samsung",
+   "entries": 15,
+   "security_entries": 0,
+   "pct_security": 0.0,
+   "first_added": "2022-11-08",
+   "last_added": "2026-04-24",
+   "median_gap_days": 19.5
+  },
+  {
+   "vendor": "SAP",
+   "entries": 14,
+   "security_entries": 0,
+   "pct_security": 0.0,
+   "first_added": "2021-11-03",
+   "last_added": "2025-05-15",
+   "median_gap_days": 0.0
+  },
+  {
+   "vendor": "Atlassian",
+   "entries": 13,
+   "security_entries": 0,
+   "pct_security": 0.0,
+   "first_added": "2021-11-03",
+   "last_added": "2024-11-12",
+   "median_gap_days": 60.0
+  },
+  {
+   "vendor": "Mozilla",
+   "entries": 13,
+   "security_entries": 0,
+   "pct_security": 0.0,
+   "first_added": "2021-11-03",
+   "last_added": "2025-10-06",
+   "median_gap_days": 12.5
+  },
+  {
+   "vendor": "Qualcomm",
+   "entries": 12,
+   "security_entries": 0,
+   "pct_security": 0.0,
+   "first_added": "2021-11-03",
+   "last_added": "2026-03-03",
+   "median_gap_days": 0.0
+  },
+  {
+   "vendor": "Trend Micro",
+   "entries": 12,
+   "security_entries": 12,
+   "pct_security": 100.0,
+   "first_added": "2021-11-03",
+   "last_added": "2026-05-21",
+   "median_gap_days": 0.0
+  },
+  {
+   "vendor": "Zyxel",
+   "entries": 12,
+   "security_entries": 5,
+   "pct_security": 41.7,
+   "first_added": "2021-11-03",
+   "last_added": "2025-02-11",
+   "median_gap_days": 45.0
+  },
+  {
+   "vendor": "QNAP",
+   "entries": 11,
+   "security_entries": 0,
+   "pct_security": 0.0,
+   "first_added": "2022-03-31",
+   "last_added": "2023-12-21",
+   "median_gap_days": 5.5
+  },
+  {
+   "vendor": "Roundcube",
+   "entries": 11,
+   "security_entries": 0,
+   "pct_security": 0.0,
+   "first_added": "2021-11-03",
+   "last_added": "2026-02-20",
+   "median_gap_days": 123.0
+  },
+  {
+   "vendor": "SolarWinds",
+   "entries": 11,
+   "security_entries": 0,
+   "pct_security": 0.0,
+   "first_added": "2021-11-03",
+   "last_added": "2026-06-05",
+   "median_gap_days": 45.0
+  },
+  {
+   "vendor": "Arm",
+   "entries": 9,
+   "security_entries": 0,
+   "pct_security": 0.0,
+   "first_added": "2021-11-03",
+   "last_added": "2024-06-12",
+   "median_gap_days": 48.0
+  },
+  {
+   "vendor": "Progress",
+   "entries": 9,
+   "security_entries": 0,
+   "pct_security": 0.0,
+   "first_added": "2021-11-03",
+   "last_added": "2026-08-07",
+   "median_gap_days": 115.0
+  },
+  {
+   "vendor": "Red Hat",
+   "entries": 9,
+   "security_entries": 0,
+   "pct_security": 0.0,
+   "first_added": "2021-12-10",
+   "last_added": "2026-08-26",
+   "median_gap_days": 86.0
+  },
+  {
+   "vendor": "Zoho",
+   "entries": 9,
+   "security_entries": 0,
+   "pct_security": 0.0,
+   "first_added": "2021-11-03",
+   "last_added": "2023-03-07",
+   "median_gap_days": 18.5
+  },
+  {
+   "vendor": "IBM",
+   "entries": 8,
+   "security_entries": 0,
+   "pct_security": 0.0,
+   "first_added": "2021-11-03",
+   "last_added": "2026-08-04",
+   "median_gap_days": 68.0
+  },
+  {
+   "vendor": "Juniper",
+   "entries": 8,
+   "security_entries": 1,
+   "pct_security": 12.5,
+   "first_added": "2022-03-25",
+   "last_added": "2025-10-02",
+   "median_gap_days": 0.0
+  },
+  {
+   "vendor": "NETGEAR",
+   "entries": 8,
+   "security_entries": 0,
+   "pct_security": 0.0,
+   "first_added": "2021-11-03",
+   "last_added": "2022-09-08",
+   "median_gap_days": 18.0
+  },
+  {
+   "vendor": "F5",
+   "entries": 7,
+   "security_entries": 7,
+   "pct_security": 100.0,
+   "first_added": "2021-11-03",
+   "last_added": "2026-03-27",
+   "median_gap_days": 94.0
+  },
+  {
+   "vendor": "Mitel",
+   "entries": 7,
+   "security_entries": 0,
+   "pct_security": 0.0,
+   "first_added": "2022-03-25",
+   "last_added": "2025-02-12",
+   "median_gap_days": 65.0
+  },
+  {
+   "vendor": "Sophos",
+   "entries": 7,
+   "security_entries": 7,
+   "pct_security": 100.0,
+   "first_added": "2021-11-03",
+   "last_added": "2025-02-06",
+   "median_gap_days": 159.0
+  },
+  {
+   "vendor": "Jenkins",
+   "entries": 6,
+   "security_entries": 0,
+   "pct_security": 0.0,
+   "first_added": "2022-02-10",
+   "last_added": "2025-10-02",
+   "median_gap_days": 382.0
+  },
+  {
+   "vendor": "TP-Link",
+   "entries": 6,
+   "security_entries": 0,
+   "pct_security": 0.0,
+   "first_added": "2022-03-25",
+   "last_added": "2025-09-03",
+   "median_gap_days": 78.0
+  },
+  {
+   "vendor": "Broadcom",
+   "entries": 5,
+   "security_entries": 0,
+   "pct_security": 0.0,
+   "first_added": "2025-04-28",
+   "last_added": "2026-08-18",
+   "median_gap_days": 126.5
+  },
+  {
+   "vendor": "DrayTek",
+   "entries": 5,
+   "security_entries": 0,
+   "pct_security": 0.0,
+   "first_added": "2021-11-03",
+   "last_added": "2025-05-15",
+   "median_gap_days": 127.0
+  },
+  {
+   "vendor": "Drupal",
+   "entries": 5,
+   "security_entries": 0,
+   "pct_security": 0.0,
+   "first_added": "2021-11-03",
+   "last_added": "2026-05-22",
+   "median_gap_days": 71.0
+  },
+  {
+   "vendor": "Exim",
+   "entries": 5,
+   "security_entries": 0,
+   "pct_security": 0.0,
+   "first_added": "2021-11-03",
+   "last_added": "2022-03-25",
+   "median_gap_days": 37.0
+  },
+  {
+   "vendor": "GNU",
+   "entries": 5,
+   "security_entries": 0,
+   "pct_security": 0.0,
+   "first_added": "2022-01-28",
+   "last_added": "2026-01-26",
+   "median_gap_days": 389.0
+  },
+  {
+   "vendor": "Langflow",
+   "entries": 5,
+   "security_entries": 0,
+   "pct_security": 0.0,
+   "first_added": "2025-05-05",
+   "last_added": "2026-07-21",
+   "median_gap_days": 52.0
+  },
+  {
+   "vendor": "RARLAB",
+   "entries": 5,
+   "security_entries": 0,
+   "pct_security": 0.0,
+   "first_added": "2022-02-15",
+   "last_added": "2025-12-09",
+   "median_gap_days": 277.5
+  },
+  {
+   "vendor": "WordPress",
+   "entries": 5,
+   "security_entries": 0,
+   "pct_security": 0.0,
+   "first_added": "2021-11-03",
+   "last_added": "2026-07-21",
+   "median_gap_days": 0.0
+  }
+ ],
+ "ransomware": {
+  "security": {
+   "total": 201,
+   "known": 77,
+   "pct_known": 38.3
+  },
+  "other": {
+   "total": 1481,
+   "known": 275,
+   "pct_known": 18.6
+  }
+ },
+ "catalog": {
+  "total": 1682,
+  "security": 201,
+  "pct_security": 12.0,
+  "classifier_version": 2,
+  "classifier_rules": 35
+ }
+}

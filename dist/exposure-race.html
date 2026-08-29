@@ -1,0 +1,2814 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Exposure Race — does the exploit arrive before your patch?</title>
+<meta name="description" content="A Monte Carlo model of the race between exploit availability and patch deployment, calibrated to measured CVE, exploit-catalogue and KEV data rather than to CVSS severity labels.">
+<meta name="color-scheme" content="dark light">
+<meta property="og:title" content="Exposure Race — does the exploit arrive before your patch?">
+<meta property="og:description" content="Severity labels do not predict exploitation. This model runs on whether a working exploit exists — measured, not assumed.">
+<meta property="og:type" content="article">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* Exposure Race — styles.
+ * Theme model: the complete palette is defined on :root (light). Dark is a
+ * token-only override, applied both by preference and by explicit data-theme,
+ * so nothing is ever defined *only* inside a media query. */
+
+:root {
+  --ink:   #FBFCFC;  --panel: #FFFFFF;  --sunk:  #F1F5F4;
+  --rule:  #DDE6E4;  --rule2: #C4D3D0;
+  --txt:   #0B1615;  --mut:   #5A716D;  --dim:   #8AA09C;
+  --att:   #D0451B;  --def:   #0E8F7C;  --bad:   #C81E3C;
+  --zero:  #7A2FD6;  --warn:  #A9740B;
+  --shadow: 0 1px 2px rgba(11,22,21,.06), 0 8px 24px -12px rgba(11,22,21,.18);
+  --track: #DDE6E4;
+
+  --disp: 'Bricolage Grotesque', ui-sans-serif, system-ui, sans-serif;
+  --body: 'IBM Plex Sans', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  /* charts render into PNG, so their type must not depend on a webfont */
+  --chart: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ink:   #080F0E;  --panel: #0D1817;  --sunk:  #0A1413;
+    --rule:  #1B2E2C;  --rule2: #2C4A46;
+    --txt:   #E2EDEA;  --mut:   #8AA5A1;  --dim:   #4E6C68;
+    --att:   #FF6B4A;  --def:   #4FD5C2;  --bad:   #FF3D5E;
+    --zero:  #B85CFF;  --warn:  #FFC24D;
+    --shadow: none;
+    --track: #223A37;
+  }
+}
+:root[data-theme="dark"] {
+  --ink:   #080F0E;  --panel: #0D1817;  --sunk:  #0A1413;
+  --rule:  #1B2E2C;  --rule2: #2C4A46;
+  --txt:   #E2EDEA;  --mut:   #8AA5A1;  --dim:   #4E6C68;
+  --att:   #FF6B4A;  --def:   #4FD5C2;  --bad:   #FF3D5E;
+  --zero:  #B85CFF;  --warn:  #FFC24D;
+  --shadow: none;
+  --track: #223A37;
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0; background: var(--ink); color: var(--txt);
+  font-family: var(--body); font-size: 15px; line-height: 1.55;
+  -webkit-font-smoothing: antialiased; padding-bottom: 72px;
+}
+a { color: inherit; }
+:focus-visible { outline: 2px solid var(--def); outline-offset: 2px; border-radius: 3px; }
+
+.wrap { max-width: 1340px; margin: 0 auto; padding: 0 20px; }
+
+/* ── header ─────────────────────────────────────────────────────────────── */
+header { border-bottom: 1px solid var(--rule); padding: 34px 0 26px; margin-bottom: 22px; }
+.eyebrow {
+  font-family: var(--mono); font-size: 10.5px; letter-spacing: .18em;
+  text-transform: uppercase; color: var(--mut);
+  display: flex; gap: 12px; align-items: center; flex-wrap: wrap;
+}
+.eyebrow::after { content: ""; flex: 1; height: 1px; background: var(--rule); min-width: 20px; }
+h1 {
+  font-family: var(--disp); font-weight: 800;
+  font-size: clamp(30px, 5.4vw, 58px); line-height: .96; letter-spacing: -.032em;
+  margin: 14px 0 0; max-width: 17ch;
+}
+h1 em { font-style: normal; color: var(--att); }
+.sub { color: var(--mut); max-width: 66ch; margin-top: 13px; font-size: 15px; }
+.sub b { color: var(--txt); font-weight: 600; }
+
+.topbar { display: flex; gap: 8px; align-items: center; margin-left: auto; }
+.eyebrow .topbar::after { content: none; }
+
+/* ── buttons ────────────────────────────────────────────────────────────── */
+button {
+  font: inherit; font-size: 12px; color: var(--txt);
+  background: var(--panel); border: 1px solid var(--rule2); border-radius: 7px;
+  padding: 6px 11px; cursor: pointer; line-height: 1.3;
+  transition: background .12s, border-color .12s, color .12s;
+}
+button:hover { border-color: var(--def); color: var(--def); }
+button.on { background: var(--def); border-color: var(--def); color: var(--ink); font-weight: 600; }
+button.ghost { background: transparent; }
+.icon-btn { padding: 5px 8px; font-family: var(--mono); font-size: 11px; letter-spacing: .04em; }
+
+/* ── layout ─────────────────────────────────────────────────────────────── */
+.grid { display: grid; grid-template-columns: 330px 1fr; gap: 22px; align-items: start; }
+@media (max-width: 1040px) { .grid { grid-template-columns: 1fr; } }
+
+.rail { position: sticky; top: 14px; max-height: calc(100vh - 28px); overflow-y: auto; padding-right: 4px; }
+@media (max-width: 1040px) { .rail { position: static; max-height: none; overflow: visible; } }
+.rail::-webkit-scrollbar { width: 8px; }
+.rail::-webkit-scrollbar-thumb { background: var(--rule2); border-radius: 4px; }
+
+/* ── cards & panels ─────────────────────────────────────────────────────── */
+.card, .panel {
+  background: var(--panel); border: 1px solid var(--rule);
+  border-radius: 12px; padding: 16px; margin-bottom: 14px; box-shadow: var(--shadow);
+}
+.card h2 {
+  font-family: var(--mono); font-size: 10.5px; letter-spacing: .16em;
+  text-transform: uppercase; margin: 0; font-weight: 600;
+}
+.card h2.d { color: var(--def); }
+.card h2.a { color: var(--att); }
+.note { color: var(--mut); font-size: 12px; margin: 4px 0 12px; }
+
+.panel h3 {
+  font-family: var(--disp); font-weight: 700; font-size: 19px;
+  letter-spacing: -.015em; margin: 0 0 3px;
+}
+.panel .lead { color: var(--mut); font-size: 13.5px; margin: 0 0 14px; max-width: 78ch; }
+.panel .lead b { color: var(--txt); font-weight: 600; }
+.panel-head { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 4px; }
+.panel-head > div:first-child { flex: 1; min-width: 0; }
+.tools { display: flex; gap: 6px; flex-shrink: 0; }
+
+/* ── controls ───────────────────────────────────────────────────────────── */
+.presets { display: flex; gap: 5px; flex-wrap: wrap; }
+.presets button { flex: 1 1 auto; min-width: 72px; padding: 6px 8px; font-size: 11.5px; }
+
+.seg { margin-bottom: 14px; }
+.seg-l {
+  font-family: var(--mono); font-size: 9.5px; letter-spacing: .14em;
+  text-transform: uppercase; color: var(--mut); margin-bottom: 6px;
+}
+.seg-d { color: var(--mut); font-size: 11.5px; line-height: 1.45; margin: 7px 0 0; }
+.seg-hint {
+  font-size: 9px; letter-spacing: .08em; color: var(--dim);
+  border: 1px solid var(--rule2); border-radius: 3px; padding: 1px 4px; margin-left: 5px;
+}
+/* multi-select traits read as checkable chips, not as one-of-N */
+#sel-profile button { position: relative; padding-left: 20px; text-align: left; }
+#sel-profile button::before {
+  content: ""; position: absolute; left: 7px; top: 50%; margin-top: -5px;
+  width: 9px; height: 9px; border: 1px solid var(--rule2); border-radius: 2px;
+}
+#sel-profile button.on::before {
+  background: currentColor; border-color: currentColor;
+}
+.seg + #cd { border-top: 1px solid var(--rule); padding-top: 14px; margin-top: 16px; }
+
+.ctrl { margin-bottom: 15px; }
+.ctrl .row { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+.ctrl label { font-size: 13px; font-weight: 500; }
+.ctrl .val {
+  font-family: var(--mono); font-size: 12.5px; font-weight: 600;
+  color: var(--def); white-space: nowrap;
+}
+.card.att .ctrl .val { color: var(--att); }
+.hint { color: var(--mut); font-size: 11.5px; margin-top: 3px; line-height: 1.45; }
+
+input[type=range] {
+  -webkit-appearance: none; appearance: none; width: 100%;
+  height: 22px; background: transparent; margin: 5px 0 0; cursor: grab;
+}
+input[type=range]:active { cursor: grabbing; }
+input[type=range]::-webkit-slider-runnable-track {
+  height: 3px; background: var(--track); border-radius: 2px;
+}
+input[type=range]::-moz-range-track { height: 3px; background: var(--track); border-radius: 2px; }
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 15px; height: 15px; margin-top: -6px;
+  border-radius: 50%; background: var(--def); border: 2px solid var(--panel);
+  box-shadow: 0 0 0 1px var(--def);
+}
+input[type=range]::-moz-range-thumb {
+  width: 13px; height: 13px; border-radius: 50%;
+  background: var(--def); border: 2px solid var(--panel); box-shadow: 0 0 0 1px var(--def);
+}
+.card.att input[type=range]::-webkit-slider-thumb { background: var(--att); box-shadow: 0 0 0 1px var(--att); }
+.card.att input[type=range]::-moz-range-thumb { background: var(--att); box-shadow: 0 0 0 1px var(--att); }
+
+details.more { margin-top: 4px; border-top: 1px solid var(--rule); padding-top: 10px; }
+details.more > summary {
+  cursor: pointer; font-size: 12px; color: var(--mut); list-style: none;
+  font-family: var(--mono); letter-spacing: .08em; text-transform: uppercase;
+  padding: 2px 0; user-select: none;
+}
+details.more > summary::-webkit-details-marker { display: none; }
+details.more > summary::before { content: "+ "; color: var(--def); }
+details.more[open] > summary::before { content: "− "; }
+details.more > summary:hover { color: var(--txt); }
+details.more > div { padding-top: 12px; }
+
+/* ── stat row ───────────────────────────────────────────────────────────── */
+.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 14px; }
+@media (max-width: 780px) { .stats { grid-template-columns: repeat(2, 1fr); } }
+.stat {
+  background: var(--panel); border: 1px solid var(--rule);
+  border-radius: 12px; padding: 13px 14px 12px; box-shadow: var(--shadow);
+}
+.stat .k {
+  font-family: var(--mono); font-size: 9.5px; letter-spacing: .13em;
+  text-transform: uppercase; color: var(--mut); line-height: 1.4;
+  min-height: 2.5em; display: block;
+}
+.stat .v {
+  font-family: var(--disp); font-weight: 800; font-size: 34px;
+  line-height: 1.05; letter-spacing: -.03em; margin-top: 5px; color: var(--bad);
+}
+.stat.good .v { color: var(--def); }
+.stat.plain .v { color: var(--txt); }
+.stat .v .u {
+  font-family: var(--body); font-size: 12px; font-weight: 500;
+  color: var(--mut); letter-spacing: 0; margin-left: 4px;
+}
+.stat .ci {
+  font-family: var(--mono); font-size: 10.5px; color: var(--mut); margin-top: 3px;
+}
+
+/* ── chart frames ───────────────────────────────────────────────────────── */
+.chart { width: 100%; display: block; }
+.chart text { font-family: var(--chart); }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+@media (max-width: 940px) { .two { grid-template-columns: 1fr; } }
+
+.legend {
+  display: flex; gap: 14px; flex-wrap: wrap; font-size: 11.5px;
+  color: var(--mut); margin-bottom: 10px;
+}
+.legend i { width: 10px; height: 10px; border-radius: 2px; display: inline-block; margin-right: 5px; vertical-align: -1px; }
+
+/* ── actions list ───────────────────────────────────────────────────────── */
+ul.acts { list-style: none; margin: 0; padding: 0; }
+ul.acts li {
+  display: flex; gap: 14px; align-items: flex-start;
+  padding: 11px 0; border-bottom: 1px solid var(--rule);
+}
+ul.acts li:last-child { border-bottom: 0; padding-bottom: 0; }
+.a-t { flex: 1; min-width: 0; }
+.a-t b { display: block; font-size: 13.5px; font-weight: 600; }
+.a-t span { color: var(--mut); font-size: 12px; }
+.a-d {
+  font-family: var(--mono); font-size: 14px; font-weight: 600;
+  color: var(--def); white-space: nowrap; padding-top: 1px;
+}
+
+/* ── evidence table ─────────────────────────────────────────────────────── */
+.tbl { width: 100%; border-collapse: collapse; font-size: 13px; }
+.tbl th {
+  text-align: right; font-family: var(--mono); font-size: 10px; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--mut); font-weight: 600;
+  padding: 0 0 8px; border-bottom: 1px solid var(--rule2);
+}
+.tbl th:first-child, .tbl td:first-child { text-align: left; }
+.tbl td { padding: 8px 0; border-bottom: 1px solid var(--rule); font-variant-numeric: tabular-nums; text-align: right; }
+.tbl td.n { font-family: var(--mono); }
+.tbl tr:last-child td { border-bottom: 0; }
+.tbl .hi { color: var(--bad); font-weight: 600; }
+.scroll-x { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+/* ── anchors ────────────────────────────────────────────────────────────── */
+.anchors { display: grid; grid-template-columns: 1fr 1fr; gap: 0 26px; }
+@media (max-width: 860px) { .anchors { grid-template-columns: 1fr; } }
+.anchors > div { padding: 11px 0; border-bottom: 1px solid var(--rule); }
+.anchors dt { font-size: 13px; font-weight: 500; margin-bottom: 3px; }
+.anchors dt b { font-weight: 700; }
+.anchors dd { margin: 0; font-size: 11.5px; color: var(--mut); font-family: var(--mono); }
+.anchors .measured { color: var(--def); }
+.anchors .assumed { color: var(--warn); }
+
+.tag {
+  font-family: var(--mono); font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase;
+  padding: 2px 6px; border-radius: 4px; border: 1px solid currentColor; white-space: nowrap;
+}
+.tag.m { color: var(--def); }
+.tag.a { color: var(--warn); }
+
+footer {
+  margin-top: 30px; padding-top: 20px; border-top: 1px solid var(--rule);
+  color: var(--mut); font-size: 12px;
+}
+footer code {
+  font-family: var(--mono); font-size: 11.5px;
+  background: var(--sunk); padding: 1px 5px; border-radius: 4px;
+}
+
+.toast {
+  position: fixed; left: 50%; bottom: 26px; transform: translateX(-50%) translateY(12px);
+  background: var(--txt); color: var(--ink); font-size: 13px; font-weight: 500;
+  padding: 9px 16px; border-radius: 8px; opacity: 0; pointer-events: none;
+  transition: opacity .18s, transform .18s; z-index: 50;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+@media print { .rail, .tools, .topbar { display: none; } .grid { grid-template-columns: 1fr; } }
+
+</style>
+<script>
+  /* set the theme before first paint so there is no flash */
+  try {
+    var t = localStorage.getItem('er-theme');
+    if (t) document.documentElement.setAttribute('data-theme', t);
+  } catch (e) {}
+</script>
+<!-- Exposure Race, self-contained build.
+     Calibrated to CyberMon cve_2026-08-27_0300Z (2026-08-27T04:29:47Z).
+     Source: index.html + css/app.css + js/*.js — see README.md. -->
+</head>
+<body>
+
+<header><div class="wrap">
+  <div class="eyebrow">
+    <span>exposure race</span><span>monte carlo</span><span>v3 · single file</span>
+    <span>calibrated <span data-snapshot>—</span></span>
+    <span class="topbar">
+      <button id="theme-btn" class="icon-btn ghost" type="button">☾ Dark</button>
+      <button id="share-btn" class="icon-btn ghost" type="button">⇗ Copy link</button>
+      <button id="reset-btn" class="icon-btn ghost" type="button">↺ Reset</button>
+    </span>
+  </div>
+  <h1>Does the exploit arrive <em>before</em> your patch?</h1>
+  <p class="sub">One race, resimulated every time you move a slider. On one side, when a working
+  exploit exists for something you expose. On the other, when you have actually closed it.
+  The attacker's clock here is <b>not assumed</b> — it is the measured distribution of time from
+  CVE publication to public exploit code, from the CyberMon corpus. Roughly a fifth of that
+  race is over before your clock starts.</p>
+</div></header>
+
+<div class="wrap grid">
+
+  <!-- ══════════════════ CONTROLS ══════════════════ -->
+  <div class="rail">
+    <div class="card def">
+      <h2 class="d">Your side</h2>
+      <p class="note">Tick everything that is true of you, then change any slider.</p>
+
+      <div class="seg">
+        <div class="seg-l">What applies to you <span class="seg-hint">pick any</span></div>
+        <div class="presets" id="sel-profile"></div>
+        <p class="seg-d" id="desc-profile"></p>
+      </div>
+      <div class="seg">
+        <div class="seg-l">How well it is run</div>
+        <div class="presets" id="sel-maturity"></div>
+      </div>
+      <div class="seg">
+        <div class="seg-l">What you can see</div>
+        <div class="presets" id="sel-detection"></div>
+        <p class="seg-d" id="desc-detection"></p>
+      </div>
+
+      <div id="cd"></div>
+      <details class="more"><summary>More defender detail</summary><div id="cd-adv"></div></details>
+    </div>
+
+    <div class="card att">
+      <h2 class="a">Their side</h2>
+      <p class="note">What you don't.</p>
+      <div id="ca"></div>
+      <details class="more"><summary>More attacker detail</summary><div id="ca-adv"></div></details>
+    </div>
+  </div>
+
+  <!-- ══════════════════ RESULTS ══════════════════ -->
+  <div>
+
+    <div class="stats">
+      <div class="stat">
+        <span class="k">Compromise of an exposed system, 12 months</span>
+        <div class="v" id="s-p">—</div><div class="ci" id="s-p-ci"></div>
+      </div>
+      <div class="stat">
+        <span class="k">…that runs long enough to become an incident</span>
+        <div class="v" id="s-i">—</div><div class="ci" id="s-i-ci"></div>
+      </div>
+      <div class="stat plain">
+        <span class="k">Systems compromised per year</span>
+        <div class="v" id="s-n">—</div><div class="ci" id="s-n-ci"></div>
+      </div>
+      <div class="stat plain">
+        <span class="k">Half of years breached by</span>
+        <div class="v" id="s-t">—</div><div class="ci" id="s-t-ci"></div>
+      </div>
+    </div>
+
+    <!-- ── the race ── -->
+    <div class="panel">
+      <div class="panel-head">
+        <div>
+          <h3>The race</h3>
+          <p class="lead">Day zero is the day a patch becomes available. Everything left of it is
+          exploitation that began before you had anything to install. The hatched area is not
+          decoration: it is the probability that a working exploit exists before you have closed
+          the hole.</p>
+        </div>
+        <div class="tools">
+          <button class="icon-btn" data-copy="race" type="button">⧉ Copy</button>
+          <button class="icon-btn" data-dl="race" type="button">↓ PNG</button>
+        </div>
+      </div>
+      <div class="legend">
+        <span><i style="background:var(--def)"></i>you close it</span>
+        <span><i style="background:var(--att)"></i>exploit exists</span>
+        <span><i style="background:var(--zero)"></i>before disclosure</span>
+        <span><i style="background:var(--bad)"></i>you lost the race</span>
+      </div>
+      <svg id="race" class="chart" role="img" aria-label="Exploit availability against patch completion"></svg>
+      <p class="lead" id="race-note" style="margin-top:12px;margin-bottom:0"></p>
+    </div>
+
+    <!-- ── funnel ── -->
+    <div class="panel">
+      <div class="panel-head">
+        <div>
+          <h3>Where the year goes</h3>
+          <p class="lead">Every stage below is a subset of the one above it. The two biggest
+          losses are not in your patch process at all: most published criticals are in software
+          you do not run, and most of the rest never get a working exploit.</p>
+        </div>
+        <div class="tools">
+          <button class="icon-btn" data-copy="funnel" type="button">⧉ Copy</button>
+          <button class="icon-btn" data-dl="funnel" type="button">↓ PNG</button>
+        </div>
+      </div>
+      <svg id="funnel" class="chart" role="img" aria-label="Attrition funnel from published vulnerabilities to compromise"></svg>
+      <p class="lead" id="wild-note" style="margin-top:10px;margin-bottom:0"></p>
+    </div>
+
+    <!-- ── sensitivity ── -->
+    <div class="panel">
+      <div class="panel-head">
+        <div>
+          <h3>What actually moves it</h3>
+          <p class="lead">Each bar swings one input across a realistic range and holds everything
+          else still. Switch the metric — <b>compromise</b> and <b>incident</b> have different
+          top levers, and that difference is the most useful thing on this page.</p>
+        </div>
+        <div class="tools">
+          <button class="icon-btn on" data-metric="p" type="button">Compromise</button>
+          <button class="icon-btn" data-metric="incident" type="button">Incident</button>
+          <button class="icon-btn" data-copy="torn" type="button">⧉</button>
+          <button class="icon-btn" data-dl="torn" type="button">↓</button>
+        </div>
+      </div>
+      <svg id="torn" class="chart" role="img" aria-label="Sensitivity of the outcome to each input"></svg>
+    </div>
+
+    <div class="panel">
+      <h3>Where the next hour goes</h3>
+      <p class="lead">The five changes that move your <span id="acts-metric">annual chance of
+      compromise</span> most, at your current settings.</p>
+      <ul class="acts" id="acts"></ul>
+    </div>
+
+    <!-- ── routes + survival ── -->
+    <div class="two">
+      <div class="panel">
+        <div class="panel-head">
+          <div><h3>How they got in</h3>
+          <p class="lead">Route of the <em>first</em> compromise, counted once per simulated year.</p></div>
+          <div class="tools"><button class="icon-btn" data-dl="routes" type="button">↓</button></div>
+        </div>
+        <svg id="routes" class="chart" role="img" aria-label="Route of first compromise"></svg>
+      </div>
+      <div class="panel">
+        <div class="panel-head">
+          <div><h3>How long you last</h3>
+          <p class="lead">Share of simulated years still clean, day by day.</p></div>
+          <div class="tools"><button class="icon-btn" data-dl="surv" type="button">↓</button></div>
+        </div>
+        <svg id="surv" class="chart" role="img" aria-label="Survival curve over twelve months"></svg>
+      </div>
+    </div>
+
+    <!-- ── compression what-if ── -->
+    <div class="panel">
+      <div class="panel-head">
+        <div>
+          <h3>The compression what-if</h3>
+          <p class="lead">The exploit clock in this model defaults to <b>what was measured</b>, not
+          to a forecast. This curve is the hypothesis: what happens if exploits arrive faster, more
+          of them get written, and more land before disclosure. Note that the measured record does
+          not currently show that compression — see the anchors below.</p>
+        </div>
+        <div class="tools">
+          <button class="icon-btn" data-copy="sweep" type="button">⧉ Copy</button>
+          <button class="icon-btn" data-dl="sweep" type="button">↓ PNG</button>
+        </div>
+      </div>
+      <svg id="sweep" class="chart" role="img" aria-label="Outcome against hypothetical exploit-clock compression"></svg>
+    </div>
+
+    <!-- ── evidence ── -->
+    <div class="panel">
+      <div class="panel-head">
+        <div>
+          <h3>Why this model ignores severity</h3>
+          <p class="lead">The obvious way to build this would be to count Critical CVEs. The data
+          says not to. Below is every scored CVE, bucketed by CVSS band, against how many of them
+          ever reached the confirmed-exploited catalogue.</p>
+        </div>
+        <div class="tools">
+          <button class="icon-btn" data-copy="severity" type="button">⧉ Copy</button>
+          <button class="icon-btn" data-dl="severity" type="button">↓ PNG</button>
+        </div>
+      </div>
+      <svg id="severity" class="chart" role="img" aria-label="Share of each CVSS severity band ever confirmed exploited"></svg>
+      <div class="scroll-x" style="margin-top:16px">
+        <table class="tbl">
+          <thead><tr><th>CVSS band</th><th>Scored CVEs</th><th>Confirmed exploited</th><th>Rate</th></tr></thead>
+          <tbody id="ev-body"></tbody>
+        </table>
+      </div>
+      <p class="lead" id="ev-foot" style="margin-top:14px;margin-bottom:0"></p>
+      <p class="lead" style="margin-top:12px;margin-bottom:0;border-top:1px solid var(--rule);padding-top:12px">
+      <b>This is no longer a contrarian position.</b> CISA's Binding Operational
+      Directive <b>26-04</b> (10 June 2026) supersedes BOD 22-01 and drops severity
+      as the trigger entirely. It prioritises on four decision points instead — is
+      it in the KEV catalogue, is the asset publicly exposed, is exploitation
+      <em>automatable</em>, and what technical impact does it give — with the
+      shortest tier at three days plus forensic triage, and the lowest at
+      &ldquo;fix on system upgrade&rdquo;. Its published heuristic for
+      <em>automatable</em> is a public proof-of-concept that achieves remote code
+      execution and reliably runs. That is the same primitive this model measures,
+      arrived at independently.</p>
+    </div>
+
+    <!-- ── volume ── -->
+    <div class="panel">
+      <div class="panel-head">
+        <div>
+          <h3>And the label is inflating</h3>
+          <p class="lead">The count of Critical-rated CVEs is growing faster than the corpus that
+          contains it. A model anchored to "criticals per year" silently gets more pessimistic
+          every year for reasons that have nothing to do with your estate — which is the second
+          reason this one is not.</p>
+        </div>
+        <div class="tools">
+          <button class="icon-btn" data-copy="volume" type="button">⧉ Copy</button>
+          <button class="icon-btn" data-dl="volume" type="button">↓ PNG</button>
+        </div>
+      </div>
+      <svg id="volume" class="chart" role="img" aria-label="Published CVEs and the critical slice, year over year"></svg>
+      <p class="lead" style="margin-top:12px;margin-bottom:0">Part of that rise is scoring policy
+      rather than vulnerability reality: CNAs assign their own scores, and the share they rate 9.0+
+      varies from near zero to roughly two in five for the same scale. Meanwhile NVD has stopped
+      analysing a growing share of the corpus outright.</p>
+    </div>
+
+    <!-- ── anchors ── -->
+    <div class="panel">
+      <h3>What the model is anchored on</h3>
+      <p class="lead">Every coefficient is either <span class="tag m">measured</span> — read
+      directly off a dated public corpus — or <span class="tag a">assumed</span>, in which case it
+      is drawn from the stated range on every single trial. That is where the credible bands on the
+      headline numbers come from. If you disagree with an assumption, the range is the argument to
+      have.</p>
+      <div class="anchors" id="anchors"></div>
+    </div>
+
+    <footer>
+      <p><b>Method.</b> One race, simulated 14,000 times per parameter change. The attacker clock is
+      sampled from the measured distribution of days between CVE publication and public exploit code;
+      the defender clock is built from your awareness delay, emergency path and routine cadence.
+      Compromise is drawn as a correlated campaign arrival rather than as independent per-system coin
+      flips, because independent draws would pin the answer at 100% and lie to you.</p>
+      <p><b>Provenance.</b> Vulnerability, exploit-catalogue, EPSS and KEV figures are from the
+      <a href="https://devko.github.io/CyberMon/">CyberMon</a> snapshot
+      <code data-snapshot>—</code>, vendored under <code>data/cybermon/</code> so every number here is
+      reproducible offline. Regenerate with <code>node tools/refresh-data.js &amp;&amp; node
+      tools/derive-calibration.js</code>. Verify the model with <code>node test/model.test.js</code>.</p>
+      <p><b>Scope.</b> This models vulnerability exploitation only. Credential abuse, phishing and
+      insider routes are absent, so treat the output as a lower bound on intrusion risk rather than a
+      picture of it. Run-rate figures are linear extrapolation of a partial year.</p>
+    </footer>
+
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+/* GENERATED FILE — do not edit by hand.
+ * Produced by tools/derive-calibration.js from the CyberMon snapshot in data/cybermon/.
+ * Snapshot: cve_2026-08-27_0300Z · EPSS v2026.06.15 · KEV 2026.08.26
+ * Generated at: 2026-08-27T04:29:47Z
+ * Refresh with:  node tools/refresh-data.js && node tools/derive-calibration.js
+ */
+(function (root, factory) {
+  if (typeof module === 'object' && module.exports) module.exports = factory();
+  else root.CALIBRATION = factory();
+})(typeof self !== 'undefined' ? self : this, function () {
+  return {
+  "generatedAt": "2026-08-27T04:29:47Z",
+  "snapshot": {
+    "cvelist": "cve_2026-08-27_0300Z",
+    "cveCount": 383416,
+    "epss": "v2026.06.15",
+    "epssDate": "2026-08-26",
+    "kev": "2026.08.26",
+    "kevCount": 1682
+  },
+  "currentYear": 2026,
+  "yearElapsed": 0.655,
+  "source": "https://devko.github.io/CyberMon/",
+  "volume": {
+    "prevYear": {
+      "year": 2025,
+      "published": 48154,
+      "critical": 4110,
+      "high": 15765,
+      "medium": 23721,
+      "low": 1603,
+      "unscored": 2955,
+      "criticalShare": 9.093,
+      "highPlusShare": 43.972
+    },
+    "curYearToDate": {
+      "year": 2026,
+      "published": 56454,
+      "critical": 6534,
+      "high": 22457,
+      "medium": 22272,
+      "low": 2213,
+      "unscored": 2978,
+      "criticalShare": 12.219,
+      "highPlusShare": 54.213
+    },
+    "curYearRunRate": {
+      "year": 2026,
+      "published": 86216,
+      "critical": 9976,
+      "high": 34285,
+      "medium": 34003,
+      "low": 3379
+    },
+    "growth": {
+      "published": 1.79,
+      "critical": 2.43,
+      "high": 2.17,
+      "medium": 1.43
+    },
+    "note": "Run-rate is linear extrapolation of a partial year — calendar arithmetic, not a forecast.",
+    "src": "https://devko.github.io/CyberMon/cve.html#flood"
+  },
+  "exploitation": {
+    "bands": [
+      {
+        "band": "0.1-3.9",
+        "population": 8576,
+        "inKev": 7,
+        "pExploited": 0.082
+      },
+      {
+        "band": "4.0-6.9",
+        "population": 91045,
+        "inKev": 203,
+        "pExploited": 0.223
+      },
+      {
+        "band": "7.0-8.9",
+        "population": 74163,
+        "inKev": 888,
+        "pExploited": 1.197
+      },
+      {
+        "band": "9.0-10.0",
+        "population": 20355,
+        "inKev": 584,
+        "pExploited": 2.869
+      }
+    ],
+    "allBands": {
+      "population": 194139,
+      "inKev": 1682,
+      "pExploited": 0.866
+    },
+    "criticalVsHigh": 2.4,
+    "kevBelowCritical": 65.279,
+    "criticalEpssBelow1pct": 63.2,
+    "src": "https://devko.github.io/CyberMon/cve.html#reality"
+  },
+  "armed": {
+    "window": 2025,
+    "byBand": [
+      {
+        "band": "0.1-3.9",
+        "total": 1603,
+        "withPoC": 11,
+        "pct": 0.7
+      },
+      {
+        "band": "4.0-6.9",
+        "total": 23721,
+        "withPoC": 250,
+        "pct": 1.1
+      },
+      {
+        "band": "7.0-8.9",
+        "total": 15765,
+        "withPoC": 336,
+        "pct": 2.1
+      },
+      {
+        "band": "9.0-10.0",
+        "total": 4110,
+        "withPoC": 339,
+        "pct": 8.2
+      }
+    ],
+    "pPoCCritical": 8.2,
+    "worldwidePoCPerYear": 936,
+    "catalog": {
+      "exploitdb": {
+        "entries": 47136,
+        "with_cve": 27402,
+        "cves": 25058,
+        "dated_cves": 25058
+      },
+      "metasploit": {
+        "modules": 7158,
+        "with_cve": 3101,
+        "cves": 3195,
+        "dated_cves": 3033
+      },
+      "nuclei": {
+        "templates": 4355,
+        "cves": 4355
+      },
+      "union_cves": 29507,
+      "dated_cves": 26218,
+      "matched_in_corpus": 29455
+    },
+    "src": "https://devko.github.io/CyberMon/exploits.html"
+  },
+  "inWild": {
+    "pKevCritical": 2.869,
+    "pInWildGivenPoC": 28.4,
+    "pInWildNoPoC": 0.6,
+    "pctPoCFirst": 81.2,
+    "kevAddedPrevYear": 245,
+    "kevAddedCurYTD": 198,
+    "kevAddedRunRate": 302,
+    "src": "https://devko.github.io/CyberMon/kev.html"
+  },
+  "pocTiming": {
+    "observedThrough": "2026-05-29",
+    "horizonDays": 90,
+    "series": [
+      {
+        "year": 2015,
+        "n": 542,
+        "medianDays": -2,
+        "pctWithinWeek": 82.8,
+        "pctBefore": 62.9,
+        "provisional": false
+      },
+      {
+        "year": 2016,
+        "n": 397,
+        "medianDays": -1,
+        "pctWithinWeek": 80.9,
+        "pctBefore": 54.7,
+        "provisional": false
+      },
+      {
+        "year": 2017,
+        "n": 1019,
+        "medianDays": 0,
+        "pctWithinWeek": 85.5,
+        "pctBefore": 48.9,
+        "provisional": false
+      },
+      {
+        "year": 2018,
+        "n": 925,
+        "medianDays": 0,
+        "pctWithinWeek": 83.6,
+        "pctBefore": 44.4,
+        "provisional": false
+      },
+      {
+        "year": 2019,
+        "n": 584,
+        "medianDays": 0,
+        "pctWithinWeek": 85.8,
+        "pctBefore": 49,
+        "provisional": false
+      },
+      {
+        "year": 2020,
+        "n": 354,
+        "medianDays": 1,
+        "pctWithinWeek": 75.7,
+        "pctBefore": 35.6,
+        "provisional": false
+      },
+      {
+        "year": 2021,
+        "n": 267,
+        "medianDays": 1,
+        "pctWithinWeek": 74.5,
+        "pctBefore": 33,
+        "provisional": false
+      },
+      {
+        "year": 2022,
+        "n": 205,
+        "medianDays": 1,
+        "pctWithinWeek": 69.3,
+        "pctBefore": 41.5,
+        "provisional": false
+      },
+      {
+        "year": 2023,
+        "n": 326,
+        "medianDays": 0,
+        "pctWithinWeek": 67.5,
+        "pctBefore": 34.7,
+        "provisional": false
+      },
+      {
+        "year": 2024,
+        "n": 146,
+        "medianDays": 0,
+        "pctWithinWeek": 80.1,
+        "pctBefore": 41.8,
+        "provisional": false
+      },
+      {
+        "year": 2025,
+        "n": 220,
+        "medianDays": 1,
+        "pctWithinWeek": 67.3,
+        "pctBefore": 22.3,
+        "provisional": true
+      },
+      {
+        "year": 2026,
+        "n": 94,
+        "medianDays": 3.5,
+        "pctWithinWeek": 53.2,
+        "pctBefore": 21.3,
+        "provisional": true
+      }
+    ],
+    "latest": {
+      "year": 2026,
+      "medianDays": 3.5,
+      "pctWithinWeek": 53.2,
+      "pctBefore": 21.3,
+      "provisional": true
+    },
+    "lastSettled": {
+      "year": 2024,
+      "medianDays": 0,
+      "pctWithinWeek": 80.1,
+      "pctBefore": 41.8
+    },
+    "caveat": "Recent years are right-censored: PoCs are still arriving for them. Provisional years understate speed and understate the pre-publication share.",
+    "src": "https://devko.github.io/CyberMon/exploits.html"
+  },
+  "kevLatency": {
+    "byYear": [
+      {
+        "year": 2023,
+        "n": 187,
+        "medianDays": 12,
+        "p25": 1,
+        "p75": 335.5,
+        "pctBefore": 5.3
+      },
+      {
+        "year": 2024,
+        "n": 186,
+        "medianDays": 21.5,
+        "p25": 1,
+        "p75": 309.8,
+        "pctBefore": 2.7
+      },
+      {
+        "year": 2025,
+        "n": 245,
+        "medianDays": 26,
+        "p25": 1,
+        "p75": 304,
+        "pctBefore": 2.9
+      },
+      {
+        "year": 2026,
+        "n": 198,
+        "medianDays": 17,
+        "p25": 1,
+        "p75": 248.2,
+        "pctBefore": 0.5
+      }
+    ],
+    "buckets": [
+      {
+        "bucket": "before_publish",
+        "n": 23,
+        "pct": 2.8
+      },
+      {
+        "bucket": "0-7d",
+        "n": 313,
+        "pct": 38.4
+      },
+      {
+        "bucket": "8-30d",
+        "n": 95,
+        "pct": 11.6
+      },
+      {
+        "bucket": "31-90d",
+        "n": 84,
+        "pct": 10.3
+      },
+      {
+        "bucket": "91-365d",
+        "n": 111,
+        "pct": 13.6
+      },
+      {
+        "bucket": "1-3y",
+        "n": 72,
+        "pct": 8.8
+      },
+      {
+        "bucket": "3y+",
+        "n": 118,
+        "pct": 14.5
+      }
+    ],
+    "within7d": 41.2,
+    "cisaDeadlineDays": 14,
+    "src": "https://devko.github.io/CyberMon/kev.html"
+  },
+  "nvd": {
+    "statuses": [
+      {
+        "status": "Modified",
+        "n": 243358
+      },
+      {
+        "status": "Analyzed",
+        "n": 69269
+      },
+      {
+        "status": "Deferred",
+        "n": 44050
+      },
+      {
+        "status": "Rejected",
+        "n": 18075
+      },
+      {
+        "status": "Received",
+        "n": 5274
+      },
+      {
+        "status": "Awaiting Analysis",
+        "n": 2720
+      },
+      {
+        "status": "Undergoing Analysis",
+        "n": 674
+      }
+    ],
+    "corpus": 383416,
+    "deferred": 44050,
+    "deferredShare": 11.489,
+    "backlogTotal": 8668,
+    "backlogFirst": {
+      "date": "2026-07-09",
+      "backlog_total": 2242,
+      "awaiting_analysis": 1479
+    },
+    "backlogLast": {
+      "date": "2026-08-27",
+      "backlog_total": 8668,
+      "awaiting_analysis": 2720
+    },
+    "backlogGrowth": 3.87,
+    "src": "https://devko.github.io/CyberMon/cve.html#decay"
+  }
+};
+});
+
+</script>
+<script>
+/* Exposure Race — simulation core.
+ * MIT licensed. Runs unmodified in Node (require) and in the browser (script tag).
+ *
+ *   node > const M = require('./js/model.js')
+ *          M.simulate(M.defaults(), 20000, 1234)
+ *
+ * Every coefficient that has a measured value comes from CALIBRATION (js/calibration.js,
+ * generated from the CyberMon snapshot). Coefficients that are NOT measured are declared
+ * in ASSUMED below, each with a plausible range, and each is drawn per-trial so the
+ * headline carries a credible interval instead of pretending to be a point estimate.
+ */
+(function (root, factory) {
+  if (typeof module === 'object' && module.exports) {
+    module.exports = factory(require('./calibration.js'));
+  } else {
+    root.MODEL = factory(root.CALIBRATION);
+  }
+})(typeof self !== 'undefined' ? self : this, function (C) {
+  'use strict';
+
+  var H = 365; /* horizon, days */
+
+  /* ═══════════════════════════════════════════════════════════════════════
+   * MEASURED — read straight off the CyberMon snapshot.
+   * ═══════════════════════════════════════════════════════════════════════ */
+  var MEASURED = {
+    /* share of criticals that ever get a public working exploit */
+    pPoC: C.armed.pPoCCritical / 100,
+    /* share of PoC'd criticals that reach the confirmed-exploited catalogue */
+    pWildGivenPoC: C.inWild.pInWildGivenPoC / 100,
+    /* share of criticals exploited in the wild with no public PoC first */
+    pWildNoPoC: C.inWild.pInWildNoPoC / 100,
+    /* attacker clock, days from CVE publication to public PoC */
+    pocBefore: C.pocTiming.latest.pctBefore / 100,
+    pocMedian: C.pocTiming.latest.medianDays,
+    pocWithinWeek: C.pocTiming.latest.pctWithinWeek / 100,
+  };
+
+  /* ═══════════════════════════════════════════════════════════════════════
+   * ASSUMED — no defensible public measurement. Drawn per trial from [lo,hi].
+   * If you disagree with one of these, this is the only block you need to edit.
+   * ═══════════════════════════════════════════════════════════════════════ */
+  var ASSUMED = {
+    /* days before publication that a pre-disclosure exploit appears (median) */
+    preMedian:      { v: 7,    lo: 3,    hi: 21,   why: 'No public measurement of pre-disclosure exploit age. Shape assumed lognormal.' },
+    /* 75th percentile of the PoC clock, days (anchors the slow tail) */
+    pocP75:         { v: 47.5, lo: 30,   hi: 90,   why: 'CyberMon hero series p75 for the current year; widened for censoring.' },
+    /* daily hazard that a mass-exploitation campaign reaches one exposed system */
+    scanHazBase:    { v: 0.010, lo: 0.004, hi: 0.022, why: 'No public per-asset campaign-arrival rate. Widest band in the model.' },
+    /* hazard multiplier when an exploit exists publicly but is not known to be used */
+    pocOnlyHazard:  { v: 0.08, lo: 0.02, hi: 0.20, why: 'Public PoC without confirmed in-the-wild use still draws opportunistic traffic.' },
+    /* hazard multiplier for edge appliances vs ordinary web systems */
+    edgeHazard:     { v: 2.2,  lo: 1.4,  hi: 3.6,  why: 'Edge appliances are hit harder and carry no endpoint telemetry.' },
+    /* hazard multiplier applied to the pre-publication window (targeted, not mass) */
+    preHazard:      { v: 0.25, lo: 0.08, hi: 0.60, why: 'Zero-day activity is targeted; mass scanning follows public code.' },
+    /* P(you actually run the affected product at all) */
+    runsEdge:       { v: 0.55, lo: 0.30, hi: 0.85, why: 'No measurement of estate-to-CVE product overlap. The single largest lever.' },
+    runsWeb:        { v: 0.35, lo: 0.15, hi: 0.65, why: 'As above, for ordinary internet-facing software.' },
+    /* containment: breakout and objective timings, days */
+    breakoutMedian: { v: 0.04, lo: 0.02, hi: 0.12, why: 'Vendor-reported eCrime breakout ~1h. Not independently measured here.' },
+    objectiveMedian:{ v: 5,    lo: 2,    hi: 12,   why: 'Time from foothold to the attacker objective (encryption, exfil).' },
+    /* P(contain) in each of the three detection regimes */
+    containFast:    { v: 0.92, lo: 0.80, hi: 0.98, why: 'Detected before breakout.' },
+    containMid:     { v: 0.55, lo: 0.35, hi: 0.75, why: 'Detected after breakout but before the objective.' },
+    containLate:    { v: 0.10, lo: 0.02, hi: 0.25, why: 'Detected after the objective is reached.' },
+    /* fraction of your estate an affected product covers */
+    afEdgeMin:      { v: 0.30, lo: 0.15, hi: 0.45, why: 'Appliance fleets are homogeneous: one vendor covers much of the tier.' },
+    afWebMax:       { v: 0.44, lo: 0.25, hi: 0.65, why: 'Ordinary software is spread thinner across an estate.' },
+    /* P(a landed campaign actually compromises a reachable affected system) */
+    exploitWorks:   { v: 0.35, lo: 0.18, hi: 0.55, why: 'Exploits fail: wrong version, hardening, luck.' },
+    /* how much slower detection is on a system with no endpoint telemetry */
+    blindMult:      { v: 5,    lo: 2.5,  hi: 10,   why: 'Compromise of an unmonitored system is usually found by a third party, not by you.' },
+  };
+
+  /* ═══════════════════════════════════════════════════════════════════════
+   * SLIDERS
+   * ═══════════════════════════════════════════════════════════════════════ */
+  var SPEC = {
+    def: [
+      { k: 'exposed',   l: 'Internet-exposed systems',   min: 5,   max: 2000, step: 5,   v: 100,
+        f: function (v) { return fmtN(v); },
+        h: 'Anything an unauthenticated attacker can reach.' },
+      { k: 'edge',      l: '…that are edge appliances',  min: 0,   max: 100,  step: 5,   v: 25,
+        f: function (v) { return v + '%'; },
+        h: 'VPN, firewall, gateway, file transfer. No endpoint agent, slower to patch, hit hardest.' },
+      { k: 'inventory', l: 'Exposed systems you know about', min: 80, max: 100, step: 1, v: 96,
+        f: function (v) { return v + '%'; },
+        h: 'The rest belong to no patch cycle at all.' },
+      { k: 'awareH',    l: 'Time to know a bug is yours', min: 1,  max: 336, step: 1,   v: 30,
+        f: fmtH,
+        h: 'From publication to you knowing it touches your estate. Once you patch in hours, this is your real clock.' },
+      { k: 'cadence',   l: 'Routine patch cycle',        min: 1,   max: 90,   step: 1,   v: 14,
+        f: function (v) { return v + ' d'; },
+        h: 'Days between scheduled windows.' },
+      { k: 'emergH',    l: 'Emergency patch speed',      min: 0,   max: 336,  step: 6,   v: 72,
+        f: function (v) { return v === 0 ? 'none' : fmtH(v); },
+        h: 'Out-of-band fix. Zero means every bug waits for the routine cycle.' },
+      { k: 'emergHit',  l: 'Exploited bugs that trigger it', min: 0, max: 100, step: 5, v: 60,
+        f: function (v) { return v + '%'; },
+        h: 'You have to recognise it as urgent first.' },
+      { k: 'virtual',   l: 'Held off by WAF / IPS rule', min: 0,   max: 80,   step: 5,   v: 20,
+        f: function (v) { return v + '%'; },
+        h: 'Buys the window back while the real fix ships. Does not apply to appliances.' },
+      { k: 'detect',    l: 'Time to detect a compromise', min: 0.1, max: 60,  step: 0.1, v: 14,
+        f: function (v) { return v < 1 ? Math.round(v * 24) + ' h' : Math.round(v) + ' d'; },
+        h: 'Median dwell on a system you actually monitor.' },
+      { k: 'edrCoverage', l: 'Estate with endpoint telemetry', min: 0, max: 100, step: 5, v: 70,
+        f: function (v) { return v + '%'; },
+        h: 'Appliances are excluded automatically — they take no agent. A compromise off-telemetry is usually found by somebody else.' },
+    ],
+    att: [
+      { k: 'stackVulns', l: 'Critical vulns in your stack / yr', min: 0, max: 200, step: 1, v: 34,
+        f: function (v) { return fmtN(v); },
+        h: 'Published criticals in software you actually run. Worldwide run-rate is ' + fmtN(C.volume.curYearRunRate.critical) + '.' },
+      { k: 'ai',        l: 'Exploit-clock compression',   min: 0,   max: 100,  step: 1,   v: 0,
+        f: function (v) { return v === 0 ? 'as measured' : '+' + v; },
+        h: 'Zero is the measured ' + C.pocTiming.latest.year + ' clock. Above zero is a what-if: faster exploits, more of them, more before disclosure.' },
+      { k: 'scan',      l: 'Mass-exploitation pressure',  min: 0,   max: 100,  step: 1,   v: 50,
+        f: function (v) { return String(v); },
+        h: 'How fast opportunistic exploitation finds you once code is public.' },
+      { k: 'campaigns', l: 'Targeted campaigns / yr',     min: 0,   max: 100,  step: 1,   v: 6,
+        f: function (v) { return fmtN(v); },
+        h: 'Runs that enumerate your surface rather than scanning the world.' },
+      { k: 'agentSkill', l: 'Campaign success vs a patched surface', min: 0, max: 10, step: 0.5, v: 1,
+        f: function (v) { return v + '%'; },
+        h: 'Per campaign. Misconfiguration, chained logic flaws, credentials.' },
+      { k: 'supply',    l: 'Supply-chain hits reaching you / yr', min: 0, max: 3, step: 0.01, v: 0.12,
+        f: function (v) { return v.toFixed(2); },
+        h: 'Poisoned dependency or signed update. Your patch cadence is irrelevant to these.' },
+    ],
+  };
+
+  function fmtN(v) {
+    return v >= 1000 ? (v / 1000).toFixed(1).replace(/\.0$/, '') + 'k' : String(v);
+  }
+  function fmtH(v) {
+    if (v < 24) return v + ' h';
+    var d = v / 24;
+    return (d < 10 ? d.toFixed(1).replace(/\.0$/, '') : Math.round(d)) + ' d';
+  }
+
+  /* ======================================================================
+   * TRAITS - things that are true about you. Pick any number; they compose.
+   *
+   * A real organisation is not one archetype. It is "SaaS and regulated", or
+   * "corporate network with an OT plant attached". So each trait is a MODIFIER
+   * on the baseline estate rather than a complete parameter set, and selecting
+   * several applies all of them.
+   *
+   * Numeric values multiply; string values like '+20' or '-6' offset. Every
+   * result is clamped to the slider range afterwards, so combinations cannot
+   * produce impossible estates.
+   *
+   * These are editorial judgement, not measurement: no public dataset gives
+   * per-sector estate composition. They exist because the alternative is
+   * asking a reader to guess "criticals in my stack per year" cold. Every
+   * slider stays editable once you have picked.
+   * ====================================================================== */
+  var TRAITS = {
+    saas: {
+      l: 'We ship SaaS',
+      d: 'Your product is the exposed surface: a wide web tier, few appliances, and you can deploy your own fix in an hour. The trade is a much larger dependency stream.',
+      m: { exposed: 2.4, edge: 0.35, cadence: 0.25, emergH: 0.25, awareH: 0.5,
+           stackVulns: 1.9, supply: 2.5, virtual: '+20', edrCoverage: '+12' },
+    },
+    vendor: {
+      l: 'We sell software',
+      d: 'Customers run what you build, which makes you a supply-chain node. Targeted far more than your size suggests, and your build and signing path is part of the attack surface.',
+      m: { campaigns: 3, supply: 3, stackVulns: 1.3 },
+    },
+    corponly: {
+      l: 'Corporate network only',
+      d: 'You run software, you do not sell it. A small exposed surface - VPN, mail, a few web apps - which makes it appliance-heavy for its size.',
+      m: { exposed: 0.55, edge: 1.4, stackVulns: 0.7, campaigns: 0.7 },
+    },
+    ot: {
+      l: 'OT / ICS',
+      d: 'Change windows are measured in months and a reboot has a safety case. Long-lived appliances, almost no endpoint telemetry, and a small surface you cannot afford to lose.',
+      m: { edge: 2.0, cadence: 4.0, emergH: 3.0, emergHit: 0.5, awareH: 3.0,
+           edrCoverage: 0.3, detect: 2.5, stackVulns: 0.7 },
+    },
+    regulated: {
+      l: 'Regulated / finance',
+      d: 'Heavily targeted, but funded to match: enforced change control, real detection, and a third-party estate large enough to be its own problem.',
+      m: { campaigns: 4, supply: 2, inventory: '+2', virtual: '+25',
+           emergHit: 1.35, edrCoverage: '+10' },
+    },
+    hosting: {
+      l: 'We host for others',
+      d: 'A very large exposed surface held on behalf of other people, under permanent campaign pressure. One appliance bug becomes a customer-wide event.',
+      m: { exposed: 6, campaigns: 5, stackVulns: 2.2, inventory: '-6', scan: '+20' },
+    },
+    legacy: {
+      l: 'Legacy we cannot touch',
+      d: 'Systems nobody will approve downtime for, or that no longer receive fixes at all. They drop out of the patch cycle without leaving the estate.',
+      m: { cadence: 2.2, inventory: '-8', virtual: 0.4, edrCoverage: 0.6, emergHit: 0.7 },
+    },
+    thirdparty: {
+      l: 'Heavy third-party / cloud',
+      d: 'Much of what you depend on is operated by somebody else. Your patch cadence does not reach it, and neither does your telemetry.',
+      m: { supply: 3.5, inventory: '-4', stackVulns: 1.4, edrCoverage: 0.85 },
+    },
+  };
+
+  /* DETECTION - what you have deployed, expressed as the two things that
+   * actually decide containment: how fast you see a covered system, and how
+   * much of the estate is covered at all. Appliances are never covered.
+   * Coverage without speed buys very little - the model will show you that
+   * if you set the two independently. */
+  var DETECTION = {
+    none:    { l: 'No detection',     d: 'Logs exist somewhere. Nobody reads them. You find out from a third party.',                                    p: { detect: 45,  edrCoverage: 5 } },
+    siem:    { l: 'SIEM, untuned',    d: 'Collection is solved, detection content is not. Alerts fire, nobody triages in time.',                          p: { detect: 20,  edrCoverage: 40 } },
+    edr:     { l: 'EDR deployed',     d: 'Endpoint agents on most servers, business-hours response.',                                                     p: { detect: 6,   edrCoverage: 78 } },
+    tuned:   { l: 'EDR + tuned SIEM', d: 'Agents plus real use cases against real telemetry, with somebody on the queue.',                                p: { detect: 1.5, edrCoverage: 88 } },
+    managed: { l: 'Managed 24/7',     d: 'MDR or an in-house SOC that actually runs overnight. This is where breakout time stops winning by default.',    p: { detect: 0.4, edrCoverage: 93 } },
+  };
+
+  /* MATURITY - how well the estate is run. Orthogonal to what you are, so it
+   * is a transform rather than another table of absolutes. */
+  /* 'bod' is not a maturity level so much as a mandated regime. CISA BOD 26-04
+   * (10 June 2026) supersedes BOD 22-01 and prioritises on four decision
+   * points - in the KEV catalogue, publicly exposed, automatable by an
+   * adversary, and technical impact - with the shortest tier at three days
+   * plus forensic triage. Its own heuristic for "automatable" is a public
+   * proof-of-concept that achieves RCE and reliably executes, which is the
+   * same primitive this model runs on. The numbers below express that regime
+   * as a transform on the baseline estate. */
+  var MATURITY = {
+    tight:   { l: 'Well run',  cadence: 0.25, emergH: 0.20, emergHit: 1.5, awareH: 0.25, detect: 0.05, virtual: 2.5, inventory: 4,   edrCoverage: 12 },
+    typical: { l: 'Typical',   cadence: 1,    emergH: 1,    emergHit: 1,   awareH: 1,    detect: 1,    virtual: 1,   inventory: 0,   edrCoverage: 0 },
+    loose:   { l: 'Sprawling', cadence: 2.6,  emergH: 2.4,  emergHit: 0.5, awareH: 3.5,  detect: 3.2,  virtual: 0.3, inventory: -12, edrCoverage: -25 },
+    bod:     { l: 'BOD 26-04',  cadence: 1,    emergH: 1,    emergHit: 1.55, awareH: 0.33, detect: 1,    virtual: 1,   inventory: 3,   edrCoverage: 4 },
+  };
+
+  function clampTo(k, v) {
+    var s = SPEC.def.concat(SPEC.att).filter(function (x) { return x.k === k; })[0];
+    if (!s) return v;
+    var q = Math.min(s.max, Math.max(s.min, v));
+    /* snap to the slider's own step so control and model never disagree */
+    var snapped = Math.round((q - s.min) / s.step) * s.step + s.min;
+    return Math.min(s.max, Math.max(s.min, +snapped.toFixed(4)));
+  }
+
+  /* Compose a parameter set: baseline -> traits -> maturity -> detection.
+   * Traits multiply or offset, so the order they were clicked in cannot
+   * change the result. */
+  function compose(opts) {
+    opts = opts || {};
+    var traits = opts.traits || [];
+    var out = defaults();
+
+    /* Multipliers and offsets are gathered separately and applied once, because
+     * the two do not commute: (x+12)*0.3 is not (x*0.3)+12, and clicking the
+     * same two traits in the other order would otherwise give a different
+     * estate.
+     *
+     * Multipliers combine by summing their EXCESS over 1 rather than by
+     * multiplying. Three traits that each roughly double a term should not
+     * produce an eightfold estate — stacking traits should compound, but with
+     * diminishing returns. A single trait is unaffected: excess 1.4 gives
+     * exactly x2.4, the multiplier as written. */
+    var up = {}, down = {}, off = {};
+    traits.forEach(function (key) {
+      var t = TRAITS[key];
+      if (!t) return;
+      Object.keys(t.m).forEach(function (prop) {
+        var mod = t.m[prop];
+        if (typeof mod === 'string') off[prop] = (off[prop] || 0) + parseFloat(mod);
+        else if (mod >= 1) up[prop] = (up[prop] || 0) + (mod - 1);
+        else if (mod > 0) down[prop] = (down[prop] || 0) + (1 / mod - 1);
+      });
+    });
+    Object.keys(out).forEach(function (prop) {
+      var factor = (1 + (up[prop] || 0)) / (1 + (down[prop] || 0));
+      out[prop] = out[prop] * factor + (off[prop] || 0);
+    });
+
+    var mat = MATURITY[opts.maturity] || MATURITY.typical;
+    ['cadence', 'emergH', 'emergHit', 'awareH', 'detect', 'virtual'].forEach(function (k) {
+      out[k] = out[k] * mat[k];
+    });
+    out.inventory += mat.inventory;
+    out.edrCoverage += mat.edrCoverage;
+
+    var det = DETECTION[opts.detection];
+    if (det) Object.keys(det.p).forEach(function (k) { out[k] = det.p[k]; });
+
+    Object.keys(out).forEach(function (k) { out[k] = clampTo(k, out[k]); });
+    out.ai = opts.ai || 0;
+    return out;
+  }
+
+  /* Derived, so the ordering test exercises the maturity axis for real. */
+  var PRESETS = {
+    tight:     compose({ maturity: 'tight' }),
+    typical:   compose({ maturity: 'typical' }),
+    sprawling: compose({ maturity: 'loose' }),
+  };
+
+  function defaults() {
+    var P = {};
+    SPEC.def.concat(SPEC.att).forEach(function (s) { P[s.k] = s.v; });
+    return P;
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════
+   * AI COUPLINGS — identity at ai=0 (the measured clock).
+   * ═══════════════════════════════════════════════════════════════════════ */
+  function clockScale(ai) { return Math.exp(-0.023 * ai); }        /* ai=100 -> x0.10 */
+  function weapMult(ai)   { return 1 + 0.010 * ai; }               /* ai=100 -> x2.0  */
+  function preMult(ai)    { return 1 + 0.012 * ai; }               /* ai=100 -> x2.2  */
+
+  /* ═══════════════════════════════════════════════════════════════════════
+   * RNG — mulberry32. Deterministic, seedable, fast.
+   * ═══════════════════════════════════════════════════════════════════════ */
+  function RNG(seed) {
+    var s = seed >>> 0;
+    function rnd() {
+      s |= 0; s = (s + 0x6D2B79F5) | 0;
+      var t = Math.imul(s ^ (s >>> 15), 1 | s);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    }
+    rnd.norm = function () {
+      var u = 0, v = 0;
+      while (u === 0) u = rnd();
+      while (v === 0) v = rnd();
+      return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+    };
+    rnd.lnorm = function (m, sig) { return m * Math.exp(sig * rnd.norm()); };
+    rnd.expo = function (mean) { return -mean * Math.log(1 - rnd()); };
+    rnd.range = function (lo, hi) { return lo + (hi - lo) * rnd(); };
+    rnd.pois = function (l) {
+      if (l <= 0) return 0;
+      if (l > 30) return Math.max(0, Math.round(l + Math.sqrt(l) * rnd.norm()));
+      var L = Math.exp(-l), k = 0, p = 1;
+      do { k++; p *= rnd(); } while (p > L);
+      return k - 1;
+    };
+    rnd.binom = function (n, p) {
+      if (p <= 0 || n <= 0) return 0;
+      if (p >= 1) return n;
+      if (n * p > 12 && n * (1 - p) > 12) {
+        return Math.min(n, Math.max(0, Math.round(n * p + Math.sqrt(n * p * (1 - p)) * rnd.norm())));
+      }
+      if (n * p < 12) return Math.min(n, rnd.pois(n * p));
+      return Math.max(0, n - Math.min(n, rnd.pois(n * (1 - p))));
+    };
+    return rnd;
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════
+   * ATTACKER CLOCK — inverse-CDF sampler over the measured PoC distribution.
+   * t < 0 means a working exploit existed before the patch did.
+   * ═══════════════════════════════════════════════════════════════════════ */
+  function drawPoCTime(rnd, k) {
+    var u = rnd();
+    if (u < k.pBefore) {
+      /* pre-publication branch: shape assumed, magnitude from ASSUMED.preMedian */
+      var q = u / k.pBefore;                       /* uniform within the branch  */
+      return -k.preMedian * Math.exp(0.95 * inverseNormal(q));
+    }
+    /* post-publication branch: piecewise-linear through the measured quantiles,
+     * then an exponential tail past p75. */
+    var t;
+    var pw = k.pWithinWeek, p75 = 0.75;
+    if (u < k.pMedian) {
+      t = lerp(u, k.pBefore, k.pMedian, 0, k.median);
+    } else if (u < pw) {
+      t = lerp(u, k.pMedian, pw, k.median, 7);
+    } else if (u < p75) {
+      t = lerp(u, pw, p75, 7, k.p75);
+    } else {
+      /* exponential tail: mean chosen so p95 lands near one year */
+      t = k.p75 + rnd.expo((365 - k.p75) / Math.log(1 / 0.2));
+    }
+    return t * k.scale;
+  }
+  function lerp(u, u0, u1, t0, t1) {
+    if (u1 <= u0) return t1;
+    return t0 + ((u - u0) / (u1 - u0)) * (t1 - t0);
+  }
+  /* Acklam-style rational approximation to the normal quantile function. */
+  function inverseNormal(p) {
+    if (p <= 0) p = 1e-9;
+    if (p >= 1) p = 1 - 1e-9;
+    var a = [-3.969683028665376e+01, 2.209460984245205e+02, -2.759285104469687e+02,
+             1.383577518672690e+02, -3.066479806614716e+01, 2.506628277459239e+00];
+    var b = [-5.447609879822406e+01, 1.615858368580409e+02, -1.556989798598866e+02,
+             6.680131188771972e+01, -1.328068155288572e+01];
+    var c = [-7.784894002430293e-03, -3.223964580411365e-01, -2.400758277161838e+00,
+             -2.549732539343734e+00, 4.374664141464968e+00, 2.938163982698783e+00];
+    var d = [7.784695709041462e-03, 3.224671290700398e-01, 2.445134137142996e+00,
+             3.754408661907416e+00];
+    var pl = 0.02425, q, r;
+    if (p < pl) {
+      q = Math.sqrt(-2 * Math.log(p));
+      return (((((c[0] * q + c[1]) * q + c[2]) * q + c[3]) * q + c[4]) * q + c[5]) /
+             ((((d[0] * q + d[1]) * q + d[2]) * q + d[3]) * q + 1);
+    }
+    if (p > 1 - pl) {
+      q = Math.sqrt(-2 * Math.log(1 - p));
+      return -(((((c[0] * q + c[1]) * q + c[2]) * q + c[3]) * q + c[4]) * q + c[5]) /
+              ((((d[0] * q + d[1]) * q + d[2]) * q + d[3]) * q + 1);
+    }
+    q = p - 0.5; r = q * q;
+    return (((((a[0] * r + a[1]) * r + a[2]) * r + a[3]) * r + a[4]) * r + a[5]) * q /
+           (((((b[0] * r + b[1]) * r + b[2]) * r + b[3]) * r + b[4]) * r + 1);
+  }
+
+  /* Draw one coefficient set. `spread` 0 pins every assumption at its central
+   * value (reproducible point estimate); 1 draws the full declared range. */
+  function drawCoeffs(rnd, P, spread) {
+    var k = {};
+    Object.keys(ASSUMED).forEach(function (key) {
+      var a = ASSUMED[key];
+      k[key] = spread <= 0 ? a.v
+        : rnd.range(a.v + (a.lo - a.v) * spread, a.v + (a.hi - a.v) * spread);
+    });
+    var ai = P.ai;
+    k.scale       = clockScale(ai);
+    k.pPoC        = Math.min(0.9, MEASURED.pPoC * weapMult(ai));
+    k.pWildGivenPoC = MEASURED.pWildGivenPoC;
+    k.pWildNoPoC  = MEASURED.pWildNoPoC;
+    k.pBefore     = Math.min(0.75, MEASURED.pocBefore * preMult(ai));
+    k.median      = MEASURED.pocMedian;
+    k.pWithinWeek = MEASURED.pocWithinWeek;
+    k.p75         = k.pocP75;
+    /* measured quantile positions, shifted by the pre-publication mass */
+    k.pMedian     = 0.5;
+    k.scanHaz     = k.scanHazBase * Math.exp(0.030 * (P.scan - 50));
+    return k;
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════
+   * SIMULATE
+   * ═══════════════════════════════════════════════════════════════════════ */
+  var ROUTES = ['opportunistic', 'targeted', 'supply'];
+  /* A strict funnel: every stage is a subset of the one above it.
+   * Whether a vulnerability is merely armed (public exploit) or actually used
+   * in the wild is NOT a funnel stage — it is a hazard multiplier, because
+   * armed-but-unused bugs still draw opportunistic traffic. It is reported
+   * separately as `wildShare`. */
+  var FUNNEL = [
+    'Criticals published in your stack',
+    'In a product you actually run',
+    'A working exploit exists at all',
+    'A patch window is open when it lands',
+    'A campaign reaches your estate',
+    'The exploit works and they are in',
+  ];
+
+  function simulate(P, trials, seed, opts) {
+    opts = opts || {};
+    var wantSurv = opts.surv !== false;
+    var spread = opts.spread === undefined ? 1 : opts.spread;
+    var rnd = RNG(seed);
+
+    var surv = new Float64Array(H + 2);
+    var hit = 0, inc = 0, events = 0, expDays = 0;
+    var firsts = [];
+    var route = [0, 0, 0];
+    var fn = [0, 0, 0, 0, 0, 0];
+    var wildN = 0, armedN = 0;
+    /* Credible interval by variance decomposition.
+     *
+     * Trials are grouped into blocks and ONE coefficient set is drawn per block,
+     * so the spread between block means contains both parameter uncertainty and
+     * Monte-Carlo noise. Subtracting the known binomial noise leaves the part
+     * that is actually about the assumptions — which is the only part worth
+     * reporting. Drawing per-trial instead (the obvious approach) makes the two
+     * inseparable and the band ends up measuring the trial count. */
+    var BLOCKS = 40, blockN = Math.max(1, Math.floor(trials / BLOCKS)), blockHits = [], blockInc = [];
+    var bh = 0, bi = 0, bc = 0;
+    var k = null;
+
+    var nEdge = Math.round(P.exposed * P.edge / 100);
+    var nWeb = P.exposed - nEdge;
+    var invF = P.inventory / 100;
+    var eKnown = Math.round(nEdge * invF), eDark = nEdge - eKnown;
+    var wKnown = Math.round(nWeb * invF), wDark = nWeb - wKnown;
+
+    for (var t = 0; t < trials; t++) {
+      if (k === null || bc === 0) k = drawCoeffs(rnd, P, spread);
+      var first = Infinity, firstRoute = -1, firstEdge = false, incident = false;
+      var n = 0, edSum = 0;
+
+      var K = rnd.pois(P.stackVulns);
+      fn[0] += K;
+
+      for (var i = 0; i < K; i++) {
+        var isEdge = rnd() < P.edge / 100;
+
+        /* 1. do you run the affected product at all? */
+        if (rnd() >= (isEdge ? k.runsEdge : k.runsWeb)) continue;
+        fn[1]++;
+
+        /* 2. does a working exploit ever exist, and is it used for real?
+         *    These are not sequential gates: a bug can be used in the wild with
+         *    no public PoC, and a public PoC can go unused. Either one arms it. */
+        var hasPoC = rnd() < k.pPoC;
+        var inWild = rnd() < (hasPoC ? k.pWildGivenPoC : k.pWildNoPoC);
+        if (!hasPoC && !inWild) continue;
+        fn[2]++;
+        armedN++;
+        if (inWild) wildN++;
+
+        /* 3. when does the exploit exist, relative to the patch? */
+        var tX = hasPoC ? drawPoCTime(rnd, k)
+                        : -k.preMedian * Math.exp(0.95 * inverseNormal(rnd()));
+        if (isEdge) tX *= 0.6; /* appliance exploitation runs ahead of the field */
+
+        /* 4. how much of your estate does it touch? */
+        var af = isEdge
+          ? k.afEdgeMin + (0.90 - k.afEdgeMin) * rnd()
+          : 0.04 + (k.afWebMax - 0.04) * rnd() * rnd();
+        var popKnown = isEdge ? eKnown : wKnown;
+        var popDark = isEdge ? eDark : wDark;
+        var nKnown = rnd.binom(popKnown, af);
+        var nDark = rnd.binom(popDark, af);
+        if (nKnown + nDark < 1) continue;
+
+        /* 5. when have you closed it? */
+        var aware = rnd.lnorm(P.awareH / 24, 0.6) * (isEdge ? 1.4 : 1);
+        var tp;
+        if (P.emergH > 0 && rnd() < (P.emergHit / 100) * (isEdge ? 0.8 : 1)) {
+          tp = aware + (P.emergH / 24) * Math.exp(0.3 * rnd.norm()) * (isEdge ? 1.5 : 1);
+        } else {
+          tp = aware + rnd() * P.cadence * (isEdge ? 1.6 : 1) + rnd.lnorm(0.6, 0.5);
+        }
+        var shielded = !isEdge && rnd() < P.virtual / 100;
+
+        var win = shielded ? 0 : Math.max(0, tp - tX);
+        if (win > 0) fn[3]++;
+        edSum += Math.min(win, H) * nKnown;
+
+        /* 6. does a campaign reach you inside that window? */
+        var hazMul = Math.exp(0.9 * rnd.norm()) * (isEdge ? k.edgeHazard : 1)
+                   * (inWild ? 1 : k.pocOnlyHazard);
+        var landed = false, won = false;
+
+        var reach = function (cnt, wTotal, tStart) {
+          if (cnt < 1 || wTotal <= 0) return null;
+          var h = k.scanHaz * hazMul * Math.pow(cnt, 0.4);
+          /* pre-publication time is targeted, not mass: discount it */
+          var pre = Math.max(0, Math.min(0, tStart + wTotal) - Math.min(0, tStart));
+          var eff = Math.min(wTotal, H) - pre * (1 - k.preHazard);
+          if (eff <= 0) return null;
+          if (rnd() >= 1 - Math.exp(-h * eff)) return null;
+          return { c: Math.max(1, rnd.binom(cnt, 0.7)), t: Math.min(wTotal, rnd.expo(1 / h)) };
+        };
+        var land = function (r, when0) {
+          var c = rnd.binom(r.c, k.exploitWorks);
+          if (c < 1) return false;
+          n += c;
+          var when = when0 + Math.max(0, tX) + r.t;
+          if (when < first) { first = when; firstRoute = 0; firstEdge = isEdge; }
+          return true;
+        };
+
+        var day0 = rnd() * H;
+        var rK = reach(nKnown, win, tX);
+        if (rK) { landed = true; if (land(rK, day0)) won = true; }
+
+        if (nDark > 0) {
+          /* systems in no patch cycle: fixed on rebuild, or not at all */
+          var tpDark = rnd() < 0.5 ? aware + rnd() * 90 + rnd.lnorm(0.6, 0.5)
+                                   : aware + rnd.expo(300);
+          var winDark = Math.max(0, tpDark - tX);
+          edSum += Math.min(winDark, H) * nDark;
+          var rD = reach(nDark, winDark, tX);
+          if (rD) { landed = true; if (land(rD, day0)) won = true; }
+        }
+        if (landed) fn[4]++;
+        if (won) fn[5]++;
+      }
+
+      /* targeted campaigns: succeed more often when a window happens to be open */
+      var openFrac = Math.min(1, edSum / (H * Math.max(1, P.exposed)));
+      var pWin = openFrac * 0.7 + (1 - openFrac) * (P.agentSkill / 100);
+      var nC = rnd.pois(P.campaigns);
+      for (var ci = 0; ci < nC; ci++) {
+        if (rnd() < pWin) {
+          n++;
+          var wc = rnd() * H;
+          if (wc < first) { first = wc; firstRoute = 1; firstEdge = rnd() < P.edge / 100; }
+        }
+      }
+      /* supply chain: patch cadence is irrelevant */
+      var nS = rnd.pois(P.supply);
+      for (var si = 0; si < nS; si++) {
+        n++;
+        var ws = rnd() * H;
+        if (ws < first) { first = ws; firstRoute = 2; firstEdge = false; }
+      }
+
+      events += n;
+      expDays += edSum;
+
+      var compromised = first < H;
+      if (compromised) {
+        hit++;
+        firsts.push(first);
+        route[firstRoute]++;             /* once per trial — not once per improvement */
+        incident = !contained(rnd, P, k, firstEdge);
+        if (incident) inc++;
+      }
+      if (wantSurv) {
+        var stop = compromised ? Math.ceil(first) : H + 1;
+        for (var d = 0; d < stop && d <= H; d++) surv[d]++;
+      }
+
+      bh += compromised ? 1 : 0; bi += incident ? 1 : 0; bc++;
+      if (bc === blockN) { blockHits.push(bh / bc); blockInc.push(bi / bc); bh = 0; bi = 0; bc = 0; }
+    }
+
+    firsts.sort(function (a, b) { return a - b; });
+    var pHit = hit / trials, pInc = inc / trials;
+    var ciH = decompose(blockHits, pHit, blockN), ciI = decompose(blockInc, pInc, blockN);
+    var totalRoute = route[0] + route[1] + route[2] || 1;
+
+    return {
+      p: pHit, pLo: ciH[0], pHi: ciH[1],
+      incident: pInc, incLo: ciI[0], incHi: ciI[1],
+      med: pHit >= 0.5 ? firsts[Math.floor(trials * 0.5)] : null,
+      events: events / trials,
+      expDays: expDays / trials,
+      surv: Array.prototype.slice.call(surv, 0, H + 1).map(function (v) { return v / trials; }),
+      routes: route.map(function (v) { return v / totalRoute; }),
+      routeN: route.slice(),
+      fn: fn.map(function (v) { return v / trials; }),
+      armed: armedN / trials,
+      wild: wildN / trials,
+      wildShare: armedN ? wildN / armedN : 0,
+      se: Math.sqrt(pHit * (1 - pHit) / trials),
+      trials: trials,
+    };
+  }
+
+  /* Two-stage containment: beat breakout, or beat the objective, or neither.
+   * Detection speed is not uniform across the estate. Edge appliances take no
+   * endpoint agent at all, and part of the rest is off-telemetry too. A
+   * compromise you cannot see is not detected on your median dwell — it is
+   * found much later, usually by somebody else. */
+  function contained(rnd, P, k, isEdge) {
+    var covered = !isEdge && rnd() < (P.edrCoverage === undefined ? 70 : P.edrCoverage) / 100;
+    var tD = covered ? rnd.lnorm(P.detect, 0.8) : rnd.lnorm(P.detect * k.blindMult, 0.9);
+    var tB = rnd.lnorm(k.breakoutMedian, 0.9);
+    var tO = rnd.lnorm(k.objectiveMedian, 0.7);
+    if (tD < tB) return rnd() < k.containFast;
+    if (tD < tO) return rnd() < k.containMid;
+    return rnd() < k.containLate;
+  }
+
+  /* Split the observed between-block variance into Monte-Carlo noise and
+   * genuine parameter uncertainty, and report only the latter as the band. */
+  function decompose(blocks, mean, blockN) {
+    if (blocks.length < 4) return [mean, mean];
+    var n = blocks.length, sum = 0;
+    for (var i = 0; i < n; i++) { var d = blocks[i] - mean; sum += d * d; }
+    var observed = sum / (n - 1);
+    var mc = (mean * (1 - mean)) / Math.max(1, blockN);   /* binomial, per block */
+    var param = Math.max(0, observed - mc);
+    var half = 1.645 * Math.sqrt(param);
+    return [Math.max(0, mean - half), Math.min(1, mean + half)];
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════
+   * RACE DENSITIES — for the headline chart. Clamped, so no mass is lost.
+   * ═══════════════════════════════════════════════════════════════════════ */
+  function densities(P, N) {
+    N = N || 30000;
+    var rnd = RNG(7);
+    var k = drawCoeffs(rnd, P, 0);
+    var x0 = -30;
+    var x1 = Math.max(24, Math.min(120, P.cadence * 1.7 * (1 + P.edge / 160) + P.emergH / 24 + P.awareH / 24 + 8));
+    var B = 160, dx = (x1 - x0) / B;
+    var A = new Float64Array(B), D = new Float64Array(B);
+    var before = 0, wins = 0;
+    /* Mass outside the drawn range is counted, never discarded (that was a v2
+     * bug), but it is also NOT folded into the edge bins — doing that creates a
+     * fake spike that dominates the normalisation and flattens the real shape.
+     * It is reported separately so the chart can label it honestly. */
+    var aBelow = 0, aAbove = 0, dAbove = 0;
+
+    for (var i = 0; i < N; i++) {
+      var isEdge = rnd() < P.edge / 100;
+      var tX = drawPoCTime(rnd, k) * (isEdge ? 0.6 : 1);
+      if (tX < 0) before++;
+      if (tX < x0) aBelow++;
+      else if (tX >= x1) aAbove++;
+      else A[Math.floor((tX - x0) / dx)]++;
+
+      var aware = rnd.lnorm(P.awareH / 24, 0.6) * (isEdge ? 1.4 : 1);
+      var tp;
+      if (P.emergH > 0 && rnd() < (P.emergHit / 100) * (isEdge ? 0.8 : 1)) {
+        tp = aware + (P.emergH / 24) * Math.exp(0.3 * rnd.norm()) * (isEdge ? 1.5 : 1);
+      } else {
+        tp = aware + rnd() * P.cadence * (isEdge ? 1.6 : 1) + rnd.lnorm(0.6, 0.5);
+      }
+      if (tp >= x1) dAbove++;
+      else D[Math.max(0, Math.floor((tp - x0) / dx))]++;
+
+      if (tX < tp) wins++;
+    }
+
+    /* CDF of the exploit clock, including the mass below the drawn range */
+    var F = new Float64Array(B), c = aBelow / N;
+    for (var j = 0; j < B; j++) { c += A[j] / N; F[j] = c; }
+    var ov = new Float64Array(B);
+    for (var m = 0; m < B; m++) ov[m] = (D[m] / N) * F[m];
+
+    var nz = function (v) {
+      var mx = 0;
+      for (var z = 0; z < v.length; z++) if (v[z] > mx) mx = v[z];
+      return Array.prototype.map.call(v, function (x) { return mx ? x / mx : 0; });
+    };
+    var dmax = 0;
+    for (var q = 0; q < B; q++) if (D[q] / N > dmax) dmax = D[q] / N;
+
+    return {
+      A: nz(A), D: nz(D), ov: Array.prototype.slice.call(ov), ovMax: dmax,
+      /* cumulative share of exploits that have arrived by each bin, including
+       * the mass below the drawn window. This is what the headline measures,
+       * and it stays readable where the density does not. */
+      cum: Array.prototype.slice.call(F),
+      x0: x0, x1: x1, B: B, dx: dx,
+      pLate: wins / N,          /* exact, by direct comparison — not a bin sum */
+      beforeFrac: before / N,
+      overflow: { aBelow: aBelow / N, aAbove: aAbove / N, dAbove: dAbove / N },
+      median: k.median, scale: k.scale,
+    };
+  }
+
+  return {
+    H: H, SPEC: SPEC, PRESETS: PRESETS, MEASURED: MEASURED, ASSUMED: ASSUMED,
+    CAL: C, FUNNEL: FUNNEL, ROUTES: ROUTES, TRAITS: TRAITS, MATURITY: MATURITY, DETECTION: DETECTION, compose: compose,
+    defaults: defaults, simulate: simulate, densities: densities,
+    RNG: RNG, inverseNormal: inverseNormal,
+    clockScale: clockScale, weapMult: weapMult, preMult: preMult,
+    fmtN: fmtN, fmtH: fmtH,
+  };
+});
+
+</script>
+<script>
+/* Exposure Race — chart rendering.
+ *
+ * Two rules make these charts work everywhere:
+ *   1. Every chart is drawn at its container's REAL pixel width, so type is
+ *      always ~11px. Nothing is scaled down into illegibility on a phone.
+ *   2. Colours are passed in as literal hex, resolved once from CSS custom
+ *      properties. CSS variables do not survive SVG serialisation, so a chart
+ *      that referenced them directly would export to PNG as a black rectangle.
+ */
+(function (root, factory) {
+  if (typeof module === 'object' && module.exports) module.exports = factory();
+  else root.CHARTS = factory();
+})(typeof self !== 'undefined' ? self : this, function () {
+  'use strict';
+
+  var NS = 'http://www.w3.org/2000/svg';
+
+  function el(tag, attrs) {
+    var e = document.createElementNS(NS, tag);
+    for (var k in attrs) if (attrs[k] !== undefined && attrs[k] !== null) e.setAttribute(k, attrs[k]);
+    return e;
+  }
+  function clear(svg) { while (svg.firstChild) svg.removeChild(svg.firstChild); }
+  function path(pts) {
+    return pts.map(function (p, i) { return (i ? 'L' : 'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1); }).join(' ');
+  }
+  function txt(svg, x, y, s, o) {
+    o = o || {};
+    var e = el('text', {
+      x: x, y: y, 'font-size': o.fs || 11, 'text-anchor': o.a || 'start',
+      fill: o.c, 'font-weight': o.w, 'letter-spacing': o.ls,
+      'font-family': o.mono ? 'ui-monospace, SFMono-Regular, Menlo, monospace' : undefined,
+    });
+    e.textContent = s;
+    svg.appendChild(e);
+    return e;
+  }
+  function frame(svg, w, h) {
+    clear(svg);
+    svg.setAttribute('viewBox', '0 0 ' + w + ' ' + h);
+    svg.setAttribute('width', w);
+    svg.setAttribute('height', h);
+    svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+    return svg;
+  }
+  function ticks(a, b, n) {
+    var step = (b - a) / (n || 7), p = Math.pow(10, Math.floor(Math.log10(step)));
+    var s = [1, 2, 2.5, 5, 10].map(function (x) { return x * p; }).find(function (x) { return x >= step; }) || p * 10;
+    var out = [];
+    for (var v = Math.ceil(a / s) * s; v <= b + 1e-9; v += s) out.push(+v.toFixed(4));
+    return out;
+  }
+  var pctS = function (v) { return (v * 100).toFixed(0) + '%'; };
+  function fmtDays(d) {
+    var x = Math.abs(d);
+    return x < 1 ? Math.round(x * 24) + 'h' : x < 10 ? x.toFixed(1) + 'd' : Math.round(x) + 'd';
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════
+   * THE RACE — when an exploit exists vs when you have closed it.
+   * ═══════════════════════════════════════════════════════════════════════ */
+  function race(svg, w, d, pal) {
+    var narrow = w < 620;
+    var h = narrow ? 330 : 380;
+    var L = 46, R = w - 14, T = narrow ? 44 : 38, BOT = h - 46, MID = Math.round(T + (BOT - T) * 0.52);
+    frame(svg, w, h);
+
+    var defs = el('defs');
+    var pat = el('pattern', { id: 'hx', patternUnits: 'userSpaceOnUse', width: 6, height: 6, patternTransform: 'rotate(48)' });
+    pat.appendChild(el('line', { x1: 0, y1: 0, x2: 0, y2: 6, stroke: pal.bad, 'stroke-width': 2 }));
+    defs.appendChild(pat);
+    svg.appendChild(defs);
+
+    var X = function (v) { return L + (R - L) * ((v - d.x0) / (d.x1 - d.x0)); };
+    var Xi = function (i) { return X(d.x0 + (i + 0.5) * d.dx); };
+    var x0px = X(0);
+
+    /* pre-disclosure zone */
+    svg.appendChild(el('rect', { x: L, y: T, width: Math.max(0, x0px - L), height: BOT - T, fill: pal.zero, 'fill-opacity': 0.07 }));
+    svg.appendChild(el('line', { x1: x0px, y1: T - 5, x2: x0px, y2: BOT + 4, stroke: pal.zero, 'stroke-width': 1.5 }));
+    if (narrow) {
+      txt(svg, x0px, T - 26, 'DAY 0 — PATCH AVAILABLE', { a: 'middle', c: pal.zero, fs: 10, ls: '.08em', mono: true });
+      txt(svg, L, T - 10, '← exploit before patch', { c: pal.zero, fs: 10 });
+    } else {
+      txt(svg, x0px - 8, T - 12, '← A WORKING EXPLOIT BEFORE A PATCH EXISTS', { a: 'end', c: pal.zero, fs: 10, ls: '.08em', mono: true });
+      txt(svg, x0px + 8, T - 12, 'PATCH AVAILABLE · DAY 0', { c: pal.zero, fs: 10, ls: '.08em', mono: true });
+    }
+
+    ticks(d.x0, d.x1, narrow ? 5 : 8).forEach(function (t) {
+      if (Math.abs(t) < 1e-9) return;
+      var x = X(t);
+      if (x < L - 1 || x > R + 1) return;
+      svg.appendChild(el('line', { x1: x, y1: T, x2: x, y2: BOT, stroke: pal.rule }));
+      txt(svg, x, BOT + 18, (t > 0 ? '+' : '') + Math.round(t) + 'd', { a: 'middle', c: pal.mut, fs: 10.5 });
+    });
+    svg.appendChild(el('line', { x1: L, y1: MID, x2: R, y2: MID, stroke: pal.rule2 }));
+
+    /* defender density, drawn upward */
+    var hUp = MID - T - 16;
+    var dp = [[L, MID]];
+    for (var i = 0; i < d.B; i++) dp.push([Xi(i), MID - d.D[i] * hUp]);
+    dp.push([R, MID]);
+    svg.appendChild(el('path', { d: path(dp) + ' Z', fill: pal.def, 'fill-opacity': 0.14, stroke: pal.def, 'stroke-width': 2, 'stroke-linejoin': 'round' }));
+
+    /* overlap = P(exploit already exists when you finally close it) */
+    var sc = d.ovMax ? hUp / d.ovMax : 0;
+    var op = [[L, MID]];
+    for (var j = 0; j < d.B; j++) op.push([Xi(j), MID - d.ov[j] * sc]);
+    op.push([R, MID]);
+    svg.appendChild(el('path', { d: path(op) + ' Z', fill: 'url(#hx)', 'fill-opacity': 0.55, stroke: 'none' }));
+    svg.appendChild(el('path', { d: path(op.slice(1, -1)), fill: 'none', stroke: pal.bad, 'stroke-width': 1.2, 'stroke-opacity': 0.85 }));
+
+    /* Attacker side, drawn downward. The density alone is unreadable here: the
+     * pre-disclosure mass is spread over weeks while the post-publication spike
+     * lands in two days, so the shape that matters disappears. The cumulative
+     * curve carries it — and it is the quantity the headline actually measures. */
+    var hDn = BOT - MID - 12;
+    var ap = [[L, MID]];
+    for (var m = 0; m < d.B; m++) ap.push([Xi(m), MID + d.A[m] * hDn]);
+    ap.push([R, MID]);
+    svg.appendChild(el('path', { d: path(ap) + ' Z', fill: pal.att, 'fill-opacity': 0.13, stroke: pal.att, 'stroke-width': 1, 'stroke-opacity': 0.45, 'stroke-linejoin': 'round' }));
+
+    if (d.cum) {
+      var cp = [];
+      for (var q = 0; q < d.B; q++) cp.push([Xi(q), MID + d.cum[q] * hDn]);
+      svg.appendChild(el('path', { d: path(cp), fill: 'none', stroke: pal.att, 'stroke-width': 2.4, 'stroke-linejoin': 'round' }));
+
+      /* gridlines for the cumulative axis */
+      [0.25, 0.5, 0.75, 1].forEach(function (f) {
+        var y = MID + f * hDn;
+        svg.appendChild(el('line', { x1: L, y1: y, x2: R, y2: y, stroke: pal.att, 'stroke-opacity': 0.16, 'stroke-dasharray': '2 4' }));
+        txt(svg, L - 5, y + 3, Math.round(f * 100) + '%', { a: 'end', c: pal.att, fs: 10, 'fill-opacity': 0.7, mono: true });
+      });
+
+      /* the share already armed at day zero — the number the page is about */
+      var atZero = d.beforeFrac;
+      var yz = MID + atZero * hDn;
+      svg.appendChild(el('circle', { cx: x0px, cy: yz, r: 4, fill: pal.att, stroke: pal.panel, 'stroke-width': 1.5 }));
+      txt(svg, x0px + 8, yz + 4, pctS(atZero) + ' already armed', { c: pal.att, fs: 10.5, w: 600 });
+      txt(svg, L, MID + hDn + 14, 'cumulative share of exploits that exist by then', { c: pal.att, fs: 10, 'fill-opacity': 0.75 });
+    }
+
+    /* Overflow: mass outside the drawn window is labelled, not folded into the
+     * edge bins. Folding it in would make a spike that hides the real shape. */
+    var of = d.overflow || { aBelow: 0, aAbove: 0, dAbove: 0 };
+    var chip = function (x, y, anchor, colour, label) {
+      var t = txt(svg, x, y, label, { a: anchor, c: colour, fs: 10, mono: true });
+      t.setAttribute('opacity', '.95');
+    };
+    if (of.aBelow > 0.004) chip(L + 2, BOT - 4, 'start', pal.att, '◂ ' + pctS(of.aBelow) + ' earlier');
+    if (of.aAbove > 0.004) chip(R - 2, BOT - 4, 'end', pal.att, pctS(of.aAbove) + ' later ▸');
+    if (of.dAbove > 0.004) chip(R - 2, T + 26, 'end', pal.def, pctS(of.dAbove) + ' still open ▸');
+
+    txt(svg, L, T + 12, 'WHEN YOU HAVE CLOSED IT', { c: pal.def, fs: 10.5, ls: '.09em', mono: true });
+    txt(svg, L, BOT + 36, 'WHEN A WORKING EXPLOIT EXISTS', { c: pal.att, fs: 10.5, ls: '.09em', mono: true });
+
+    /* headline badge */
+    var bw = narrow ? 150 : 232, bh = 60, bx = R - bw - 2, by = T + 4;
+    svg.appendChild(el('rect', { x: bx, y: by, width: bw, height: bh, rx: 8, fill: pal.sunk, stroke: pal.rule }));
+    var n1 = el('text', { x: bx + 14, y: by + 32, 'font-size': 28, fill: pal.bad, 'font-weight': 800 });
+    n1.textContent = pctS(d.pLate);
+    svg.appendChild(n1);
+    txt(svg, bx + 14, by + 48, narrow ? 'THEY WIN THE RACE' : 'OF ARMED BUGS: THEY WIN THE RACE',
+      { c: pal.mut, fs: 10, ls: '.07em', mono: true });
+
+    txt(svg, R, BOT + 36, pctS(d.beforeFrac) + ' start before day 0', { a: 'end', c: pal.mut, fs: 10.5 });
+    return svg;
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════
+   * ATTRITION FUNNEL
+   * ═══════════════════════════════════════════════════════════════════════ */
+  function funnel(svg, w, r, labels, pal) {
+    var narrow = w < 640;
+    var rh = narrow ? 52 : 40;
+    var h = labels.length * rh + 34;
+    frame(svg, w, h);
+    var L = narrow ? 8 : 300, R = w - 58, T = 10;
+    var max = Math.max.apply(null, r.fn.concat([1e-3]));
+
+    r.fn.forEach(function (v, i) {
+      var y = T + i * rh + (narrow ? 16 : 0);
+      var bw = Math.max(1.5, (R - L) * Math.sqrt(v / max));
+      var col = i === 0 ? pal.dim : i < 2 ? pal.def : i < 4 ? pal.warn : pal.bad;
+      var barY = narrow ? y + 2 : y;
+
+      if (narrow) txt(svg, L, y - 4, labels[i], { c: i === 5 ? pal.txt : pal.mut, fs: 11.5 });
+      else txt(svg, L - 12, y + 15, labels[i], { a: 'end', c: i === 5 ? pal.txt : pal.mut, fs: 11.5 });
+
+      svg.appendChild(el('rect', { x: L, y: barY, width: Math.max(0, R - L), height: 19, rx: 3, fill: pal.sunk }));
+      svg.appendChild(el('rect', { x: L, y: barY, width: bw, height: 19, rx: 3, fill: col, 'fill-opacity': i === 5 ? 1 : 0.8 }));
+      txt(svg, Math.min(R + 6, L + bw + 7), barY + 14, v < 1 ? v.toFixed(2) : v.toFixed(1), { c: col, fs: 12, w: 600, mono: true });
+
+      if (i) {
+        var drop = r.fn[i - 1] > 0 ? (1 - v / r.fn[i - 1]) * 100 : 0;
+        var dx = narrow ? R : L - 12;
+        txt(svg, dx, narrow ? y - 4 : y + 1, '−' + drop.toFixed(0) + '%', { a: 'end', c: pal.dim, fs: 10, mono: true });
+      }
+    });
+    txt(svg, L, T + labels.length * rh + (narrow ? 26 : 16), 'per simulated year · bar width is √-scaled', { c: pal.dim, fs: 10 });
+    return svg;
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════
+   * ROUTES IN
+   * ═══════════════════════════════════════════════════════════════════════ */
+  function routes(svg, w, r, pal) {
+    var names = [
+      'Opportunistic — mass exploitation in your window',
+      'Targeted campaign against your surface',
+      'Supply chain — patching is irrelevant',
+    ];
+    var cols = [pal.att, pal.warn, pal.zero];
+    var rh = 56, h = names.length * rh + 6;
+    frame(svg, w, h);
+    var L = 2, R = w - 4;
+    r.routes.forEach(function (v, i) {
+      var y = 20 + i * rh;
+      txt(svg, L, y - 7, names[i], { c: pal.txt, fs: 11.5 });
+      svg.appendChild(el('rect', { x: L, y: y, width: R - L, height: 12, rx: 3, fill: pal.sunk }));
+      svg.appendChild(el('rect', { x: L, y: y, width: Math.max(0, (R - L) * v), height: 12, rx: 3, fill: cols[i] }));
+      txt(svg, L, y + 30, pctS(v), { c: cols[i], fs: 14, w: 700, mono: true });
+    });
+    return svg;
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════
+   * SURVIVAL
+   * ═══════════════════════════════════════════════════════════════════════ */
+  function survival(svg, w, r, pal) {
+    var h = 236;
+    frame(svg, w, h);
+    var L = 40, R = w - 10, T = 12, B = h - 34;
+    for (var i = 0; i <= 4; i++) {
+      var y = T + (B - T) * i / 4;
+      svg.appendChild(el('line', { x1: L, y1: y, x2: R, y2: y, stroke: pal.rule }));
+      txt(svg, L - 7, y + 4, (100 - i * 25) + '%', { a: 'end', c: pal.mut, fs: 10 });
+    }
+    [0, 90, 180, 270, 365].forEach(function (d) {
+      txt(svg, L + (R - L) * d / 365, B + 17, d ? d + 'd' : 'day 0', { a: 'middle', c: pal.mut, fs: 10 });
+    });
+    var pts = r.surv.map(function (v, i) { return [L + (R - L) * i / 365, T + (B - T) * (1 - v)]; });
+    svg.appendChild(el('path', { d: path(pts) + ' L ' + R + ' ' + B + ' L ' + L + ' ' + B + ' Z', fill: pal.def, 'fill-opacity': 0.10 }));
+    svg.appendChild(el('path', { d: path(pts), fill: 'none', stroke: pal.def, 'stroke-width': 2.2 }));
+
+    var half = -1;
+    for (var k = 0; k <= 365; k++) if (r.surv[k] <= 0.5) { half = k; break; }
+    if (half > 0) {
+      var x = L + (R - L) * half / 365;
+      svg.appendChild(el('line', { x1: x, y1: T, x2: x, y2: B, stroke: pal.bad, 'stroke-dasharray': '3 3' }));
+      txt(svg, x + 5, T + 11, 'day ' + half, { c: pal.bad, fs: 10.5, mono: true });
+    }
+    txt(svg, R, T + 11, pctS(r.surv[365]) + ' of years clean', { a: 'end', c: pal.mut, fs: 10.5 });
+    return svg;
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════
+   * TORNADO — ranked sensitivity, with the baseline drawn from the SAME
+   * seed and trial count as the bars.
+   * ═══════════════════════════════════════════════════════════════════════ */
+  function tornado(svg, w, rows, base, pal) {
+    var narrow = w < 560;
+    var rh = narrow ? 34 : 25;
+    var h = rows.length * rh + 40;
+    frame(svg, w, h);
+    var labelW = narrow ? 0 : Math.min(190, w * 0.36);
+    var valW = 52;
+    var CX = narrow ? (w - valW) / 2 : labelW + (w - labelW - valW) / 2;
+    var half = narrow ? (w - valW) / 2 - 6 : (w - labelW - valW) / 2 - 8;
+    var T = narrow ? 20 : 12;
+    var span = Math.max(0.02, Math.max.apply(null, rows.map(function (r) {
+      return Math.max(Math.abs(r.hi - base), Math.abs(base - r.lo));
+    })));
+
+    svg.appendChild(el('line', { x1: CX, y1: T - 6, x2: CX, y2: T + rows.length * rh, stroke: pal.rule2 }));
+    rows.forEach(function (r, i) {
+      var y = T + i * rh;
+      if (narrow) txt(svg, 2, y - 5, r.l, { c: pal.txt, fs: 11 });
+      else txt(svg, labelW - 10, y + 12, r.l, { a: 'end', c: pal.txt, fs: 11 });
+      [[(r.lo - base) / span * half, pal.def], [(r.hi - base) / span * half, pal.att]].forEach(function (pair) {
+        var dxv = pair[0], col = pair[1], bw = Math.abs(dxv);
+        if (bw < 0.7) return;
+        svg.appendChild(el('rect', { x: dxv < 0 ? CX - bw : CX, y: y + (narrow ? 1 : 3), width: bw, height: 13, rx: 2, fill: col, 'fill-opacity': 0.9 }));
+      });
+      txt(svg, w - 2, y + (narrow ? 12 : 13), pctS(r.lo) + '→' + pctS(r.hi), { a: 'end', c: pal.mut, fs: 10, mono: true });
+    });
+    var fy = T + rows.length * rh + 16;
+    txt(svg, CX - 8, fy, '← better', { a: 'end', c: pal.def, fs: 10 });
+    txt(svg, CX + 8, fy, 'worse →', { c: pal.att, fs: 10 });
+    txt(svg, CX, T - 10, 'baseline ' + pctS(base), { a: 'middle', c: pal.mut, fs: 10, mono: true });
+    return svg;
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════
+   * COMPRESSION SWEEP
+   * ═══════════════════════════════════════════════════════════════════════ */
+  function sweep(svg, w, pts, curX, curY, pal) {
+    var h = 236;
+    frame(svg, w, h);
+    var L = 40, R = w - 10, T = 12, B = h - 40;
+    var max = Math.max.apply(null, [0.05].concat(pts.map(function (p) { return p[1]; }))) * 1.14;
+    for (var i = 0; i <= 4; i++) {
+      var y = T + (B - T) * i / 4;
+      svg.appendChild(el('line', { x1: L, y1: y, x2: R, y2: y, stroke: pal.rule }));
+      txt(svg, L - 7, y + 4, pctS(max * (1 - i / 4)), { a: 'end', c: pal.mut, fs: 10 });
+    }
+    [0, 25, 50, 75, 100].forEach(function (a) {
+      txt(svg, L + (R - L) * a / 100, B + 17, a === 0 ? 'measured' : '+' + a, { a: 'middle', c: pal.mut, fs: 10 });
+    });
+    var XY = function (p) { return [L + (R - L) * p[0] / 100, T + (B - T) * (1 - p[1] / max)]; };
+    var P2 = pts.map(XY);
+    svg.appendChild(el('path', { d: path(P2) + ' L ' + R + ' ' + B + ' L ' + L + ' ' + B + ' Z', fill: pal.att, 'fill-opacity': 0.10 }));
+    svg.appendChild(el('path', { d: path(P2), fill: 'none', stroke: pal.att, 'stroke-width': 2.2 }));
+    var c = XY([curX, curY]);
+    svg.appendChild(el('line', { x1: c[0], y1: T, x2: c[0], y2: B, stroke: pal.txt, 'stroke-dasharray': '3 3', 'stroke-opacity': 0.6 }));
+    svg.appendChild(el('circle', { cx: c[0], cy: c[1], r: 4.5, fill: pal.txt }));
+    txt(svg, Math.min(c[0] + 8, R - 60), Math.max(T + 12, c[1] - 9), 'you are here', { c: pal.txt, fs: 10.5 });
+    txt(svg, L, B + 34, 'hypothetical exploit-clock compression →', { c: pal.dim, fs: 10 });
+    return svg;
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════
+   * SEVERITY EVIDENCE — exploitation rate by CVSS band. The chart that
+   * justifies not using CVSS severity as the model's primitive.
+   * ═══════════════════════════════════════════════════════════════════════ */
+  function severity(svg, w, cal, pal) {
+    var bands = cal.exploitation.bands;
+    var narrow = w < 560;
+    var rh = 46, h = bands.length * rh + 52;
+    frame(svg, w, h);
+    var L = narrow ? 66 : 96, R = w - 92, T = 20;
+    var max = Math.max.apply(null, bands.map(function (b) { return b.pExploited; }));
+    var names = { '9.0-10.0': 'Critical', '7.0-8.9': 'High', '4.0-6.9': 'Medium', '0.1-3.9': 'Low' };
+    var order = ['9.0-10.0', '7.0-8.9', '4.0-6.9', '0.1-3.9'];
+
+    txt(svg, L, T - 6, 'SHARE OF EACH SEVERITY BAND EVER CONFIRMED EXPLOITED', { c: pal.mut, fs: 10, ls: '.08em', mono: true });
+
+    order.forEach(function (key, i) {
+      var b = bands.find(function (x) { return x.band === key; });
+      if (!b) return;
+      var y = T + i * rh + 6;
+      var bw = Math.max(2, (R - L) * (b.pExploited / max));
+      var col = i === 0 ? pal.bad : i === 1 ? pal.att : pal.mut;
+      txt(svg, L - 10, y + 15, names[key], { a: 'end', c: pal.txt, fs: 12.5, w: 600 });
+      txt(svg, L - 10, y + 28, key, { a: 'end', c: pal.dim, fs: 10, mono: true });
+      svg.appendChild(el('rect', { x: L, y: y, width: Math.max(0, R - L), height: 21, rx: 3, fill: pal.sunk }));
+      svg.appendChild(el('rect', { x: L, y: y, width: bw, height: 21, rx: 3, fill: col, 'fill-opacity': 0.9 }));
+      txt(svg, L + bw + 8, y + 15, b.pExploited.toFixed(2) + '%', { c: col, fs: 12.5, w: 700, mono: true });
+      txt(svg, w - 2, y + 28, b.inKev.toLocaleString('en-US') + ' of ' + b.population.toLocaleString('en-US'),
+        { a: 'end', c: pal.dim, fs: 10, mono: true });
+    });
+
+    var fy = T + bands.length * rh + 18;
+    txt(svg, L, fy, 'Critical is only ' + cal.exploitation.criticalVsHigh + '× High — and ' +
+      cal.exploitation.kevBelowCritical.toFixed(0) + '% of confirmed-exploited bugs are rated below Critical.',
+      { c: pal.txt, fs: 11.5 });
+    return svg;
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════
+   * SEVERITY VOLUME — criticals published per year, the "is 2026 different"
+   * question, answered from the snapshot.
+   * ═══════════════════════════════════════════════════════════════════════ */
+  function volume(svg, w, cal, pal) {
+    var v = cal.volume;
+    var rows = [
+      { label: String(v.prevYear.year), pub: v.prevYear.published, crit: v.prevYear.critical, share: v.prevYear.criticalShare, partial: false },
+      { label: v.curYearRunRate.year + ' run-rate', pub: v.curYearRunRate.published, crit: v.curYearRunRate.critical, share: v.curYearToDate.criticalShare, partial: true },
+    ];
+    var h = 190;
+    frame(svg, w, h);
+    var L = 4, R = w - 4, T = 26;
+    var max = Math.max.apply(null, rows.map(function (r) { return r.pub; }));
+    txt(svg, L, 12, 'PUBLISHED CVES AND THE CRITICAL SLICE', { c: pal.mut, fs: 10, ls: '.08em', mono: true });
+
+    rows.forEach(function (r, i) {
+      var y = T + i * 74;
+      var bw = (R - L) * (r.pub / max);
+      var cw = (R - L) * (r.crit / max);
+      txt(svg, L, y + 11, r.label, { c: pal.txt, fs: 12.5, w: 600 });
+      txt(svg, R, y + 11, r.pub.toLocaleString('en-US') + ' published', { a: 'end', c: pal.mut, fs: 11, mono: true });
+      svg.appendChild(el('rect', { x: L, y: y + 20, width: bw, height: 22, rx: 3, fill: pal.rule2, 'fill-opacity': r.partial ? 0.55 : 0.9 }));
+      svg.appendChild(el('rect', { x: L, y: y + 20, width: Math.max(2, cw), height: 22, rx: 3, fill: pal.bad, 'fill-opacity': r.partial ? 0.75 : 1 }));
+      txt(svg, L + Math.max(2, cw) + 8, y + 35,
+        r.crit.toLocaleString('en-US') + ' critical · ' + r.share.toFixed(1) + '% of scored',
+        { c: pal.bad, fs: 11.5, w: 600, mono: true });
+      if (r.partial) txt(svg, L, y + 56, 'linear run-rate of a partial year — calendar arithmetic, not a forecast', { c: pal.dim, fs: 10 });
+    });
+    txt(svg, L, h - 6, 'Criticals grew ' + cal.volume.growth.critical + '× against ' + cal.volume.growth.published + '× total volume.',
+      { c: pal.txt, fs: 11.5 });
+    return svg;
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════
+   * EXPORT — serialise an SVG into a shareable PNG with a title and source
+   * baked in, so the image stands alone when pasted somewhere else.
+   * ═══════════════════════════════════════════════════════════════════════ */
+  function toPNG(svg, opts) {
+    opts = opts || {};
+    var scale = opts.scale || 2;
+    var pad = 22, headH = opts.title ? (opts.subtitle ? 62 : 42) : 0, footH = 30;
+    var vb = svg.getAttribute('viewBox').split(/\s+/).map(Number);
+    var w = vb[2], h = vb[3];
+    var W = w + pad * 2, Hh = h + headH + footH + pad * 2;
+
+    var clone = svg.cloneNode(true);
+    clone.setAttribute('x', pad);
+    clone.setAttribute('y', pad + headH);
+
+    var outer = document.createElementNS(NS, 'svg');
+    outer.setAttribute('xmlns', NS);
+    outer.setAttribute('width', W);
+    outer.setAttribute('height', Hh);
+    outer.setAttribute('viewBox', '0 0 ' + W + ' ' + Hh);
+
+    outer.appendChild(el('rect', { x: 0, y: 0, width: W, height: Hh, fill: opts.bg || '#ffffff' }));
+    if (opts.title) {
+      var t1 = el('text', {
+        x: pad, y: pad + 20, 'font-size': 19, 'font-weight': 700, fill: opts.fg || '#111',
+        'font-family': 'ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif',
+      });
+      t1.textContent = opts.title;
+      outer.appendChild(t1);
+      if (opts.subtitle) {
+        var t2 = el('text', {
+          x: pad, y: pad + 42, 'font-size': 12.5, fill: opts.mut || '#667',
+          'font-family': 'ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif',
+        });
+        t2.textContent = opts.subtitle;
+        outer.appendChild(t2);
+      }
+    }
+    outer.appendChild(clone);
+    if (opts.source) {
+      var t3 = el('text', {
+        x: pad, y: Hh - pad + 4, 'font-size': 11, fill: opts.mut || '#667',
+        'font-family': 'ui-monospace, SFMono-Regular, Menlo, monospace',
+      });
+      t3.textContent = opts.source;
+      outer.appendChild(t3);
+    }
+
+    var svgStr = new XMLSerializer().serializeToString(outer);
+    var blob = new Blob([svgStr], { type: 'image/svg+xml;charset=utf-8' });
+    var url = URL.createObjectURL(blob);
+
+    return new Promise(function (resolve, reject) {
+      var img = new Image();
+      img.onload = function () {
+        var cv = document.createElement('canvas');
+        cv.width = Math.round(W * scale);
+        cv.height = Math.round(Hh * scale);
+        var ctx = cv.getContext('2d');
+        ctx.setTransform(scale, 0, 0, scale, 0, 0);
+        ctx.drawImage(img, 0, 0);
+        URL.revokeObjectURL(url);
+        cv.toBlob(function (b) { b ? resolve(b) : reject(new Error('canvas encode failed')); }, 'image/png');
+      };
+      img.onerror = function () { URL.revokeObjectURL(url); reject(new Error('svg decode failed')); };
+      img.src = url;
+    });
+  }
+
+  return {
+    race: race, funnel: funnel, routes: routes, survival: survival,
+    tornado: tornado, sweep: sweep, severity: severity, volume: volume,
+    toPNG: toPNG, el: el, clear: clear, fmtDays: fmtDays,
+  };
+});
+
+</script>
+<script>
+/* Exposure Race — UI wiring.
+ *
+ * Note on DOM construction: js/calibration.js is regenerated from a network
+ * fetch (tools/refresh-data.js). Its contents are therefore treated as data,
+ * never as markup — every dynamic value goes in through textContent. innerHTML
+ * is used only to clear containers.
+ */
+(function () {
+  'use strict';
+  var M = window.MODEL, CH = window.CHARTS, C = window.CALIBRATION;
+
+  /* ── state ─────────────────────────────────────────────────────────────── */
+  var P = M.defaults();
+  var METRIC = 'p';                 /* 'p' = compromise, 'incident' = incident */
+  var ON = [], MAT = 'typical', DET = null;   /* ON = selected traits, multi-select */
+  var SEED = 1234, SEED_SENS = 7;
+  var N_FAST = 4000, N_HEAVY = 14000, N_SENS = 5000;
+
+  /* Sliders shown up front. Detection is driven by the posture selector, so the
+   * two knobs behind it live in "more" — the reader picks a stack, not a dwell
+   * time they have no way to estimate. */
+  var BASIC = { exposed: 1, edge: 1, cadence: 1, stackVulns: 1, ai: 1 };
+
+  var $ = function (id) { return document.getElementById(id); };
+  var pctS = function (v) { return (v * 100).toFixed(0) + '%'; };
+  var num = function (v, d) { return Number(v).toFixed(d === undefined ? 0 : d); };
+  var thou = function (v) { return Number(v).toLocaleString('en-US'); };
+
+  /* ── tiny DOM builders ─────────────────────────────────────────────────── */
+  function E(tag, cls, text) {
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text !== undefined && text !== null) e.textContent = String(text);
+    return e;
+  }
+  function add(parent) {
+    for (var i = 1; i < arguments.length; i++) {
+      var c = arguments[i];
+      if (c === null || c === undefined) continue;
+      parent.appendChild(typeof c === 'string' ? document.createTextNode(c) : c);
+    }
+    return parent;
+  }
+  function b(text) { return E('b', null, text); }
+  function empty(node) { while (node.firstChild) node.removeChild(node.firstChild); return node; }
+
+  /* ── theme ─────────────────────────────────────────────────────────────── */
+  function currentTheme() {
+    return document.documentElement.getAttribute('data-theme') ||
+      (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  }
+  function setTheme(t) {
+    document.documentElement.setAttribute('data-theme', t);
+    try { localStorage.setItem('er-theme', t); } catch (e) { /* private mode */ }
+    $('theme-btn').textContent = t === 'dark' ? '☀ Light' : '☾ Dark';
+    redrawAll();
+  }
+  function palette() {
+    var cs = getComputedStyle(document.documentElement);
+    var get = function (n) { return cs.getPropertyValue('--' + n).trim(); };
+    return {
+      ink: get('ink'), panel: get('panel'), sunk: get('sunk'),
+      rule: get('rule'), rule2: get('rule2'),
+      txt: get('txt'), mut: get('mut'), dim: get('dim'),
+      att: get('att'), def: get('def'), bad: get('bad'), zero: get('zero'), warn: get('warn'),
+    };
+  }
+
+  /* ── URL state: only non-default values, so shared links stay short ────── */
+  function toURL() {
+    var d = M.defaults(), parts = [];
+    Object.keys(d).forEach(function (k) { if (P[k] !== d[k]) parts.push(k + '=' + P[k]); });
+    if (METRIC !== 'p') parts.push('m=' + METRIC);
+    if (ON.length) parts.push('traits=' + ON.join(','));
+    parts.push('mat=' + MAT);
+    if (DET) parts.push('det=' + DET);
+    var q = parts.join('&');
+    return location.origin + location.pathname + (q ? '?' + q : '');
+  }
+  function fromURL() {
+    var q = new URLSearchParams(location.search), d = M.defaults();
+    if (q.get('traits')) {
+      ON = q.get('traits').split(',').filter(function (t) { return M.TRAITS[t]; });
+    }
+    if (M.MATURITY[q.get('mat')]) MAT = q.get('mat');
+    if (M.DETECTION[q.get('det')]) DET = q.get('det');
+    applyShape();
+    Object.keys(d).forEach(function (k) {
+      if (!q.has(k)) return;
+      var v = parseFloat(q.get(k));
+      if (!isFinite(v)) return;
+      var s = spec(k);
+      if (s) v = Math.min(s.max, Math.max(s.min, v));
+      P[k] = v;
+    });
+    if (q.get('m') === 'incident') METRIC = 'incident';
+  }
+  function pushURL() {
+    try { history.replaceState(null, '', toURL()); } catch (e) { /* file:// */ }
+  }
+  function spec(k) {
+    return M.SPEC.def.concat(M.SPEC.att).filter(function (s) { return s.k === k; })[0];
+  }
+
+  /* ── controls ──────────────────────────────────────────────────────────── */
+  function buildControls(list, basicHost, advHost) {
+    list.forEach(function (s) {
+      var d = E('div', 'ctrl');
+      var row = E('div', 'row');
+      var lab = E('label', null, s.l);
+      lab.setAttribute('for', 'i-' + s.k);
+      var val = E('span', 'val');
+      val.id = 'v-' + s.k;
+      add(row, lab, val);
+
+      var input = document.createElement('input');
+      input.type = 'range';
+      input.id = 'i-' + s.k;
+      input.min = s.min; input.max = s.max; input.step = s.step; input.value = P[s.k];
+      input.setAttribute('aria-describedby', 'h-' + s.k);
+
+      var hint = E('div', 'hint', s.h);
+      hint.id = 'h-' + s.k;
+
+      add(d, row, input, hint);
+      (BASIC[s.k] ? basicHost : advHost).appendChild(d);
+
+      input.addEventListener('input', function (e) {
+        P[s.k] = +e.target.value;
+        setVal(s);
+        if (s.k === 'detect' || s.k === 'edrCoverage') DET = null;
+        refreshSelectors();
+        schedule();
+      });
+      setVal(s);
+    });
+  }
+  function setVal(s) { var e = $('v-' + s.k); if (e) e.textContent = s.f(P[s.k]); }
+
+  function syncAll() {
+    M.SPEC.def.concat(M.SPEC.att).forEach(function (s) {
+      var i = $('i-' + s.k);
+      if (i) { i.value = P[s.k]; setVal(s); }
+    });
+  }
+
+  /* ── shape: traits x maturity x detection posture ─────────────────────── */
+  function applyShape() {
+    P = M.compose({ traits: ON, maturity: MAT, detection: DET, ai: P.ai });
+  }
+  /* Which posture does the current detect/coverage pair most resemble? Used to
+   * light the right button when traits set those values rather than a click. */
+  function closestDetection() {
+    var best = null, bestD = Infinity;
+    Object.keys(M.DETECTION).forEach(function (k) {
+      var d = M.DETECTION[k].p;
+      var dist = Math.abs(Math.log(P.detect / d.detect)) + Math.abs(P.edrCoverage - d.edrCoverage) / 60;
+      if (dist < bestD) { bestD = dist; best = k; }
+    });
+    return best;
+  }
+
+  /* Descriptions do not stack, so a multi-select cannot explain itself in
+   * prose. Show the resulting estate instead — that is what the reader needs
+   * to sanity-check before trusting the number. */
+  function estateSummary() {
+    var bits = [
+      M.fmtN(P.exposed) + ' exposed systems',
+      P.edge + '% appliances',
+      P.stackVulns + ' criticals/yr in your stack',
+      P.cadence + '-day patch cycle',
+      P.edrCoverage + '% on telemetry',
+    ];
+    if (P.supply >= 0.3) bits.push(P.supply.toFixed(2) + ' supply-chain hits/yr');
+    return bits.join(' · ');
+  }
+
+  function buildToggles(hostId, table, isOn, onPick) {
+    var host = empty($(hostId));
+    Object.keys(table).forEach(function (key) {
+      var btn = E('button', null, table[key].l);
+      btn.type = 'button';
+      btn.dataset.key = key;
+      if (table[key].d) btn.title = table[key].d;
+      btn.setAttribute('aria-pressed', String(!!isOn(key)));
+      btn.addEventListener('click', function () { onPick(key); });
+      host.appendChild(btn);
+    });
+  }
+  function refreshSelectors() {
+    var det = DET || closestDetection();
+    document.querySelectorAll('#sel-profile button').forEach(function (b2) {
+      var on = ON.indexOf(b2.dataset.key) >= 0;
+      b2.classList.toggle('on', on);
+      b2.setAttribute('aria-pressed', String(on));
+    });
+    [['sel-maturity', MAT], ['sel-detection', det]].forEach(function (pair) {
+      document.querySelectorAll('#' + pair[0] + ' button').forEach(function (b2) {
+        var on = b2.dataset.key === pair[1];
+        b2.classList.toggle('on', on);
+        b2.setAttribute('aria-pressed', String(on));
+      });
+    });
+    $('desc-profile').textContent = ON.length
+      ? estateSummary()
+      : 'Nothing picked — a generic mid-size estate. ' + estateSummary();
+    $('desc-detection').textContent = M.DETECTION[det] ? M.DETECTION[det].d : '';
+  }
+  function buildShapeUI() {
+    buildToggles('sel-profile', M.TRAITS,
+      function (k) { return ON.indexOf(k) >= 0; },
+      function (k) {
+        var i = ON.indexOf(k);
+        if (i >= 0) ON.splice(i, 1); else ON.push(k);
+        applyShape(); syncAll(); refreshSelectors(); schedule();
+      });
+    buildToggles('sel-maturity', M.MATURITY,
+      function (k) { return k === MAT; },
+      function (k) { MAT = k; applyShape(); syncAll(); refreshSelectors(); schedule(); });
+    buildToggles('sel-detection', M.DETECTION,
+      function (k) { return k === (DET || closestDetection()); },
+      function (k) { DET = k; applyShape(); syncAll(); refreshSelectors(); schedule(); });
+    refreshSelectors();
+  }
+
+  /* ── sensitivity ───────────────────────────────────────────────────────── */
+  var LEVERS = [
+    { k: 'stackVulns', lo: 8,    hi: 90,  l: 'Vulns in your stack' },
+    { k: 'exposed',    lo: 25,   hi: 400, l: 'Exposed systems' },
+    { k: 'edge',       lo: 0,    hi: 70,  l: 'Edge appliance share' },
+    { k: 'inventory',  lo: 100,  hi: 86,  l: 'Inventory coverage' },
+    { k: 'detect',     lo: 0.25, hi: 45,  l: 'Time to detect' },
+    { k: 'cadence',    lo: 2,    hi: 60,  l: 'Patch cycle' },
+    { k: 'awareH',     lo: 4,    hi: 240, l: 'Time to know it is yours' },
+    { k: 'emergH',     lo: 12,   hi: 0,   l: 'Emergency patching' },
+    { k: 'emergHit',   lo: 95,   hi: 25,  l: 'Emergency trigger rate' },
+    { k: 'virtual',    lo: 70,   hi: 0,   l: 'WAF / virtual patching' },
+    { k: 'campaigns',  lo: 0,    hi: 30,  l: 'Targeted campaigns' },
+    { k: 'supply',     lo: 0,    hi: 1,   l: 'Supply-chain hits' },
+    { k: 'ai',         lo: 0,    hi: 80,  l: 'Exploit-clock compression' },
+  ];
+  var ADVICE = {
+    stackVulns: ['Run less software at the edge', 'Every product you expose is a subscription to its vulnerability stream. This is the largest single term in the model.'],
+    exposed:    ['Cut the exposed surface', 'Fewer reachable systems shrinks every other term at once.'],
+    edge:       ['Reduce or ring-fence edge appliances', 'They patch slower, take no endpoint agent, and are the class where mass exploitation starts on day zero.'],
+    inventory:  ['Close the inventory gap', 'A system in no patch cycle is exposed for months, not days.'],
+    detect:     ['Detect faster', 'This does not stop a compromise. It decides whether the compromise becomes an incident — and on that metric nothing else comes close.'],
+    cadence:    ['Shorten the routine cycle', 'Helps, but it has a floor: a fifth of exploitation predates the patch entirely.'],
+    awareH:     ['Shorten the time to know it is yours', 'Once you can patch in hours, knowing is the whole clock.'],
+    emergH:     ['Build a real out-of-band path', 'Without one, every urgent bug inherits the routine cadence.'],
+    emergHit:   ['Fix the trigger, not the speed', 'Patching in hours does not help if you do not know the bug touches you.'],
+    virtual:    ['Put exposed services where a rule ships in minutes', 'Buys the window back while the real fix is tested. Does not cover appliances.'],
+    campaigns:  ['Instrument the edge for enumeration', 'Targeted campaigns look different from background scanning, if anyone is looking.'],
+    supply:     ['Verify what you install', 'Nothing in your patch cadence touches this route.'],
+    ai:         ['Not yours to move', 'Plan the defender clock around it rather than hoping the attacker clock holds still.'],
+  };
+
+  function over(k, v) { var o = {}; Object.keys(P).forEach(function (x) { o[x] = P[x]; }); o[k] = v; return o; }
+  function sim(params, n, seed, wantSurv) {
+    return M.simulate(params, n, seed, { surv: !!wantSurv, spread: 1 });
+  }
+  function sensitivity() {
+    return LEVERS.map(function (t) {
+      var lo = sim(over(t.k, t.lo), N_SENS, SEED_SENS)[METRIC];
+      var hi = sim(over(t.k, t.hi), N_SENS, SEED_SENS)[METRIC];
+      return { k: t.k, l: t.l, lo: lo, hi: hi, span: Math.abs(hi - lo) };
+    }).sort(function (a, b2) { return b2.span - a.span; });
+  }
+
+  /* ── render ────────────────────────────────────────────────────────────── */
+  var lastHeavy = null, lastSens = null;
+
+  function width(id) {
+    return Math.max(280, Math.floor($(id).parentNode.getBoundingClientRect().width));
+  }
+  function setStat(id, value, unit, ci) {
+    var v = $(id);
+    empty(v);
+    add(v, document.createTextNode(value), E('span', 'u', unit));
+    $(id + '-ci').textContent = ci;
+  }
+  function renderHead(r) {
+    setStat('s-p', pctS(r.p), 'of years', '90% band ' + pctS(r.pLo) + '–' + pctS(r.pHi));
+    setStat('s-i', pctS(r.incident), 'of years', '90% band ' + pctS(r.incLo) + '–' + pctS(r.incHi));
+    setStat('s-n', r.events < 10 ? num(r.events, 2) : num(r.events), 'expected', 'compromised systems / yr');
+    if (r.med == null) setStat('s-t', '—', 'not reached', 'most years stay clean');
+    else setStat('s-t', num(r.med), 'days', 'median time to first compromise');
+  }
+
+  function drawRace() {
+    var d = M.densities(P, 30000);
+    CH.race($('race'), width('race'), d, palette());
+    var n = empty($('race-note'));
+    add(n, 'Measured ' + C.pocTiming.latest.year + ' clock: median ',
+      b(CH.fmtDays(d.median)), ' from publication to a public exploit, ',
+      b(pctS(d.beforeFrac)), ' of them before the patch exists.');
+    if (P.ai > 0) add(n, ' Compression is at ', b('+' + P.ai), ', scaling that clock by ×' + d.scale.toFixed(2) + '.');
+  }
+
+  function drawMain(r) {
+    var pal = palette();
+    drawRace();
+    CH.funnel($('funnel'), width('funnel'), r, M.FUNNEL, pal);
+    CH.routes($('routes'), width('routes'), r, pal);
+    CH.survival($('surv'), width('surv'), r, pal);
+    updateWild(r);
+  }
+  function redrawAll() {
+    if (!lastHeavy) return;
+    var pal = palette();
+    drawMain(lastHeavy);
+    CH.severity($('severity'), width('severity'), C, pal);
+    CH.volume($('volume'), width('volume'), C, pal);
+    if (lastSens) {
+      CH.tornado($('torn'), width('torn'), lastSens.rows, lastSens.base, pal);
+      CH.sweep($('sweep'), width('sweep'), lastSens.sweep, P.ai, lastSens.sweepCur, pal);
+    }
+  }
+
+  function fast() {
+    var r = sim(P, N_FAST, SEED, true);
+    lastHeavy = r;
+    renderHead(r);
+    drawMain(r);
+  }
+
+  function heavy() {
+    var r = sim(P, N_HEAVY, SEED, true);
+    lastHeavy = r;
+    renderHead(r);
+    drawMain(r);
+
+    /* Baseline computed with EXACTLY the seed and trial count the bars use, so
+     * a bar can never be offset against a mismatched base. */
+    var base = sim(P, N_SENS, SEED_SENS)[METRIC];
+    var rows = sensitivity();
+    var sweepPts = [];
+    for (var a = 0; a <= 100; a += 10) sweepPts.push([a, sim(over('ai', a), N_SENS, SEED_SENS)[METRIC]]);
+    var sweepCur = sim(over('ai', P.ai), N_SENS, SEED_SENS)[METRIC];
+    lastSens = { base: base, rows: rows, sweep: sweepPts, sweepCur: sweepCur };
+
+    var pal = palette();
+    CH.tornado($('torn'), width('torn'), rows, base, pal);
+    CH.sweep($('sweep'), width('sweep'), sweepPts, P.ai, sweepCur, pal);
+    CH.severity($('severity'), width('severity'), C, pal);
+    CH.volume($('volume'), width('volume'), C, pal);
+    renderActions(rows, base);
+    pushURL();
+  }
+
+  function updateWild(r) {
+    var n = empty($('wild-note'));
+    add(n, 'Of the ', b(num(r.fn[2], 2)), ' armed bugs a year, ', b(num(r.wild, 2)),
+      ' (' + pctS(r.wildShare) + ') are confirmed used against real targets. The rest still draw ' +
+      'opportunistic traffic, at a fraction of the hazard.');
+  }
+
+  function renderActions(rows, base) {
+    var host = empty($('acts'));
+    var items = rows.filter(function (r) { return base - r.lo > 0.004 && ADVICE[r.k]; }).slice(0, 5);
+    if (!items.length) {
+      var li0 = E('li');
+      var t0 = E('div', 'a-t');
+      add(t0, b('Nothing on your side moves this much.'),
+        E('span', null, 'At these settings the outcome is driven by routes your patch process does not touch. Look at the route split.'));
+      add(li0, t0, E('div', 'a-d', '—'));
+      host.appendChild(li0);
+    } else {
+      items.forEach(function (r) {
+        var a = ADVICE[r.k];
+        var li = E('li');
+        var t = E('div', 'a-t');
+        add(t, b(a[0]), E('span', null, a[1]));
+        add(li, t, E('div', 'a-d', '−' + ((base - r.lo) * 100).toFixed(1) + ' pts'));
+        host.appendChild(li);
+      });
+    }
+    $('acts-metric').textContent = METRIC === 'p'
+      ? 'annual chance of compromise' : 'annual chance of an incident';
+  }
+
+  /* ── scheduling ────────────────────────────────────────────────────────── */
+  var raf = null, slow = null;
+  function schedule() {
+    if (raf) cancelAnimationFrame(raf);
+    raf = requestAnimationFrame(fast);
+    clearTimeout(slow);
+    slow = setTimeout(heavy, 260);
+  }
+
+  /* ── sharing ───────────────────────────────────────────────────────────── */
+  function toast(msg) {
+    var t = $('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toast._t);
+    toast._t = setTimeout(function () { t.classList.remove('show'); }, 2200);
+  }
+  function exportOpts(title, subtitle) {
+    var pal = palette();
+    return {
+      title: title, subtitle: subtitle, scale: 2,
+      bg: pal.panel, fg: pal.txt, mut: pal.mut,
+      source: 'Exposure Race · calibrated to CyberMon ' + C.snapshot.cvelist + ' · devko.github.io/CyberMon',
+    };
+  }
+  function subtitleFor(id) {
+    var r = lastHeavy;
+    if (!r) return '';
+    if (id === 'race') return pctS(M.densities(P, 8000).pLate) + ' of armed bugs have a working exploit before the hole is closed';
+    if (id === 'funnel') return num(r.fn[0]) + ' criticals a year become ' + num(r.fn[5], 2) + ' compromises';
+    if (id === 'routes') return 'first compromise of the year, by route';
+    if (id === 'surv') return pctS(r.p) + ' chance of compromise within 12 months';
+    if (id === 'torn') return 'ranked by effect on the ' + (METRIC === 'p' ? 'compromise' : 'incident') + ' rate';
+    if (id === 'sweep') return 'what happens if the exploit clock compresses further';
+    if (id === 'severity') return 'CISA KEV against the scored CVE population';
+    if (id === 'volume') return C.volume.curYearRunRate.year + ' run-rate against ' + C.volume.prevYear.year + ' actual';
+    return '';
+  }
+  function chartTitle(id) {
+    var card = $(id).closest('.panel');
+    var h3 = card ? card.querySelector('h3') : null;
+    return h3 ? h3.textContent.trim() : 'Exposure Race';
+  }
+  function download(blob, name) {
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 800);
+  }
+  function wireExport(id) {
+    var svg = $(id);
+    if (!svg) return;
+    var render = function () { return CH.toPNG(svg, exportOpts(chartTitle(id), subtitleFor(id))); };
+    var dl = document.querySelector('[data-dl="' + id + '"]');
+    var cp = document.querySelector('[data-copy="' + id + '"]');
+    if (dl) dl.addEventListener('click', function () {
+      render().then(function (bl) { download(bl, 'exposure-race-' + id + '.png'); toast('PNG saved'); })
+        .catch(function () { toast('Could not render PNG'); });
+    });
+    if (cp) cp.addEventListener('click', function () {
+      render().then(function (bl) {
+        if (window.ClipboardItem && navigator.clipboard && navigator.clipboard.write) {
+          return navigator.clipboard.write([new ClipboardItem({ 'image/png': bl })])
+            .then(function () { toast('Chart copied to clipboard'); });
+        }
+        download(bl, 'exposure-race-' + id + '.png');
+        toast('Clipboard unavailable — PNG saved instead');
+      }).catch(function () { toast('Could not render PNG'); });
+    });
+  }
+
+  /* ── anchors ───────────────────────────────────────────────────────────── */
+  function anchorRow(host, label, kind, value, note) {
+    var wrap = E('div');
+    var dt = E('dt');
+    add(dt, document.createTextNode(label + ' '), E('span', 'tag ' + (kind === 'measured' ? 'm' : 'a'), kind));
+    var dd = E('dd', kind === 'measured' ? 'measured' : 'assumed', value);
+    var sm = E('span', null, note);
+    sm.style.fontSize = '11px';
+    sm.style.color = 'var(--dim)';
+    add(wrap, dt, dd, sm);
+    host.appendChild(wrap);
+  }
+  function renderAnchors() {
+    var host = empty($('anchors'));
+    var crit = C.exploitation.bands.filter(function (x) { return x.band === '9.0-10.0'; })[0];
+    anchorRow(host, 'Criticals that ever get a public working exploit', 'measured',
+      C.armed.pPoCCritical + '%',
+      'CyberMon · ExploitDB + Metasploit + Nuclei against cvelistV5, CY' + C.armed.window);
+    anchorRow(host, 'Criticals confirmed exploited in the wild', 'measured',
+      crit.pExploited + '%', 'CyberMon · CISA KEV ' + C.snapshot.kev + ' against the scored population');
+    anchorRow(host, 'Days from publication to a public exploit (median)', 'measured',
+      C.pocTiming.latest.medianDays + ' d',
+      'CyberMon · ' + C.pocTiming.latest.year + ', 90-day horizon' +
+      (C.pocTiming.latest.provisional ? ' — provisional, right-censored' : ''));
+    anchorRow(host, 'Exploits that appear before the patch does', 'measured',
+      C.pocTiming.latest.pctBefore + '%', 'CyberMon · ' + C.pocTiming.latest.year + ' arming series');
+    anchorRow(host, 'Criticals published worldwide, ' + C.volume.curYearRunRate.year + ' run-rate', 'measured',
+      thou(C.volume.curYearRunRate.critical),
+      'CyberMon · cvelistV5, ' + num(C.yearElapsed * 100) + '% of the year elapsed');
+    anchorRow(host, 'Confirmed-exploited vulns added worldwide per year', 'measured',
+      C.inWild.kevAddedRunRate + ' (' + C.volume.curYearRunRate.year + ' run-rate)',
+      'CyberMon · CISA KEV additions');
+    anchorRow(host, 'CVEs NVD has stopped analysing', 'measured',
+      thou(C.nvd.deferred) + ' (' + C.nvd.deferredShare.toFixed(1) + '%)',
+      'CyberMon · NVD API status labels');
+    Object.keys(M.ASSUMED).forEach(function (k) {
+      var a = M.ASSUMED[k];
+      anchorRow(host, k, 'assumed', a.v + '   (range ' + a.lo + '–' + a.hi + ')', a.why);
+    });
+  }
+
+  function renderEvidence() {
+    var body = empty($('ev-body'));
+    [['9.0-10.0', 'Critical'], ['7.0-8.9', 'High'], ['4.0-6.9', 'Medium'], ['0.1-3.9', 'Low']]
+      .forEach(function (n) {
+        var r = C.exploitation.bands.filter(function (y) { return y.band === n[0]; })[0];
+        if (!r) return;
+        var tr = E('tr');
+        var td0 = E('td', null, n[1] + ' ');
+        var sp = E('span', null, n[0]);
+        sp.style.color = 'var(--dim)';
+        sp.style.fontFamily = 'var(--mono)';
+        sp.style.fontSize = '11px';
+        td0.appendChild(sp);
+        add(tr, td0, E('td', 'n', thou(r.population)), E('td', 'n', thou(r.inKev)),
+          E('td', 'n' + (n[1] === 'Critical' ? ' hi' : ''), r.pExploited.toFixed(3) + '%'));
+        body.appendChild(tr);
+      });
+    var f = empty($('ev-foot'));
+    add(f, b(num(C.exploitation.kevBelowCritical) + '%'),
+      ' of confirmed-exploited vulnerabilities are rated below Critical, and ',
+      b(C.exploitation.criticalEpssBelow1pct + '%'),
+      ' of Critical-rated CVEs carry less than a 1% chance of exploitation. Critical is only ',
+      b(C.exploitation.criticalVsHigh + '×'),
+      ' High. That is a nudge, not a filter — which is why this model runs on whether an exploit exists, not on what the label says.');
+  }
+
+  /* ── init ──────────────────────────────────────────────────────────────── */
+  function init() {
+    try {
+      var stored = localStorage.getItem('er-theme');
+      if (stored) document.documentElement.setAttribute('data-theme', stored);
+    } catch (e) { /* ignore */ }
+    $('theme-btn').textContent = currentTheme() === 'dark' ? '☀ Light' : '☾ Dark';
+
+    fromURL();
+    buildControls(M.SPEC.def, $('cd'), $('cd-adv'));
+    buildControls(M.SPEC.att, $('ca'), $('ca-adv'));
+
+    buildShapeUI();
+    document.querySelectorAll('[data-metric]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        METRIC = btn.dataset.metric;
+        document.querySelectorAll('[data-metric]').forEach(function (x) { x.classList.toggle('on', x === btn); });
+        heavy();
+      });
+    });
+    $('theme-btn').addEventListener('click', function () {
+      setTheme(currentTheme() === 'dark' ? 'light' : 'dark');
+    });
+    $('share-btn').addEventListener('click', function () {
+      var url = toURL();
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(url).then(
+          function () { toast('Link copied — it carries your settings'); },
+          function () { toast('Copy failed — the URL bar already has it'); });
+      } else { toast('The URL bar already carries your settings'); }
+    });
+    $('reset-btn').addEventListener('click', function () {
+      ON = []; MAT = 'typical'; DET = null;
+      P = M.defaults();
+      syncAll();
+      refreshSelectors();
+      schedule();
+    });
+
+    ['race', 'funnel', 'routes', 'surv', 'torn', 'sweep', 'severity', 'volume'].forEach(wireExport);
+
+    document.querySelectorAll('[data-snapshot]').forEach(function (e) {
+      e.textContent = C.generatedAt.slice(0, 10);
+    });
+    document.querySelectorAll('[data-curyear]').forEach(function (e) {
+      e.textContent = String(C.currentYear);
+    });
+    document.querySelectorAll('[data-prevyear]').forEach(function (e) {
+      e.textContent = String(C.volume.prevYear.year);
+    });
+
+    renderAnchors();
+    renderEvidence();
+
+    var resizeT = null;
+    window.addEventListener('resize', function () {
+      clearTimeout(resizeT);
+      resizeT = setTimeout(redrawAll, 140);
+    });
+    var mq = window.matchMedia('(prefers-color-scheme: dark)');
+    if (mq.addEventListener) mq.addEventListener('change', function () {
+      if (!document.documentElement.getAttribute('data-theme')) redrawAll();
+    });
+
+    fast();
+    setTimeout(heavy, 30);
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+  else init();
+})();
+
+</script>
+</body>
+</html>

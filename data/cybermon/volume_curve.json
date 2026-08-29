@@ -1,0 +1,151 @@
+{
+ "generated_at": "2026-08-27T04:29:47Z",
+ "years": [
+  {
+   "year": 1999,
+   "published": 320,
+   "rejected": 1
+  },
+  {
+   "year": 2000,
+   "published": 1437,
+   "rejected": 32
+  },
+  {
+   "year": 2001,
+   "published": 1323,
+   "rejected": 3
+  },
+  {
+   "year": 2002,
+   "published": 1690,
+   "rejected": 9
+  },
+  {
+   "year": 2003,
+   "published": 1223,
+   "rejected": 16
+  },
+  {
+   "year": 2004,
+   "published": 1612,
+   "rejected": 15
+  },
+  {
+   "year": 2005,
+   "published": 6708,
+   "rejected": 97
+  },
+  {
+   "year": 2006,
+   "published": 6885,
+   "rejected": 61
+  },
+  {
+   "year": 2007,
+   "published": 7211,
+   "rejected": 81
+  },
+  {
+   "year": 2008,
+   "published": 5673,
+   "rejected": 36
+  },
+  {
+   "year": 2009,
+   "published": 5732,
+   "rejected": 57
+  },
+  {
+   "year": 2010,
+   "published": 4639,
+   "rejected": 49
+  },
+  {
+   "year": 2011,
+   "published": 4150,
+   "rejected": 49
+  },
+  {
+   "year": 2012,
+   "published": 5288,
+   "rejected": 100
+  },
+  {
+   "year": 2013,
+   "published": 5187,
+   "rejected": 219
+  },
+  {
+   "year": 2014,
+   "published": 7928,
+   "rejected": 86
+  },
+  {
+   "year": 2015,
+   "published": 6494,
+   "rejected": 102
+  },
+  {
+   "year": 2016,
+   "published": 6457,
+   "rejected": 70
+  },
+  {
+   "year": 2017,
+   "published": 14642,
+   "rejected": 3654
+  },
+  {
+   "year": 2018,
+   "published": 16510,
+   "rejected": 2188
+  },
+  {
+   "year": 2019,
+   "published": 17308,
+   "rejected": 1923
+  },
+  {
+   "year": 2020,
+   "published": 18363,
+   "rejected": 1419
+  },
+  {
+   "year": 2021,
+   "published": 20177,
+   "rejected": 2212
+  },
+  {
+   "year": 2022,
+   "published": 25000,
+   "rejected": 1500
+  },
+  {
+   "year": 2023,
+   "published": 28847,
+   "rejected": 577
+  },
+  {
+   "year": 2024,
+   "published": 39925,
+   "rejected": 818
+  },
+  {
+   "year": 2025,
+   "published": 48154,
+   "rejected": 1895
+  },
+  {
+   "year": 2026,
+   "published": 56454,
+   "rejected": 810
+  }
+ ],
+ "projection": {
+  "year": 2026,
+  "published": 86216,
+  "rejected": 1237,
+  "elapsed": 0.655
+ }
+}

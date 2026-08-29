@@ -1,0 +1,276 @@
+{
+ "generated_at": "2026-08-27T04:29:47Z",
+ "min_n": 500,
+ "years": [
+  {
+   "year": 2000,
+   "n": 1437,
+   "missing_cwe": 1433,
+   "pct_missing_cwe": 99.7,
+   "missing_cvss": 1433,
+   "pct_missing_cvss": 99.7,
+   "missing_affected": 1437,
+   "pct_missing_affected": 100.0
+  },
+  {
+   "year": 2001,
+   "n": 1323,
+   "missing_cwe": 1322,
+   "pct_missing_cwe": 99.9,
+   "missing_cvss": 1322,
+   "pct_missing_cvss": 99.9,
+   "missing_affected": 1323,
+   "pct_missing_affected": 100.0
+  },
+  {
+   "year": 2002,
+   "n": 1690,
+   "missing_cwe": 1686,
+   "pct_missing_cwe": 99.8,
+   "missing_cvss": 1686,
+   "pct_missing_cvss": 99.8,
+   "missing_affected": 1690,
+   "pct_missing_affected": 100.0
+  },
+  {
+   "year": 2003,
+   "n": 1223,
+   "missing_cwe": 1221,
+   "pct_missing_cwe": 99.8,
+   "missing_cvss": 1221,
+   "pct_missing_cvss": 99.8,
+   "missing_affected": 1223,
+   "pct_missing_affected": 100.0
+  },
+  {
+   "year": 2004,
+   "n": 1612,
+   "missing_cwe": 1606,
+   "pct_missing_cwe": 99.6,
+   "missing_cvss": 1605,
+   "pct_missing_cvss": 99.6,
+   "missing_affected": 1611,
+   "pct_missing_affected": 99.9
+  },
+  {
+   "year": 2005,
+   "n": 6708,
+   "missing_cwe": 6685,
+   "pct_missing_cwe": 99.7,
+   "missing_cvss": 6681,
+   "pct_missing_cvss": 99.6,
+   "missing_affected": 6705,
+   "pct_missing_affected": 100.0
+  },
+  {
+   "year": 2006,
+   "n": 6885,
+   "missing_cwe": 6861,
+   "pct_missing_cwe": 99.7,
+   "missing_cvss": 6849,
+   "pct_missing_cvss": 99.5,
+   "missing_affected": 6884,
+   "pct_missing_affected": 100.0
+  },
+  {
+   "year": 2007,
+   "n": 7211,
+   "missing_cwe": 7183,
+   "pct_missing_cwe": 99.6,
+   "missing_cvss": 7174,
+   "pct_missing_cvss": 99.5,
+   "missing_affected": 7210,
+   "pct_missing_affected": 100.0
+  },
+  {
+   "year": 2008,
+   "n": 5673,
+   "missing_cwe": 5641,
+   "pct_missing_cwe": 99.4,
+   "missing_cvss": 5636,
+   "pct_missing_cvss": 99.3,
+   "missing_affected": 5672,
+   "pct_missing_affected": 100.0
+  },
+  {
+   "year": 2009,
+   "n": 5732,
+   "missing_cwe": 5692,
+   "pct_missing_cwe": 99.3,
+   "missing_cvss": 5686,
+   "pct_missing_cvss": 99.2,
+   "missing_affected": 5727,
+   "pct_missing_affected": 99.9
+  },
+  {
+   "year": 2010,
+   "n": 4639,
+   "missing_cwe": 4605,
+   "pct_missing_cwe": 99.3,
+   "missing_cvss": 4588,
+   "pct_missing_cvss": 98.9,
+   "missing_affected": 4630,
+   "pct_missing_affected": 99.8
+  },
+  {
+   "year": 2011,
+   "n": 4150,
+   "missing_cwe": 4122,
+   "pct_missing_cwe": 99.3,
+   "missing_cvss": 4114,
+   "pct_missing_cvss": 99.1,
+   "missing_affected": 4146,
+   "pct_missing_affected": 99.9
+  },
+  {
+   "year": 2012,
+   "n": 5288,
+   "missing_cwe": 5239,
+   "pct_missing_cwe": 99.1,
+   "missing_cvss": 5225,
+   "pct_missing_cvss": 98.8,
+   "missing_affected": 5268,
+   "pct_missing_affected": 99.6
+  },
+  {
+   "year": 2013,
+   "n": 5187,
+   "missing_cwe": 5121,
+   "pct_missing_cwe": 98.7,
+   "missing_cvss": 5108,
+   "pct_missing_cvss": 98.5,
+   "missing_affected": 5167,
+   "pct_missing_affected": 99.6
+  },
+  {
+   "year": 2014,
+   "n": 7928,
+   "missing_cwe": 7802,
+   "pct_missing_cwe": 98.4,
+   "missing_cvss": 7787,
+   "pct_missing_cvss": 98.2,
+   "missing_affected": 7840,
+   "pct_missing_affected": 98.9
+  },
+  {
+   "year": 2015,
+   "n": 6494,
+   "missing_cwe": 6428,
+   "pct_missing_cwe": 99.0,
+   "missing_cvss": 6416,
+   "pct_missing_cvss": 98.8,
+   "missing_affected": 6472,
+   "pct_missing_affected": 99.7
+  },
+  {
+   "year": 2016,
+   "n": 6457,
+   "missing_cwe": 6392,
+   "pct_missing_cwe": 99.0,
+   "missing_cvss": 6360,
+   "pct_missing_cvss": 98.5,
+   "missing_affected": 6166,
+   "pct_missing_affected": 95.5
+  },
+  {
+   "year": 2017,
+   "n": 14642,
+   "missing_cwe": 13708,
+   "pct_missing_cwe": 93.6,
+   "missing_cvss": 14211,
+   "pct_missing_cvss": 97.1,
+   "missing_affected": 8254,
+   "pct_missing_affected": 56.4
+  },
+  {
+   "year": 2018,
+   "n": 16510,
+   "missing_cwe": 13974,
+   "pct_missing_cwe": 84.6,
+   "missing_cvss": 14768,
+   "pct_missing_cvss": 89.4,
+   "missing_affected": 8892,
+   "pct_missing_affected": 53.9
+  },
+  {
+   "year": 2019,
+   "n": 17308,
+   "missing_cwe": 14923,
+   "pct_missing_cwe": 86.2,
+   "missing_cvss": 14676,
+   "pct_missing_cvss": 84.8,
+   "missing_affected": 9513,
+   "pct_missing_affected": 55.0
+  },
+  {
+   "year": 2020,
+   "n": 18363,
+   "missing_cwe": 14623,
+   "pct_missing_cwe": 79.6,
+   "missing_cvss": 12291,
+   "pct_missing_cvss": 66.9,
+   "missing_affected": 9398,
+   "pct_missing_affected": 51.2
+  },
+  {
+   "year": 2021,
+   "n": 20177,
+   "missing_cwe": 12972,
+   "pct_missing_cwe": 64.3,
+   "missing_cvss": 11798,
+   "pct_missing_cvss": 58.5,
+   "missing_affected": 9609,
+   "pct_missing_affected": 47.6
+  },
+  {
+   "year": 2022,
+   "n": 25000,
+   "missing_cwe": 10883,
+   "pct_missing_cwe": 43.5,
+   "missing_cvss": 10234,
+   "pct_missing_cvss": 40.9,
+   "missing_affected": 11781,
+   "pct_missing_affected": 47.1
+  },
+  {
+   "year": 2023,
+   "n": 28847,
+   "missing_cwe": 7084,
+   "pct_missing_cwe": 24.6,
+   "missing_cvss": 5697,
+   "pct_missing_cvss": 19.7,
+   "missing_affected": 7391,
+   "pct_missing_affected": 25.6
+  },
+  {
+   "year": 2024,
+   "n": 39925,
+   "missing_cwe": 5367,
+   "pct_missing_cwe": 13.4,
+   "missing_cvss": 2213,
+   "pct_missing_cvss": 5.5,
+   "missing_affected": 2127,
+   "pct_missing_affected": 5.3
+  },
+  {
+   "year": 2025,
+   "n": 48154,
+   "missing_cwe": 5637,
+   "pct_missing_cwe": 11.7,
+   "missing_cvss": 2955,
+   "pct_missing_cvss": 6.1,
+   "missing_affected": 4961,
+   "pct_missing_affected": 10.3
+  },
+  {
+   "year": 2026,
+   "n": 56454,
+   "missing_cwe": 5425,
+   "pct_missing_cwe": 9.6,
+   "missing_cvss": 2978,
+   "pct_missing_cvss": 5.3,
+   "missing_affected": 2440,
+   "pct_missing_affected": 4.3
+  }
+ ]
+}

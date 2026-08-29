@@ -1,0 +1,139 @@
+{
+ "generated_at": "2026-08-27T04:29:47Z",
+ "matched": {
+  "total_kev": 1682,
+  "matched_cve": 1682,
+  "unmatched_cve": 0
+ },
+ "launch_backfill": {
+  "date_added_before": "2023-01-01",
+  "n": 866,
+  "median_days": 887.5
+ },
+ "latency_by_year": [
+  {
+   "year": 2023,
+   "n": 187,
+   "median_days": 12.0,
+   "p25_days": 1.0,
+   "p75_days": 335.5,
+   "pct_negative": 5.3,
+   "pct_over_365d": 24.6
+  },
+  {
+   "year": 2024,
+   "n": 186,
+   "median_days": 21.5,
+   "p25_days": 1.0,
+   "p75_days": 309.8,
+   "pct_negative": 2.7,
+   "pct_over_365d": 24.2
+  },
+  {
+   "year": 2025,
+   "n": 245,
+   "median_days": 26.0,
+   "p25_days": 1.0,
+   "p75_days": 304.0,
+   "pct_negative": 2.9,
+   "pct_over_365d": 22.9
+  },
+  {
+   "year": 2026,
+   "n": 198,
+   "median_days": 17.0,
+   "p25_days": 1.0,
+   "p75_days": 248.2,
+   "pct_negative": 0.5,
+   "pct_over_365d": 21.7
+  }
+ ],
+ "latency_buckets": [
+  {
+   "bucket": "before_publish",
+   "n": 23,
+   "pct": 2.8
+  },
+  {
+   "bucket": "0-7d",
+   "n": 313,
+   "pct": 38.4
+  },
+  {
+   "bucket": "8-30d",
+   "n": 95,
+   "pct": 11.6
+  },
+  {
+   "bucket": "31-90d",
+   "n": 84,
+   "pct": 10.3
+  },
+  {
+   "bucket": "91-365d",
+   "n": 111,
+   "pct": 13.6
+  },
+  {
+   "bucket": "1-3y",
+   "n": 72,
+   "pct": 8.8
+  },
+  {
+   "bucket": "3y+",
+   "n": 118,
+   "pct": 14.5
+  }
+ ],
+ "remediation_span_by_year": [
+  {
+   "year": 2021,
+   "n": 311,
+   "median_days": 181.0,
+   "p25_days": 14.0,
+   "p75_days": 181.0
+  },
+  {
+   "year": 2022,
+   "n": 555,
+   "median_days": 21.0,
+   "p25_days": 21.0,
+   "p75_days": 21.0
+  },
+  {
+   "year": 2023,
+   "n": 187,
+   "median_days": 21.0,
+   "p25_days": 21.0,
+   "p75_days": 21.0
+  },
+  {
+   "year": 2024,
+   "n": 186,
+   "median_days": 21.0,
+   "p25_days": 21.0,
+   "p75_days": 21.0
+  },
+  {
+   "year": 2025,
+   "n": 245,
+   "median_days": 21.0,
+   "p25_days": 21.0,
+   "p75_days": 21.0
+  },
+  {
+   "year": 2026,
+   "n": 198,
+   "median_days": 14.0,
+   "p25_days": 3.0,
+   "p75_days": 14.0
+  }
+ ],
+ "headline": {
+  "latest_year": 2025,
+  "median_days_latest": 26.0,
+  "pct_over_365d_latest": 22.9,
+  "baseline_year": 2023,
+  "median_days_baseline": 12.0
+ }
+}
