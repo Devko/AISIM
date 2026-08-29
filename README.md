@@ -3,6 +3,12 @@
 An interactive Monte Carlo model of one question: **when a vulnerability lands in
 something you expose, does a working exploit exist before you have closed it?**
 
+The AI framing of that question turns out to be the wrong one. The exploit clock
+everyone expects AI to have collapsed was already at zero: measured median time
+from CVE publication to public exploit code has **not exceeded one day in any
+settled year since 2015**. Compression is available here as an explicit scenario
+slider, not as a baseline assumption.
+
 It is calibrated against a dated, public corpus rather than against vendor
 narrative — and the first thing that corpus says is that the obvious way to
 build this model would have been wrong.

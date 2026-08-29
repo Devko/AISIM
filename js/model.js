@@ -69,7 +69,7 @@
       why: 'Median that reproduces the reported 29-minute average eCrime breakout under this model\'s lognormal spread. Upper bound is the 2024 figure (~48 min average).',
       src: 'CrowdStrike Global Threat Report 2026' },
     objectiveMedian:{ v: 5,    lo: 2,    hi: 12,
-      why: 'Median dwell when the adversary announces itself, usually via a ransomware note — a direct read on time from foothold to objective.',
+      why: 'Median dwell when the adversary announces itself, usually via a ransomware note, giving a direct read on time from foothold to objective.',
       src: 'Mandiant M-Trends 2026' },
     /* P(contain) in each of the three detection regimes */
     containFast:    { v: 0.92, lo: 0.80, hi: 0.98, why: 'Detected before breakout.' },
@@ -84,7 +84,7 @@
     exploitWorks:   { v: 0.35, lo: 0.18, hi: 0.55, why: 'Exploits fail: wrong version, hardening, luck.' },
     /* how much slower detection is on a system with no endpoint telemetry */
     blindMult:      { v: 2.6,  lo: 1.8,  hi: 5,
-      why: 'Median dwell is 26 days when an external party notifies you and 10 days when you detect it yourself — a measured 2.6x penalty for finding out from somebody else.',
+      why: 'Median dwell is 26 days when an external party notifies you and 10 days when detected internally, a measured 2.6x penalty for external notification.',
       src: 'Mandiant M-Trends 2026' },
   };
 
@@ -95,54 +95,54 @@
     def: [
       { k: 'exposed',   l: 'Internet-exposed systems',   min: 5,   max: 2000, step: 5,   v: 100,
         f: function (v) { return fmtN(v); },
-        h: 'Anything an unauthenticated attacker can reach.' },
+        h: 'Any system reachable by an unauthenticated attacker.' },
       { k: 'edge',      l: '…that are edge appliances',  min: 0,   max: 100,  step: 5,   v: 25,
         f: function (v) { return v + '%'; },
-        h: 'VPN, firewall, gateway, file transfer. No endpoint agent, slower to patch, hit hardest.' },
-      { k: 'inventory', l: 'Exposed systems you know about', min: 80, max: 100, step: 1, v: 96,
+        h: 'VPN, firewall, gateway, managed file transfer. No endpoint agent, slower to remediate, most heavily targeted.' },
+      { k: 'inventory', l: 'Exposed systems in inventory', min: 80, max: 100, step: 1, v: 96,
         f: function (v) { return v + '%'; },
-        h: 'The rest belong to no patch cycle at all.' },
-      { k: 'awareH',    l: 'Time to know a bug is yours', min: 1,  max: 336, step: 1,   v: 30,
+        h: 'The remainder sit in no remediation cycle at all.' },
+      { k: 'awareH',    l: 'Time to establish applicability', min: 1,  max: 336, step: 1,   v: 30,
         f: fmtH,
-        h: 'From publication to you knowing it touches your estate. Once you patch in hours, this is your real clock.' },
-      { k: 'cadence',   l: 'Routine patch cycle',        min: 1,   max: 90,   step: 1,   v: 14,
+        h: 'From publication to confirming the vulnerability affects your estate. Once remediation runs in hours, this is the governing interval.' },
+      { k: 'cadence',   l: 'Routine remediation cycle',        min: 1,   max: 90,   step: 1,   v: 14,
         f: function (v) { return v + ' d'; },
-        h: 'Days between scheduled windows.' },
-      { k: 'emergH',    l: 'Emergency patch speed',      min: 0,   max: 336,  step: 6,   v: 72,
+        h: 'Days between scheduled change windows.' },
+      { k: 'emergH',    l: 'Out-of-band remediation time',      min: 0,   max: 336,  step: 6,   v: 72,
         f: function (v) { return v === 0 ? 'none' : fmtH(v); },
-        h: 'Out-of-band fix. Zero means every bug waits for the routine cycle.' },
-      { k: 'emergHit',  l: 'Exploited bugs that trigger it', min: 0, max: 100, step: 5, v: 60,
+        h: 'Emergency change path. Zero means every vulnerability waits for the routine cycle.' },
+      { k: 'emergHit',  l: 'Exploited vulns triggering out-of-band', min: 0, max: 100, step: 5, v: 60,
         f: function (v) { return v + '%'; },
-        h: 'You have to recognise it as urgent first.' },
-      { k: 'virtual',   l: 'Held off by WAF / IPS rule', min: 0,   max: 80,   step: 5,   v: 20,
+        h: 'Requires the vulnerability to be recognised as urgent first.' },
+      { k: 'virtual',   l: 'Mitigated by WAF or IPS rule', min: 0,   max: 80,   step: 5,   v: 20,
         f: function (v) { return v + '%'; },
-        h: 'Buys the window back while the real fix ships. Does not apply to appliances.' },
+        h: 'Recovers the exposure window while the permanent fix ships. Does not apply to appliances.' },
       { k: 'detect',    l: 'Time to detect a compromise', min: 0.1, max: 60,  step: 0.1, v: 14,
         f: function (v) { return v < 1 ? Math.round(v * 24) + ' h' : Math.round(v) + ' d'; },
-        h: 'Median dwell on a system you actually monitor.' },
+        h: 'Median dwell time on a monitored system.' },
       { k: 'edrCoverage', l: 'Estate with endpoint telemetry', min: 0, max: 100, step: 5, v: 70,
         f: function (v) { return v + '%'; },
-        h: 'Appliances are excluded automatically — they take no agent. A compromise off-telemetry is usually found by somebody else.' },
+        h: 'Appliances are excluded automatically, since they support no agent. Compromise outside telemetry is typically reported by a third party.' },
     ],
     att: [
       { k: 'stackVulns', l: 'Critical vulns in your stack / yr', min: 0, max: 200, step: 1, v: 34,
         f: function (v) { return fmtN(v); },
-        h: 'Published criticals in software you actually run. Worldwide run-rate is ' + fmtN(C.volume.curYearRunRate.critical) + '.' },
+        h: 'Published criticals in software you operate. Worldwide run-rate is ' + fmtN(C.volume.curYearRunRate.critical) + '.' },
       { k: 'ai',        l: 'Exploit-clock compression',   min: 0,   max: 100,  step: 1,   v: 0,
         f: function (v) { return v === 0 ? 'as measured' : '+' + v; },
-        h: 'Zero is the measured ' + C.pocTiming.latest.year + ' clock. Above zero is a what-if: faster exploits, more of them, more before disclosure.' },
+        h: 'Zero is the measured ' + C.pocTiming.latest.year + ' distribution. Above zero models faster exploit development, greater volume, and more pre-disclosure availability.' },
       { k: 'scan',      l: 'Mass-exploitation pressure',  min: 0,   max: 100,  step: 1,   v: 50,
         f: function (v) { return String(v); },
-        h: 'How fast opportunistic exploitation finds you once code is public.' },
+        h: 'Rate at which opportunistic exploitation reaches you once exploit code is public.' },
       { k: 'campaigns', l: 'Targeted campaigns / yr',     min: 0,   max: 100,  step: 1,   v: 6,
         f: function (v) { return fmtN(v); },
-        h: 'Runs that enumerate your surface rather than scanning the world.' },
+        h: 'Operations that enumerate your estate specifically rather than scanning indiscriminately.' },
       { k: 'agentSkill', l: 'Campaign success vs a patched surface', min: 0, max: 10, step: 0.5, v: 1,
         f: function (v) { return v + '%'; },
-        h: 'Per campaign. Misconfiguration, chained logic flaws, credentials.' },
-      { k: 'supply',    l: 'Supply-chain hits reaching you / yr', min: 0, max: 3, step: 0.01, v: 0.12,
+        h: 'Per campaign, via misconfiguration, chained logic flaws or credential abuse.' },
+      { k: 'supply',    l: 'Supply-chain compromises reaching you / yr', min: 0, max: 3, step: 0.01, v: 0.12,
         f: function (v) { return v.toFixed(2); },
-        h: 'Poisoned dependency or signed update. Your patch cadence is irrelevant to these.' },
+        h: 'Compromised dependency or signed update. Remediation cadence does not apply to this vector.' },
     ],
   };
 
@@ -175,45 +175,45 @@
   var TRAITS = {
     saas: {
       l: 'We ship SaaS',
-      d: 'Your product is the exposed surface: a wide web tier, few appliances, and you can deploy your own fix in an hour. The trade is a much larger dependency stream.',
+      d: 'The product is the exposed surface: a wide web tier, few appliances, and first-party fixes deployable within the hour. The trade-off is a substantially larger dependency stream.',
       m: { exposed: 2.4, edge: 0.35, cadence: 0.25, emergH: 0.25, awareH: 0.5,
            stackVulns: 1.9, supply: 2.5, virtual: '+20', edrCoverage: '+12' },
     },
     vendor: {
       l: 'We sell software',
-      d: 'Customers run what you build, which makes you a supply-chain node. Targeted far more than your size suggests, and your build and signing path is part of the attack surface.',
+      d: 'Customers operate what you build, which makes you a supply-chain node. Targeted well above what headcount would suggest, and the build and signing pipeline forms part of the attack surface.',
       m: { campaigns: 3, supply: 3, stackVulns: 1.3 },
     },
     corponly: {
       l: 'Corporate network only',
-      d: 'You run software, you do not sell it. A small exposed surface - VPN, mail, a few web apps - which makes it appliance-heavy for its size.',
+      d: 'Software is operated, not distributed. A small exposed surface of VPN, mail and a few web applications, which makes it appliance-heavy for its size.',
       m: { exposed: 0.55, edge: 1.4, stackVulns: 0.7, campaigns: 0.7 },
     },
     ot: {
       l: 'OT / ICS',
-      d: 'Change windows are measured in months and a reboot has a safety case. Long-lived appliances, almost no endpoint telemetry, and a small surface you cannot afford to lose.',
+      d: 'Change windows run to months and any reboot carries a safety case. Long-lived appliances, minimal endpoint telemetry, and a small surface with high consequence of loss.',
       m: { edge: 2.0, cadence: 4.0, emergH: 3.0, emergHit: 0.5, awareH: 3.0,
            edrCoverage: 0.3, detect: 2.5, stackVulns: 0.7 },
     },
     regulated: {
       l: 'Regulated / finance',
-      d: 'Heavily targeted, but funded to match: enforced change control, real detection, and a third-party estate large enough to be its own problem.',
+      d: 'Heavily targeted and funded accordingly: enforced change control, maintained detection, and a third-party estate large enough to constitute its own exposure.',
       m: { campaigns: 4, supply: 2, inventory: '+2', virtual: '+25',
            emergHit: 1.35, edrCoverage: '+10' },
     },
     hosting: {
       l: 'We host for others',
-      d: 'A very large exposed surface held on behalf of other people, under permanent campaign pressure. One appliance bug becomes a customer-wide event.',
+      d: 'A large exposed surface operated on behalf of third parties, under sustained campaign pressure. A single appliance vulnerability becomes a customer-wide event.',
       m: { exposed: 6, campaigns: 5, stackVulns: 2.2, inventory: '-6', scan: '+20' },
     },
     legacy: {
       l: 'Legacy we cannot touch',
-      d: 'Systems nobody will approve downtime for, or that no longer receive fixes at all. They drop out of the patch cycle without leaving the estate.',
+      d: 'Systems with no approved downtime window, or past end of support. They leave the remediation cycle without leaving the estate.',
       m: { cadence: 2.2, inventory: '-8', virtual: 0.4, edrCoverage: 0.6, emergHit: 0.7 },
     },
     thirdparty: {
       l: 'Heavy third-party / cloud',
-      d: 'Much of what you depend on is operated by somebody else. Your patch cadence does not reach it, and neither does your telemetry.',
+      d: 'A significant share of the dependency estate is operated by third parties. Neither remediation cadence nor telemetry reaches it.',
       m: { supply: 3.5, inventory: '-4', stackVulns: 1.4, edrCoverage: 0.85 },
     },
   };
@@ -224,11 +224,11 @@
    * Coverage without speed buys very little - the model will show you that
    * if you set the two independently. */
   var DETECTION = {
-    none:    { l: 'No detection',     d: 'Logs exist somewhere. Nobody reads them. You find out from a third party, late.',                              p: { detect: 45,  edrCoverage: 5 } },
-    siem:    { l: 'SIEM, untuned',    d: 'Collection is solved, detection content is not. In practice somebody outside tells you first — a 26-day median.', p: { detect: 26,  edrCoverage: 40 } },
-    edr:     { l: 'EDR deployed',     d: 'Endpoint agents on most servers, business-hours response. Matches the 10-day median for organisations that find it themselves.', p: { detect: 10,  edrCoverage: 78 } },
-    tuned:   { l: 'EDR + tuned SIEM', d: 'Agents plus real use cases against real telemetry, with somebody on the queue.',                                p: { detect: 3,   edrCoverage: 88 } },
-    managed: { l: 'Managed 24/7',     d: 'MDR or an in-house SOC that actually runs overnight. This is where breakout time stops winning by default.',    p: { detect: 1,   edrCoverage: 93 } },
+    none:    { l: 'No detection',     d: 'Logs are retained but not reviewed. Notification arrives late, from a third party.',                              p: { detect: 45,  edrCoverage: 5 } },
+    siem:    { l: 'SIEM, untuned',    d: 'Collection is in place, detection content is not. External notification typically arrives first, at a 26-day median.', p: { detect: 26,  edrCoverage: 40 } },
+    edr:     { l: 'EDR deployed',     d: 'Endpoint agents on most servers with business-hours response. Matches the 10-day median for organisations detecting internally.', p: { detect: 10,  edrCoverage: 78 } },
+    tuned:   { l: 'EDR + tuned SIEM', d: 'Agents plus maintained detection content against live telemetry, with an analyst on the queue.',                                p: { detect: 3,   edrCoverage: 88 } },
+    managed: { l: 'Managed 24/7',     d: 'MDR or an in-house SOC with genuine out-of-hours cover. This is where adversary breakout time stops winning by default.',    p: { detect: 1,   edrCoverage: 93 } },
   };
 
   /* MATURITY - how well the estate is run. Orthogonal to what you are, so it
@@ -242,7 +242,7 @@
    * same primitive this model runs on. The numbers below express that regime
    * as a transform on the baseline estate. */
   var MATURITY = {
-    tight:   { l: 'Well run',  cadence: 0.25, emergH: 0.20, emergHit: 1.5, awareH: 0.25, detect: 0.05, virtual: 2.5, inventory: 4,   edrCoverage: 12 },
+    tight:   { l: 'Mature',  cadence: 0.25, emergH: 0.20, emergHit: 1.5, awareH: 0.25, detect: 0.05, virtual: 2.5, inventory: 4,   edrCoverage: 12 },
     typical: { l: 'Typical',   cadence: 1,    emergH: 1,    emergHit: 1,   awareH: 1,    detect: 1,    virtual: 1,   inventory: 0,   edrCoverage: 0 },
     loose:   { l: 'Sprawling', cadence: 2.6,  emergH: 2.4,  emergHit: 0.5, awareH: 3.5,  detect: 3.2,  virtual: 0.3, inventory: -12, edrCoverage: -25 },
     bod:     { l: 'BOD 26-04',  cadence: 1,    emergH: 1,    emergHit: 1.55, awareH: 0.33, detect: 1,    virtual: 1,   inventory: 3,   edrCoverage: 4 },
@@ -459,11 +459,11 @@
    * separately as `wildShare`. */
   var FUNNEL = [
     'Criticals published in your stack',
-    'In a product you actually run',
-    'A working exploit exists at all',
-    'A patch window is open when it lands',
+    'Present in software you operate',
+    'Public exploit code exists',
+    'Unremediated when exploit code lands',
     'A campaign reaches your estate',
-    'The exploit works and they are in',
+    'Exploitation succeeds',
   ];
 
   function simulate(P, trials, seed, opts) {

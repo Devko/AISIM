@@ -61,8 +61,12 @@
    * ═══════════════════════════════════════════════════════════════════════ */
   function race(svg, w, d, pal) {
     var narrow = w < 620;
-    var h = narrow ? 330 : 380;
-    var L = 46, R = w - 14, T = narrow ? 44 : 38, BOT = h - 46, MID = Math.round(T + (BOT - T) * 0.52);
+    /* The bottom gutter carries three stacked rows below the axis — tick
+     * labels, the band name, then the scale caption. They get reserved slots
+     * (BOT+18 / +36 / +50) rather than hand-tuned offsets, because two labels
+     * anchored to the same edge will always eventually collide. */
+    var h = narrow ? 348 : 396;
+    var L = 46, R = w - 14, T = narrow ? 44 : 38, BOT = h - 62, MID = Math.round(T + (BOT - T) * 0.52);
     frame(svg, w, h);
 
     var defs = el('defs');
@@ -79,10 +83,10 @@
     svg.appendChild(el('rect', { x: L, y: T, width: Math.max(0, x0px - L), height: BOT - T, fill: pal.zero, 'fill-opacity': 0.07 }));
     svg.appendChild(el('line', { x1: x0px, y1: T - 5, x2: x0px, y2: BOT + 4, stroke: pal.zero, 'stroke-width': 1.5 }));
     if (narrow) {
-      txt(svg, x0px, T - 26, 'DAY 0 — PATCH AVAILABLE', { a: 'middle', c: pal.zero, fs: 10, ls: '.08em', mono: true });
-      txt(svg, L, T - 10, '← exploit before patch', { c: pal.zero, fs: 10 });
+      txt(svg, x0px, T - 26, 'DAY 0 · PATCH AVAILABLE', { a: 'middle', c: pal.zero, fs: 10, ls: '.08em', mono: true });
+      txt(svg, L, T - 10, '← exploit precedes patch', { c: pal.zero, fs: 10 });
     } else {
-      txt(svg, x0px - 8, T - 12, '← A WORKING EXPLOIT BEFORE A PATCH EXISTS', { a: 'end', c: pal.zero, fs: 10, ls: '.08em', mono: true });
+      txt(svg, x0px - 8, T - 12, '← EXPLOIT AVAILABLE BEFORE ANY PATCH', { a: 'end', c: pal.zero, fs: 10, ls: '.08em', mono: true });
       txt(svg, x0px + 8, T - 12, 'PATCH AVAILABLE · DAY 0', { c: pal.zero, fs: 10, ls: '.08em', mono: true });
     }
 
@@ -136,8 +140,7 @@
       var atZero = d.beforeFrac;
       var yz = MID + atZero * hDn;
       svg.appendChild(el('circle', { cx: x0px, cy: yz, r: 4, fill: pal.att, stroke: pal.panel, 'stroke-width': 1.5 }));
-      txt(svg, x0px + 8, yz + 4, pctS(atZero) + ' already armed', { c: pal.att, fs: 10.5, w: 600 });
-      txt(svg, L, MID + hDn + 14, 'cumulative share of exploits that exist by then', { c: pal.att, fs: 10, 'fill-opacity': 0.75 });
+      txt(svg, x0px + 8, yz + 4, pctS(atZero) + ' already exploitable', { c: pal.att, fs: 10.5, w: 600 });
     }
 
     /* Overflow: mass outside the drawn window is labelled, not folded into the
@@ -149,21 +152,29 @@
     };
     if (of.aBelow > 0.004) chip(L + 2, BOT - 4, 'start', pal.att, '◂ ' + pctS(of.aBelow) + ' earlier');
     if (of.aAbove > 0.004) chip(R - 2, BOT - 4, 'end', pal.att, pctS(of.aAbove) + ' later ▸');
-    if (of.dAbove > 0.004) chip(R - 2, T + 26, 'end', pal.def, pctS(of.dAbove) + ' still open ▸');
+    if (of.dAbove > 0.004) chip(R - 2, T + 26, 'end', pal.def, pctS(of.dAbove) + ' unremediated ▸');
 
-    txt(svg, L, T + 12, 'WHEN YOU HAVE CLOSED IT', { c: pal.def, fs: 10.5, ls: '.09em', mono: true });
-    txt(svg, L, BOT + 36, 'WHEN A WORKING EXPLOIT EXISTS', { c: pal.att, fs: 10.5, ls: '.09em', mono: true });
+    /* Narrow shortens both band names: the full strings run under the headline
+     * badge and the day-zero readout at phone widths. */
+    txt(svg, L, T + 12, narrow ? 'REMEDIATED' : 'WHEN REMEDIATION COMPLETES',
+      { c: pal.def, fs: 10.5, ls: '.09em', mono: true });
+    txt(svg, L, BOT + 36, narrow ? 'EXPLOIT AVAILABLE' : 'WHEN PUBLIC EXPLOIT CODE EXISTS',
+      { c: pal.att, fs: 10.5, ls: '.09em', mono: true });
+    if (d.cum) {
+      txt(svg, L, BOT + 50, 'cumulative share of exploits available by day',
+        { c: pal.att, fs: 10, 'fill-opacity': 0.75 });
+    }
 
     /* headline badge */
-    var bw = narrow ? 150 : 232, bh = 60, bx = R - bw - 2, by = T + 4;
+    var bw = narrow ? 150 : 248, bh = 60, bx = R - bw - 2, by = T + 4;
     svg.appendChild(el('rect', { x: bx, y: by, width: bw, height: bh, rx: 8, fill: pal.sunk, stroke: pal.rule }));
     var n1 = el('text', { x: bx + 14, y: by + 32, 'font-size': 28, fill: pal.bad, 'font-weight': 800 });
     n1.textContent = pctS(d.pLate);
     svg.appendChild(n1);
-    txt(svg, bx + 14, by + 48, narrow ? 'THEY WIN THE RACE' : 'OF ARMED BUGS: THEY WIN THE RACE',
+    txt(svg, bx + 14, by + 48, narrow ? 'EXPLOITED FIRST' : 'OF WEAPONISED VULNS, EXPLOITED FIRST',
       { c: pal.mut, fs: 10, ls: '.07em', mono: true });
 
-    txt(svg, R, BOT + 36, pctS(d.beforeFrac) + ' start before day 0', { a: 'end', c: pal.mut, fs: 10.5 });
+    txt(svg, R, BOT + 36, pctS(d.beforeFrac) + ' precede disclosure', { a: 'end', c: pal.mut, fs: 10.5 });
     return svg;
   }
 
@@ -197,7 +208,7 @@
         txt(svg, dx, narrow ? y - 4 : y + 1, '−' + drop.toFixed(0) + '%', { a: 'end', c: pal.dim, fs: 10, mono: true });
       }
     });
-    txt(svg, L, T + labels.length * rh + (narrow ? 26 : 16), 'per simulated year · bar width is √-scaled', { c: pal.dim, fs: 10 });
+    txt(svg, L, T + labels.length * rh + (narrow ? 26 : 16), 'per simulated year, bar width square-root scaled', { c: pal.dim, fs: 10 });
     return svg;
   }
 
@@ -206,9 +217,9 @@
    * ═══════════════════════════════════════════════════════════════════════ */
   function routes(svg, w, r, pal) {
     var names = [
-      'Opportunistic — mass exploitation in your window',
-      'Targeted campaign against your surface',
-      'Supply chain — patching is irrelevant',
+      'Opportunistic: mass exploitation in the exposure window',
+      'Targeted campaign against the exposed estate',
+      'Supply chain: remediation cadence does not apply',
     ];
     var cols = [pal.att, pal.warn, pal.zero];
     var rh = 56, h = names.length * rh + 6;
@@ -314,8 +325,8 @@
     var c = XY([curX, curY]);
     svg.appendChild(el('line', { x1: c[0], y1: T, x2: c[0], y2: B, stroke: pal.txt, 'stroke-dasharray': '3 3', 'stroke-opacity': 0.6 }));
     svg.appendChild(el('circle', { cx: c[0], cy: c[1], r: 4.5, fill: pal.txt }));
-    txt(svg, Math.min(c[0] + 8, R - 60), Math.max(T + 12, c[1] - 9), 'you are here', { c: pal.txt, fs: 10.5 });
-    txt(svg, L, B + 34, 'hypothetical exploit-clock compression →', { c: pal.dim, fs: 10 });
+    txt(svg, Math.min(c[0] + 8, R - 60), Math.max(T + 12, c[1] - 9), 'current settings', { c: pal.txt, fs: 10.5 });
+    txt(svg, L, B + 34, 'modelled exploit-clock compression →', { c: pal.dim, fs: 10 });
     return svg;
   }
 
@@ -333,7 +344,7 @@
     var names = { '9.0-10.0': 'Critical', '7.0-8.9': 'High', '4.0-6.9': 'Medium', '0.1-3.9': 'Low' };
     var order = ['9.0-10.0', '7.0-8.9', '4.0-6.9', '0.1-3.9'];
 
-    txt(svg, L, T - 6, 'SHARE OF EACH SEVERITY BAND EVER CONFIRMED EXPLOITED', { c: pal.mut, fs: 10, ls: '.08em', mono: true });
+    txt(svg, L, T - 6, 'SHARE OF EACH SEVERITY BAND CONFIRMED EXPLOITED', { c: pal.mut, fs: 10, ls: '.08em', mono: true });
 
     order.forEach(function (key, i) {
       var b = bands.find(function (x) { return x.band === key; });
@@ -351,7 +362,7 @@
     });
 
     var fy = T + bands.length * rh + 18;
-    txt(svg, L, fy, 'Critical is only ' + cal.exploitation.criticalVsHigh + '× High — and ' +
+    txt(svg, L, fy, 'Critical is only ' + cal.exploitation.criticalVsHigh + '× High, and ' +
       cal.exploitation.kevBelowCritical.toFixed(0) + '% of confirmed-exploited bugs are rated below Critical.',
       { c: pal.txt, fs: 11.5 });
     return svg;
@@ -371,7 +382,7 @@
     frame(svg, w, h);
     var L = 4, R = w - 4, T = 26;
     var max = Math.max.apply(null, rows.map(function (r) { return r.pub; }));
-    txt(svg, L, 12, 'PUBLISHED CVES AND THE CRITICAL SLICE', { c: pal.mut, fs: 10, ls: '.08em', mono: true });
+    txt(svg, L, 12, 'PUBLISHED CVES AND THE CRITICAL-RATED SHARE', { c: pal.mut, fs: 10, ls: '.08em', mono: true });
 
     rows.forEach(function (r, i) {
       var y = T + i * 74;
@@ -384,7 +395,7 @@
       txt(svg, L + Math.max(2, cw) + 8, y + 35,
         r.crit.toLocaleString('en-US') + ' critical · ' + r.share.toFixed(1) + '% of scored',
         { c: pal.bad, fs: 11.5, w: 600, mono: true });
-      if (r.partial) txt(svg, L, y + 56, 'linear run-rate of a partial year — calendar arithmetic, not a forecast', { c: pal.dim, fs: 10 });
+      if (r.partial) txt(svg, L, y + 56, 'linear run-rate of a partial year, not a forecast', { c: pal.dim, fs: 10 });
     });
     txt(svg, L, h - 6, 'Criticals grew ' + cal.volume.growth.critical + '× against ' + cal.volume.growth.published + '× total volume.',
       { c: pal.txt, fs: 11.5 });

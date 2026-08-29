@@ -206,7 +206,7 @@
     });
     $('desc-profile').textContent = ON.length
       ? estateSummary()
-      : 'Nothing picked — a generic mid-size estate. ' + estateSummary();
+      : 'No attributes selected. Generic mid-size estate: ' + estateSummary();
     $('desc-detection').textContent = M.DETECTION[det] ? M.DETECTION[det].d : '';
   }
   function buildShapeUI() {
@@ -233,29 +233,29 @@
     { k: 'edge',       lo: 0,    hi: 70,  l: 'Edge appliance share' },
     { k: 'inventory',  lo: 100,  hi: 86,  l: 'Inventory coverage' },
     { k: 'detect',     lo: 0.25, hi: 45,  l: 'Time to detect' },
-    { k: 'cadence',    lo: 2,    hi: 60,  l: 'Patch cycle' },
-    { k: 'awareH',     lo: 4,    hi: 240, l: 'Time to know it is yours' },
-    { k: 'emergH',     lo: 12,   hi: 0,   l: 'Emergency patching' },
-    { k: 'emergHit',   lo: 95,   hi: 25,  l: 'Emergency trigger rate' },
+    { k: 'cadence',    lo: 2,    hi: 60,  l: 'Routine remediation cycle' },
+    { k: 'awareH',     lo: 4,    hi: 240, l: 'Triage to applicability' },
+    { k: 'emergH',     lo: 12,   hi: 0,   l: 'Out-of-band remediation' },
+    { k: 'emergHit',   lo: 95,   hi: 25,  l: 'Out-of-band trigger rate' },
     { k: 'virtual',    lo: 70,   hi: 0,   l: 'WAF / virtual patching' },
     { k: 'campaigns',  lo: 0,    hi: 30,  l: 'Targeted campaigns' },
     { k: 'supply',     lo: 0,    hi: 1,   l: 'Supply-chain hits' },
     { k: 'ai',         lo: 0,    hi: 80,  l: 'Exploit-clock compression' },
   ];
   var ADVICE = {
-    stackVulns: ['Run less software at the edge', 'Every product you expose is a subscription to its vulnerability stream. This is the largest single term in the model.'],
-    exposed:    ['Cut the exposed surface', 'Fewer reachable systems shrinks every other term at once.'],
-    edge:       ['Reduce or ring-fence edge appliances', 'They patch slower, take no endpoint agent, and are the class where mass exploitation starts on day zero.'],
-    inventory:  ['Close the inventory gap', 'A system in no patch cycle is exposed for months, not days.'],
-    detect:     ['Detect faster', 'This does not stop a compromise. It decides whether the compromise becomes an incident — and on that metric nothing else comes close.'],
-    cadence:    ['Shorten the routine cycle', 'Helps, but it has a floor: a fifth of exploitation predates the patch entirely.'],
-    awareH:     ['Shorten the time to know it is yours', 'Once you can patch in hours, knowing is the whole clock.'],
-    emergH:     ['Build a real out-of-band path', 'Without one, every urgent bug inherits the routine cadence.'],
-    emergHit:   ['Fix the trigger, not the speed', 'Patching in hours does not help if you do not know the bug touches you.'],
-    virtual:    ['Put exposed services where a rule ships in minutes', 'Buys the window back while the real fix is tested. Does not cover appliances.'],
-    campaigns:  ['Instrument the edge for enumeration', 'Targeted campaigns look different from background scanning, if anyone is looking.'],
-    supply:     ['Verify what you install', 'Nothing in your patch cadence touches this route.'],
-    ai:         ['Not yours to move', 'Plan the defender clock around it rather than hoping the attacker clock holds still.'],
+    stackVulns: ['Reduce edge software footprint', 'Each exposed product commits you to its vulnerability stream. This is the largest single term in the model.'],
+    exposed:    ['Reduce the exposed attack surface', 'Fewer reachable systems reduces every other term simultaneously.'],
+    edge:       ['Reduce or segment edge appliances', 'They remediate slower, support no endpoint agent, and are the asset class where mass exploitation begins at day zero.'],
+    inventory:  ['Close the asset inventory gap', 'A system in no remediation cycle stays exposed for months rather than days.'],
+    detect:     ['Reduce time to detect', 'This does not prevent compromise. It determines whether a compromise escalates to an incident, and no other parameter comes close on that metric.'],
+    cadence:    ['Shorten the routine remediation cycle', 'Effective, but floored: around a fifth of exploitation precedes patch availability entirely.'],
+    awareH:     ['Shorten triage to applicability', 'Once remediation runs in hours, triage is the entire timeline.'],
+    emergH:     ['Establish an out-of-band remediation path', 'Without one, every urgent vulnerability inherits the routine cadence.'],
+    emergHit:   ['Fix the trigger, not the speed', 'Remediating in hours has no effect if applicability is never established.'],
+    virtual:    ['Front exposed services with enforceable rulesets', 'Recovers the exposure window while the permanent fix is tested. Does not cover appliances.'],
+    campaigns:  ['Instrument the edge for enumeration', 'Targeted campaigns are distinguishable from background scanning where telemetry exists.'],
+    supply:     ['Verify software provenance and integrity', 'Remediation cadence has no effect on this vector.'],
+    ai:         ['Outside defender control', 'Plan the remediation timeline against it rather than assuming the adversary timeline holds constant.'],
   };
 
   function over(k, v) { var o = {}; Object.keys(P).forEach(function (x) { o[x] = P[x]; }); o[k] = v; return o; }
@@ -288,14 +288,16 @@
      * interval to mean anything. Show the point estimate live and keep the last
      * trustworthy band rather than flashing a number that is mostly noise. */
     if (r.bandReliable) {
-      lastBand.p = '90% band ' + pctS(r.pLo) + '–' + pctS(r.pHi);
-      lastBand.i = '90% band ' + pctS(r.incLo) + '–' + pctS(r.incHi);
+      lastBand.p = '90% band ' + pctS(r.pLo) + ' to ' + pctS(r.pHi);
+      lastBand.i = '90% band ' + pctS(r.incLo) + ' to ' + pctS(r.incHi);
     }
     setStat('s-p', pctS(r.p), 'of years', lastBand.p);
     setStat('s-i', pctS(r.incident), 'of years', lastBand.i);
-    setStat('s-n', r.events < 10 ? num(r.events, 2) : num(r.events), 'expected', 'compromised systems / yr');
-    if (r.med == null) setStat('s-t', '—', 'not reached', 'most years stay clean');
-    else setStat('s-t', num(r.med), 'days', 'median time to first compromise');
+    setStat('s-n', r.events < 10 ? num(r.events, 2) : num(r.events), 'systems', 'across the 12-month window');
+    /* A bare rule in the value slot reads as a failed render, not as "this does
+     * not happen inside the window". Give it an actual bound. */
+    if (r.med == null) setStat('s-t', '>12', 'months', 'no compromise in most simulated years');
+    else setStat('s-t', num(r.med), 'days', 'across simulated years');
   }
 
   function drawRace() {
@@ -303,8 +305,8 @@
     CH.race($('race'), width('race'), d, palette());
     var n = empty($('race-note'));
     add(n, 'Measured ' + C.pocTiming.latest.year + ' clock: median ',
-      b(CH.fmtDays(d.median)), ' from publication to a public exploit, ',
-      b(pctS(d.beforeFrac)), ' of them before the patch exists.');
+      b(CH.fmtDays(d.median)), ' from publication to public exploit code, ',
+      b(pctS(d.beforeFrac)), ' of it ahead of patch availability.');
     if (P.ai > 0) add(n, ' Compression is at ', b('+' + P.ai), ', scaling that clock by ×' + d.scale.toFixed(2) + '.');
   }
 
@@ -361,9 +363,9 @@
 
   function updateWild(r) {
     var n = empty($('wild-note'));
-    add(n, 'Of the ', b(num(r.fn[2], 2)), ' armed bugs a year, ', b(num(r.wild, 2)),
-      ' (' + pctS(r.wildShare) + ') are confirmed used against real targets. The rest still draw ' +
-      'opportunistic traffic, at a fraction of the hazard.');
+    add(n, 'Of the ', b(num(r.fn[2], 2)), ' weaponised vulnerabilities a year, ', b(num(r.wild, 2)),
+      ' (' + pctS(r.wildShare) + ') are confirmed exploited against live targets. The remainder still attract ' +
+      'opportunistic traffic at a fraction of the hazard rate.');
   }
 
   function renderActions(rows, base) {
@@ -372,9 +374,9 @@
     if (!items.length) {
       var li0 = E('li');
       var t0 = E('div', 'a-t');
-      add(t0, b('Nothing on your side moves this much.'),
-        E('span', null, 'At these settings the outcome is driven by routes your patch process does not touch. Look at the route split.'));
-      add(li0, t0, E('div', 'a-d', '—'));
+      add(t0, b('No defender parameter moves this materially.'),
+        E('span', null, 'At these settings the outcome is driven by vectors the remediation process does not reach. See the initial access vector split.'));
+      add(li0, t0, E('div', 'a-d', 'n/a'));
       host.appendChild(li0);
     } else {
       items.forEach(function (r) {
@@ -387,7 +389,7 @@
       });
     }
     $('acts-metric').textContent = METRIC === 'p'
-      ? 'annual chance of compromise' : 'annual chance of an incident';
+      ? 'annual probability of compromise' : 'annual probability of an incident';
   }
 
   /* ── scheduling ────────────────────────────────────────────────────────── */
@@ -472,7 +474,7 @@
             .then(function () { toast('Chart copied to clipboard'); });
         }
         download(bl, 'exposure-race-' + id + '.png');
-        toast('Clipboard unavailable — PNG saved instead');
+        toast('Clipboard unavailable. PNG saved instead');
       }).catch(function () { toast('Could not render PNG'); });
     });
   }
@@ -501,7 +503,7 @@
     anchorRow(host, 'Days from publication to a public exploit (median)', 'measured',
       C.pocTiming.latest.medianDays + ' d',
       'CyberMon · ' + C.pocTiming.latest.year + ', 90-day horizon' +
-      (C.pocTiming.latest.provisional ? ' — provisional, right-censored' : ''));
+      (C.pocTiming.latest.provisional ? ', provisional, right-censored' : ''));
     anchorRow(host, 'Exploits that appear before the patch does', 'measured',
       C.pocTiming.latest.pctBefore + '%', 'CyberMon · ' + C.pocTiming.latest.year + ' arming series');
     anchorRow(host, 'Criticals published worldwide, ' + C.volume.curYearRunRate.year + ' run-rate', 'measured',
@@ -518,12 +520,12 @@
     var keys = Object.keys(M.ASSUMED);
     keys.filter(function (k) { return M.ASSUMED[k].src; }).forEach(function (k) {
       var a = M.ASSUMED[k];
-      anchorRow(host, k, 'reported', a.v + '   (range ' + a.lo + '–' + a.hi + ')',
-        a.src + ' — ' + a.why);
+      anchorRow(host, k, 'reported', a.v + '   (range ' + a.lo + ' to ' + a.hi + ')',
+        a.src + '. ' + a.why);
     });
     keys.filter(function (k) { return !M.ASSUMED[k].src; }).forEach(function (k) {
       var a = M.ASSUMED[k];
-      anchorRow(host, k, 'assumed', a.v + '   (range ' + a.lo + '–' + a.hi + ')', a.why);
+      anchorRow(host, k, 'assumed', a.v + '   (range ' + a.lo + ' to ' + a.hi + ')', a.why);
     });
   }
 
@@ -550,7 +552,7 @@
       b(C.exploitation.criticalEpssBelow1pct + '%'),
       ' of Critical-rated CVEs carry less than a 1% chance of exploitation. Critical is only ',
       b(C.exploitation.criticalVsHigh + '×'),
-      ' High. That is a nudge, not a filter — which is why this model runs on whether an exploit exists, not on what the label says.');
+      ' High. That is a weak signal, not a filter, which is why this model is driven by exploit availability rather than by severity band.');
   }
 
   /* ── init ──────────────────────────────────────────────────────────────── */
@@ -580,8 +582,8 @@
       var url = toURL();
       if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(url).then(
-          function () { toast('Link copied — it carries your settings'); },
-          function () { toast('Copy failed — the URL bar already has it'); });
+          function () { toast('Link copied, including current settings'); },
+          function () { toast('Copy failed. The URL bar carries the same link'); });
       } else { toast('The URL bar already carries your settings'); }
     });
     $('reset-btn').addEventListener('click', function () {
