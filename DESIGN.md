@@ -5,7 +5,7 @@ colors:
   ink: "#F6F8F7"
   panel: "#FFFFFF"
   sunk: "#E9EFED"
-  rule: "#DCE6E3"
+  rule: "#D3DFDB"
   rule-strong: "#7F9490"
   track: "#CBD8D5"
   txt: "#0A1514"
@@ -443,8 +443,11 @@ Breakpoints, each with a specific job rather than a device name:
 - **940px** — paired chart chapters stack.
 - **900px** — the masthead's measured figures fall below the standfirst.
 - **860px** — the anchors list and the footer notes go single-column.
-- **780px** — the readout bank drops from four columns to two, and its
-  dividing rules re-form as a 2×2.
+- **1040px** — the readout bank also drops its 1.14/0.86 ranking for four
+  equal columns: once it spans the full page rather than a results column,
+  the width difference reads as an alignment error rather than a hierarchy.
+- **780px** — the readout bank drops to two columns and its dividing rules
+  re-form as a 2×2.
 - **720px** — the docked readout sheds its interval and estate summary.
 
 Chapter headings and their tools share one intrinsic row: the title holds a
@@ -595,6 +598,13 @@ from the label.
 - One plate divided by 1px `--rule` verticals, not four floating tiles. Four
   separate cards read as a KPI row, which is the register the argument is
   trying to out-rank.
+- **Ranked, not equal.** The two probability cells take `1.14fr` and the full
+  readout size; the two count cells take `0.86fr` and a step down. Compromise
+  and incident are a *pair* — the page's second finding is that detection
+  changes nothing about being compromised and everything about whether it
+  matters, so the two have to be read against each other — and the counts
+  support them. The divider between the pair and the counts is the only one
+  drawn at `--rule2`, because it is the only one that means something.
 - **Structure:** flex column with the label set to `flex: 1`, so values are
   pushed to the bottom of each cell rather than sitting under a guessed
   `min-height`.

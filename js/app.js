@@ -847,7 +847,14 @@
     });
 
     fast();
-    setTimeout(heavy, 30);
+    /* Let the first frame paint and the entry animations commit before the
+     * heavy pass takes the main thread for the better part of a second. An
+     * animation that has already started runs on the compositor and is
+     * unaffected by the block; one that has not simply arrives late, which is
+     * what a reader sees as the page hesitating on load. */
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () { setTimeout(heavy, 60); });
+    });
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);

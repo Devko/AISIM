@@ -85,6 +85,7 @@ a { color: inherit; text-underline-offset: .18em; text-decoration-thickness: 1px
 [id^="p-"] { scroll-margin-top: 74px; }
 
 .wrap { max-width: 1240px; margin: 0 auto; padding: 0 24px; }
+@media (max-width: 420px) { .wrap { padding: 0 16px; } }
 
 .skip {
   position: absolute; left: 12px; top: -60px; z-index: 100;
@@ -289,7 +290,13 @@ button.ghost { background: transparent; }
  * title down to 19%. Intrinsic, so it needs no breakpoint of its own. */
 .panel-head { display: flex; align-items: flex-start; gap: 14px; flex-wrap: wrap; }
 .panel-head > div:first-child { flex: 1 1 260px; min-width: 0; }
-.tools { display: flex; gap: 6px; flex-shrink: 0; align-items: flex-start; }
+/* flex-shrink: 0 keeps the toolbar intact while there is room; max-width caps
+ * it at the row so that when there is not, it wraps inside itself instead of
+ * pushing the chapter wider than the page. */
+.tools {
+  display: flex; gap: 6px; flex-shrink: 0; align-items: flex-start;
+  flex-wrap: wrap; max-width: 100%;
+}
 
 /* ── controls ───────────────────────────────────────────────────────────── */
 /* Equal-width cells rather than flex-wrap. Ragged rows of differently sized
@@ -411,12 +418,22 @@ details.more[open] > div { animation: rise .28s var(--ease) both; }
 /* One plate divided by rules rather than four floating tiles: four separate
  * cards read as a KPI row, which is the register the argument is trying to
  * out-rank. Divided, they read as one instrument with four dials. */
+/* Not four equal cells. The first two are the answer and are a pair — the
+ * page's second finding is that detection changes nothing about being
+ * compromised and everything about whether it matters, so compromise and
+ * incident have to be read against each other. The last two are supporting
+ * counts, and they take a smaller share of the plate and a smaller figure.
+ * Four equal-weight cells with a grey label and a big coloured number is the
+ * KPI row this design exists to avoid. */
 .stats {
-  display: grid; grid-template-columns: repeat(4, 1fr);
+  display: grid; grid-template-columns: 1.14fr 1.14fr .86fr .86fr;
   background: var(--panel); border: 1px solid var(--rule);
   border-radius: 14px; box-shadow: var(--shadow); overflow: hidden;
   margin-bottom: 34px;
 }
+/* The divider between the pair and the counts is the one that means
+ * something, so it is the only one drawn at control weight. */
+.stat:nth-child(3) { border-left-color: var(--rule2); }
 /* Labels wrap to different line counts, so the value is pushed to the bottom of
  * the cell rather than sitting under a guessed min-height. Grid stretches the
  * cells to equal height, so the numbers line up across the row either way. */
@@ -425,10 +442,12 @@ details.more[open] > div { animation: rise .28s var(--ease) both; }
   display: flex; flex-direction: column;
 }
 .stat:first-child { border-left: 0; }
+@media (max-width: 1040px) { .stats { grid-template-columns: repeat(4, 1fr); } }
 @media (max-width: 780px) {
   .stats { grid-template-columns: repeat(2, 1fr); }
   .stat:nth-child(odd) { border-left: 0; }
-  .stat:nth-child(n+3) { border-top: 1px solid var(--rule); }
+  .stat:nth-child(3) { border-left-color: var(--rule); }
+  .stat:nth-child(n+3) { border-top: 1px solid var(--rule2); }
 }
 
 /* The credible interval as a figure rather than only as a sentence, drawn on
@@ -463,7 +482,7 @@ details.more[open] > div { animation: rise .28s var(--ease) both; }
   font-variant-numeric: tabular-nums;
 }
 .stat.good .v { color: var(--def); }
-.stat.plain .v { color: var(--txt); }
+.stat.plain .v { color: var(--txt); font-size: clamp(24px, 1.95vw, 28px); }
 .stat .v .u {
   font-family: var(--body); font-size: 12px; font-weight: 500;
   color: var(--mut); letter-spacing: 0; margin-left: 5px;
@@ -476,7 +495,14 @@ details.more[open] > div { animation: rise .28s var(--ease) both; }
 .chart { width: 100%; display: block; }
 .chart text { font-family: var(--chart); }
 .two { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
-@media (max-width: 940px) { .two { grid-template-columns: 1fr; } }
+/* Two ranges, not one, because the width that matters is the results column
+ * rather than the viewport. Between 1041 and 1180 the rail is still taking
+ * 352px of it, so a side-by-side pair would draw two 310px charts on a
+ * desktop; below 1040 the column is the whole page and the pair fits again
+ * until the page itself is narrow. */
+@media (max-width: 940px), (min-width: 1041px) and (max-width: 1180px) {
+  .two { grid-template-columns: 1fr; }
+}
 .two .panel { margin-bottom: 0; }
 
 .legend {
