@@ -403,6 +403,13 @@ requires. A heading is set in the serif. Everything a reader operates or reads
 as prose is set in the sans. Nothing is set in the serif because it is
 important; importance is expressed in size and position.
 
+**The No-Faded-Text Rule.** Chart labels carry no `fill-opacity`. Two of them
+used to pass one and `txt()` silently dropped it; wiring it up put 10px type at
+3.8:1 in dark and 3.0:1 in light, under the floor the palette section states
+and `tools/check-contrast.js` enforces — and under a floor a token-level check
+cannot see, because the token is fine and the alpha is not. Chart text is
+de-emphasised by choosing a quieter token, never by fading a loud one.
+
 **The PNG Rule.** Chart text uses `--chart` — a pure system stack — never a
 webfont, and every `<text>` node carries its font-family as an *attribute*.
 Charts export to PNG by serialising to a standalone SVG where no stylesheet
@@ -734,10 +741,16 @@ No SMIL, for the same reason: it renders at its initial value inside an
 `<img>`. Give elements classes and animate the classes.
 
 **The Reveal Must Be Undoable Rule.** The reveal hides its elements before
-first paint, so the class that arms it is only set when there is an
-`IntersectionObserver` to unset it, and a `window.onerror` handler drops it if
-anything throws. A page that hides content and then fails to show it again is
-worse than a page with no animation.
+first paint, so it needs three separate ways back. The class that arms it is
+only set when there is an `IntersectionObserver` to unset it; a `window` error
+listener **in the capture phase** drops it, because a 404 or a blocked script
+fires an error event on the element that never bubbles; and `js/app.js` stamps
+`data-live` on the root as its first statement, against a 2.5s timer in the
+pre-paint script that strips the class if the stamp never arrives. That last
+one is the general case — a parse error, a CSP block, a throw before the
+observers are wired. A page that hides content and then fails to show it again
+is worse than a page with no animation, so this is checked by loading the page
+with `js/app.js` 404ing and with it throwing on its first line.
 
 **The Reduced-Motion Rule.** The kill-switch covers `animation`, `transition`
 *and* `scroll-behavior`, on `*`, `*::before` and `*::after`, and restores the
@@ -769,7 +782,13 @@ transitions is not a kill-switch once keyframes exist.
 - **Do** preserve the accessibility floor: `:focus-visible` rings at 2px
   Defender Teal, `prefers-reduced-motion` killing animation *and* transition,
   `aria-label` on every chart, `aria-pressed` on every selected-state control,
-  `role="status"` on the toast, and the skip link.
+  `aria-valuetext` on every slider, `aria-current` on the contents entry,
+  `role="status"` on the toast, and a skip link that moves focus rather than
+  only the viewport.
+- **Do** give every state a second channel. The derived detection posture is a
+  dashed border *and* a visually-hidden clause in the button's accessible name;
+  the current contents entry is teal *and* semibold. A state carried by colour
+  alone is a state half the readers do not have.
 
 ### Don't:
 

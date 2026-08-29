@@ -95,6 +95,23 @@ a { color: inherit; text-underline-offset: .18em; text-decoration-thickness: 1px
 }
 .skip:focus { top: 12px; }
 
+/* Available to a screen reader, absent from the page. Used for the results
+ * landmark heading and for the state the dashed "derived" border carries
+ * visually. */
+.vh {
+  position: absolute; width: 1px; height: 1px; margin: -1px;
+  padding: 0; border: 0; overflow: hidden; white-space: nowrap;
+  clip-path: inset(50%);
+}
+/* display:none rather than .vh alone: the string must leave the accessible
+ * name entirely when the posture is not a derived match. */
+.presets .near-note { display: none; }
+.presets button.near .near-note { display: inline; }
+/* The results column takes focus from the skip link and should not draw a
+ * ring around the whole page for it. */
+.results:focus { outline: none; }
+.results:focus-visible { outline: 2px solid var(--def); outline-offset: 6px; }
+
 /* ── masthead ───────────────────────────────────────────────────────────── */
 header { border-bottom: 1px solid var(--rule); padding: 30px 0 30px; margin-bottom: 26px; }
 .eyebrow {
@@ -420,7 +437,9 @@ details.more[open] > div { animation: rise .28s var(--ease) both; }
   letter-spacing: .06em; flex: none;
 }
 .toc a:hover { color: var(--txt); }
-.toc a.cur { color: var(--def); }
+/* Weight as well as colour: the current chapter must be distinguishable
+ * without seeing the difference between teal and grey. */
+.toc a.cur { color: var(--def); font-weight: 600; }
 .toc a.cur::before { color: var(--def); }
 
 /* ── readout bank ───────────────────────────────────────────────────────── */

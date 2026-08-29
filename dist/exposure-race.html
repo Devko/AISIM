@@ -110,6 +110,23 @@ a { color: inherit; text-underline-offset: .18em; text-decoration-thickness: 1px
 }
 .skip:focus { top: 12px; }
 
+/* Available to a screen reader, absent from the page. Used for the results
+ * landmark heading and for the state the dashed "derived" border carries
+ * visually. */
+.vh {
+  position: absolute; width: 1px; height: 1px; margin: -1px;
+  padding: 0; border: 0; overflow: hidden; white-space: nowrap;
+  clip-path: inset(50%);
+}
+/* display:none rather than .vh alone: the string must leave the accessible
+ * name entirely when the posture is not a derived match. */
+.presets .near-note { display: none; }
+.presets button.near .near-note { display: inline; }
+/* The results column takes focus from the skip link and should not draw a
+ * ring around the whole page for it. */
+.results:focus { outline: none; }
+.results:focus-visible { outline: 2px solid var(--def); outline-offset: 6px; }
+
 /* ── masthead ───────────────────────────────────────────────────────────── */
 header { border-bottom: 1px solid var(--rule); padding: 30px 0 30px; margin-bottom: 26px; }
 .eyebrow {
@@ -435,7 +452,9 @@ details.more[open] > div { animation: rise .28s var(--ease) both; }
   letter-spacing: .06em; flex: none;
 }
 .toc a:hover { color: var(--txt); }
-.toc a.cur { color: var(--def); }
+/* Weight as well as colour: the current chapter must be distinguishable
+ * without seeing the difference between teal and grey. */
+.toc a.cur { color: var(--def); font-weight: 600; }
 .toc a.cur::before { color: var(--def); }
 
 /* ── readout bank ───────────────────────────────────────────────────────── */
@@ -730,10 +749,19 @@ footer code {
   try {
     if (window.IntersectionObserver &&
         !(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches)) {
-      document.documentElement.classList.add('anim');
-      window.addEventListener('error', function () {
-        document.documentElement.classList.remove('anim');
-      });
+      var de = document.documentElement;
+      de.classList.add('anim');
+      /* Capture, because a 404 or a blocked script fires an error event on the
+       * element that never bubbles to window. */
+      window.addEventListener('error', function () { de.classList.remove('anim'); }, true);
+      /* And a backstop for every other way js/app.js can fail to arrive —
+       * a parse error, a CSP block, a throw before the observers are wired.
+       * app.js stamps data-live as soon as it is running; if that has not
+       * happened, nothing is going to reveal these elements and they are shown
+       * as they would be with no script at all. */
+      setTimeout(function () {
+        if (!de.hasAttribute('data-live')) de.classList.remove('anim');
+      }, 2500);
     }
   } catch (e) {}
 </script>
@@ -847,7 +875,7 @@ footer code {
   <!-- ══════════════════ RESULTS ══════════════════ -->
   <!-- .stats is a grid sibling, not a child of .results, so it can move ahead
        of the controls on a single-column viewport. See .grid in app.css. -->
-  <div class="stats">
+  <div class="stats" role="group" aria-label="Headline results">
     <div class="stat">
       <span class="k">Probability of compromise, 12-month window</span>
       <div class="v" id="s-p">…</div><div class="ci" id="s-p-ci"></div>
@@ -868,7 +896,8 @@ footer code {
     </div>
   </div>
 
-  <div class="results" id="results">
+  <div class="results" id="results" tabindex="-1">
+    <h2 class="vh">Results</h2>
 
     <!-- ── the race ── -->
     <section class="panel" id="p-race">
@@ -2344,12 +2373,15 @@ footer code {
   var SANS = 'ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif';
   var MONO = 'ui-monospace, SFMono-Regular, Menlo, monospace';
 
+  /* No fill-opacity here on purpose. Two labels used to pass one and it was
+   * silently dropped; wiring it up put 10px type at 3.8:1 in dark and 3.0:1
+   * in light, under the floor DESIGN.md states and CI now enforces. Chart text
+   * is de-emphasised by choosing a quieter token, never by fading a loud one. */
   function txt(svg, x, y, s, o) {
     o = o || {};
     var e = el('text', {
       x: x, y: y, 'font-size': o.fs || 11, 'text-anchor': o.a || 'start',
       fill: o.c, 'font-weight': o.w, 'letter-spacing': o.ls,
-      'fill-opacity': o.fo,
       'font-family': o.mono ? MONO : SANS,
     });
     e.textContent = s;
@@ -2458,7 +2490,7 @@ footer code {
       [0.25, 0.5, 0.75, 1].forEach(function (f) {
         var y = MID + f * hDn;
         svg.appendChild(el('line', { x1: L, y1: y, x2: R, y2: y, stroke: pal.att, 'stroke-opacity': 0.16, 'stroke-dasharray': '2 4' }));
-        txt(svg, L - 5, y + 3, Math.round(f * 100) + '%', { a: 'end', c: pal.att, fs: 10, fo: 0.7, mono: true });
+        txt(svg, L - 5, y + 3, Math.round(f * 100) + '%', { a: 'end', c: pal.att, fs: 10, mono: true });
       });
 
       /* the share already armed at day zero — the number the page is about */
@@ -2494,7 +2526,7 @@ footer code {
       { c: pal.att, fs: 10.5, ls: '.09em', mono: true });
     if (d.cum) {
       txt(svg, L, BOT + 50, 'cumulative share of exploits available by day',
-        { c: pal.att, fs: 10, fo: 0.75 });
+        { c: pal.att, fs: 10 });
     }
 
     /* headline badge */
@@ -2864,6 +2896,11 @@ footer code {
  */
 (function () {
   'use strict';
+  /* Tells the pre-paint script in index.html that this file arrived and is
+   * running, so its failsafe does not strip the class that arms the reveals.
+   * Set before anything that could throw. */
+  document.documentElement.setAttribute('data-live', '');
+
   var M = window.MODEL, CH = window.CHARTS, C = window.CALIBRATION;
 
   /* ── state ─────────────────────────────────────────────────────────────── */
@@ -3094,6 +3131,11 @@ footer code {
       btn.dataset.key = key;
       if (table[key].d) btn.title = table[key].d;
       if (meta) btn.appendChild(E('span', 'mtr', meta(key)));
+      /* Hidden until the posture is a derived match, at which point it joins
+       * the button's accessible name. The dashed border says the same thing,
+       * and says it to sighted readers only. */
+      if (meta) btn.appendChild(E('span', 'vh near-note',
+        ' — closest match to your current dwell time and coverage'));
       btn.setAttribute('aria-pressed', String(!!isOn(key)));
       btn.addEventListener('click', function () { onPick(key); });
       host.appendChild(btn);
@@ -3623,7 +3665,12 @@ footer code {
       entries.forEach(function (en) { seen[en.target.id] = en.isIntersecting; });
       var cur = null;
       secs.forEach(function (x) { if (seen[x.id] && !cur) cur = x.id; });
-      Object.keys(links).forEach(function (k) { links[k].classList.toggle('cur', k === cur); });
+      Object.keys(links).forEach(function (k) {
+        var on = k === cur;
+        links[k].classList.toggle('cur', on);
+        if (on) links[k].setAttribute('aria-current', 'true');
+        else links[k].removeAttribute('aria-current');
+      });
     }, { rootMargin: '-42% 0px -48% 0px' });
     secs.forEach(function (x) { if (links[x.id]) io.observe(x); });
   }
@@ -3689,6 +3736,15 @@ footer code {
     observeReveal();
     observeDock();
     observeToc();
+
+    /* Scrolling to a div does not move focus into it, so a keyboard reader
+     * following the skip link landed back at the top of the tab order on the
+     * next Tab. The target carries tabindex="-1" for this. */
+    var skip = document.querySelector('.skip');
+    if (skip) skip.addEventListener('click', function () {
+      var t = $('results');
+      if (t) setTimeout(function () { t.focus({ preventScroll: true }); }, 0);
+    });
 
     window.addEventListener('pointerup', function () { DRAG = false; });
     window.addEventListener('pointercancel', function () { DRAG = false; });

@@ -28,10 +28,19 @@
   try {
     if (window.IntersectionObserver &&
         !(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches)) {
-      document.documentElement.classList.add('anim');
-      window.addEventListener('error', function () {
-        document.documentElement.classList.remove('anim');
-      });
+      var de = document.documentElement;
+      de.classList.add('anim');
+      /* Capture, because a 404 or a blocked script fires an error event on the
+       * element that never bubbles to window. */
+      window.addEventListener('error', function () { de.classList.remove('anim'); }, true);
+      /* And a backstop for every other way js/app.js can fail to arrive —
+       * a parse error, a CSP block, a throw before the observers are wired.
+       * app.js stamps data-live as soon as it is running; if that has not
+       * happened, nothing is going to reveal these elements and they are shown
+       * as they would be with no script at all. */
+      setTimeout(function () {
+        if (!de.hasAttribute('data-live')) de.classList.remove('anim');
+      }, 2500);
     }
   } catch (e) {}
 </script>
@@ -142,7 +151,7 @@
   <!-- ══════════════════ RESULTS ══════════════════ -->
   <!-- .stats is a grid sibling, not a child of .results, so it can move ahead
        of the controls on a single-column viewport. See .grid in app.css. -->
-  <div class="stats">
+  <div class="stats" role="group" aria-label="Headline results">
     <div class="stat">
       <span class="k">Probability of compromise, 12-month window</span>
       <div class="v" id="s-p">…</div><div class="ci" id="s-p-ci"></div>
@@ -163,7 +172,8 @@
     </div>
   </div>
 
-  <div class="results" id="results">
+  <div class="results" id="results" tabindex="-1">
+    <h2 class="vh">Results</h2>
 
     <!-- ── the race ── -->
     <section class="panel" id="p-race">

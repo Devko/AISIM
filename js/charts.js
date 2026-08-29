@@ -31,12 +31,15 @@
   var SANS = 'ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif';
   var MONO = 'ui-monospace, SFMono-Regular, Menlo, monospace';
 
+  /* No fill-opacity here on purpose. Two labels used to pass one and it was
+   * silently dropped; wiring it up put 10px type at 3.8:1 in dark and 3.0:1
+   * in light, under the floor DESIGN.md states and CI now enforces. Chart text
+   * is de-emphasised by choosing a quieter token, never by fading a loud one. */
   function txt(svg, x, y, s, o) {
     o = o || {};
     var e = el('text', {
       x: x, y: y, 'font-size': o.fs || 11, 'text-anchor': o.a || 'start',
       fill: o.c, 'font-weight': o.w, 'letter-spacing': o.ls,
-      'fill-opacity': o.fo,
       'font-family': o.mono ? MONO : SANS,
     });
     e.textContent = s;
@@ -145,7 +148,7 @@
       [0.25, 0.5, 0.75, 1].forEach(function (f) {
         var y = MID + f * hDn;
         svg.appendChild(el('line', { x1: L, y1: y, x2: R, y2: y, stroke: pal.att, 'stroke-opacity': 0.16, 'stroke-dasharray': '2 4' }));
-        txt(svg, L - 5, y + 3, Math.round(f * 100) + '%', { a: 'end', c: pal.att, fs: 10, fo: 0.7, mono: true });
+        txt(svg, L - 5, y + 3, Math.round(f * 100) + '%', { a: 'end', c: pal.att, fs: 10, mono: true });
       });
 
       /* the share already armed at day zero — the number the page is about */
@@ -181,7 +184,7 @@
       { c: pal.att, fs: 10.5, ls: '.09em', mono: true });
     if (d.cum) {
       txt(svg, L, BOT + 50, 'cumulative share of exploits available by day',
-        { c: pal.att, fs: 10, fo: 0.75 });
+        { c: pal.att, fs: 10 });
     }
 
     /* headline badge */

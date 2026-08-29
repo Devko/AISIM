@@ -7,6 +7,11 @@
  */
 (function () {
   'use strict';
+  /* Tells the pre-paint script in index.html that this file arrived and is
+   * running, so its failsafe does not strip the class that arms the reveals.
+   * Set before anything that could throw. */
+  document.documentElement.setAttribute('data-live', '');
+
   var M = window.MODEL, CH = window.CHARTS, C = window.CALIBRATION;
 
   /* ── state ─────────────────────────────────────────────────────────────── */
@@ -237,6 +242,11 @@
       btn.dataset.key = key;
       if (table[key].d) btn.title = table[key].d;
       if (meta) btn.appendChild(E('span', 'mtr', meta(key)));
+      /* Hidden until the posture is a derived match, at which point it joins
+       * the button's accessible name. The dashed border says the same thing,
+       * and says it to sighted readers only. */
+      if (meta) btn.appendChild(E('span', 'vh near-note',
+        ' — closest match to your current dwell time and coverage'));
       btn.setAttribute('aria-pressed', String(!!isOn(key)));
       btn.addEventListener('click', function () { onPick(key); });
       host.appendChild(btn);
@@ -766,7 +776,12 @@
       entries.forEach(function (en) { seen[en.target.id] = en.isIntersecting; });
       var cur = null;
       secs.forEach(function (x) { if (seen[x.id] && !cur) cur = x.id; });
-      Object.keys(links).forEach(function (k) { links[k].classList.toggle('cur', k === cur); });
+      Object.keys(links).forEach(function (k) {
+        var on = k === cur;
+        links[k].classList.toggle('cur', on);
+        if (on) links[k].setAttribute('aria-current', 'true');
+        else links[k].removeAttribute('aria-current');
+      });
     }, { rootMargin: '-42% 0px -48% 0px' });
     secs.forEach(function (x) { if (links[x.id]) io.observe(x); });
   }
@@ -832,6 +847,15 @@
     observeReveal();
     observeDock();
     observeToc();
+
+    /* Scrolling to a div does not move focus into it, so a keyboard reader
+     * following the skip link landed back at the top of the tab order on the
+     * next Tab. The target carries tabindex="-1" for this. */
+    var skip = document.querySelector('.skip');
+    if (skip) skip.addEventListener('click', function () {
+      var t = $('results');
+      if (t) setTimeout(function () { t.focus({ preventScroll: true }); }, 0);
+    });
 
     window.addEventListener('pointerup', function () { DRAG = false; });
     window.addEventListener('pointercancel', function () { DRAG = false; });
