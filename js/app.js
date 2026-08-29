@@ -174,7 +174,8 @@
   /* The groove is filled up to the thumb so the reader can see where in the
    * range they are without reading the number back. */
   function setFill(input, s) {
-    var pct = (input.value - s.min) / (s.max - s.min) * 100;
+    var span = s.max - s.min;
+    var pct = span ? (input.value - s.min) / span * 100 : 0;
     input.style.setProperty('--fill', Math.max(0, Math.min(100, pct)).toFixed(2) + '%');
   }
 
@@ -221,9 +222,16 @@
    * unreachable on a touch screen and by keyboard. The descriptions of the
    * traits actually selected are shown instead, so the reasoning behind the
    * numbers is on the page rather than behind a pointer. */
+  var traitNotesAt = null;
   function renderTraitNotes() {
     var host = $('trait-notes');
     if (!host) return;
+    /* refreshSelectors runs on every input event, so a dragged slider would
+     * otherwise rebuild this list sixty times a second for a set that has not
+     * changed. */
+    var sig = ON.join(',');
+    if (sig === traitNotesAt) return;
+    traitNotesAt = sig;
     empty(host);
     ON.forEach(function (k) {
       var t = M.TRAITS[k];
@@ -382,12 +390,14 @@
   }
   function setStat(id, value, fmt, unit, ci) {
     var el = $(id), ciEl = $(id + '-ci');
+    if (!el) return;
     if (ciEl) ciEl.textContent = ci;
     if (statRaf[id]) { cancelAnimationFrame(statRaf[id]); statRaf[id] = 0; }
 
     var from = statAt[id];
     statAt[id] = value;
-    if (!ANIM || live() || value === null || typeof from !== 'number' || from === value) {
+    if (!ANIM || live() || value === null || !isFinite(value) ||
+        typeof from !== 'number' || !isFinite(from) || from === value) {
       paintStat(el, fmt(value), unit);
       return;
     }
