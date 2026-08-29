@@ -86,10 +86,12 @@ so a reader can hand a colleague the exact configuration they were looking at.
   dependency, no build step required to view. Deployed on GitHub Pages with
   `.nojekyll`.
 - `js/model.js` is MIT and runs headless under Node as well as in the browser.
-- Four CI gates, all blocking: the model test suite; the palette must still
-  clear the contrast floor `DESIGN.md` states; `js/calibration.js` must be
-  reproducible from the vendored snapshot; `dist/exposure-race.html` must be
-  current. Drift in any of these means the page is quoting numbers no longer in
+- Five CI gates, all blocking: every script must parse; the model test suite;
+  the palette must still clear the contrast floor `DESIGN.md` states;
+  `js/calibration.js` must be reproducible from the vendored snapshot;
+  `dist/exposure-race.html` must be current. The parse gate exists because
+  `js/app.js` and `js/charts.js` are browser-only and no test requires them, so
+  a syntax error in either used to pass every other gate and ship. Drift in any of these means the page is quoting numbers no longer in
   the corpus, or asserting an accessibility floor it no longer meets, and fails
   the build.
 - 60,000 interactive trials across 150 blocks. The point estimate settles long
@@ -97,9 +99,17 @@ so a reader can hand a colleague the exact configuration they were looking at.
   reported width stable across seeds and trial counts.
 - Every number is tagged by epistemic status — `measured`, `reported`, or
   `assumed`. This is a product commitment, not a presentation device.
-- Traits, maturity, and detection profiles are explicitly editorial judgement,
-  not measurement. They compose by summing excess over 1, so stacking is
-  order-independent with diminishing returns, and every slider stays editable.
+- The five shape controls — exposure, attributes, attention, maturity and
+  detection — are explicitly editorial judgement, not measurement. They compose
+  by summing excess over 1, so stacking is order-independent with diminishing
+  returns, and every slider stays editable.
+- **Each shape control answers exactly one question**, and that is what decides
+  where a new one belongs. Exposure is a single-select ladder because it is one
+  axis: its rungs are alternatives, not attributes, so contradictory estates
+  become unrepresentable rather than silently averaged. Attention sits on the
+  threat card because adversary interest is not something the reader controls.
+  A control that only ever raises the number is a ratchet, not an instrument —
+  both ladders reach below the baseline as well as above it.
 - **Scope limit:** vulnerability exploitation only. Credential abuse, phishing,
   and insider routes are absent. Output is a lower bound on intrusion risk, not
   a picture of it. Never present it as a risk assessment for a named organisation.

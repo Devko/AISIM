@@ -312,6 +312,45 @@ console.log('\n══ Exposure Race — model tests ═════════�
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
+ * 12b. Suspendable runs — js/app.js drives the 60,000-trial settle pass
+ *      through createRun() a slice at a time so it does not hold the frame.
+ *      That is only legitimate if a sliced run is the SAME run: same trials,
+ *      same order, same coefficient draws, same block flushes. Whole-run
+ *      equality is therefore the property under test, and it is checked at
+ *      slice sizes that do not divide the trial count and do not align with
+ *      the 150 block boundaries, which is where an off-by-one would show.
+ * ───────────────────────────────────────────────────────────────────────── */
+{
+  const opts = { surv: true, spread: 1 };
+  const whole = M.simulate(D(), 30000, 1234, opts);
+  const drain = (chunk) => {
+    const run = M.createRun(D(), 30000, 1234, opts);
+    let guard = 0;
+    while (!run.advance(chunk)) if (++guard > 100000) throw new Error('advance never completed');
+    return run.result();
+  };
+  [1, 7, 997, 10000, 30000].forEach((chunk) => {
+    const sliced = drain(chunk);
+    const same = ['p', 'pLo', 'pHi', 'incident', 'incLo', 'incHi', 'med', 'events', 'expDays',
+      'armed', 'wild', 'wildShare', 'se', 'trials', 'bandReliable']
+      .every((k) => sliced[k] === whole[k]) &&
+      ['fn', 'routes', 'routeN', 'surv'].every((k) => JSON.stringify(sliced[k]) === JSON.stringify(whole[k]));
+    ok(`a run sliced ${chunk} at a time is identical to one run whole`, same,
+      `p=${fmt(sliced.p)} vs ${fmt(whole.p)}`);
+  });
+
+  const run = M.createRun(D(), 5000, 7, { surv: false, spread: 0 });
+  ok('advance() reports incomplete until the last trial', run.advance(4999) === false);
+  ok('done() agrees with advance()', run.done() === false);
+  ok('advance() reports complete on the final trial', run.advance(1) === true && run.done() === true);
+  ok('advancing past the end is a no-op, not an overrun',
+    run.advance(10000) === true && run.result().trials === 5000);
+  ok('result() is idempotent', run.result().p === run.result().p);
+  ok('advance() with no argument runs to completion',
+    M.createRun(D(), 3000, 5, { surv: false, spread: 0 }).advance() === true);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
  * 13. Presets must all be valid and ordered
  * ───────────────────────────────────────────────────────────────────────── */
 {
@@ -333,68 +372,196 @@ console.log('\n══ Exposure Race — model tests ═════════�
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
- * 13b. Trait composition — traits are multi-select, so the result must not
- *      depend on click order and must never leave the slider ranges.
+ * 13b. Shape composition — one exposure rung, any number of traits, one
+ *      attention level. The result must not depend on click order, must never
+ *      leave the slider ranges, and each ladder must be monotone in the thing
+ *      it claims to order.
  * ───────────────────────────────────────────────────────────────────────── */
 {
   const keys = Object.keys(M.TRAITS);
+  const expKeys = Object.keys(M.EXPOSURE);
+  const attKeys = Object.keys(M.ATTENTION);
   const all = M.SPEC.def.concat(M.SPEC.att);
+  const P = (o) => M.compose(o);
 
-  ok('every trait has a label, description and modifier set',
-    keys.every(k => M.TRAITS[k].l && M.TRAITS[k].d && M.TRAITS[k].m &&
-      Object.keys(M.TRAITS[k].m).length));
+  const tables = [['exposure', M.EXPOSURE], ['trait', M.TRAITS], ['attention', M.ATTENTION]];
+  tables.forEach(([name, tbl]) => {
+    ok(`every ${name} has a label, description and modifier set`,
+      Object.keys(tbl).every(k => tbl[k].l && tbl[k].d && tbl[k].m &&
+        Object.keys(tbl[k].m).length));
+    const unknown = [];
+    Object.keys(tbl).forEach(k => Object.keys(tbl[k].m).forEach(prop => {
+      if (!all.some(s => s.k === prop)) unknown.push(k + '.' + prop);
+    }));
+    ok(`${name}s only modify real parameters`, unknown.length === 0, unknown.join(','));
+  });
 
-  const unknown = [];
-  keys.forEach(k => Object.keys(M.TRAITS[k].m).forEach(prop => {
-    if (!all.some(s => s.k === prop)) unknown.push(k + '.' + prop);
-  }));
-  ok('traits only modify real parameters', unknown.length === 0, unknown.join(','));
+  /* The composer's identity. Both ladders carry a x1 rung so that an untouched
+   * console is exactly the baseline estate — if either default drifts off its
+   * identity rung, every headline on the page moves and nothing says so. */
+  {
+    const d = M.defaults(), c = P({});
+    const drift = Object.keys(d).filter(k => Math.abs(d[k] - c[k]) > 1e-9);
+    ok('compose({}) returns the baseline estate untouched', drift.length === 0,
+      drift.map(k => `${k} ${d[k]}->${c[k]}`).join(', '));
+    ok('the default rungs exist in their tables',
+      !!M.EXPOSURE[M.DEFAULT_EXPOSURE] && !!M.ATTENTION[M.DEFAULT_ATTENTION]);
+  }
 
-  /* order independence across permutations of a colliding set — saas offsets
-   * edrCoverage while ot multiplies it, which is exactly the case that broke */
+  /* Each ladder is an ordered axis, so walking it must move the headline one
+   * way only. A rung that does not raise the number is a rung that is lying
+   * about where it sits. */
+  const walk = (label, ks, mk) => {
+    const ps = ks.map(k => M.simulate(P(mk(k)), 20000, 1234, { surv: false, spread: 0 }).p);
+    ok(`the ${label} ladder is monotone in compromise probability`,
+      ps.every((v, i) => i === 0 || v > ps[i - 1]),
+      ps.map(x => (x * 100).toFixed(1) + '%').join(' -> '));
+  };
+  walk('exposure', expKeys, (k) => ({ exposure: k }));
+  walk('attention', attKeys, (k) => ({ attention: k }));
+
+  /* The floor the old multi-select could not express: the safest posture the
+   * console can describe must sit well below the baseline, or the control is a
+   * ratchet rather than an axis. */
+  {
+    const floor = M.simulate(P({ exposure: expKeys[0], attention: attKeys[0] }),
+      20000, 1234, { surv: false, spread: 0 }).p;
+    const base = M.simulate(P({}), 20000, 1234, { surv: false, spread: 0 }).p;
+    ok('the bottom of both ladders sits below the baseline estate', floor < base * 0.8,
+      `${fmt(floor)} vs ${fmt(base)}`);
+  }
+
+  /* Order independence across a colliding set — ot multiplies edrCoverage while
+   * thirdparty multiplies it again, which is exactly the case that broke. */
   const perm = [
-    ['saas', 'regulated', 'ot'], ['ot', 'regulated', 'saas'],
-    ['regulated', 'saas', 'ot'], ['ot', 'saas', 'regulated'],
-  ].map(t => JSON.stringify(M.compose({ traits: t })));
+    ['vendor', 'ot', 'thirdparty'], ['ot', 'thirdparty', 'vendor'],
+    ['thirdparty', 'vendor', 'ot'], ['ot', 'vendor', 'thirdparty'],
+  ].map(t => JSON.stringify(P({ traits: t })));
   ok('composition is independent of click order', new Set(perm).size === 1,
     `${new Set(perm).size} distinct results from 4 orderings`);
 
-  /* a single trait must apply exactly as written — no diminishing returns yet */
-  near('a lone multiplier applies exactly', M.compose({ traits: ['saas'] }).exposed,
-    M.defaults().exposed * M.TRAITS.saas.m.exposed, 1e-9);
+  /* A single modifier must apply exactly as written — no diminishing returns
+   * until something else stacks on it. True across the tables, not just within
+   * traits, because a rung and a trait share one multiplier pass. */
+  near('a lone rung multiplier applies exactly', P({ exposure: 'others' }).exposed,
+    M.defaults().exposed * M.EXPOSURE.others.m.exposed, 1e-9);
+  near('a lone trait multiplier applies exactly', P({ traits: ['thirdparty'] }).supply,
+    M.defaults().supply * M.TRAITS.thirdparty.m.supply, 1e-9);
 
-  /* stacking must compound but with diminishing returns, never multiplicatively */
-  const stacked = M.compose({ traits: ['hosting', 'saas'] }).exposed;
-  const naive = M.defaults().exposed * M.TRAITS.hosting.m.exposed * M.TRAITS.saas.m.exposed;
-  ok('stacked multipliers compound sub-multiplicatively',
-    stacked > M.compose({ traits: ['hosting'] }).exposed && stacked < naive,
-    `${stacked} < ${naive} naive`);
+  /* Stacking must compound but with diminishing returns, never multiplicatively
+   * — and a rung stacking with a trait must obey the same rule as two traits. */
+  {
+    const stacked = P({ exposure: 'corp', traits: ['ot'] }).edge;
+    const naive = M.defaults().edge * M.EXPOSURE.corp.m.edge * M.TRAITS.ot.m.edge;
+    ok('a rung and a trait compound sub-multiplicatively',
+      stacked > P({ exposure: 'corp' }).edge && stacked < naive,
+      `${stacked} < ${naive} naive`);
+  }
 
-  /* every subset must stay inside every slider range */
-  let bad = [];
-  const subsets = [[], ...keys.map(k => [k]), keys,
-    ['saas', 'regulated'], ['corponly', 'ot', 'legacy'], ['hosting', 'vendor', 'thirdparty']];
-  subsets.forEach(t => Object.keys(M.MATURITY).forEach(mat => Object.keys(M.DETECTION).concat([null]).forEach(det => {
-    const p = M.compose({ traits: t, maturity: mat, detection: det });
-    all.forEach(s => {
-      if (!(p[s.k] >= s.min && p[s.k] <= s.max)) bad.push(`${s.k}=${p[s.k]} [${t.join('+') || 'none'}/${mat}/${det}]`);
+  /* No pair of selectable things may contradict each other. The exposure axis
+   * is single-select precisely so that it cannot, and the surviving traits earn
+   * their place by composing with every rung: raising exposure must never lower
+   * the reachable surface, whatever else is selected. */
+  {
+    let bad = [];
+    expKeys.forEach((e, i) => {
+      if (i === 0) return;
+      keys.concat([null]).forEach(t => {
+        const lo = P({ exposure: expKeys[i - 1], traits: t ? [t] : [] });
+        const hi = P({ exposure: e, traits: t ? [t] : [] });
+        if (hi.exposed < lo.exposed) bad.push(`${expKeys[i - 1]}->${e} with ${t || 'no trait'}`);
+      });
     });
-  })));
-  ok('every trait × maturity × detection combination stays in range',
-    bad.length === 0, bad.slice(0, 3).join('; '));
+    ok('every trait leaves the exposure ladder monotone in reachable systems',
+      bad.length === 0, bad.slice(0, 3).join('; '));
+  }
 
-  /* and every combination must actually simulate */
-  let ran = 0, failed = 0;
-  subsets.forEach(t => {
-    const r = M.simulate(M.compose({ traits: t }), 3000, 1234, { surv: false, spread: 1 });
-    ran++;
-    if (!(r.p >= 0 && r.p <= 1 && isFinite(r.events) && r.incident <= r.p + 1e-9)) failed++;
+  /* Every combination must stay inside every slider range. The sweep is now the
+   * full cross-product of both ladders against the trait power set, because a
+   * rung multiplying the same term a trait offsets is the new collision. */
+  const subsets = [[], ...keys.map(k => [k]), keys,
+    ['vendor', 'thirdparty'], ['ot', 'thirdparty']];
+  {
+    let bad = [];
+    subsets.forEach(t => expKeys.forEach(e => attKeys.forEach(a =>
+      Object.keys(M.MATURITY).forEach(mat => Object.keys(M.DETECTION).concat([null]).forEach(det => {
+        const p = P({ exposure: e, traits: t, attention: a, maturity: mat, detection: det });
+        all.forEach(s => {
+          if (!(p[s.k] >= s.min && p[s.k] <= s.max)) {
+            bad.push(`${s.k}=${p[s.k]} [${e}/${t.join('+') || 'none'}/${a}/${mat}/${det}]`);
+          }
+        });
+      })))));
+    ok('every exposure x trait x attention x maturity x detection stays in range',
+      bad.length === 0, bad.slice(0, 3).join('; '));
+  }
+
+  /* And every combination must actually simulate. */
+  {
+    let ran = 0, failed = 0;
+    subsets.forEach(t => expKeys.forEach(e => {
+      const r = M.simulate(P({ exposure: e, traits: t }), 3000, 1234, { surv: false, spread: 1 });
+      ran++;
+      if (!(r.p >= 0 && r.p <= 1 && isFinite(r.events) && r.incident <= r.p + 1e-9)) failed++;
+    }));
+    ok('every shape combination produces a valid simulation', failed === 0, `${ran} combinations`);
+  }
+
+  /* Detection posture assigns dwell time outright — the reader bought a stack
+   * and the stack states its own median. */
+  const otManaged = P({ traits: ['ot'], detection: 'managed' });
+  near('detection posture wins on dwell time', otManaged.detect, M.DETECTION.managed.p.detect, 1e-9);
+  /* But it may not overwrite a physical impossibility with an aspiration. An OT
+   * estate cannot reach 93% endpoint coverage by signing an MDR contract,
+   * because the appliances support no agent. */
+  ok('a trait that suppresses telemetry keeps its ceiling under any posture',
+    otManaged.edrCoverage < M.DETECTION.managed.p.edrCoverage,
+    `${otManaged.edrCoverage}% vs ${M.DETECTION.managed.p.edrCoverage}% bought`);
+
+  /* Every one of these keys arrives from the query string, and a bare
+   * `TABLE[key]` truthiness test passes for all of them. ?det=constructor used
+   * to throw inside compose() — from fromURL(), which runs at the top of init()
+   * outside any try/catch, so the whole console failed to build. ?mat=toString
+   * was quieter and worse: eight NaN parameters, simulated. */
+  const PROTO = ['constructor', 'toString', 'valueOf', 'hasOwnProperty', '__proto__', 'isPrototypeOf'];
+  const baseline = JSON.stringify(M.compose({}));
+  let threw = null, nanned = null, drifted = null;
+  PROTO.forEach((k) => {
+    ['exposure', 'attention', 'maturity', 'detection'].forEach((axis) => {
+      const opts = {};
+      opts[axis] = k;
+      try {
+        const c = M.compose(opts);
+        const bad = Object.keys(c).filter((x) => !isFinite(c[x]));
+        if (bad.length && !nanned) nanned = `${axis}=${k} -> ${bad.join(',')}`;
+        if (JSON.stringify(c) !== baseline && !drifted) drifted = `${axis}=${k}`;
+      } catch (e) {
+        if (!threw) threw = `${axis}=${k} -> ${e.message}`;
+      }
+    });
+    if (M.TRAITS[k] === undefined) return;
   });
-  ok('every trait combination produces a valid simulation', failed === 0, `${ran} combinations`);
+  ok('an inherited Object.prototype key cannot throw out of compose()', threw === null, threw || '');
+  ok('an inherited key cannot compose a non-finite parameter', nanned === null, nanned || '');
+  ok('an unknown shape key falls back to the default estate', drifted === null, drifted || '');
+  near('a posture is unrestricted where no trait suppresses coverage',
+    P({ detection: 'managed' }).edrCoverage, M.DETECTION.managed.p.edrCoverage, 5);
 
-  /* detection posture must override whatever the traits set */
-  const otManaged = M.compose({ traits: ['ot'], detection: 'managed' });
-  near('detection posture wins over trait defaults', otManaged.detect, M.DETECTION.managed.p.detect, 1e-9);
+  /* The two tables that used to overlap must stay disjoint. 'legacy' set the
+   * same four terms in the same direction as MATURITY.loose, so selecting both
+   * counted one weakness twice; nothing in TRAITS may touch the maturity axis
+   * wholesale again. */
+  {
+    const matAxis = ['cadence', 'emergH', 'emergHit', 'awareH', 'virtual', 'inventory'];
+    const overlap = keys.filter(k => {
+      const m = Object.keys(M.TRAITS[k].m);
+      return matAxis.every(x => m.indexOf(x) >= 0);
+    });
+    ok('no trait duplicates the whole maturity axis', overlap.length === 0, overlap.join(','));
+    ok('the retired keys are gone from TRAITS',
+      ['saas', 'corponly', 'hosting', 'legacy', 'regulated'].every(k => !M.TRAITS[k]),
+      Object.keys(M.TRAITS).join(','));
+  }
 }
 
 /* ─────────────────────────────────────────────────────────────────────────

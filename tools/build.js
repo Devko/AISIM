@@ -38,10 +38,8 @@ scripts.forEach((src) => {
   html = html.replace(tag, () => '<script>\n' + code + '\n</script>');
 });
 
-/* A closing tag inside an inlined script would end the block early. */
-if (/<\/script\s*>/i.test(html.replace(/<\/script>\s*(<script>|<\/body>)/gi, ''))) {
-  /* fine — the check below is the real one */
-}
+/* A closing tag inside an inlined source file would end its block early and
+ * silently truncate the build, so the open/close counts have to match. */
 const scriptBlocks = html.split('<script').length - 1;
 const scriptCloses = html.split('</script>').length - 1;
 if (scriptBlocks !== scriptCloses) {
@@ -63,9 +61,12 @@ const out = path.join(ROOT, 'dist', 'exposure-race.html');
 fs.writeFileSync(out, html);
 
 const kb = (s) => (s.length / 1024).toFixed(0) + ' KB';
+/* Width is measured, not guessed: 'calibration.js' is fourteen characters and
+ * a hardcoded pad of ten put one row of the size table out of column. */
+const parts = [['html', read('index.html')], ['css', css]]
+  .concat(scripts.map((s) => [s.replace('js/', ''), read(s)]));
+const nameW = Math.max(...parts.map((p) => p[0].length)) + 2;
 console.log('wrote dist/exposure-race.html   ' + kb(html));
-console.log('  html      ' + kb(read('index.html')));
-console.log('  css       ' + kb(css));
-scripts.forEach((s) => console.log('  ' + s.replace('js/', '').padEnd(10) + kb(read(s))));
+parts.forEach(([name, src]) => console.log('  ' + name.padEnd(nameW) + kb(src)));
 console.log('\n  snapshot  ' + cal.snapshot.cvelist);
 console.log('  remote    Google Fonts only (page is legible without it)');

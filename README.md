@@ -200,7 +200,7 @@ js/model.js                simulation core; MIT; runs in node and the browser
 js/charts.js               SVG rendering + PNG export
 js/app.js                  state, URL sharing, wiring
 data/cybermon/*.json       vendored snapshot, so the page is reproducible offline
-test/model.test.js         96 assertions
+test/model.test.js         determinism, monotonicity, calibration fidelity, regressions
 tools/refresh-data.js      re-pull the snapshot
 tools/derive-calibration.js  snapshot -> js/calibration.js
 tools/check-contrast.js    palette -> contrast floor, both themes
@@ -218,18 +218,62 @@ The model runs headless:
 
 ```js
 const M = require('./js/model.js');
-M.simulate(M.compose({ traits: ['saas', 'regulated'], detection: 'tuned' }), 40000, 1234);
+M.simulate(M.compose({
+  exposure: 'product',      // one of five rungs — what strangers can reach
+  traits: ['vendor'],       // any number — what else is true on top of that
+  attention: 'sector',      // one of four — who is aiming at you
+  detection: 'tuned',
+}), 40000, 1234);
 ```
 
-### Traits are editorial
+A run can also be advanced in pieces, which is how the page keeps a 60,000-trial
+pass off the frame. It visits the same trials in the same order as `simulate`,
+so the result is identical to the whole-run call:
 
-`TRAITS`, `MATURITY` and `DETECTION` in `js/model.js` are judgement, not
-measurement — no public dataset gives per-sector estate composition. They exist
-because the alternative is asking a reader to guess "criticals in my stack per
-year" cold. They are multi-select and compose: multipliers combine by summing
-their excess over 1, so stacking several compounds with diminishing returns
-rather than exploding, and the result never depends on click order. Every slider
-stays editable afterwards.
+```js
+const run = M.createRun(M.defaults(), 60000, 1234, { surv: true, spread: 1 });
+while (!run.advance(10000)) { /* yield to whatever else needs the thread */ }
+run.result();
+```
+
+### The shape controls are editorial
+
+`EXPOSURE`, `TRAITS`, `ATTENTION`, `MATURITY` and `DETECTION` in `js/model.js`
+are judgement, not measurement — no public dataset gives per-sector estate
+composition. They exist because the alternative is asking a reader to guess
+"criticals in my stack per year" cold.
+
+Each answers exactly one question, which is the rule that decides where a new
+one belongs:
+
+| table | question | select |
+|---|---|---|
+| `EXPOSURE` | what can a stranger reach without credentials? | one of five |
+| `TRAITS` | what else is true, on top of that? | any number |
+| `ATTENTION` | who is aiming at you? | one of four |
+| `MATURITY` | how well is the estate run? | one of four |
+| `DETECTION` | what have you deployed to see an intrusion? | one of five |
+
+`EXPOSURE` is single-select because it is one axis, and its rungs are
+alternatives rather than attributes. You cannot be both corporate-network-only
+and a SaaS vendor; when that axis was a multi-select the composer averaged the
+two and produced an estate that exists nowhere. `ATTENTION` lives on the threat
+card because adversary interest is not something the reader controls — it used
+to be a trait called "Regulated / finance", described in defensive language
+while quadrupling the campaign rate.
+
+The first three compose in one pass: multipliers combine by summing their excess
+over 1, so stacking several compounds with diminishing returns rather than
+exploding, and the result never depends on click order. Both ladders carry an
+identity rung, so `compose({})` returns the baseline estate untouched. Every
+slider stays editable afterwards.
+
+Anything added to `TRAITS` has to compose with *every* exposure rung without
+contradicting it — that is the test a trait has to pass to be a trait rather
+than a rung. It also may not restate an axis another table already owns: a
+"legacy we cannot touch" trait moved cadence, coverage, trigger rate and
+inventory in the same direction as `MATURITY.loose`, so selecting both counted
+one weakness twice. The maturity ladder owns that axis alone.
 
 ---
 

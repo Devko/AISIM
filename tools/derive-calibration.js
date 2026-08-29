@@ -57,8 +57,6 @@ const kevTotal = svr.kev.total;
 const popTotal = Object.values(pop).reduce((a, b) => a + b, 0);
 
 /* ── PoC availability by band (CY of poc.coverage.window_year) ──────────── */
-const pocCov = {};
-poc.coverage.buckets.forEach((b) => { pocCov[b.bucket] = b; });
 const CRIT = '9.0-10.0';
 const pPoCCritical = poc.coverage.buckets.find((b) => b.bucket === CRIT).pct / 100;
 const pKevCritical = bands.find((b) => b.band === CRIT).pExploited / 100;
@@ -66,7 +64,6 @@ const pKevCritical = bands.find((b) => b.band === CRIT).pExploited / 100;
 /* ── PoC timing: the "arming" series is the methodologically clean one ──── */
 const arming = poc.arming.years;
 const armLatest = arming[arming.length - 1];
-const armPrev = arming[arming.length - 2];
 /* last non-provisional year: the defensible anchor */
 const armSolid = [...arming].reverse().find((y) => !y.provisional);
 
@@ -232,14 +229,14 @@ const body = `${banner}(function (root, factory) {
 `;
 
 fs.writeFileSync(OUT, body);
-console.log('wrote ' + path.relative(ROOT, OUT) + '  (' + body.length.toLocaleString() + ' bytes)');
+console.log('wrote ' + path.relative(ROOT, OUT) + '  (' + body.length.toLocaleString('en-US') + ' bytes)');
 console.log('');
 console.log('  snapshot           ' + out.snapshot.cvelist + '  (' + out.generatedAt + ')');
-console.log('  ' + PREV + ' criticals      ' + prev.critical.toLocaleString() + '  (' + out.volume.prevYear.criticalShare + '% of scored)');
-console.log('  ' + CUR + ' run-rate       ' + out.volume.curYearRunRate.critical.toLocaleString() + '  (' + out.volume.curYearToDate.criticalShare + '% of scored, ' + out.volume.growth.critical + 'x)');
+console.log('  ' + PREV + ' criticals      ' + prev.critical.toLocaleString('en-US') + '  (' + out.volume.prevYear.criticalShare + '% of scored)');
+console.log('  ' + CUR + ' run-rate       ' + out.volume.curYearRunRate.critical.toLocaleString('en-US') + '  (' + out.volume.curYearToDate.criticalShare + '% of scored, ' + out.volume.growth.critical + 'x)');
 console.log('  P(public PoC|crit) ' + out.armed.pPoCCritical + '%');
 console.log('  P(in wild  |crit)  ' + out.inWild.pKevCritical + '%   [PoC-first ' + out.inWild.pInWildGivenPoC + '% · no-PoC ' + out.inWild.pInWildNoPoC + '%]');
 console.log('  PoC median         ' + out.pocTiming.latest.medianDays + 'd (' + out.pocTiming.latest.year + ', provisional=' + out.pocTiming.latest.provisional + ')');
 console.log('  PoC before pub     ' + out.pocTiming.latest.pctBefore + '%');
 console.log('  KEV additions/yr   ' + out.inWild.kevAddedPrevYear + ' (' + PREV + ') · ' + out.inWild.kevAddedRunRate + ' (' + CUR + ' run-rate)');
-console.log('  NVD deferred       ' + out.nvd.deferred.toLocaleString() + ' (' + out.nvd.deferredShare + '% of corpus)');
+console.log('  NVD deferred       ' + out.nvd.deferred.toLocaleString('en-US') + ' (' + out.nvd.deferredShare + '% of corpus)');

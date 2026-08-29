@@ -16,15 +16,24 @@ const https = require('https');
 const BASE = 'https://devko.github.io/CyberMon/data/';
 const OUT = path.join(__dirname, '..', 'data', 'cybermon');
 
+/* The snapshot is refreshed as a whole, not file by file as the model happens
+ * to need it: tools/derive-calibration.js reads seven of these, and the rest
+ * are what makes the vendored corpus auditable rather than a curated extract.
+ * A file in data/cybermon/ that is NOT listed here can never be refreshed, so
+ * it silently drifts out of step with its own snapshot — see the orphan check
+ * at the end of this file, which exists because four of them had. */
 const FILES = [
   'meta',                /* snapshot versions and freshness             */
   'nine_eight_flood',    /* CVEs per year bucketed by severity          */
   'volume_curve',        /* published vs rejected per year              */
+  'cve_calendar',        /* CVE-ID age against publication year         */
   'severity_inflation',  /* median score drift, split by CVSS version   */
   'score_vs_reality',    /* CVSS x EPSS grid, plus KEV by band          */
   'time_to_poc',         /* days from publication to public exploit     */
   'kev_latency',         /* how long until a bug is known-exploited     */
   'kev_changelog',       /* KEV additions over time                     */
+  'kev_guards',          /* KEV share carrying a security-guard flag    */
+  'kev_ransomware',      /* KEV share with known ransomware use         */
   'nvd_decay',           /* NVD analysis status and backlog             */
   'nvd_throughput',      /* queue movement, measured externally         */
   'cna_leaderboard',     /* who scores their own bugs how high          */
@@ -32,6 +41,7 @@ const FILES = [
   'advisory_quality',    /* missing CWE / CVSS / version data           */
   'cwe_distribution',    /* bug classes over time                       */
   'epss_report',         /* EPSS distribution                           */
+  'epss_volatility',     /* weekly churn across the EPSS thresholds     */
 ];
 
 function get(url, redirects) {
@@ -77,6 +87,24 @@ function get(url, redirects) {
   console.log('\n' + ok + '/' + FILES.length + ' refreshed');
   if (failed.length) {
     console.error('kept the previous copy for: ' + failed.join(', '));
+  }
+
+  /* Orphan check. A .json sitting in data/cybermon/ that this script does not
+   * fetch is worse than an absent one: it looks like part of the snapshot, is
+   * dated like part of the snapshot, and quietly keeps whatever it said when
+   * it was last written while everything around it moves on. Reported rather
+   * than deleted — removing vendored data is the maintainer's call, not this
+   * script's — but it must not stay invisible. */
+  const known = new Set(FILES.map((n) => n + '.json'));
+  const orphans = fs.readdirSync(OUT)
+    .filter((f) => f.endsWith('.json') && !known.has(f))
+    .sort();
+  if (orphans.length) {
+    console.error('\n' + orphans.length + ' file(s) in data/cybermon/ are not in this ' +
+      'script\'s FILES list and were NOT refreshed:');
+    orphans.forEach((f) => console.error('  - ' + f));
+    console.error('They will drift out of step with the rest of the snapshot. Either add ' +
+      'them to FILES or delete them.');
   }
   try {
     const meta = JSON.parse(fs.readFileSync(path.join(OUT, 'meta.json'), 'utf8'));

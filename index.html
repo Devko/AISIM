@@ -67,13 +67,13 @@
       <p class="sub">A Monte Carlo model of exploit availability against remediation completion,
       resimulated on every parameter change. The adversary timeline is <b>not assumed</b>: it is the
       measured distribution of days from CVE publication to public exploit code, taken from the
-      CyberMon corpus. Around a fifth of that interval elapses before disclosure.</p>
+      CyberMon corpus. Around a fifth of those exploits appear before disclosure.</p>
     </div>
 
     <!-- The thesis in three measured figures, read off the vendored snapshot at
          render time rather than typed into the prose, so they cannot go stale. -->
     <aside class="clock" aria-labelledby="clock-h">
-      <div class="clock-h" id="clock-h">The clock, as measured <span class="tag m">measured</span></div>
+      <div class="clock-h" id="clock-h">The exploit clock <span class="tag m">measured</span></div>
       <dl id="clock"></dl>
     </aside>
   </div>
@@ -92,65 +92,13 @@
 
 <div class="wrap grid">
 
-  <!-- ══════════════════ CONTROLS ══════════════════ -->
-  <div class="rail">
-    <div class="card def">
-      <h2 class="d">Your environment</h2>
-      <p class="note">Select the attributes that apply, then adjust any parameter.</p>
-
-      <div class="seg">
-        <div class="seg-l">Environment attributes <span class="seg-hint">select any</span></div>
-        <div class="presets chips" id="sel-profile"></div>
-        <p class="seg-d" id="desc-profile"></p>
-        <div class="trait-notes" id="trait-notes"></div>
-      </div>
-      <div class="seg">
-        <div class="seg-l">Operational maturity</div>
-        <div class="presets ladder-4" id="sel-maturity"></div>
-        <p class="seg-d" id="desc-maturity"></p>
-      </div>
-      <div class="seg">
-        <div class="seg-l">Detection capability</div>
-        <div class="presets ladder-5" id="sel-detection"></div>
-        <p class="seg-d" id="desc-detection"></p>
-      </div>
-
-      <div id="cd"></div>
-      <details class="more"><summary>Additional defender parameters</summary><div id="cd-adv"></div></details>
-    </div>
-
-    <!-- Wrapped so the console can become two columns between a tablet and the
-         desktop breakpoint without the grid stretching a short card to match a
-         tall one. See .rail in app.css. -->
-    <div class="rail-side">
-    <div class="card att">
-      <h2 class="a">Threat environment</h2>
-      <p class="note">Parameters outside your control.</p>
-      <div id="ca"></div>
-      <details class="more"><summary>Additional threat parameters</summary><div id="ca-adv"></div></details>
-    </div>
-
-    <nav class="toc" aria-label="Sections">
-      <div class="seg-l">On this page</div>
-      <ol>
-        <li><a href="#p-race">Exploit against remediation</a></li>
-        <li><a href="#p-funnel">Attrition to compromise</a></li>
-        <li><a href="#p-torn">Sensitivity analysis</a></li>
-        <li><a href="#p-acts">Prioritised actions</a></li>
-        <li><a href="#p-routes">Initial access vector</a></li>
-        <li><a href="#p-surv">Time to first compromise</a></li>
-        <li><a href="#p-sweep">Has AI compressed the clock?</a></li>
-        <li><a href="#p-severity">Why not severity</a></li>
-        <li><a href="#p-volume">Severity-label inflation</a></li>
-        <li><a href="#p-anchors">Model provenance</a></li>
-      </ol>
-    </nav>
-    </div>
-  </div>
-
   <!-- ══════════════════ RESULTS ══════════════════ -->
-  <!-- .stats is a grid sibling, not a child of .results, so it can move ahead
-       of the controls on a single-column viewport. See .grid in app.css. -->
+  <!-- .stats leads the grid in source order, not only in pixels. "The answer
+       first" has to hold for speech and reflow order too, and a CSS `order`
+       reaches neither: a screen reader met the entire 1,887px console before
+       the number the page exists to show. It carries nothing focusable, so
+       leading here costs the keyboard reader nothing, and the desktop
+       position is set explicitly on the grid. See .grid in app.css. -->
   <div class="stats" role="group" aria-label="Headline results">
     <div class="stat">
       <span class="k">Probability of compromise, 12-month window</span>
@@ -172,8 +120,94 @@
     </div>
   </div>
 
+  <!-- ══════════════════ CONTROLS ══════════════════ -->
+  <!-- The rail is ranked by how often each part is needed, not by topic.
+       The threat card is used *while reading* — chapter 07 hands the reader the
+       compression slider by name — so it is pinned and stays on screen whatever
+       the rail is scrolled to. The estate configuration is set once, at the
+       start, and takes the bounded scroller beneath it. The contents list is
+       no longer here at all: it is front matter and now leads the document.
+       Before this the rail was a single 1,935-2,612px scroller inside an
+       ~868px sticky box: one slider of twelve was visible at rest, the
+       compression control sat 536px below the fold, and selecting traits
+       pushed it a further 677px away. See .rail in app.css. -->
+  <div class="rail">
+    <div class="rail-fixed">
+      <div class="card att">
+        <h2 class="a">Threat environment</h2>
+        <p class="note">Parameters outside your control.</p>
+        <div class="seg">
+          <div class="seg-l">Adversary attention <span class="seg-hint">pick one</span></div>
+          <div class="presets quad" id="sel-attention"></div>
+          <p class="seg-d" id="desc-attention"></p>
+        </div>
+        <div id="ca"></div>
+        <details class="more"><summary>Additional threat parameters</summary><div id="ca-adv"></div></details>
+      </div>
+    </div>
+
+    <!-- Set once, so it is the half that scrolls. Its own growth — the trait
+         notes run to 683px with every attribute selected — now moves nothing
+         but itself. -->
+    <div class="rail-scroll">
+      <div class="card def">
+        <h2 class="d">Your environment</h2>
+        <p class="note">Place yourself on each axis, then adjust any parameter.</p>
+
+        <div class="seg">
+          <div class="seg-l">Public exposure <span class="seg-hint">pick one</span></div>
+          <div class="presets ladder-5" id="sel-exposure"></div>
+          <p class="seg-d" id="desc-exposure"></p>
+        </div>
+        <div class="seg">
+          <div class="seg-l">Also true of us <span class="seg-hint">select any</span></div>
+          <div class="presets chips" id="sel-profile"></div>
+          <div class="trait-notes" id="trait-notes"></div>
+        </div>
+        <div class="seg">
+          <div class="seg-l">Operational maturity <span class="seg-hint">pick one</span></div>
+          <div class="presets ladder-4" id="sel-maturity"></div>
+          <p class="seg-d" id="desc-maturity"></p>
+        </div>
+        <div class="seg">
+          <div class="seg-l">Detection capability <span class="seg-hint">pick one</span></div>
+          <div class="presets ladder-5" id="sel-detection"></div>
+          <p class="seg-d" id="desc-detection"></p>
+        </div>
+        <!-- The composed result of all four controls above. It reported a total
+             before the reader had finished specifying it while it sat under the
+             chips; here it is the answer to the whole card. -->
+        <p class="seg-d estate" id="desc-profile"></p>
+
+        <div id="cd"></div>
+        <details class="more"><summary>Additional defender parameters</summary><div id="cd-adv"></div></details>
+      </div>
+    </div>
+  </div>
+
   <div class="results" id="results" tabindex="-1">
     <h2 class="vh">Results</h2>
+
+    <!-- Contents are front matter, not instrument. This list has never had a
+         panel, a radius or a fill — it was already document material sitting
+         inside the console, where it was 739px below the sticky rail's fold on
+         a desktop and 2,529px down a phone. A ruled document puts its contents
+         at the front. -->
+    <nav class="toc" aria-label="Sections">
+      <div class="seg-l">On this page</div>
+      <ol>
+        <li><a href="#p-race">Exploit against remediation</a></li>
+        <li><a href="#p-funnel">Attrition to compromise</a></li>
+        <li><a href="#p-torn">Sensitivity analysis</a></li>
+        <li><a href="#p-acts">Prioritised actions</a></li>
+        <li><a href="#p-routes">Initial access vector</a></li>
+        <li><a href="#p-surv">Time to first compromise</a></li>
+        <li><a href="#p-sweep">Has AI compressed the clock?</a></li>
+        <li><a href="#p-severity">Why not severity</a></li>
+        <li><a href="#p-volume">Severity-label inflation</a></li>
+        <li><a href="#p-anchors">Model provenance</a></li>
+      </ol>
+    </nav>
 
     <!-- ── the race ── -->
     <section class="panel" id="p-race">
@@ -196,7 +230,7 @@
         <span><i class="sw-zero"></i>pre-disclosure</span>
         <span><i class="sw-hatch"></i>unremediated exposure</span>
       </div>
-      <svg id="race" class="chart" role="img" aria-label="Exploit availability against remediation completion"></svg>
+      <svg id="race" class="chart" height="396" role="img" aria-label="Exploit availability against remediation completion"></svg>
       <p class="lead foot" id="race-note"></p>
     </section>
 
@@ -215,7 +249,7 @@
           <button class="icon-btn" data-dl="funnel" type="button">PNG</button>
         </div>
       </div>
-      <svg id="funnel" class="chart" role="img" aria-label="Attrition funnel from published vulnerabilities to compromise"></svg>
+      <svg id="funnel" class="chart" height="274" role="img" aria-label="Attrition funnel from published vulnerabilities to compromise"></svg>
       <p class="lead foot" id="wild-note"></p>
     </section>
 
@@ -226,8 +260,10 @@
           <span class="ord">03</span>
           <h3>Sensitivity analysis</h3>
           <p class="lead">Each bar varies a single parameter across its plausible range with all
-          others held constant. <b>Compromise</b> and <b>incident</b> respond to different
-          parameters, and that divergence is what should drive remediation priority.</p>
+          others held constant. A <b>compromise</b> is an adversary establishing a foothold; it
+          becomes an <b>incident</b> when detection and response fail to contain it before the
+          adversary reaches its objective. The two respond to different parameters, and that
+          divergence is what should drive remediation priority.</p>
         </div>
         <div class="tools">
           <div class="switch" role="group" aria-label="Metric">
@@ -238,7 +274,7 @@
           <button class="icon-btn" data-dl="torn" type="button">PNG</button>
         </div>
       </div>
-      <svg id="torn" class="chart" role="img" aria-label="Sensitivity of the outcome to each parameter"></svg>
+      <svg id="torn" class="chart" height="379" role="img" aria-label="Sensitivity of the outcome to each parameter"></svg>
     </section>
 
     <section class="panel" id="p-acts">
@@ -267,7 +303,7 @@
             <button class="icon-btn" data-dl="routes" type="button">PNG</button>
           </div>
         </div>
-        <svg id="routes" class="chart" role="img" aria-label="Initial access vector of first compromise"></svg>
+        <svg id="routes" class="chart" height="174" role="img" aria-label="Initial access vector of first compromise"></svg>
       </section>
       <section class="panel" id="p-surv">
         <div class="panel-head">
@@ -281,12 +317,12 @@
             <button class="icon-btn" data-dl="surv" type="button">PNG</button>
           </div>
         </div>
-        <svg id="surv" class="chart" role="img" aria-label="Survival function over twelve months"></svg>
+        <svg id="surv" class="chart" height="236" role="img" aria-label="Survival function over twelve months"></svg>
       </section>
     </div>
 
     <!-- ── compression what-if ── -->
-    <section class="panel" id="p-sweep">
+    <section class="panel part" id="p-sweep">
       <div class="panel-head">
         <div class="ph-copy">
           <span class="ord">07</span>
@@ -303,7 +339,7 @@
           <button class="icon-btn" data-dl="sweep" type="button">PNG</button>
         </div>
       </div>
-      <svg id="sweep" class="chart" role="img" aria-label="Outcome against modelled exploit-clock compression"></svg>
+      <svg id="sweep" class="chart" height="236" role="img" aria-label="Outcome against modelled exploit-clock compression"></svg>
     </section>
 
     <!-- ── evidence ── -->
@@ -321,7 +357,7 @@
           <button class="icon-btn" data-dl="severity" type="button">PNG</button>
         </div>
       </div>
-      <svg id="severity" class="chart" role="img" aria-label="Share of each CVSS severity band confirmed exploited"></svg>
+      <svg id="severity" class="chart" height="236" role="img" aria-label="Share of each CVSS severity band confirmed exploited"></svg>
       <div class="scroll-x">
         <table class="tbl">
           <thead><tr><th>CVSS band</th><th>Scored CVEs</th><th>Confirmed exploited</th><th>Rate</th></tr></thead>
@@ -356,7 +392,7 @@
           <button class="icon-btn" data-dl="volume" type="button">PNG</button>
         </div>
       </div>
-      <svg id="volume" class="chart" role="img" aria-label="Published CVEs and the Critical-rated share, year over year"></svg>
+      <svg id="volume" class="chart" height="190" role="img" aria-label="Published CVEs and the Critical-rated share, year over year"></svg>
       <p class="lead foot">Part of that increase reflects
       scoring policy rather than vulnerability reality. CNAs self-assign scores, and the share each
       rates 9.0 or above ranges from near zero to roughly two in five against the same scale. NVD
@@ -364,7 +400,7 @@
     </section>
 
     <!-- ── anchors ── -->
-    <section class="panel" id="p-anchors">
+    <section class="panel part" id="p-anchors">
       <div class="panel-head">
         <div class="ph-copy">
           <span class="ord">10</span>

@@ -457,63 +457,161 @@ was: the charts are drawn at their container's true pixel width, and past
 roughly 900px of column the sparse ones (survival, sweep, volume) become mostly
 empty plot area.
 
-The three grid children (rail, stats, results) are placed explicitly rather
-than flowing, precisely so the single column can reorder them.
+That ~900px ceiling is now enforced on the figure itself rather than inferred
+from the page cap. `.chart` carries `max-width: 900px`, because below 1040px
+the single column inherits the whole page and used to draw the sparse charts at
+977px — wider on a tablet than they are ever drawn on a desktop, and past the
+ceiling the cap exists to hold. Measured Width still holds: the SVG's laid-out
+box is 900, so 900 is what gets drawn.
+
+The three grid children are **stats, rail, results**, in that source order, and
+they are placed explicitly rather than flowing. Source order is load-bearing
+here rather than incidental — see The Answer First Rule.
 
 The masthead runs its own two-column grid: the headline and standfirst left,
 and the three measured figures the argument rests on right. That column exists
 because the headline is capped at 16ch and was otherwise leaving half a screen
 of empty paper beside itself.
 
-The rail is sticky at `top: 16px`, its own scroll container bounded to
-`calc(100vh - 32px)`, with a deliberately visible thin scrollbar: a wheel
-gesture landing on the rail must not read as a dead page. When the docked
-readout is up, the rail steps down to `top: 74px` so it does not scroll behind
-it.
+### The rail
 
-Breakpoints, each with a specific job rather than a device name:
+The rail is sticky at `top: 16px`, bounded to `calc(100vh - 32px)`, with a
+deliberately visible thin scrollbar: a wheel gesture landing on the rail must
+not read as a dead page. When the docked readout is up, it steps down to
+`top: 74px` so it does not scroll behind it.
 
-- **1040px** — grid collapses to one column and the stat bank moves *ahead* of
-  the controls.
+Inside that bound it is **ranked by use frequency, not by subject** — two
+zones, `.rail-fixed` and `.rail-scroll`:
+
+- **`.rail-fixed`** holds the threat card. It is the half operated *while
+  reading*: chapter 07 hands the reader the exploit-clock compression slider by
+  name, so the chapter that makes the page's title claim and the control that
+  tests it have to be able to occupy the screen together.
+- **`.rail-scroll`** holds the estate card. It is set once, at the start, so it
+  takes whatever height is left and scrolls inside it. Its own growth — the
+  trait notes run to 683px with everything selected — now moves nothing but
+  itself.
+
+Ordered by subject, in one scroller, the rail was 1,935–2,612px of console in
+an ~868px box: one slider of twelve visible at rest, the compression control
+536px below the fold, and selecting traits pushing it a further 677px away.
+
+**Ranking is unconditional; pinning is not.** Ranking is free — the threat card
+comes first, so compression sits 347–458px into the rail and is on screen at
+rest at every viewport. Pinning it there permanently costs the estate card
+whatever the threat card occupies, and that card is 550px against 1,331px of
+estate content. Measured, with a reload at each height:
+
+| viewport | rail | mode | estate window |
+|---|---|---|---|
+| 900 | 868 | one ranked scroller | — (whole rail scrolls) |
+| 1000 | 968 | pinned split | 418px, 31% |
+| 1100 | 1068 | pinned split | 518px, 39% |
+
+Pinned at 900 the window would be 318px, which is a bad trade on a laptop and a
+fine one on a tall display — so a height query decides it rather than a blanket
+rule. Below 1000px of viewport the rail is one ranked scroller; at or above it,
+the two zones split. `.rail-fixed` carries a `60vh` ceiling — resolving to 600px
+at 1000 and 660px at 1100 — so that opening *Additional threat parameters*
+cannot squeeze the scroller to nothing. In `vh`, because a percentage
+max-height resolves against the parent's height and `.rail` carries only a
+max-height, so a percentage silently does nothing: an earlier `55%` cap was
+ignored outright and the zone sailed past it to 65% of the rail.
+
+**Measure heights with a reload.** Resizing an emulated viewport does not
+re-resolve `vh`, so a resize-then-measure pass reports the previous size's
+layout. Every figure in this table was taken after a fresh load.
+
+The contents list is **not** in the rail. It never had a panel, a radius or a
+fill, so it was always document material sitting inside the instrument — and it
+sat 739px below the sticky rail's fold. It is now front matter at the head of
+the results column, two columns wide, closed by the 42px that opens every
+chapter.
+
+### Breakpoints
+
+Each has a specific job rather than a device name:
+
+- **1040px** — grid collapses to one column. The stat bank is already ahead of
+  the controls in source order, so nothing reorders.
+- **1041px, at 1000px of viewport height** — the rail splits into a pinned zone
+  and a scroller. See The Room To Pin Rule.
+- **≤1040px, intrinsic** — the console becomes
+  `repeat(auto-fit, minmax(280px, 1fr))`. Not a breakpoint: a hard 700px floor
+  put the widest slider of the entire responsive range at 699px — 608px against
+  275px one pixel wider. Two columns now hold for exactly as long as two columns
+  are worth having, dropping to one at ~630px, where a full-width control is the
+  expected idiom rather than an accident.
 - **420px** — the page gutter tightens from 24px to 16px, which is what keeps
   the chapter toolbar on the row at 320px.
-- **1040–700px** — the rail stops being a rail and would otherwise inherit the
-  whole page width, so the console splits into two columns: the environment
-  card down the left, the threat card and the contents stacked beside it. Left
-  full-width it gave a 20-character chip 730px to sit in and stretched a slider
-  to 1,470px, where a 5% change needs a 70px gesture.
-- **940px, and again between 1041 and 1180** — paired chart chapters stack.
-  Two ranges rather than one, because the width that matters is the results
-  column: between 1041 and 1180 the rail is still taking 352px of it.
 - **900px** — the masthead's measured figures fall below the standfirst.
-- **860px** — the anchors list and the footer notes go single-column.
-- **1040px** — the readout bank also drops its 1.14/0.86 ranking for four
-  equal columns: once it spans the full page rather than a results column,
-  the width difference reads as an alignment error rather than a hierarchy.
+- **860px** — the anchors list, the footer notes and the contents list go
+  single-column.
+- **1040px** — the readout bank drops its 1.14/0.86 ranking for four equal
+  columns: once it spans the full page rather than a results column, the width
+  difference reads as an alignment error rather than a hierarchy.
 - **780px** — the readout bank drops to two columns and its dividing rules
   re-form as a 2×2.
 - **720px** — the docked readout sheds its interval and estate summary.
+
+Paired chart chapters (`.two`) are governed by a **container query on the
+results column**, not by viewport ranges: `@container (max-width: 800px)`
+stacks them. Two viewport ranges used to stand in for one container
+measurement, and they disagreed with it — widening 1040 → 1041 shrank the main
+charts 977 → 626, and 1180 → 1181 halved the pair 765 → 380. Asking the column
+directly makes pairing monotone in the width it actually has. `.results`
+carries `container-type: inline-size` for this.
 
 Chapter headings and their tools share one intrinsic row: the title holds a
 260px flex basis and the row is allowed to wrap, so the tools drop beneath the
 heading exactly when holding them inline would squeeze it. No breakpoint
 governs this.
 
-Rhythm: 42px between chapters, 30px across the column gap, 18px inside cards
-and between rail cards, 34px under the readout bank.
+### Rhythm
+
+Between chapters 42px; at a part boundary 72px; 30px across the column gap;
+18px inside cards and between rail cards; 34px under the readout bank.
+
+Inside a chapter there are two groups, not four evenly spaced items: the
+heading and its lead bind at 6px, then 18px of separation, then the legend, the
+figure and its caption bind at 8px. Every interval used to sit within four
+pixels of every other — 6 / 16 / 12 / 14 — so the caption bound no more tightly
+to its figure than the figure did to the lead, and proximity expressed no
+grouping at all.
+
+**A note on the scale.** The `spacing` tokens in the frontmatter (6 / 8 / 14 /
+18 / 22 / 30 / 42) are not the whole set the stylesheet spends. It also uses 4,
+5, 7, 9, 10, 12, 16, 17, 20, 24, 26, 32, 34, 44 and 72. Some are named in this
+document and load-bearing — the 24px gutter, the 34px under the readout bank,
+the 42px and 72px between chapters. Others are genuinely one-off. Treat the
+token list as the preferred ladder rather than a closed set until the two are
+reconciled.
 
 ### Named Rules
 
-**The Answer First Rule.** Below 1040px the readout bank is ordered before the
-control rail. The page exists to show a number, and burying it under a full
-screen of inputs made every phone visitor pay for the controls before seeing
-the answer. Any future reflow keeps the answer above the instrument.
+**The Answer First Rule.** The readout bank comes before the control rail in
+**source order**, and the desktop grid lifts it into place explicitly. It used
+to lead only in pixels, via CSS `order`, which reaches neither speech order nor
+reflow order — a screen reader met the entire 1,887px console before the number
+the page exists to show. The bank holds nothing focusable, so leading costs the
+keyboard reader nothing. Any future reflow keeps the answer above the
+instrument, and keeps it there in the DOM.
+
+**The Room To Pin Rule.** A control the argument names should be reachable
+while that argument is being read — but not at any price. Pinning costs the
+rest of the rail exactly what the pinned card occupies, so pin only where there
+is room: rank always, pin above 1000px of viewport height. A guarantee that
+starves the configuration sitting next to it is not worth buying.
 
 **The Answer Stays Rule.** The page is roughly 7,000px tall and the rail is
 sticky, so a reader adjusting a slider two thousand pixels down had no sight of
 the number they were moving. The docked readout carries it — the compromise
 probability, its band and the current estate — and appears only once the real
-bank has scrolled away.
+bank has scrolled away. The label yields before the figure does: `.dock-k`
+shrinks and ellipsises, `.dock-v` does not. Nowrap with no shrink meant a 263px
+label pushed the number off the right edge below ~342px, so at 320px — the
+reflow width — what stayed on screen was the caption and what left was the
+answer.
 
 **The Measured Width Rule.** `width(id)` in `js/app.js` measures the SVG's own
 laid-out box, not its parent's border box. Measuring the parent included the
@@ -522,6 +620,34 @@ displayed and then uniformly shrunk by `preserveAspectRatio` — 11px labels
 rendering at 10.4px, with dead letterbox bands top and bottom that were quietly
 saving several charts from clipping their own edge labels. Anything that
 changes a chart's container changes its drawing width exactly, with no slack.
+
+**The Reserved Height Rule.** Every chart `<svg>` carries a `height` attribute
+in the markup, reserving roughly the space the chart will occupy. Without one,
+an undrawn chart is the replaced-element default of 150px, and the charts that
+land after the first paint presented an ordinal, a heading and a lead above a
+blank box, then jumped the document taller when they arrived. The attribute is
+a reservation, not a constraint: `frame()` overwrites it on every draw.
+
+It reserves the height each chart draws at **desktop width**, and only there.
+Chart heights are width-dependent and every chart switches to its narrow branch
+at a different threshold — 400px for 05, 560px for 03 and 08, 620px for 01,
+640px for 02 — so no single set of attributes can match at every width, and
+none is available to the markup, which is written before any width is known.
+One reference width, stated, beats eight values each right at a width nobody
+identified. Charts whose height does not vary with width (06, 07, 09) match
+exactly at all widths.
+
+Since chapters 08 and 09 moved into the first render pass, the charts this
+still matters most for are 03 and 07, which arrive with the settle.
+
+**The Three Movements Rule.** The ten chapters are not ten peers. They run
+01–06 the race, 07–09 the defence of the method, and 10 the provenance, and a
+single uniform rule flattened the two places the argument changes register into
+eight identical breaks. A part boundary is marked the only ways this system
+marks anything structural: 72px of air above instead of 42, 32px below the rule
+instead of 20, and the ordinal a step up the neutral ramp to `--txt`. No new
+rule weight, no accent, no added copy. Chapter margins collapse, so the top
+margin has to clear 42px to be seen at all.
 
 ## Elevation & Depth
 
@@ -606,22 +732,46 @@ that is the only way to inset a scrollbar thumb.
 
 ### Selector grids
 
-Three grammars, each legible without a word of explanation:
+Five grammars, each legible without a word of explanation. Four of them are
+`pick one` and three of those are ordered, which the alignment says out loud:
 
-- **Trait chips (`#sel-profile`, multi-select):** a two-column grid, so eight
-  labels of 8–25 characters sit in four rows of equal width rather than a
+- **Exposure ladder (`#sel-exposure`, one-of-5):** two columns with the fifth
+  spanning the full width. Alone among the ladders it stays **left-aligned**,
+  because it is an ordered axis rather than a set of alternatives — five rungs
+  read down a common left edge show their order in a way five centred labels do
+  not. It is the first control on the card because it is the page's founding
+  claim: how much of you a stranger can reach without credentials.
+- **Attribute chips (`#sel-profile`, multi-select):** a two-column grid with the
+  third spanning, so three labels sit in two rows of equal width rather than a
   ragged flex-wrap. Each carries a 9px `::before` marker at 2px radius which
   fills with `currentColor` when selected — so the marker inherits whichever
-  accent the surrounding card is using.
+  accent the surrounding card is using. The marker is the whole distinction
+  between this grid and the ladder above it: a checkbox means *and*, a lit
+  button means *instead*.
+- **Attention ladder (`#sel-attention`, one-of-4):** an even 2×2, not the
+  three-plus-one the maturity ladder uses. Its labels are phrases rather than
+  single words, and `Opportunistic` is one word wider than a third of the rail —
+  a single unbreakable word cannot wrap, so it ellipsised mid-word. Two columns
+  give every rung room for its own name. This is the only selector on the threat
+  card, and the only shape control the reader does not get to choose about
+  themselves.
 - **Maturity ladder (`#sel-maturity`, one-of-4):** three equal columns with the
   fourth option spanning the full width. BOD 26-04 is a mandated regime rather
   than a rung on the ladder, and the layout says so.
 - **Detection ladder (`#sel-detection`, one-of-5):** two columns with the fifth
   spanning, which completes a five-rung ladder without a ragged row.
 
-Every option carries a description slot beneath it. Maturity gained one in this
-redesign — it was the only control on the page whose label could not be guessed
-from the label.
+Every option carries a description slot beneath it. Maturity gained one in an
+earlier redesign — it was the only control on the page whose label could not be
+guessed from the label.
+
+**`.estate`:** the composed result of all four controls on the defender card,
+set in the mono face and ruled off at the top. It sits *below* the last of them
+rather than under the chips, where it used to report a total the reader had not
+finished specifying. It is the one line on the card that is an answer rather
+than another description, and the mono face is what says so. Note that `#cd`
+took its top rule from `.seg + #cd`; the sliders now follow `.estate`, so that
+rule moved onto `.estate` itself and `.estate + #cd` zeroes the doubled padding.
 
 ### Cards / Containers
 
@@ -700,24 +850,33 @@ from the label.
   the dwell time and coverage that posture writes (`10 d · 78%`), read from
   `M.DETECTION[k].p`. A console that does not show what its presets write is
   not a console.
-- **`.trait-notes`:** each trait carries a paragraph explaining what it does to
-  the estate, and it used to be reachable only by hovering a mouse over the
-  chip — which is to say, not reachable on a touch screen or by keyboard at
-  all. The descriptions of the traits *actually selected* are now listed in the
-  rail beneath the estate summary, so the reasoning behind the numbers is on
-  the page. The `title` attribute stays as a convenience, not as the only route.
+- **`.trait-notes`:** each attribute carries a paragraph explaining what it
+  does to the estate, and it used to be reachable only by hovering a mouse over
+  the chip — which is to say, not reachable on a touch screen or by keyboard at
+  all. The descriptions of the attributes *actually selected* are listed
+  directly beneath the chips, so the reasoning behind the numbers is on the
+  page. The `title` attribute stays as a convenience, not as the only route.
+  The single-select ladders need no equivalent: one choice means one
+  description, which is what their own `.seg-d` slot already carries.
 - **`.seg-d`** carries a `min-height` floor, because these strings change
   length on every selection and without one the whole rail below them jumps on
   each click.
 
 ### Contents
 
-A numbered list in the rail, below the threat card inside `.rail-side` —
-a wrapper that exists so the two-column console between 700px and 1040px does
-not stretch a short card to match a tall one — with
-`counter-reset`/`counter-increment` supplying the ordinals so the markup
-carries no numbering of its own. The current chapter is marked `.cur` in
-Defender Teal by an IntersectionObserver.
+A numbered list at the head of the results column, before chapter 01 — front
+matter, not instrument. It has never had a panel, a radius or a fill, so it was
+always document material; it was simply living inside the console, where it sat
+739px below the sticky rail's fold on a desktop and 2,529px down a phone. Two
+columns, because a ten-item single file is a 328px block standing between the
+reader and the argument; single column below 860px, alongside the anchors list
+and the footer notes.
+
+`counter-reset`/`counter-increment` supply the ordinals, so the markup carries
+no numbering of its own and the list cannot disagree with the chapters it names.
+Each entry is ruled at `--rule`, matching the anchors list. The current chapter
+is marked `.cur` in Defender Teal *and* semibold by an IntersectionObserver —
+two channels, per the accessibility floor.
 
 ### Named Rules
 

@@ -17,6 +17,10 @@
   /* ── state ─────────────────────────────────────────────────────────────── */
   var P = M.defaults();
   var METRIC = 'p';                 /* 'p' = compromise, 'incident' = incident */
+  /* Four controls, four questions. EXP and ATTN are single-select ladders —
+   * one axis each, so one answer each; ON is the multi-select that carries
+   * everything which composes on top of a rung without contradicting it. */
+  var EXP = M.DEFAULT_EXPOSURE, ATTN = M.DEFAULT_ATTENTION;
   var ON = [], MAT = 'typical', DET = null;   /* ON = selected traits, multi-select */
   var SEED = 1234, SEED_SENS = 7;
   /* N_HEAVY is set by the credible interval, not by the point estimate: the
@@ -130,10 +134,19 @@
   }
 
   /* ── URL state: only non-default values, so shared links stay short ────── */
+  /* Query values are attacker-supplied strings. A bare `TABLE[key]` truthiness
+   * test passes for every Object.prototype member, so ?det=constructor used to
+   * survive this guard and take down init(). */
+  function owns(table, key) {
+    return typeof key === 'string' && Object.prototype.hasOwnProperty.call(table, key);
+  }
+
   function toURL() {
     var d = M.defaults(), parts = [];
     Object.keys(d).forEach(function (k) { if (P[k] !== d[k]) parts.push(k + '=' + P[k]); });
     if (METRIC !== 'p') parts.push('m=' + METRIC);
+    if (EXP !== M.DEFAULT_EXPOSURE) parts.push('exp=' + EXP);
+    if (ATTN !== M.DEFAULT_ATTENTION) parts.push('attn=' + ATTN);
     if (ON.length) parts.push('traits=' + ON.join(','));
     if (MAT !== 'typical') parts.push('mat=' + MAT);
     if (DET) parts.push('det=' + DET);
@@ -142,11 +155,17 @@
   }
   function fromURL() {
     var q = new URLSearchParams(location.search), d = M.defaults();
+    /* The trait table lost five entries when the exposure axis became a rung.
+     * A link shared before that carries keys this build no longer knows, and
+     * the filter drops them rather than throwing — the reader gets the rest of
+     * their selection instead of a blank console. */
+    if (owns(M.EXPOSURE, q.get('exp'))) EXP = q.get('exp');
+    if (owns(M.ATTENTION, q.get('attn'))) ATTN = q.get('attn');
     if (q.get('traits')) {
-      ON = q.get('traits').split(',').filter(function (t) { return M.TRAITS[t]; });
+      ON = q.get('traits').split(',').filter(function (t) { return owns(M.TRAITS, t); });
     }
-    if (M.MATURITY[q.get('mat')]) MAT = q.get('mat');
-    if (M.DETECTION[q.get('det')]) DET = q.get('det');
+    if (owns(M.MATURITY, q.get('mat'))) MAT = q.get('mat');
+    if (owns(M.DETECTION, q.get('det'))) DET = q.get('det');
     applyShape();
     Object.keys(d).forEach(function (k) {
       if (!q.has(k)) return;
@@ -161,9 +180,15 @@
   function pushURL() {
     try { history.replaceState(null, '', toURL()); } catch (e) { /* file:// */ }
   }
-  function spec(k) {
-    return M.SPEC.def.concat(M.SPEC.att).filter(function (s) { return s.k === k; })[0];
-  }
+  /* Every slider, indexed once. `spec()` used to concatenate the two spec
+   * arrays and filter them on each call, and syncAll() concatenated them
+   * again on every trait click; KEYS also gives the parameter signature the
+   * race chart is memoised on a stable order to build from. */
+  var ALL_SPEC = M.SPEC.def.concat(M.SPEC.att);
+  var KEYS = ALL_SPEC.map(function (s) { return s.k; });
+  var SPEC_BY_KEY = {};
+  ALL_SPEC.forEach(function (s) { SPEC_BY_KEY[s.k] = s; });
+  function spec(k) { return SPEC_BY_KEY[k]; }
 
   /* ── controls ──────────────────────────────────────────────────────────── */
   function buildControls(list, basicHost, advHost) {
@@ -220,7 +245,7 @@
   }
 
   function syncAll() {
-    M.SPEC.def.concat(M.SPEC.att).forEach(function (s) {
+    ALL_SPEC.forEach(function (s) {
       var i = $('i-' + s.k);
       if (i) { i.value = P[s.k]; setVal(s); setFill(i, s); }
     });
@@ -228,7 +253,8 @@
 
   /* ── shape: traits x maturity x detection posture ─────────────────────── */
   function applyShape() {
-    P = M.compose({ traits: ON, maturity: MAT, detection: DET, ai: P.ai });
+    P = M.compose({ exposure: EXP, traits: ON, attention: ATTN,
+                    maturity: MAT, detection: DET, ai: P.ai });
   }
   /* Which posture does the current detect/coverage pair most resemble? Used to
    * light the right button when traits set those values rather than a click. */
@@ -249,11 +275,11 @@
     var bits = [
       M.fmtN(P.exposed) + ' exposed systems',
       P.edge + '% appliances',
-      P.stackVulns + ' criticals/yr in your stack',
+      P.stackVulns + ' criticals a year',
       P.cadence + '-day patch cycle',
       P.edrCoverage + '% on telemetry',
     ];
-    if (P.supply >= 0.3) bits.push(P.supply.toFixed(2) + ' supply-chain hits/yr');
+    if (P.supply >= 0.3) bits.push(P.supply.toFixed(2) + ' supply-chain hits a year');
     return bits.join(' · ');
   }
 
@@ -311,7 +337,7 @@
        * the button's accessible name. The dashed border says the same thing,
        * and says it to sighted readers only. */
       if (meta) btn.appendChild(E('span', 'vh near-note',
-        ' — closest match to your current dwell time and coverage'));
+        ', closest match to your current dwell time and coverage'));
       btn.setAttribute('aria-pressed', String(!!isOn(key)));
       btn.addEventListener('click', function () { onPick(key); });
       host.appendChild(btn);
@@ -324,7 +350,8 @@
       b2.classList.toggle('on', on);
       b2.setAttribute('aria-pressed', String(on));
     });
-    [['sel-maturity', MAT], ['sel-detection', det]].forEach(function (pair) {
+    [['sel-exposure', EXP], ['sel-attention', ATTN],
+     ['sel-maturity', MAT], ['sel-detection', det]].forEach(function (pair) {
       /* Moving the dwell or coverage slider clears the explicit choice and
        * lights whichever posture the numbers now resemble. Shown identically
        * to a click, that reads as a selection the reader never made — so a
@@ -337,11 +364,15 @@
         b2.setAttribute('aria-pressed', String(on && !derived));
       });
     });
+    setDesc($('desc-exposure'), M.EXPOSURE[EXP] ? M.EXPOSURE[EXP].d : '');
+    setDesc($('desc-attention'), M.ATTENTION[ATTN] ? M.ATTENTION[ATTN].d : '');
     setDesc($('desc-maturity'), M.MATURITY[MAT] ? M.MATURITY[MAT].d : '');
     renderTraitNotes();
-    setDesc($('desc-profile'), ON.length
-      ? estateSummary()
-      : 'No attributes selected. Generic mid-size estate: ' + estateSummary());
+    /* The estate line is the composed result of all four controls, so it sits
+     * below the last of them rather than under the chips — where it used to
+     * report a total the reader had not finished specifying. There is always a
+     * rung selected now, so it no longer has an empty case to caption. */
+    setDesc($('desc-profile'), estateSummary());
     setDesc($('desc-detection'), M.DETECTION[det] ? M.DETECTION[det].d : '');
   }
   /* The metric toggle is a selected-state control like the chips, so it
@@ -355,6 +386,18 @@
   }
 
   function buildShapeUI() {
+    /* Exposure first, because it is the page's founding claim and the term
+     * every other control is a correction to: how much of you a stranger can
+     * reach without credentials. Single-select, so the two rungs a reader
+     * might have wanted at once are the two that contradict each other. */
+    buildToggles('sel-exposure', M.EXPOSURE,
+      function (k) { return k === EXP; },
+      function (k) { EXP = k; applyShape(); syncAll(); refreshSelectors(); schedule(); });
+    /* Attention lives on the threat card — it is the one shape control the
+     * reader does not get to choose about themselves. */
+    buildToggles('sel-attention', M.ATTENTION,
+      function (k) { return k === ATTN; },
+      function (k) { ATTN = k; applyShape(); syncAll(); refreshSelectors(); schedule(); });
     buildToggles('sel-profile', M.TRAITS,
       function (k) { return ON.indexOf(k) >= 0; },
       function (k) {
@@ -380,7 +423,7 @@
 
   /* ── sensitivity ───────────────────────────────────────────────────────── */
   var LEVERS = [
-    { k: 'stackVulns', lo: 8,    hi: 90,  l: 'Vulns in your stack' },
+    { k: 'stackVulns', lo: 8,    hi: 90,  l: 'Criticals in your stack' },
     { k: 'exposed',    lo: 25,   hi: 400, l: 'Exposed systems' },
     { k: 'edge',       lo: 0,    hi: 70,  l: 'Edge appliance share' },
     { k: 'inventory',  lo: 100,  hi: 86,  l: 'Inventory coverage' },
@@ -407,23 +450,28 @@
     virtual:    ['Front exposed services with enforceable rulesets', 'Recovers the exposure window while the permanent fix is tested. Does not cover appliances.'],
     campaigns:  ['Instrument the edge for enumeration', 'Targeted campaigns are distinguishable from background scanning where telemetry exists.'],
     supply:     ['Verify software provenance and integrity', 'Remediation cadence has no effect on this vector.'],
-    ai:         ['Outside defender control', 'Plan the remediation timeline against it rather than assuming the adversary timeline holds constant.'],
   };
 
-  function over(k, v) { var o = {}; Object.keys(P).forEach(function (x) { o[x] = P[x]; }); o[k] = v; return o; }
+  function copyOf(src) { var o = {}; Object.keys(src).forEach(function (x) { o[x] = src[x]; }); return o; }
+  function over(k, v, base) { var o = copyOf(base || P); o[k] = v; return o; }
   function sim(params, n, seed, wantSurv) {
     return M.simulate(params, n, seed, { surv: !!wantSurv, spread: 1 });
   }
-  function sensitivity() {
-    return LEVERS.map(function (t) {
-      var lo = sim(over(t.k, t.lo), N_SENS, SEED_SENS)[METRIC];
-      var hi = sim(over(t.k, t.hi), N_SENS, SEED_SENS)[METRIC];
-      return { k: t.k, l: t.l, lo: lo, hi: hi, span: Math.abs(hi - lo) };
-    }).sort(function (a, b2) { return b2.span - a.span; });
+  /* One lever, both ends. Each run reseeds from SEED_SENS, so a row does not
+   * depend on which rows were computed before it — which is what lets the
+   * settle pass compute them one per turn without moving a single figure. */
+  function sensitivityRow(t, base) {
+    var lo = sim(over(t.k, t.lo, base), N_SENS, SEED_SENS)[METRIC];
+    var hi = sim(over(t.k, t.hi, base), N_SENS, SEED_SENS)[METRIC];
+    return { k: t.k, l: t.l, lo: lo, hi: hi, span: Math.abs(hi - lo) };
   }
 
   /* ── render ────────────────────────────────────────────────────────────── */
-  var lastHeavy = null, lastSens = null, lastDens = null;
+  var lastRun = null, lastSens = null, lastDens = null;
+  /* The compression the drawn sweep belongs to. Redrawing it against the live
+   * P.ai would move the "current settings" marker off the curve it was
+   * computed for whenever a redraw lands between passes. */
+  var lastSweepAi = 0;
 
   /* The SVG's own laid-out width, not its parent's border box. Measuring the
    * parent included the panel's padding and border, so every chart was drawn
@@ -514,8 +562,6 @@
     if (r.bandReliable) {
       lastBand.p = '90% band ' + pctS(r.pLo) + ' to ' + pctS(r.pHi);
       lastBand.i = '90% band ' + pctS(r.incLo) + ' to ' + pctS(r.incHi);
-    }
-    if (r.bandReliable) {
       setBand('s-p-band', r.pLo, r.pHi);
       setBand('s-i-band', r.incLo, r.incHi);
     }
@@ -543,15 +589,34 @@
     $('dock-est').textContent = estateSummary();
   }
 
+  /* densities() seeds its own RNG with a constant, so it is a pure function of
+   * the parameter set — the same estate always produces the same curve. It
+   * costs ~6ms for 30,000 samples, and it was being paid three times over for
+   * one answer: once on the fast pass, again on the heavy pass that follows it
+   * with identical parameters, and again on every theme toggle and every
+   * resize. Keyed on the parameters instead, so it is recomputed exactly when
+   * the curve would actually differ. */
+  var densAt = null;
+  function raceDensities() {
+    var sig = '';
+    for (var i = 0; i < KEYS.length; i++) sig += P[KEYS[i]] + ',';
+    if (!lastDens || densAt !== sig) { lastDens = M.densities(P, 30000); densAt = sig; }
+    return lastDens;
+  }
+
   function drawRace() {
-    var d = M.densities(P, 30000);
-    lastDens = d;
+    var d = raceDensities();
     CH.race($('race'), width('race'), d, palette());
     var n = empty($('race-note'));
     add(n, 'Measured ' + C.pocTiming.latest.year + ' clock: median ',
-      b(CH.fmtDays(d.median)), ' from publication to public exploit code, ',
-      b(pctS(d.beforeFrac)), ' of it ahead of patch availability.');
-    if (P.ai > 0) add(n, ' Compression is at ', b('+' + P.ai), ', scaling that clock by ×' + d.scale.toFixed(2) + '.');
+      b(CH.fmtDays(d.median)), ' from publication to public exploit code.');
+    if (P.ai > 0) {
+      add(n, ' Modelled at ', b('+' + P.ai), ' compression, scaling that clock by ×' +
+        d.scale.toFixed(2) + ': ', b(pctS(d.beforeFrac)),
+        ' of exploits arrive ahead of patch availability.');
+    } else {
+      add(n, ' ', b(pctS(d.beforeFrac)), ' of exploits arrive ahead of patch availability.');
+    }
   }
 
   function drawMain(r) {
@@ -562,52 +627,161 @@
     CH.survival($('surv'), width('surv'), r, pal);
     updateWild(r);
   }
-  function redrawAll() {
-    if (!lastHeavy) return;
-    var pal = palette();
-    drawMain(lastHeavy);
+  /* Chapters 08 and 09 read the vendored snapshot, never the simulation, so
+   * their only inputs are the palette and the drawn width. They were being
+   * redrawn on every settle regardless — DOM churn for a figure that cannot
+   * have changed. They are drawn once at init and again only when one of
+   * those two inputs actually moves. */
+  function drawEvidence(pal) {
     CH.severity($('severity'), width('severity'), C, pal);
     CH.volume($('volume'), width('volume'), C, pal);
+  }
+  function redrawAll() {
+    var pal = palette();
+    drawEvidence(pal);
+    if (!lastRun) return;
+    drawMain(lastRun);
     if (lastSens) {
       CH.tornado($('torn'), width('torn'), lastSens.rows, lastSens.base, pal);
-      CH.sweep($('sweep'), width('sweep'), lastSens.sweep, P.ai, lastSens.sweepCur, pal);
+      /* Only once the sweep points belong to the same pass as the bars. */
+      if (lastSens.sweep) {
+        CH.sweep($('sweep'), width('sweep'), lastSens.sweep, lastSweepAi, lastSens.sweepCur, pal);
+      }
     }
   }
 
   function fast() {
     var r = sim(P, N_FAST, SEED, true);
-    lastHeavy = r;
+    lastRun = r;
     renderHead(r);
     drawMain(r);
   }
 
+  /* The settle pass is about 380ms of arithmetic on this machine: a 60,000
+   * trial run, then 26 sensitivity runs, then 11 sweep points. Run as one
+   * block it holds the main thread for all of it — scrolling stops, hover
+   * states stick, and the theme button does not answer until it ends.
+   *
+   * It is therefore cut into stages that yield to the browser between them —
+   * six slices of the main run, then the render, then one stage per lever and
+   * one per sweep point, about thirty-four in all. No stage runs more than
+   * 10,000 trials or one lever, which measured 55ms as the longest remaining
+   * block against 260ms for the unsliced pass. Nothing is approximated: the
+   * run carries its own RNG and accumulators (see createRun), and each
+   * sensitivity run reseeds from SEED_SENS independently of the others, so
+   * stage-at-a-time gives bit-identical figures to one straight loop.
+   *
+   * A generation counter rather than a boolean: a pass superseded by fresh
+   * input abandons the stages it has left instead of finishing arithmetic
+   * about an estate the reader has already moved on from. */
+  /* How a stage hands control back. setTimeout(…, 0) is the obvious choice and
+   * the wrong one: a background tab clamps timers to roughly one a second, so
+   * a 26-stage pass that takes 380ms in front of a reader would take 26
+   * SECONDS behind one — measured here, where the sweep chart was still
+   * undrawn seconds after every other chart had settled. A MessageChannel task
+   * is not subject to that clamp. It is still a macrotask, so paint and input
+   * get their turn between stages exactly as they would with a timer. */
+  var yieldChan = null, yieldQueue = [];
+  if (typeof MessageChannel === 'function') {
+    yieldChan = new MessageChannel();
+    yieldChan.port1.onmessage = function () {
+      var fn = yieldQueue.shift();
+      if (fn) fn();
+    };
+  }
+  function yieldTo(fn) {
+    if (!yieldChan) return setTimeout(fn, 0);
+    yieldQueue.push(fn);
+    yieldChan.port2.postMessage(0);
+    return null;
+  }
+
+  /* A queued MessageChannel task cannot be cancelled, so the generation
+   * counter is what actually stops a superseded pass: a stale stage sees a
+   * gen that no longer matches and returns without doing any work. The timer
+   * handle is cleared too, for the fallback path. */
+  var heavyGen = 0, heavyTimer = null;
+  function cancelHeavy() {
+    heavyGen++;
+    if (heavyTimer) { clearTimeout(heavyTimer); heavyTimer = null; }
+  }
+  /* 10,000 trials a slice: ~15ms of the 92ms the full run costs, which keeps
+   * every slice inside the budget a main thread needs to stay responsive to
+   * input. The slicing does not approximate anything — see createRun in
+   * js/model.js: the accumulators and the RNG live in the run, so a sliced
+   * run and a whole one visit the same trials in the same order. */
+  var HEAVY_CHUNK = 10000;
+
   function heavy() {
-    var r = sim(P, N_HEAVY, SEED, true);
-    lastHeavy = r;
-    renderHead(r);
-    drawMain(r);
+    cancelHeavy();
+    var gen = heavyGen;
+
+    /* One coherent estate for the whole pass. Every stage reads this rather
+     * than the live parameters: a control moved mid-pass abandons the pass
+     * outright, so no stage should ever be in a position to answer half about
+     * one estate and half about another. */
+    var snap = copyOf(P);
+    var run = M.createRun(snap, N_HEAVY, SEED, { surv: true, spread: 1 });
+
+    var base = null, rows = [], sweepPts = [];
+    var stages = [];
+    for (var c = 0; c < N_HEAVY; c += HEAVY_CHUNK) {
+      stages.push(function () { run.advance(HEAVY_CHUNK); });
+    }
+    stages.push(function () {
+      var r = run.result();
+      lastRun = r;
+      renderHead(r);
+      drawMain(r);
+      pushURL();
+    });
 
     /* Baseline computed with EXACTLY the seed and trial count the bars use, so
      * a bar can never be offset against a mismatched base. */
-    var base = sim(P, N_SENS, SEED_SENS)[METRIC];
-    var rows = sensitivity();
-    var sweepPts = [];
-    for (var a = 0; a <= 100; a += 10) sweepPts.push([a, sim(over('ai', a), N_SENS, SEED_SENS)[METRIC]]);
-    var sweepCur = sim(over('ai', P.ai), N_SENS, SEED_SENS)[METRIC];
-    lastSens = { base: base, rows: rows, sweep: sweepPts, sweepCur: sweepCur };
+    stages.push(function () { base = sim(snap, N_SENS, SEED_SENS)[METRIC]; });
+    LEVERS.forEach(function (t) {
+      stages.push(function () { rows.push(sensitivityRow(t, snap)); });
+    });
+    stages.push(function () {
+      rows.sort(function (x, y) { return y.span - x.span; });
+      CH.tornado($('torn'), width('torn'), rows, base, palette());
+      renderActions(rows, base);
+      /* Published with the bars, not eleven stages later with the sweep. A
+       * redraw in that gap — a theme toggle, the resize debounce, beforeprint —
+       * read lastSens and repainted the tornado with the PREVIOUS estate's
+       * numbers, over bars that had already been redrawn with these. `sweep`
+       * stays null until its points exist, so the same redraw leaves the sweep
+       * chart alone rather than drawing it from a half-filled array. */
+      lastSens = { base: base, rows: rows, sweep: null, sweepCur: base };
+    });
+    for (var a = 0; a <= 100; a += 10) {
+      (function (ai) {
+        stages.push(function () { sweepPts.push([ai, sim(over('ai', ai, snap), N_SENS, SEED_SENS)[METRIC]]); });
+      })(a);
+    }
+    stages.push(function () {
+      /* `over('ai', snap.ai)` is the snapshot itself, run at the same seed and
+       * trial count as the baseline — so the "current settings" marker IS the
+       * baseline. It was a further 5,000-trial simulation of a number already
+       * in hand. */
+      lastSens = { base: base, rows: rows, sweep: sweepPts, sweepCur: base };
+      CH.sweep($('sweep'), width('sweep'), sweepPts, snap.ai, base, palette());
+      lastSweepAi = snap.ai;
+    });
 
-    var pal = palette();
-    CH.tornado($('torn'), width('torn'), rows, base, pal);
-    CH.sweep($('sweep'), width('sweep'), sweepPts, P.ai, sweepCur, pal);
-    CH.severity($('severity'), width('severity'), C, pal);
-    CH.volume($('volume'), width('volume'), C, pal);
-    renderActions(rows, base);
-    pushURL();
+    var i = 0;
+    var step = function () {
+      heavyTimer = null;
+      if (gen !== heavyGen) return;
+      stages[i++]();
+      if (i < stages.length) heavyTimer = yieldTo(step);
+    };
+    heavyTimer = yieldTo(step);
   }
 
   function updateWild(r) {
     var n = empty($('wild-note'));
-    add(n, 'Of the ', b(num(r.fn[2], 2)), ' weaponised vulnerabilities a year, ', b(num(r.wild, 2)),
+    add(n, 'Of the ', b(num(r.fn[2], 2)), ' vulnerabilities a year that receive public exploit code, ', b(num(r.wild, 2)),
       ' (' + pctS(r.wildShare) + ') are confirmed exploited against live targets. The remainder still attract ' +
       'opportunistic traffic at a fraction of the hazard rate.');
   }
@@ -700,6 +874,10 @@
      * on the new nodes, once per pass. Drop the flag as soon as the reader
      * touches anything. */
     if (ANIM) document.querySelectorAll('.chart.fresh').forEach(function (c) { c.classList.remove('fresh'); });
+    /* Whatever the last settle had left to compute is about to be answered by
+     * a newer one. Drop it, rather than let it finish and paint a stale chart
+     * over a fresher reading. */
+    cancelHeavy();
     if (raf) cancelAnimationFrame(raf);
     raf = requestAnimationFrame(runFast);
     clearTimeout(fallback);
@@ -725,13 +903,13 @@
     };
   }
   function subtitleFor(id) {
-    var r = lastHeavy;
+    var r = lastRun;
     if (!r) return '';
-    /* Read the drawn figure, never a fresh sample: a second 8,000-trial pass
+    /* Read the drawn figure, never a fresh sample: a second 4,000-trial pass
      * would put a different percentage in the caption than the one printed
      * inside the image it captions. */
     if (id === 'race') return lastDens
-      ? pctS(lastDens.pLate) + ' of armed bugs have a working exploit before the hole is closed' : '';
+      ? pctS(lastDens.pLate) + ' have public exploit code before remediation completes' : '';
     if (id === 'funnel') return num(r.fn[0]) + ' criticals a year become ' + num(r.fn[5], 2) + ' compromises';
     if (id === 'routes') return 'first compromise of the year, by route';
     if (id === 'surv') return pctS(r.p) + ' chance of compromise within 12 months';
@@ -803,7 +981,7 @@
     anchorRow(host, 'Criticals published worldwide, ' + C.volume.curYearRunRate.year + ' run-rate', 'measured',
       thou(C.volume.curYearRunRate.critical),
       'CyberMon · cvelistV5, ' + num(C.yearElapsed * 100) + '% of the year elapsed');
-    anchorRow(host, 'Confirmed-exploited vulns added worldwide per year', 'measured',
+    anchorRow(host, 'Confirmed-exploited CVEs added worldwide per year', 'measured',
       C.inWild.kevAddedRunRate + ' (' + C.volume.curYearRunRate.year + ' run-rate)',
       'CyberMon · CISA KEV additions');
     anchorRow(host, 'CVEs NVD has stopped analysing', 'measured',
@@ -919,12 +1097,12 @@
        * 1180px, so picking one meant the other could never light and its
        * contents entry looked broken. aria-current goes on the first, which is
        * the one a reader jumping there would land on. */
-      var live = [];
-      secs.forEach(function (x) { if (seen[x.id] && links[x.id]) live.push(x.id); });
+      var onScreen = [];
+      secs.forEach(function (x) { if (seen[x.id] && links[x.id]) onScreen.push(x.id); });
       Object.keys(links).forEach(function (k) {
-        var on = live.indexOf(k) >= 0;
+        var on = onScreen.indexOf(k) >= 0;
         links[k].classList.toggle('cur', on);
-        if (k === live[0]) links[k].setAttribute('aria-current', 'true');
+        if (k === onScreen[0]) links[k].setAttribute('aria-current', 'true');
         else links[k].removeAttribute('aria-current');
       });
     }, { rootMargin: '-42% 0px -48% 0px' });
@@ -956,6 +1134,14 @@
     });
     $('share-btn').addEventListener('click', function () {
       var url = toURL();
+      /* Stamp the address bar before saying anything about it. The URL is
+       * otherwise only written at the end of a settle, so for the ~280ms after
+       * a control moves it still describes the previous estate — and BOTH
+       * fallback messages below assert that the URL bar carries the link the
+       * reader just asked for. The copied string is always correct, because
+       * toURL() is computed fresh here rather than read off location, so this
+       * is about making the claim true rather than about the link. */
+      pushURL();
       if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(url).then(
           function () { toast('Link copied, including current settings'); },
@@ -963,6 +1149,13 @@
       } else { toast('The URL bar already carries your settings'); }
     });
     $('reset-btn').addEventListener('click', function () {
+      /* Every piece of shape state, not just the ones that existed when this
+       * handler was written. Leaving EXP and ATTN behind did not merely light
+       * a stale rung: toURL() still emitted exp=/attn=, so a link copied after
+       * a reset reproduced the pre-reset estate rather than the baseline the
+       * sender was looking at, and the next selector click re-derived the
+       * sliders from the rung the reader thought they had cleared. */
+      EXP = M.DEFAULT_EXPOSURE; ATTN = M.DEFAULT_ATTENTION;
       ON = []; MAT = 'typical'; DET = null;
       P = M.defaults();
       syncAll();
@@ -1014,20 +1207,44 @@
       clearTimeout(resizeT);
       resizeT = setTimeout(redrawAll, 140);
     });
-    var mq = window.matchMedia('(prefers-color-scheme: dark)');
-    if (mq.addEventListener) mq.addEventListener('change', function () {
-      if (!document.documentElement.getAttribute('data-theme')) redrawAll();
-    });
+    /* There was a prefers-color-scheme listener here that redrew the charts
+     * when the OS theme changed and no explicit choice had been made. It could
+     * never fire: index.html ships `<html data-theme="dark">`, so the attribute
+     * it tested for is always present. That is deliberate and documented —
+     * DESIGN.md calls light the definitional baseline and dark the default
+     * experience — so the dead branch goes rather than the markup. The
+     * stylesheet's prefers-color-scheme block stays: it is the Single
+     * Definition Rule, and CI enforces it. */
 
     fast();
+    drawEvidence(palette());
     /* Let the first frame paint and the entry animations commit before the
-     * heavy pass takes the main thread for the better part of a second. An
-     * animation that has already started runs on the compositor and is
-     * unaffected by the block; one that has not simply arrives late, which is
-     * what a reader sees as the page hesitating on load. */
+     * settle pass takes the main thread. An animation that has already started
+     * runs on the compositor and is unaffected; one that has not simply
+     * arrives late, which is what a reader sees as the page hesitating on
+     * load.
+     *
+     * The two frames are an optimisation and MUST NOT be the only route in.
+     * requestAnimationFrame does not fire at all in a background tab, an
+     * embedded pane, or a power-saving mode, and some of those still report
+     * visibilityState "visible". Measured in one such pane: rAF never ran, so
+     * the sensitivity, sweep, severity and volume charts were never drawn at
+     * all, the prioritised-actions list stayed empty, the credible bands never
+     * appeared, and the page sat on its 4,000-trial estimate indefinitely —
+     * every one of those a permanent blank rather than a late arrival. The
+     * scheduler and the stat tween both carry a timer backstop for exactly
+     * this reason; the first pass, which is the one every reader gets, had
+     * none. Whichever route arrives first runs, and `once` retires the other. */
+    var started = false;
+    var startHeavy = function () {
+      if (started) return;
+      started = true;
+      heavy();
+    };
     requestAnimationFrame(function () {
-      requestAnimationFrame(function () { setTimeout(heavy, 60); });
+      requestAnimationFrame(function () { setTimeout(startHeavy, 60); });
     });
+    setTimeout(startHeavy, 400);
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);

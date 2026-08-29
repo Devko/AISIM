@@ -213,7 +213,7 @@
     });
     n1.textContent = pctS(d.pLate);
     svg.appendChild(n1);
-    txt(svg, bx + 14, by + 48, narrow ? 'EXPLOITED FIRST' : 'OF WEAPONISED VULNS, EXPLOITED FIRST',
+    txt(svg, bx + 14, by + 48, narrow ? 'EXPLOIT CODE FIRST' : 'EXPLOIT CODE BEFORE REMEDIATION',
       { c: pal.mut, fs: 10, ls: '.07em', mono: true });
 
     txt(svg, narrow ? L : R, BOT + (narrow ? 64 : 36),
@@ -412,7 +412,10 @@
     var rh = 46, h = bands.length * rh + (w < 620 ? 68 : 52);
     frame(svg, w, h);
     var L = narrow ? 66 : 96, R = w - 92, T = 20;
-    var max = Math.max.apply(null, bands.map(function (b) { return b.pExploited; }));
+    /* Floored, like the funnel's and the sweep's. Every bar is a fraction of
+     * this maximum, so an all-zero band set would divide by zero and hand the
+     * renderer width="NaN" rather than an empty chart. */
+    var max = Math.max.apply(null, bands.map(function (b) { return b.pExploited; }).concat([1e-3]));
     var names = { '9.0-10.0': 'Critical', '7.0-8.9': 'High', '4.0-6.9': 'Medium', '0.1-3.9': 'Low' };
     var order = ['9.0-10.0', '7.0-8.9', '4.0-6.9', '0.1-3.9'];
 
@@ -443,8 +446,8 @@
      * column narrower than about 620px, including the paired-chart row. */
     var fy = T + bands.length * rh + 18;
     var a = 'Critical is only ' + cal.exploitation.criticalVsHigh + '× High, and ' +
-      cal.exploitation.kevBelowCritical.toFixed(0) + '% of';
-    var b2 = 'confirmed-exploited bugs are rated below Critical.';
+      cal.exploitation.kevBelowCritical.toFixed(0) + '% of confirmed-exploited';
+    var b2 = 'vulnerabilities are rated below Critical.';
     if (w < 620) {
       txt(svg, 0, fy, a, { c: pal.txt, fs: 11.5 });
       txt(svg, 0, fy + 16, b2, { c: pal.txt, fs: 11.5 });
@@ -467,7 +470,7 @@
     var h = 190;
     frame(svg, w, h);
     var L = 4, R = w - 4, T = 26;
-    var max = Math.max.apply(null, rows.map(function (r) { return r.pub; }));
+    var max = Math.max.apply(null, rows.map(function (r) { return r.pub; }).concat([1e-3]));
     txt(svg, L, 12, w < 400 ? 'PUBLISHED CVES · CRITICAL SHARE'
       : 'PUBLISHED CVES AND THE CRITICAL-RATED SHARE',
       { c: pal.mut, fs: 10, ls: '.08em', mono: true });
@@ -505,8 +508,19 @@
     opts = opts || {};
     var scale = opts.scale || 2;
     var pad = 22, headH = opts.title ? (opts.subtitle ? 62 : 42) : 0, footH = 30;
-    var vb = svg.getAttribute('viewBox').split(/\s+/).map(Number);
+    /* A chart that has never been drawn carries no viewBox, and the Copy and
+     * PNG buttons are live from first paint — so this is reachable any time a
+     * render pass has not run for that chart yet. It must REJECT rather than
+     * throw: the caller attaches .then().catch() to the return value, and a
+     * synchronous throw escapes that chain entirely, so the reader would get
+     * an uncaught TypeError and a button that silently does nothing instead
+     * of the "Could not render PNG" toast. */
+    var vbAttr = svg && svg.getAttribute('viewBox');
+    var vb = vbAttr ? vbAttr.trim().split(/[\s,]+/).map(Number) : [];
     var w = vb[2], h = vb[3];
+    if (!isFinite(w) || !isFinite(h) || w <= 0 || h <= 0) {
+      return Promise.reject(new Error('chart has not been drawn yet'));
+    }
     var W = w + pad * 2, Hh = h + headH + footH + pad * 2;
     /* The header and footer are laid out in the same box as the chart, so a
      * title longer than a narrow chart ran off the image. Estimated from the
@@ -524,23 +538,32 @@
     clone.setAttribute('x', pad);
     clone.setAttribute('y', pad + headH);
 
+    /* Last-resort chrome colours for a caller that passed none. js/app.js
+     * always supplies these from palette(), so these values do not reach the
+     * page — but an export must still come out legible on its own, and a
+     * literal invented here would be palette drift the moment it ever did
+     * fire. They are therefore the light theme's own --panel / --txt / --mut,
+     * copied as literals because a serialised SVG resolves no custom
+     * properties. Keep them in step with :root in css/app.css. */
+    var bg = opts.bg || '#FFFFFF', fg = opts.fg || '#0A1514', mut = opts.mut || '#536B67';
+
     var outer = document.createElementNS(NS, 'svg');
     outer.setAttribute('xmlns', NS);
     outer.setAttribute('width', W);
     outer.setAttribute('height', Hh);
     outer.setAttribute('viewBox', '0 0 ' + W + ' ' + Hh);
 
-    outer.appendChild(el('rect', { x: 0, y: 0, width: W, height: Hh, fill: opts.bg || '#ffffff' }));
+    outer.appendChild(el('rect', { x: 0, y: 0, width: W, height: Hh, fill: bg }));
     if (opts.title) {
       var t1 = el('text', {
-        x: pad, y: pad + 20, 'font-size': titleSize, 'font-weight': 700, fill: opts.fg || '#111',
+        x: pad, y: pad + 20, 'font-size': titleSize, 'font-weight': 700, fill: fg,
         'font-family': 'ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif',
       });
       t1.textContent = opts.title;
       outer.appendChild(t1);
       if (opts.subtitle) {
         var t2 = el('text', {
-          x: pad, y: pad + 42, 'font-size': subSize, fill: opts.mut || '#667',
+          x: pad, y: pad + 42, 'font-size': subSize, fill: mut,
           'font-family': 'ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif',
         });
         t2.textContent = opts.subtitle;
@@ -550,7 +573,7 @@
     outer.appendChild(clone);
     if (opts.source) {
       var t3 = el('text', {
-        x: pad, y: Hh - pad + 4, 'font-size': srcSize, fill: opts.mut || '#667',
+        x: pad, y: Hh - pad + 4, 'font-size': srcSize, fill: mut,
         'font-family': 'ui-monospace, SFMono-Regular, Menlo, monospace',
       });
       t3.textContent = opts.source;

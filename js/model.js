@@ -111,9 +111,9 @@
       { k: 'emergH',    l: 'Out-of-band remediation time',      min: 0,   max: 336,  step: 6,   v: 72,
         f: function (v) { return v === 0 ? 'none' : fmtH(v); },
         h: 'Emergency change path. Zero means every vulnerability waits for the routine cycle.' },
-      { k: 'emergHit',  l: 'Exploited vulns triggering out-of-band', min: 0, max: 100, step: 5, v: 60,
+      { k: 'emergHit',  l: 'Out-of-band trigger rate', min: 0, max: 100, step: 5, v: 60,
         f: function (v) { return v + '%'; },
-        h: 'Requires the vulnerability to be recognised as urgent first.' },
+        h: 'Share of exploited vulnerabilities recognised as urgent in time to take the out-of-band path.' },
       { k: 'virtual',   l: 'Mitigated by WAF or IPS rule', min: 0,   max: 80,   step: 5,   v: 20,
         f: function (v) { return v + '%'; },
         h: 'Recovers the exposure window while the permanent fix ships. Does not apply to appliances.' },
@@ -125,24 +125,24 @@
         h: 'Appliances are excluded automatically, since they support no agent. Compromise outside telemetry is typically reported by a third party.' },
     ],
     att: [
-      { k: 'stackVulns', l: 'Critical vulns in your stack / yr', min: 0, max: 200, step: 1, v: 34,
+      { k: 'stackVulns', l: 'Criticals in your stack, per year', min: 0, max: 200, step: 1, v: 34,
         f: function (v) { return fmtN(v); },
-        h: 'Published criticals in software you operate. Worldwide run-rate is ' + fmtN(C.volume.curYearRunRate.critical) + '.' },
+        h: 'Published criticals in software you operate. Worldwide run-rate is ' + C.volume.curYearRunRate.critical.toLocaleString('en-US') + '.' },
       { k: 'ai',        l: 'Exploit-clock compression',   min: 0,   max: 100,  step: 1,   v: 0,
         f: function (v) { return v === 0 ? 'as measured' : '+' + v; },
         h: 'Zero is the measured ' + C.pocTiming.latest.year + ' distribution. Above zero models faster exploit development, greater volume, and more pre-disclosure availability.' },
       { k: 'scan',      l: 'Mass-exploitation pressure',  min: 0,   max: 100,  step: 1,   v: 50,
         f: function (v) { return String(v); },
         h: 'Rate at which opportunistic exploitation reaches you once exploit code is public.' },
-      { k: 'campaigns', l: 'Targeted campaigns / yr',     min: 0,   max: 100,  step: 1,   v: 6,
+      { k: 'campaigns', l: 'Targeted campaigns per year', min: 0,   max: 100,  step: 1,   v: 6,
         f: function (v) { return fmtN(v); },
         h: 'Operations that enumerate your estate specifically rather than scanning indiscriminately.' },
       { k: 'agentSkill', l: 'Campaign success vs a patched surface', min: 0, max: 10, step: 0.5, v: 1,
         f: function (v) { return v + '%'; },
         h: 'Per campaign, via misconfiguration, chained logic flaws or credential abuse.' },
-      { k: 'supply',    l: 'Supply-chain compromises reaching you / yr', min: 0, max: 3, step: 0.01, v: 0.12,
+      { k: 'supply',    l: 'Supply-chain compromises per year', min: 0, max: 3, step: 0.01, v: 0.12,
         f: function (v) { return v.toFixed(2); },
-        h: 'Compromised dependency or signed update. Remediation cadence does not apply to this vector.' },
+        h: 'Compromised dependency or signed update that reaches your estate. Remediation cadence does not apply to this vector.' },
     ],
   };
 
@@ -156,12 +156,60 @@
   }
 
   /* ======================================================================
-   * TRAITS - things that are true about you. Pick any number; they compose.
+   * EXPOSURE - what you put in front of an unauthenticated stranger.
    *
-   * A real organisation is not one archetype. It is "SaaS and regulated", or
-   * "corporate network with an OT plant attached". So each trait is a MODIFIER
-   * on the baseline estate rather than a complete parameter set, and selecting
-   * several applies all of them.
+   * This is the page's founding claim, made selectable: the more of your
+   * estate a stranger can reach without credentials, the more of the
+   * attacker's clock applies to you at all. It is one axis, so it is one
+   * choice - the rungs are alternatives, not attributes. You cannot be both
+   * corporate-network-only and a SaaS vendor, and a multi-select could not
+   * say so; it averaged the two and produced an estate that exists nowhere.
+   *
+   * The rungs are ordered and monotone in reachable surface. Rung one is the
+   * floor the control previously had no way to express: an estate that
+   * publishes no unauthenticated listener is not merely below average, it is
+   * off the bottom of the baseline.
+   *
+   * Drives the four terms that describe reachable surface - how many systems,
+   * how many of them are appliances, how large a vulnerability stream the
+   * software they run commits you to, and how much of it a WAF can stand in
+   * front of. Everything else is left to the other three controls.
+   * ====================================================================== */
+  var EXPOSURE = {
+    none: {
+      l: 'Nothing inbound',
+      d: 'No unauthenticated listener on the public internet. Access is brokered outbound-only, and what remains reachable is the broker itself. The floor of this axis, not a typical estate.',
+      m: { exposed: 0.12, edge: 0.5, stackVulns: 0.4 },
+    },
+    corp: {
+      l: 'Corporate edge only',
+      d: 'VPN, mail and a handful of internal applications published to the internet. Software is operated, not distributed. A small surface, but appliance-heavy for its size, which is the worst composition per system.',
+      m: { exposed: 0.55, edge: 1.4, stackVulns: 0.7, virtual: '-5' },
+    },
+    web: {
+      l: 'Public web presence',
+      d: 'The corporate edge plus a public site, a customer portal and some APIs. Reachable by anyone, but not the thing being sold, so the web tier stays a minority of the estate.',
+      m: { exposed: 1, edge: 1, stackVulns: 1 },
+    },
+    product: {
+      l: 'The product is public',
+      d: 'The exposed surface is the revenue: a wide web tier, few appliances, and first-party fixes deployable within the hour. The trade-off is a substantially larger dependency stream.',
+      m: { exposed: 2.4, edge: 0.35, stackVulns: 1.9, virtual: '+20' },
+    },
+    others: {
+      l: 'We run other estates',
+      d: 'Hosting or managed service. The surface is a multiple of headcount rather than a function of it, and a single appliance vulnerability becomes a customer-wide event.',
+      m: { exposed: 6, edge: 1.1, stackVulns: 2.2, virtual: '+5' },
+    },
+  };
+
+  /* ======================================================================
+   * TRAITS - what else is true, on top of wherever you sit on that axis.
+   *
+   * Every trait here composes with every rung without contradicting it: you
+   * can sell software from any exposure posture, run an OT plant behind any
+   * of them, and depend on third parties regardless. That is the test a trait
+   * has to pass to be a trait rather than a rung.
    *
    * Numeric values multiply; string values like '+20' or '-6' offset. Every
    * result is clamped to the slider range afterwards, so combinations cannot
@@ -171,45 +219,27 @@
    * per-sector estate composition. They exist because the alternative is
    * asking a reader to guess "criticals in my stack per year" cold. Every
    * slider stays editable once you have picked.
+   *
+   * Two former traits are deliberately absent. 'Legacy we cannot touch' set
+   * cadence, coverage, trigger rate and inventory in the same direction as
+   * MATURITY.loose, so selecting both counted one weakness twice and reached
+   * an 80-day change window nobody asked for; the maturity ladder owns that
+   * axis alone now. 'Regulated / finance' was not an environment attribute at
+   * all - it bought campaigns x4, which is adversary attention - and has moved
+   * to ATTENTION on the threat side, where the reader cannot mistake it for
+   * something they control.
    * ====================================================================== */
   var TRAITS = {
-    saas: {
-      l: 'We ship SaaS',
-      d: 'The product is the exposed surface: a wide web tier, few appliances, and first-party fixes deployable within the hour. The trade-off is a substantially larger dependency stream.',
-      m: { exposed: 2.4, edge: 0.35, cadence: 0.25, emergH: 0.25, awareH: 0.5,
-           stackVulns: 1.9, supply: 2.5, virtual: '+20', edrCoverage: '+12' },
-    },
     vendor: {
-      l: 'We sell software',
-      d: 'Customers operate what you build, which makes you a supply-chain node. Targeted well above what headcount would suggest, and the build and signing pipeline forms part of the attack surface.',
-      m: { campaigns: 3, supply: 3, stackVulns: 1.3 },
-    },
-    corponly: {
-      l: 'Corporate network only',
-      d: 'Software is operated, not distributed. A small exposed surface of VPN, mail and a few web applications, which makes it appliance-heavy for its size.',
-      m: { exposed: 0.55, edge: 1.4, stackVulns: 0.7, campaigns: 0.7 },
+      l: 'We sell software others run',
+      d: 'Customers operate what you build, which makes you a supply-chain node. The build and signing pipeline forms part of the attack surface, and the dependency stream is inherited by everyone downstream.',
+      m: { supply: 3, stackVulns: 1.3 },
     },
     ot: {
-      l: 'OT / ICS',
+      l: 'OT / ICS in scope',
       d: 'Change windows run to months and any reboot carries a safety case. Long-lived appliances, minimal endpoint telemetry, and a small surface with high consequence of loss.',
       m: { edge: 2.0, cadence: 4.0, emergH: 3.0, emergHit: 0.5, awareH: 3.0,
-           edrCoverage: 0.3, detect: 2.5, stackVulns: 0.7 },
-    },
-    regulated: {
-      l: 'Regulated / finance',
-      d: 'Heavily targeted and funded accordingly: enforced change control, maintained detection, and a third-party estate large enough to constitute its own exposure.',
-      m: { campaigns: 4, supply: 2, inventory: '+2', virtual: '+25',
-           emergHit: 1.35, edrCoverage: '+10' },
-    },
-    hosting: {
-      l: 'We host for others',
-      d: 'A large exposed surface operated on behalf of third parties, under sustained campaign pressure. A single appliance vulnerability becomes a customer-wide event.',
-      m: { exposed: 6, campaigns: 5, stackVulns: 2.2, inventory: '-6', scan: '+20' },
-    },
-    legacy: {
-      l: 'Legacy we cannot touch',
-      d: 'Systems with no approved downtime window, or past end of support. They leave the remediation cycle without leaving the estate.',
-      m: { cadence: 2.2, inventory: '-8', virtual: 0.4, edrCoverage: 0.6, emergHit: 0.7 },
+           edrCoverage: 0.3, detect: 2.5 },
     },
     thirdparty: {
       l: 'Heavy third-party / cloud',
@@ -231,6 +261,43 @@
     managed: { l: 'Managed 24/7',     d: 'MDR or an in-house SOC with genuine out-of-hours cover. This is where adversary breakout time stops winning by default.',    p: { detect: 1,   edrCoverage: 93 } },
   };
 
+  /* ======================================================================
+   * ATTENTION - who is aiming at you, and how hard.
+   *
+   * Lives on the threat side because it is not a property of your estate. It
+   * used to be a trait called 'Regulated / finance', sitting among things the
+   * reader controls, described in defensive language - "enforced change
+   * control, maintained detection" - while quadrupling the campaign rate. A
+   * reader picked a chip that read as competence and watched the number rise
+   * by nineteen points. The effect was defensible; its placement was not.
+   *
+   * Ordered, single-select, and monotone in adversary interest. Drives the two
+   * terms that carry deliberate attention rather than opportunism: campaigns
+   * that enumerate you specifically, and supply-chain compromises aimed at
+   * whoever is downstream of you.
+   * ====================================================================== */
+  var ATTENTION = {
+    ambient: {
+      l: 'Opportunistic only',
+      d: 'Nobody is looking for you by name. What arrives is what arrives at every reachable address: mass scanning behind public exploit code.',
+      m: { campaigns: 0.15, supply: 0.6 },
+    },
+    ordinary: {
+      l: 'Ordinary interest',
+      d: 'The baseline. Occasional deliberate enumeration, mostly commodity ransomware affiliates working a target list you happen to be on.',
+      m: { campaigns: 1, supply: 1 },
+    },
+    sector: {
+      l: 'Sector under pressure',
+      d: 'Finance, healthcare, government supply and defence industrial base. Targeted well above what headcount would suggest, and the third-party estate is large enough to constitute its own exposure.',
+      m: { campaigns: 4, supply: 2 },
+    },
+    named: {
+      l: 'A named target',
+      d: 'Specific, persistent adversary interest in you rather than in your sector. State-nexus or a determined criminal group with a reason to keep coming back after a failure.',
+      m: { campaigns: 9, supply: 3, scan: '+15' },
+    },
+  };
   /* MATURITY - how well the estate is run. Orthogonal to what you are, so it
    * is a transform rather than another table of absolutes. */
   /* 'bod' is not a maturity level so much as a mandated regime. CISA BOD 26-04
@@ -251,10 +318,18 @@
       cadence: 1,    emergH: 1,    emergHit: 1,   awareH: 1,    detect: 1,    virtual: 1,   inventory: 0,   edrCoverage: 0 },
     loose:   { l: 'Sprawling', d: 'Change control by exception, applicability established late, little virtual patching, and a material share of the estate in no remediation cycle at all.',
       cadence: 2.6,  emergH: 2.4,  emergHit: 0.5, awareH: 3.5,  detect: 3.2,  virtual: 0.3, inventory: -12, edrCoverage: -25 },
-    bod:     { l: 'BOD 26-04', d: 'A mandated regime rather than a rung on the ladder. Prioritising on KEV presence, exposure, automatability and impact buys faster, more reliable triage and a better-known estate — not a faster change window.',
+    bod:     { l: 'BOD 26-04', d: 'A mandated regime rather than a rung on the ladder. Prioritising on KEV presence, exposure, automatability and impact buys faster, more reliable triage and a better-known estate, not a faster change window.',
       cadence: 1,    emergH: 1,    emergHit: 1.55, awareH: 0.33, detect: 1,    virtual: 1,   inventory: 3,   edrCoverage: 4 },
   };
 
+  /* The rung and the attention level the baseline estate already represents.
+   * `SPEC` defaults describe a generic mid-size estate with a public web
+   * presence and no particular adversary interest, so these two are the
+   * identity of the composer: compose({}) must return defaults() unchanged,
+   * which is what the ordering test asserts. Both tables carry a x1 rung for
+   * exactly that reason. */
+  var DEFAULT_EXPOSURE = 'web';
+  var DEFAULT_ATTENTION = 'ordinary';
   function clampTo(k, v) {
     var s = SPEC.def.concat(SPEC.att).filter(function (x) { return x.k === k; })[0];
     if (!s) return v;
@@ -264,9 +339,28 @@
     return Math.min(s.max, Math.max(s.min, +snapped.toFixed(4)));
   }
 
-  /* Compose a parameter set: baseline -> traits -> maturity -> detection.
-   * Traits multiply or offset, so the order they were clicked in cannot
-   * change the result. */
+  /* Compose a parameter set:
+   *   baseline -> exposure rung -> traits -> attention -> maturity -> detection
+   *
+   * The first three all speak the same `m` dialect and are gathered into one
+   * pass, so they cannot depend on the order they were applied in - and,
+   * because the rung and the attention level are single-select, a rung's
+   * multiplier and a trait's multiplier on the same term compound exactly the
+   * way two traits would. `edge` is the term where that matters: the corporate
+   * rung already tilts appliance-heavy, and an OT plant on top of it tilts
+   * further, which is the composition the old multi-select could not express
+   * without also averaging away the exposure claim. */
+  /* A table lookup by a key that came from a URL must not resolve an inherited
+   * Object.prototype member. `DETECTION['constructor']` is truthy, so the guard
+   * below used to pass and then dereference `det.p.detect` on undefined —
+   * index.html?det=constructor threw inside fromURL(), which runs at the top of
+   * init() outside any try/catch, and the whole console failed to build. The
+   * maturity table was quieter and worse: ?mat=toString composed eight NaN
+   * parameters and simulated them. */
+  function owns(table, key) {
+    return typeof key === 'string' && Object.prototype.hasOwnProperty.call(table, key);
+  }
+
   function compose(opts) {
     opts = opts || {};
     var traits = opts.traits || [];
@@ -283,30 +377,52 @@
      * diminishing returns. A single trait is unaffected: excess 1.4 gives
      * exactly x2.4, the multiplier as written. */
     var up = {}, down = {}, off = {};
-    traits.forEach(function (key) {
-      var t = TRAITS[key];
-      if (!t) return;
-      Object.keys(t.m).forEach(function (prop) {
-        var mod = t.m[prop];
+    function gather(m) {
+      if (!m) return;
+      Object.keys(m).forEach(function (prop) {
+        var mod = m[prop];
         if (typeof mod === 'string') off[prop] = (off[prop] || 0) + parseFloat(mod);
         else if (mod >= 1) up[prop] = (up[prop] || 0) + (mod - 1);
         else if (mod > 0) down[prop] = (down[prop] || 0) + (1 / mod - 1);
       });
-    });
+    }
+    /* The rung is the only one of the three that is always present. An unknown
+     * or absent key falls back to the middle rung rather than to no rung at
+     * all, so a stale shared link cannot silently produce a surface-free
+     * estate that the reader never chose. */
+    gather(EXPOSURE[owns(EXPOSURE, opts.exposure) ? opts.exposure : DEFAULT_EXPOSURE].m);
+    traits.forEach(function (key) { if (TRAITS[key]) gather(TRAITS[key].m); });
+    gather(ATTENTION[owns(ATTENTION, opts.attention) ? opts.attention : DEFAULT_ATTENTION].m);
+
     Object.keys(out).forEach(function (prop) {
       var factor = (1 + (up[prop] || 0)) / (1 + (down[prop] || 0));
       out[prop] = out[prop] * factor + (off[prop] || 0);
     });
 
-    var mat = MATURITY[opts.maturity] || MATURITY.typical;
+    var mat = MATURITY[owns(MATURITY, opts.maturity) ? opts.maturity : 'typical'];
     ['cadence', 'emergH', 'emergHit', 'awareH', 'detect', 'virtual'].forEach(function (k) {
       out[k] = out[k] * mat[k];
     });
     out.inventory += mat.inventory;
     out.edrCoverage += mat.edrCoverage;
 
-    var det = DETECTION[opts.detection];
-    if (det) Object.keys(det.p).forEach(function (k) { out[k] = det.p[k]; });
+    /* Detection is an assignment, not a multiplier, because the reader picked
+     * a stack and the stack states its own dwell time and coverage. The one
+     * thing it must not do is overwrite a physical impossibility with an
+     * aspiration: an OT estate cannot reach 93% endpoint coverage by buying an
+     * MDR contract, because the appliances support no agent. So a trait that
+     * suppresses coverage keeps its suppression, applied to whatever the
+     * posture claims. Dwell time is genuinely purchasable and is not capped. */
+    var det = owns(DETECTION, opts.detection) ? DETECTION[opts.detection] : null;
+    if (det) {
+      var covCap = 1;
+      traits.forEach(function (key) {
+        var t = TRAITS[key];
+        if (t && typeof t.m.edrCoverage === 'number' && t.m.edrCoverage < 1) covCap *= t.m.edrCoverage;
+      });
+      out.detect = det.p.detect;
+      out.edrCoverage = det.p.edrCoverage * covCap;
+    }
 
     Object.keys(out).forEach(function (k) { out[k] = clampTo(k, out[k]); });
     out.ai = opts.ai || 0;
@@ -451,6 +567,17 @@
     k.p75         = k.pocP75;
     /* measured quantile positions, shifted by the pre-publication mass */
     k.pMedian     = 0.5;
+    /* The inverse-CDF sampler walks these knots in order and interpolates
+     * between consecutive pairs, so they have to BE in order. They are, for
+     * the current snapshot at every compression setting — pBefore tops out at
+     * 0.47 against a median knot of 0.50. But pBefore is measured data times
+     * a slider: the 2015 row of the same series reads 62.9%, and a snapshot
+     * refresh that moved `latest` onto a year like that would put pBefore
+     * past pMedian and have the post-publication branch extrapolate outside
+     * its own segment. Clamping costs nothing today and keeps the sampler
+     * honest against data that has not arrived yet. */
+    k.pBefore     = Math.min(k.pBefore, k.pMedian);
+    k.pWithinWeek = Math.min(Math.max(k.pWithinWeek, k.pMedian), 0.75);
     k.scanHaz     = k.scanHazBase * Math.exp(0.030 * (P.scan - 50));
     return k;
   }
@@ -473,13 +600,30 @@
     'Exploitation succeeds',
   ];
 
-  function simulate(P, trials, seed, opts) {
+  /* A run, suspendable between trials.
+   *
+   * The trial loop is the one genuinely expensive thing this file does: 60,000
+   * trials is about 92ms, which is roughly twice the budget a main thread has
+   * if it means to stay responsive to input. Exposing the loop as something a
+   * caller can advance in pieces lets the page spend that cost in slices
+   * without holding the frame.
+   *
+   * Splitting it changes nothing about the result. Every accumulator and the
+   * RNG itself live in this closure, so a run advanced 10,000 at a time visits
+   * exactly the trials, in exactly the order, with exactly the coefficient
+   * draws, that one advanced all at once would — including the block flushes
+   * the credible interval is built from. `simulate` below is the whole-run
+   * case and remains the API everything except the settle pass uses. */
+  function createRun(P, trials, seed, opts) {
     opts = opts || {};
     var wantSurv = opts.surv !== false;
     var spread = opts.spread === undefined ? 1 : opts.spread;
     var rnd = RNG(seed);
 
     var surv = new Float64Array(H + 2);
+    /* Day each trial stopped surviving; H+1 means it never did. surv[] is the
+     * suffix sum of this, taken once after the loop. */
+    var stopAt = new Int32Array(H + 2);
     var hit = 0, inc = 0, events = 0, expDays = 0;
     var firsts = [];
     var route = [0, 0, 0];
@@ -511,164 +655,207 @@
     var eKnown = Math.round(nEdge * invF), eDark = nEdge - eKnown;
     var wKnown = Math.round(nWeb * invF), wDark = nWeb - wKnown;
 
-    for (var t = 0; t < trials; t++) {
-      if (k === null || bc === 0) k = drawCoeffs(rnd, P, spread);
-      var first = Infinity, firstRoute = -1, firstEdge = false, incident = false;
-      var n = 0, edSum = 0;
+    var t = 0;
+    /* Advance by `n` trials, or to the end when `n` is omitted. Returns true
+     * once the run is complete. */
+    function advance(n) {
+      var end = n > 0 ? Math.min(trials, t + n) : trials;
+      for (; t < end; t++) {
+        /* bc is 0 on the first trial and again after every block flush, which
+         * is exactly when a fresh coefficient set is due. */
+        if (bc === 0) k = drawCoeffs(rnd, P, spread);
+        var first = Infinity, firstRoute = -1, firstEdge = false, incident = false;
+        var n = 0, edSum = 0;
 
-      var K = rnd.pois(P.stackVulns);
-      fn[0] += K;
+        var K = rnd.pois(P.stackVulns);
+        fn[0] += K;
 
-      for (var i = 0; i < K; i++) {
-        var isEdge = rnd() < P.edge / 100;
+        for (var i = 0; i < K; i++) {
+          var isEdge = rnd() < P.edge / 100;
 
-        /* 1. do you run the affected product at all? */
-        if (rnd() >= (isEdge ? k.runsEdge : k.runsWeb)) continue;
-        fn[1]++;
+          /* 1. do you run the affected product at all? */
+          if (rnd() >= (isEdge ? k.runsEdge : k.runsWeb)) continue;
+          fn[1]++;
 
-        /* 2. does a working exploit ever exist, and is it used for real?
-         *    These are not sequential gates: a bug can be used in the wild with
-         *    no public PoC, and a public PoC can go unused. Either one arms it. */
-        var hasPoC = rnd() < k.pPoC;
-        var inWild = rnd() < (hasPoC ? k.pWildGivenPoC : k.pWildNoPoC);
-        if (!hasPoC && !inWild) continue;
-        fn[2]++;
-        armedN++;
-        if (inWild) wildN++;
+          /* 2. does a working exploit ever exist, and is it used for real?
+           *    These are not sequential gates: a bug can be used in the wild with
+           *    no public PoC, and a public PoC can go unused. Either one arms it. */
+          var hasPoC = rnd() < k.pPoC;
+          var inWild = rnd() < (hasPoC ? k.pWildGivenPoC : k.pWildNoPoC);
+          if (!hasPoC && !inWild) continue;
+          fn[2]++;
+          armedN++;
+          if (inWild) wildN++;
 
-        /* 3. when does the exploit exist, relative to the patch? */
-        var tX = hasPoC ? drawPoCTime(rnd, k)
-                        : -k.preMedian * Math.exp(0.95 * inverseNormal(rnd()));
-        if (isEdge) tX *= 0.6; /* appliance exploitation runs ahead of the field */
+          /* 3. when does the exploit exist, relative to the patch? */
+          var tX = hasPoC ? drawPoCTime(rnd, k)
+                          : -k.preMedian * Math.exp(0.95 * inverseNormal(rnd()));
+          if (isEdge) tX *= 0.6; /* appliance exploitation runs ahead of the field */
 
-        /* 4. how much of your estate does it touch? */
-        var af = isEdge
-          ? k.afEdgeMin + (0.90 - k.afEdgeMin) * rnd()
-          : 0.04 + (k.afWebMax - 0.04) * rnd() * rnd();
-        var popKnown = isEdge ? eKnown : wKnown;
-        var popDark = isEdge ? eDark : wDark;
-        var nKnown = rnd.binom(popKnown, af);
-        var nDark = rnd.binom(popDark, af);
-        if (nKnown + nDark < 1) continue;
+          /* 4. how much of your estate does it touch? */
+          var af = isEdge
+            ? k.afEdgeMin + (0.90 - k.afEdgeMin) * rnd()
+            : 0.04 + (k.afWebMax - 0.04) * rnd() * rnd();
+          var popKnown = isEdge ? eKnown : wKnown;
+          var popDark = isEdge ? eDark : wDark;
+          var nKnown = rnd.binom(popKnown, af);
+          var nDark = rnd.binom(popDark, af);
+          if (nKnown + nDark < 1) continue;
 
-        /* 5. when have you closed it? */
-        var aware = rnd.lnorm(P.awareH / 24, 0.6) * (isEdge ? 1.4 : 1);
-        var tp;
-        if (P.emergH > 0 && rnd() < (P.emergHit / 100) * (isEdge ? 0.8 : 1)) {
-          tp = aware + (P.emergH / 24) * Math.exp(0.3 * rnd.norm()) * (isEdge ? 1.5 : 1);
-        } else {
-          tp = aware + rnd() * P.cadence * (isEdge ? 1.6 : 1) + rnd.lnorm(0.6, 0.5);
+          /* 5. when have you closed it? */
+          var aware = rnd.lnorm(P.awareH / 24, 0.6) * (isEdge ? 1.4 : 1);
+          var tp;
+          if (P.emergH > 0 && rnd() < (P.emergHit / 100) * (isEdge ? 0.8 : 1)) {
+            tp = aware + (P.emergH / 24) * Math.exp(0.3 * rnd.norm()) * (isEdge ? 1.5 : 1);
+          } else {
+            tp = aware + rnd() * P.cadence * (isEdge ? 1.6 : 1) + rnd.lnorm(0.6, 0.5);
+          }
+          var shielded = !isEdge && rnd() < P.virtual / 100;
+
+          var win = shielded ? 0 : Math.max(0, tp - tX);
+          if (win > 0) fn[3]++;
+          edSum += Math.min(win, H) * nKnown;
+
+          /* 6. does a campaign reach you inside that window? */
+          var hazMul = Math.exp(0.9 * rnd.norm()) * (isEdge ? k.edgeHazard : 1)
+                     * (inWild ? 1 : k.pocOnlyHazard);
+          var landed = false, won = false;
+
+          var reach = function (cnt, wTotal, tStart) {
+            if (cnt < 1 || wTotal <= 0) return null;
+            var h = k.scanHaz * hazMul * Math.pow(cnt, 0.4);
+            /* pre-publication time is targeted, not mass: discount it */
+            var pre = Math.max(0, Math.min(0, tStart + wTotal) - Math.min(0, tStart));
+            var eff = Math.min(wTotal, H) - pre * (1 - k.preHazard);
+            if (eff <= 0) return null;
+            if (rnd() >= 1 - Math.exp(-h * eff)) return null;
+            return { c: Math.max(1, rnd.binom(cnt, 0.7)), t: Math.min(wTotal, rnd.expo(1 / h)) };
+          };
+          var land = function (r, when0) {
+            var c = rnd.binom(r.c, k.exploitWorks);
+            if (c < 1) return false;
+            n += c;
+            var when = when0 + Math.max(0, tX) + r.t;
+            if (when < first) { first = when; firstRoute = 0; firstEdge = isEdge; }
+            return true;
+          };
+
+          var day0 = rnd() * H;
+          var rK = reach(nKnown, win, tX);
+          if (rK) { landed = true; if (land(rK, day0)) won = true; }
+
+          if (nDark > 0) {
+            /* systems in no patch cycle: fixed on rebuild, or not at all */
+            var tpDark = rnd() < 0.5 ? aware + rnd() * 90 + rnd.lnorm(0.6, 0.5)
+                                     : aware + rnd.expo(300);
+            var winDark = Math.max(0, tpDark - tX);
+            edSum += Math.min(winDark, H) * nDark;
+            var rD = reach(nDark, winDark, tX);
+            if (rD) { landed = true; if (land(rD, day0)) won = true; }
+          }
+          if (landed) fn[4]++;
+          if (won) fn[5]++;
         }
-        var shielded = !isEdge && rnd() < P.virtual / 100;
 
-        var win = shielded ? 0 : Math.max(0, tp - tX);
-        if (win > 0) fn[3]++;
-        edSum += Math.min(win, H) * nKnown;
-
-        /* 6. does a campaign reach you inside that window? */
-        var hazMul = Math.exp(0.9 * rnd.norm()) * (isEdge ? k.edgeHazard : 1)
-                   * (inWild ? 1 : k.pocOnlyHazard);
-        var landed = false, won = false;
-
-        var reach = function (cnt, wTotal, tStart) {
-          if (cnt < 1 || wTotal <= 0) return null;
-          var h = k.scanHaz * hazMul * Math.pow(cnt, 0.4);
-          /* pre-publication time is targeted, not mass: discount it */
-          var pre = Math.max(0, Math.min(0, tStart + wTotal) - Math.min(0, tStart));
-          var eff = Math.min(wTotal, H) - pre * (1 - k.preHazard);
-          if (eff <= 0) return null;
-          if (rnd() >= 1 - Math.exp(-h * eff)) return null;
-          return { c: Math.max(1, rnd.binom(cnt, 0.7)), t: Math.min(wTotal, rnd.expo(1 / h)) };
-        };
-        var land = function (r, when0) {
-          var c = rnd.binom(r.c, k.exploitWorks);
-          if (c < 1) return false;
-          n += c;
-          var when = when0 + Math.max(0, tX) + r.t;
-          if (when < first) { first = when; firstRoute = 0; firstEdge = isEdge; }
-          return true;
-        };
-
-        var day0 = rnd() * H;
-        var rK = reach(nKnown, win, tX);
-        if (rK) { landed = true; if (land(rK, day0)) won = true; }
-
-        if (nDark > 0) {
-          /* systems in no patch cycle: fixed on rebuild, or not at all */
-          var tpDark = rnd() < 0.5 ? aware + rnd() * 90 + rnd.lnorm(0.6, 0.5)
-                                   : aware + rnd.expo(300);
-          var winDark = Math.max(0, tpDark - tX);
-          edSum += Math.min(winDark, H) * nDark;
-          var rD = reach(nDark, winDark, tX);
-          if (rD) { landed = true; if (land(rD, day0)) won = true; }
+        /* targeted campaigns: succeed more often when a window happens to be open */
+        var openFrac = Math.min(1, edSum / (H * Math.max(1, P.exposed)));
+        var pWin = openFrac * 0.7 + (1 - openFrac) * (P.agentSkill / 100);
+        var nC = rnd.pois(P.campaigns);
+        for (var ci = 0; ci < nC; ci++) {
+          if (rnd() < pWin) {
+            n++;
+            var wc = rnd() * H;
+            if (wc < first) { first = wc; firstRoute = 1; firstEdge = rnd() < P.edge / 100; }
+          }
         }
-        if (landed) fn[4]++;
-        if (won) fn[5]++;
-      }
-
-      /* targeted campaigns: succeed more often when a window happens to be open */
-      var openFrac = Math.min(1, edSum / (H * Math.max(1, P.exposed)));
-      var pWin = openFrac * 0.7 + (1 - openFrac) * (P.agentSkill / 100);
-      var nC = rnd.pois(P.campaigns);
-      for (var ci = 0; ci < nC; ci++) {
-        if (rnd() < pWin) {
+        /* supply chain: patch cadence is irrelevant */
+        var nS = rnd.pois(P.supply);
+        for (var si = 0; si < nS; si++) {
           n++;
-          var wc = rnd() * H;
-          if (wc < first) { first = wc; firstRoute = 1; firstEdge = rnd() < P.edge / 100; }
+          var ws = rnd() * H;
+          if (ws < first) { first = ws; firstRoute = 2; firstEdge = false; }
         }
-      }
-      /* supply chain: patch cadence is irrelevant */
-      var nS = rnd.pois(P.supply);
-      for (var si = 0; si < nS; si++) {
-        n++;
-        var ws = rnd() * H;
-        if (ws < first) { first = ws; firstRoute = 2; firstEdge = false; }
-      }
 
-      events += n;
-      expDays += edSum;
+        events += n;
+        expDays += edSum;
 
-      var compromised = first < H;
-      if (compromised) {
-        hit++;
-        firsts.push(first);
-        route[firstRoute]++;             /* once per trial — not once per improvement */
-        incident = !contained(rnd, P, k, firstEdge);
-        if (incident) inc++;
-      }
-      if (wantSurv) {
-        var stop = compromised ? Math.ceil(first) : H + 1;
-        for (var d = 0; d < stop && d <= H; d++) surv[d]++;
-      }
+        var compromised = first < H;
+        if (compromised) {
+          hit++;
+          firsts.push(first);
+          route[firstRoute]++;             /* once per trial — not once per improvement */
+          incident = !contained(rnd, P, k, firstEdge);
+          if (incident) inc++;
+        }
+        if (wantSurv) {
+          /* Record only WHERE this trial leaves the survivor set. Incrementing
+           * every day it survived cost 365 writes per trial — 21.9M at 60k
+           * trials — to build a suffix sum that one pass at the end produces
+           * exactly, and measurably faster. */
+          stopAt[compromised ? Math.ceil(first) : H + 1]++;
+        }
 
-      bh += compromised ? 1 : 0; bi += incident ? 1 : 0; bc++;
-      if (bc === blockN) { blockHits.push(bh / bc); blockInc.push(bi / bc); bh = 0; bi = 0; bc = 0; }
+        bh += compromised ? 1 : 0; bi += incident ? 1 : 0; bc++;
+        if (bc === blockN) { blockHits.push(bh / bc); blockInc.push(bi / bc); bh = 0; bi = 0; bc = 0; }
+      }
+      return t >= trials;
     }
 
-    firsts.sort(function (a, b) { return a - b; });
-    var pHit = hit / trials, pInc = inc / trials;
-    var ciH = decompose(blockHits, pHit, blockN), ciI = decompose(blockInc, pInc, blockN);
-    var totalRoute = route[0] + route[1] + route[2] || 1;
+    /* Aggregate. Reads the accumulators without disturbing them, so it is
+     * safe to call on a finished run more than once. */
+    function result() {
+      if (wantSurv) {
+        /* surv[d] is the number of trials still uncompromised at the end of day
+         * d — that is, those whose stop day is strictly greater than d. */
+        var alive = trials;
+        for (var sd = 0; sd <= H; sd++) { alive -= stopAt[sd]; surv[sd] = alive; }
+      }
+
+      firsts.sort(function (a, b) { return a - b; });
+      var pHit = hit / trials, pInc = inc / trials;
+      var ciH = decompose(blockHits, pHit, blockN), ciI = decompose(blockInc, pInc, blockN);
+      var totalRoute = route[0] + route[1] + route[2] || 1;
+      var medIdx = Math.floor(trials * 0.5);
+
+      return {
+        p: pHit, pLo: ciH[0], pHi: ciH[1],
+        incident: pInc, incLo: ciI[0], incHi: ciI[1],
+        /* Median across ALL trials, with the uncompromised years sorted past
+         * the end — so the index is into the trial count, not into `firsts`.
+         * Bounds-checked rather than gated on pHit >= 0.5: with exactly half
+         * the trials compromised the index is one past the last element, and
+         * the old form returned `undefined` there rather than null, leaking a
+         * third value out of a documented number-or-null field. */
+        med: medIdx < firsts.length ? firsts[medIdx] : null,
+        events: events / trials,
+        expDays: expDays / trials,
+        surv: Array.prototype.slice.call(surv, 0, H + 1).map(function (v) { return v / trials; }),
+        routes: route.map(function (v) { return v / totalRoute; }),
+        routeN: route.slice(),
+        fn: fn.map(function (v) { return v / trials; }),
+        armed: armedN / trials,
+        wild: wildN / trials,
+        wildShare: armedN ? wildN / armedN : 0,
+        se: Math.sqrt(pHit * (1 - pHit) / trials),
+        trials: trials,
+        /* the interval needs enough blocks AND enough trials per block to mean
+         * anything; below this the caller should keep showing the last good one */
+        bandReliable: trials >= 30000,
+      };
+    }
 
     return {
-      p: pHit, pLo: ciH[0], pHi: ciH[1],
-      incident: pInc, incLo: ciI[0], incHi: ciI[1],
-      med: pHit >= 0.5 ? firsts[Math.floor(trials * 0.5)] : null,
-      events: events / trials,
-      expDays: expDays / trials,
-      surv: Array.prototype.slice.call(surv, 0, H + 1).map(function (v) { return v / trials; }),
-      routes: route.map(function (v) { return v / totalRoute; }),
-      routeN: route.slice(),
-      fn: fn.map(function (v) { return v / trials; }),
-      armed: armedN / trials,
-      wild: wildN / trials,
-      wildShare: armedN ? wildN / armedN : 0,
-      se: Math.sqrt(pHit * (1 - pHit) / trials),
-      trials: trials,
-      /* the interval needs enough blocks AND enough trials per block to mean
-       * anything; below this the caller should keep showing the last good one */
-      bandReliable: trials >= 30000,
+      advance: advance,
+      done: function () { return t >= trials; },
+      result: result,
     };
+  }
+
+  /* The whole run, in one call — the original signature, unchanged. */
+  function simulate(P, trials, seed, opts) {
+    var run = createRun(P, trials, seed, opts);
+    run.advance();
+    return run.result();
   }
 
   /* Two-stage containment: beat breakout, or beat the objective, or neither.
@@ -708,6 +895,20 @@
     var k = drawCoeffs(rnd, P, 0);
     var x0 = -30;
     var x1 = Math.max(24, Math.min(120, P.cadence * 1.7 * (1 + P.edge / 160) + P.emergH / 24 + P.awareH / 24 + 8));
+    /* These bins are sized for drawing a shape, not for reading a quantile off
+     * it. x0 is pinned at -30 and x1 floors at 24, so the narrowest bin this
+     * function can produce anywhere in the parameter space is 54/160 = 0.34d.
+     * That is coarser than the median it would be measuring under heavy
+     * compression: at ai=100 the modelled median is around 0.31d, so the whole
+     * quantity sits inside a single bin and no readout of `cum` can resolve
+     * it — interpolating within the crossing bin does not rescue it either,
+     * since that assumes a uniform density across the very interval in
+     * question. If a modelled median is ever wanted on the page, bin
+     * adaptively or sample it directly; do NOT read it off `cum`, and do not
+     * compute it as the measured median times `scale` (that product is never
+     * exact — the pre-publication branch is unscaled and its mass grows with
+     * ai independently, so it drifts several percent and is not a figure any
+     * run of this model produces). */
     var B = 160, dx = (x1 - x0) / B;
     var A = new Float64Array(B), D = new Float64Array(B);
     var before = 0, wins = 0;
@@ -768,8 +969,11 @@
 
   return {
     H: H, SPEC: SPEC, PRESETS: PRESETS, MEASURED: MEASURED, ASSUMED: ASSUMED,
-    CAL: C, FUNNEL: FUNNEL, ROUTES: ROUTES, TRAITS: TRAITS, MATURITY: MATURITY, DETECTION: DETECTION, compose: compose,
-    defaults: defaults, simulate: simulate, densities: densities,
+    CAL: C, FUNNEL: FUNNEL, ROUTES: ROUTES,
+    EXPOSURE: EXPOSURE, TRAITS: TRAITS, ATTENTION: ATTENTION,
+    MATURITY: MATURITY, DETECTION: DETECTION, compose: compose,
+    DEFAULT_EXPOSURE: DEFAULT_EXPOSURE, DEFAULT_ATTENTION: DEFAULT_ATTENTION,
+    defaults: defaults, simulate: simulate, createRun: createRun, densities: densities,
     RNG: RNG, inverseNormal: inverseNormal,
     clockScale: clockScale, weapMult: weapMult, preMult: preMult,
     fmtN: fmtN, fmtH: fmtH,

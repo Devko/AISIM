@@ -21,9 +21,6 @@
   --zero:  #7029CC;  --warn:  #8A6008;
   --shadow: 0 1px 2px rgba(10,21,20,.05), 0 10px 30px -14px rgba(10,21,20,.20);
   --track: #CBD8D5;
-  /* Tint used to wash a surface with an accent without inventing a token:
-   * the accent itself at low alpha, so it follows the theme automatically. */
-  --wash: 5%;
 
   /* Binds the UA surfaces we do not draw — scrollbars, form controls — to the
    * theme the page actually chose, not to the OS. Without this an explicit
@@ -48,7 +45,6 @@
     --zero:  #BE6BFF;  --warn:  #FFC24D;
     --shadow: none;
     --track: #24403D;
-    --wash: 9%;
   }
 }
 :root[data-theme="dark"] {
@@ -60,7 +56,6 @@
   --zero:  #BE6BFF;  --warn:  #FFC24D;
   --shadow: none;
   --track: #24403D;
-  --wash: 9%;
 }
 
 /* ── base ───────────────────────────────────────────────────────────────── */
@@ -180,13 +175,19 @@ h1 em { font-style: italic; color: var(--att); }
    * rows and doubled the height the sticky rail has to clear. */
   flex-wrap: nowrap; overflow: hidden;
 }
+/* The label yields, the answer does not. Nowrap with no shrink meant a 263px
+ * label pushed the figure off the right edge below ~342px — at 320px, the
+ * reflow width, what stayed on screen was the caption and what left was the
+ * number. "The answer stays" has to survive its own narrowest case. */
 .dock-k {
   font-family: var(--mono); font-size: 10px; letter-spacing: .13em;
   text-transform: uppercase; color: var(--mut); white-space: nowrap;
+  flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis;
 }
 .dock-v {
   font-family: var(--mono); font-size: 19px; font-weight: 600; color: var(--bad);
   font-variant-numeric: tabular-nums; letter-spacing: -.02em;
+  flex: none;
 }
 .dock-ci {
   font-family: var(--mono); font-size: 11px; color: var(--mut);
@@ -206,8 +207,17 @@ button {
   transition: background .14s var(--ease), border-color .14s var(--ease),
               color .14s var(--ease);
 }
-button:hover { border-color: var(--def); color: var(--def); }
-button.on { background: var(--def); border-color: var(--def); color: var(--ink); font-weight: 600; }
+/* The accent is whichever the surrounding card sets — .card.def and .card.att
+ * each declare --accent, and every other accented element already reads it.
+ * These two did not, which was invisible for as long as the only selectable
+ * buttons on the page sat in the defender card. The attention ladder put a
+ * selectable button inside the attacker card for the first time, and a lit
+ * chip rendered Defender Teal inside a Vermilion-headed card. */
+button:hover { border-color: var(--accent, var(--def)); color: var(--accent, var(--def)); }
+button.on {
+  background: var(--accent, var(--def)); border-color: var(--accent, var(--def));
+  color: var(--ink); font-weight: 600;
+}
 button.on:hover { color: var(--ink); }
 button.ghost { background: transparent; }
 .icon-btn {
@@ -223,27 +233,71 @@ button.ghost { background: transparent; }
 .switch button.on { position: relative; z-index: 1; }
 
 /* ── layout ─────────────────────────────────────────────────────────────── */
-/* Three grid children — rail, stats, results — placed explicitly so the single
- * column can reorder. On desktop the rail spans both rows and the reading order
- * matches the source. Below 1040px the stats jump ahead of the controls: the
- * page exists to show a number, and burying it under a full screen of inputs
- * meant every phone visitor paid for the controls before seeing the answer. */
+/* Three grid children — stats, rail, results — placed explicitly, because the
+ * source order and the desktop order genuinely differ. The answer leads the
+ * document: on one column it simply flows first, and on two the explicit
+ * placement lifts the rail into the left margin beside it.
+ *
+ * The answer used to lead only in pixels, via `order`, which reaches neither
+ * speech order nor reflow order — a screen reader met the whole console
+ * before the number. Source order carries it now, so `order` is gone. The
+ * stat bank holds nothing focusable, so leading costs the keyboard nothing. */
 .grid { display: grid; grid-template-columns: 322px 1fr; gap: 18px 30px; align-items: start; }
-.rail    { grid-column: 1; grid-row: 1 / span 2; }
 .stats   { grid-column: 2; grid-row: 1; }
-.results { grid-column: 2; grid-row: 2; min-width: 0; }
+.rail    { grid-column: 1; grid-row: 1 / span 2; }
+.results { grid-column: 2; grid-row: 2; min-width: 0; container-type: inline-size; }
 
 @media (max-width: 1040px) {
   .grid { grid-template-columns: 1fr; }
-  .stats   { grid-column: 1; grid-row: auto; order: 1; }
-  .rail    { grid-column: 1; grid-row: auto; order: 2; }
-  .results { grid-column: 1; grid-row: auto; order: 3; }
+  .stats, .rail, .results { grid-column: 1; grid-row: auto; }
 }
 
+/* Ranked by how often each part is used, not by topic. The threat card comes
+ * first because it is the half operated *while reading*; the estate card is
+ * set once, at the start, and follows. Before this the rail was one 1,935 to
+ * 2,612px scroller inside an ~868px sticky box, ordered by subject: one
+ * slider of twelve was visible at rest, the compression control sat 536px
+ * below the fold, and selecting traits pushed it a further 677px down. The
+ * contents list, which is navigation rather than instrument, has left the
+ * rail entirely — see .toc. */
 .rail {
   position: sticky; top: 16px; max-height: calc(100vh - 32px);
   overflow-y: auto; padding-right: 6px;
   transition: top .26s var(--ease), max-height .26s var(--ease);
+}
+
+/* Ranking is unconditional; pinning is not.
+ *
+ * Ranking costs nothing: the threat card comes first, so the compression
+ * slider that chapter 07 hands the reader by name sits 347-458px into the
+ * rail and is on screen at rest at every viewport. That alone fixes the case
+ * that mattered — it used to sit 536px below the fold, and selecting traits
+ * pushed it a further 677px away.
+ *
+ * Pinning it there permanently, so that it survives the reader scrolling the
+ * rail, costs the estate card whatever the threat card occupies, and that
+ * card is 550px. On a 900px viewport the rail is 868 and the pin would leave
+ * the configuration a 318px window onto 1,331px of content. At 1000 the rail
+ * is 968 and the window is 418; at 1100, 518. So the trade is bad on a laptop
+ * and fine on a tall display, and a height query decides it rather than a
+ * blanket rule: pin only where there is room to pin. */
+@media (min-width: 1041px) and (min-height: 1000px) {
+  .rail {
+    display: flex; flex-direction: column; min-height: 0;
+    overflow: visible; padding-right: 0;
+  }
+  /* flex-shrink must be 0. The two zones together overflow the rail by design
+   * — that is what the scroller is for — and a shrinkable pinned zone reads as
+   * slack: it collapsed the threat card from 386px to 207px and cut the
+   * compression slider in half.
+   *
+   * The ceiling is in vh, not %. A percentage max-height resolves against the
+   * parent's height, and .rail carries only a max-height, so the percentage
+   * was indefinite and silently did nothing — the zone sailed past a stated
+   * 55% cap to 65% of the rail. The ceiling exists so that opening
+   * "Additional threat parameters" cannot squeeze the scroller to nothing. */
+  .rail-fixed  { flex: 0 0 auto; min-height: 0; max-height: 60vh; overflow-y: auto; }
+  .rail-scroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding-right: 6px; }
 }
 /* The docked readout is fixed to the top of the viewport, so the sticky rail
  * has to step down out from under it rather than scroll behind it. Scoped to
@@ -253,25 +307,41 @@ button.ghost { background: transparent; }
 @media (min-width: 1041px) {
   .dock.up ~ .grid .rail { top: 74px; max-height: calc(100vh - 90px); }
 }
-@media (max-width: 1040px) { .rail { position: static; max-height: none; overflow: visible; } }
 /* Once the rail stops being a rail it inherits the whole page width, which
  * gave a 20-character chip 730px to sit in and stretched a slider to 1,470px
- * — a drag target so long that a 5% change needs a 70px gesture. Between a
- * tablet and the desktop breakpoint the console splits in two instead: the
- * environment card down the left, the threat card and the contents stacked
- * beside it. */
-@media (max-width: 1040px) and (min-width: 700px) {
-  .rail { display: grid; grid-template-columns: 1fr 1fr; gap: 0 22px; align-items: start; }
+ * — a drag target so long that a 5% change needs a 70px gesture. The console
+ * splits in two instead.
+ *
+ * Intrinsic, not a breakpoint. A hard 700px floor put the widest slider of the
+ * entire responsive range at 699px: 608px, against 275px one pixel wider. The
+ * track now holds two columns for exactly as long as two columns are worth
+ * having, and drops to one at ~630px, where a full-width control is the
+ * expected idiom rather than an accident. */
+@media (max-width: 1040px) {
+  .rail {
+    position: static; max-height: none; overflow: visible; padding-right: 0;
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 0 22px; align-items: start;
+  }
+  .rail-fixed, .rail-scroll { max-height: none; overflow: visible; padding-right: 0; }
 }
 /* The rail is its own scroll container, so the scrollbar has to be visible
  * enough that a wheel gesture landing on it is not read as a dead page. */
-.rail { scrollbar-width: thin; scrollbar-color: var(--rule2) transparent; }
-.rail::-webkit-scrollbar { width: 10px; }
-.rail::-webkit-scrollbar-thumb {
+.rail, .rail-scroll, .rail-fixed {
+  scrollbar-width: thin; scrollbar-color: var(--rule2) transparent;
+}
+.rail::-webkit-scrollbar,
+.rail-scroll::-webkit-scrollbar,
+.rail-fixed::-webkit-scrollbar { width: 10px; }
+.rail::-webkit-scrollbar-thumb,
+.rail-scroll::-webkit-scrollbar-thumb,
+.rail-fixed::-webkit-scrollbar-thumb {
   background: var(--rule2); border-radius: 5px;
   border: 3px solid var(--ink); background-clip: padding-box;
 }
-.rail:hover::-webkit-scrollbar-thumb { background: var(--dim); background-clip: padding-box; }
+.rail:hover::-webkit-scrollbar-thumb,
+.rail-scroll:hover::-webkit-scrollbar-thumb,
+.rail-fixed:hover::-webkit-scrollbar-thumb { background: var(--dim); background-clip: padding-box; }
 
 /* ── cards & panels ─────────────────────────────────────────────────────── */
 .card, .panel {
@@ -301,13 +371,30 @@ button.ghost { background: transparent; }
   padding: 20px 0 0; margin: 0 0 42px;
 }
 .results > .panel:last-of-type { margin-bottom: 0; }
+/* Ten chapters are not ten peers. They run in three movements — 01-06 the
+ * race, 07-09 the defence of the method, 10 the provenance — and a single
+ * uniform rule flattened the two places the argument changes register into
+ * eight identical breaks. Marked the only ways this system marks anything
+ * structural: more air, and a step up the neutral ramp on the ordinal. No new
+ * rule weight, no accent, no added copy. */
+/* 72, not 30. Adjacent chapter margins collapse, so a 30px top margin against
+ * the previous chapter's 42px bottom margin resolved to 42 and the part break
+ * measured exactly like every other break. The value has to clear 42 to be
+ * seen at all. */
+.panel.part { margin-top: 72px; padding-top: 32px; }
+.panel.part .ord { color: var(--txt); }
 .panel h3 {
   font-family: var(--disp); font-weight: 600; font-size: 21px;
   line-height: 1.22; letter-spacing: -.005em; margin: 0;
 }
-.panel .lead { color: var(--mut); font-size: 13.5px; margin: 6px 0 16px; max-width: 74ch; }
+/* Cadence inside a chapter, not just between them. Every interval used to sit
+ * within four pixels of every other — 6 / 16 / 12 / 14 — so the caption bound
+ * no more tightly to its figure than the figure did to the lead, and proximity
+ * expressed no grouping at all. Two groups now: the heading and its lead, then
+ * the legend, the figure and its caption, with the wider interval between. */
+.panel .lead { color: var(--mut); font-size: 13.5px; margin: 6px 0 18px; max-width: 74ch; }
 .panel .lead b { color: var(--txt); font-weight: 600; }
-.panel .lead.foot { margin: 14px 0 0; }
+.panel .lead.foot { margin: 8px 0 0; }
 .panel .codified {
   margin: 14px 0 0; border-top: 1px solid var(--rule); padding-top: 14px;
 }
@@ -346,9 +433,21 @@ button.ghost { background: transparent; }
 }
 /* BOD 26-04 is a mandated regime rather than a rung on the maturity ladder,
  * and the fifth detection posture completes a ladder of five — both take the
- * full width so neither row is left ragged. */
+ * full width so neither row is left ragged. The attribute chips are three, so
+ * the third takes the same treatment for the same reason. */
 .ladder-4 button:last-child, .ladder-5 button:last-child { grid-column: 1 / -1; }
-.ladder-4 button, .ladder-5 button { text-align: center; }
+.chips button:last-child { grid-column: 1 / -1; }
+.ladder-4 button, .ladder-5 button, .quad button { text-align: center; }
+/* Four rungs in an even 2x2 rather than the 3-plus-1 the maturity ladder uses.
+ * Its labels are single words that fit a third of the rail; "Opportunistic" is
+ * one word wider than that cell, and a single unbreakable word cannot wrap, so
+ * it ellipsised mid-word instead. Two columns give every rung room for its
+ * own name. */
+.quad { grid-template-columns: 1fr 1fr; }
+/* The exposure rungs are an ordered axis rather than a set of alternatives, so
+ * they stay left-aligned: a ladder read down a common left edge shows its order
+ * in a way five centred labels do not. */
+.ladder-5#sel-exposure button { text-align: left; }
 
 .seg { margin-bottom: 16px; }
 .seg-l {
@@ -356,6 +455,14 @@ button.ghost { background: transparent; }
   text-transform: uppercase; color: var(--mut); margin-bottom: 7px;
 }
 .seg-d { color: var(--mut); font-size: 11.5px; line-height: 1.45; margin: 8px 0 0; }
+/* The composed estate, reporting what all four controls above have produced.
+ * Ruled off and set in the mono face because it is a readout rather than
+ * another description — the one line on the card that is an answer. */
+.estate {
+  font-family: var(--mono); font-size: 11px; line-height: 1.55;
+  color: var(--dim); border-top: 1px solid var(--rule);
+  padding-top: 12px; margin-top: 16px;
+}
 /* 9px could not clear AA against the card in either theme; the border already
  * does the de-emphasis, so the type does not have to. */
 .seg-hint {
@@ -372,7 +479,14 @@ button.ghost { background: transparent; }
   transition: background .14s var(--ease), border-color .14s var(--ease);
 }
 #sel-profile button.on::before { background: currentColor; border-color: currentColor; }
-.seg + #cd { border-top: 1px solid var(--rule); padding-top: 16px; margin-top: 18px; }
+/* The sliders used to follow the last .seg directly. The estate readout now
+ * sits between them and carries the rule itself, so the sliders only draw
+ * their own when nothing else has. */
+/* The estate line (#desc-profile) now sits between the last .seg and #cd, so
+ * the adjacent-sibling form this rule used to take could no longer match
+ * anything. The rule is on #cd directly. */
+#cd { border-top: 1px solid var(--rule); padding-top: 16px; margin-top: 18px; }
+.estate + #cd { padding-top: 0; margin-top: 18px; }
 
 .ctrl { margin-bottom: 16px; }
 .ctrl .row { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
@@ -431,13 +545,22 @@ details.more > div { padding-top: 14px; }
 details.more[open] > div { animation: rise .28s var(--ease) both; }
 
 /* ── contents ───────────────────────────────────────────────────────────── */
-.toc { padding: 0 2px 6px; }
-.toc ol { list-style: none; margin: 0; padding: 0; counter-reset: toc; }
+/* Front matter, in the document, not a widget in the console. It never had a
+ * panel, a radius or a fill, so it was always document material — it was just
+ * living inside the instrument, 739px below the sticky rail's fold and 2,529px
+ * down a phone. Two columns because the results column is wide and a ten-item
+ * single file would be a 328px block ahead of the argument. */
+.toc { margin: 0 0 42px; }
+.toc ol {
+  list-style: none; margin: 0; padding: 0; counter-reset: toc;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 0 32px;
+}
+@media (max-width: 860px) { .toc ol { grid-template-columns: 1fr; } }
 .toc li { counter-increment: toc; }
 .toc a {
   display: flex; gap: 10px; align-items: baseline;
-  padding: 5px 0; font-size: 12.5px; color: var(--mut); text-decoration: none;
-  border-bottom: 1px solid transparent;
+  padding: 8px 0; font-size: 12.5px; color: var(--mut); text-decoration: none;
+  border-bottom: 1px solid var(--rule);
   transition: color .14s var(--ease);
 }
 .toc a::before {
@@ -522,7 +645,6 @@ details.more[open] > div { animation: rise .28s var(--ease) both; }
   line-height: 1.08; letter-spacing: -.035em; margin-top: 8px; color: var(--bad);
   font-variant-numeric: tabular-nums;
 }
-.stat.good .v { color: var(--def); }
 .stat.plain .v { color: var(--txt); font-size: clamp(24px, 1.95vw, 28px); }
 .stat .v .u {
   font-family: var(--body); font-size: 12px; font-weight: 500;
@@ -533,20 +655,30 @@ details.more[open] > div { animation: rise .28s var(--ease) both; }
 }
 
 /* ── chart frames ───────────────────────────────────────────────────────── */
-.chart { width: 100%; display: block; }
+/* The 1240px page cap exists because past roughly 900px of column the sparse
+ * charts go mostly empty plot area. Below 1040px the single column inherited
+ * the whole page and broke that ceiling on a tablet — drawing survival, sweep
+ * and volume at 977px, wider than they are ever drawn on a desktop. The
+ * ceiling belongs to the figure, not to one breakpoint. Measured Width still
+ * holds: the SVG's laid-out box is now 900, so 900 is what gets drawn. */
+.chart { width: 100%; max-width: 900px; display: block; }
 /* No font-family rule here on purpose. js/charts.js sets the family as an
  * attribute on every <text> node, because a chart is rasterised for PNG export
  * inside an <img> where no stylesheet applies. A CSS rule would win on screen
  * and lose in the export — which is exactly what happened: every mono chart
  * label rendered in the sans stack on the page and in the mono stack in the
  * image it was supposed to match. */
-.two { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
-/* Two ranges, not one, because the width that matters is the results column
- * rather than the viewport. Between 1041 and 1180 the rail is still taking
- * 352px of it, so a side-by-side pair would draw two 310px charts on a
- * desktop; below 1040 the column is the whole page and the pair fits again
- * until the page itself is narrow. */
-@media (max-width: 940px), (min-width: 1041px) and (max-width: 1180px) {
+/* Row gap is a chapter boundary, not an inside-a-card gap. Once the pair
+ * stacks, a single `gap: 22px` set chapters 05 and 06 twenty-two pixels apart
+ * while every other chapter break was forty-two — so 06 read as a subsection
+ * of 05 in exactly the two bands where they stack. */
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 42px 22px; }
+/* The width that matters is the results column, so ask the results column.
+ * Two viewport ranges were standing in for one container measurement, and
+ * they disagreed with it: widening 1040 -> 1041 shrank the main charts 977 ->
+ * 626, and 1180 -> 1181 halved this pair 765 -> 380. Asking the container
+ * directly makes the pair monotonic in the width it actually has. */
+@container (max-width: 800px) {
   .two { grid-template-columns: 1fr; }
 }
 .two { margin-bottom: 42px; }
@@ -554,7 +686,7 @@ details.more[open] > div { animation: rise .28s var(--ease) both; }
 
 .legend {
   display: flex; gap: 16px; flex-wrap: wrap; font-size: 11.5px;
-  color: var(--mut); margin-bottom: 12px;
+  color: var(--mut); margin-bottom: 8px;
 }
 /* Each detection posture reports the dwell time and coverage it writes. */
 .presets .mtr {

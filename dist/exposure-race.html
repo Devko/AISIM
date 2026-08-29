@@ -36,9 +36,6 @@
   --zero:  #7029CC;  --warn:  #8A6008;
   --shadow: 0 1px 2px rgba(10,21,20,.05), 0 10px 30px -14px rgba(10,21,20,.20);
   --track: #CBD8D5;
-  /* Tint used to wash a surface with an accent without inventing a token:
-   * the accent itself at low alpha, so it follows the theme automatically. */
-  --wash: 5%;
 
   /* Binds the UA surfaces we do not draw — scrollbars, form controls — to the
    * theme the page actually chose, not to the OS. Without this an explicit
@@ -63,7 +60,6 @@
     --zero:  #BE6BFF;  --warn:  #FFC24D;
     --shadow: none;
     --track: #24403D;
-    --wash: 9%;
   }
 }
 :root[data-theme="dark"] {
@@ -75,7 +71,6 @@
   --zero:  #BE6BFF;  --warn:  #FFC24D;
   --shadow: none;
   --track: #24403D;
-  --wash: 9%;
 }
 
 /* ── base ───────────────────────────────────────────────────────────────── */
@@ -195,13 +190,19 @@ h1 em { font-style: italic; color: var(--att); }
    * rows and doubled the height the sticky rail has to clear. */
   flex-wrap: nowrap; overflow: hidden;
 }
+/* The label yields, the answer does not. Nowrap with no shrink meant a 263px
+ * label pushed the figure off the right edge below ~342px — at 320px, the
+ * reflow width, what stayed on screen was the caption and what left was the
+ * number. "The answer stays" has to survive its own narrowest case. */
 .dock-k {
   font-family: var(--mono); font-size: 10px; letter-spacing: .13em;
   text-transform: uppercase; color: var(--mut); white-space: nowrap;
+  flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis;
 }
 .dock-v {
   font-family: var(--mono); font-size: 19px; font-weight: 600; color: var(--bad);
   font-variant-numeric: tabular-nums; letter-spacing: -.02em;
+  flex: none;
 }
 .dock-ci {
   font-family: var(--mono); font-size: 11px; color: var(--mut);
@@ -221,8 +222,17 @@ button {
   transition: background .14s var(--ease), border-color .14s var(--ease),
               color .14s var(--ease);
 }
-button:hover { border-color: var(--def); color: var(--def); }
-button.on { background: var(--def); border-color: var(--def); color: var(--ink); font-weight: 600; }
+/* The accent is whichever the surrounding card sets — .card.def and .card.att
+ * each declare --accent, and every other accented element already reads it.
+ * These two did not, which was invisible for as long as the only selectable
+ * buttons on the page sat in the defender card. The attention ladder put a
+ * selectable button inside the attacker card for the first time, and a lit
+ * chip rendered Defender Teal inside a Vermilion-headed card. */
+button:hover { border-color: var(--accent, var(--def)); color: var(--accent, var(--def)); }
+button.on {
+  background: var(--accent, var(--def)); border-color: var(--accent, var(--def));
+  color: var(--ink); font-weight: 600;
+}
 button.on:hover { color: var(--ink); }
 button.ghost { background: transparent; }
 .icon-btn {
@@ -238,27 +248,71 @@ button.ghost { background: transparent; }
 .switch button.on { position: relative; z-index: 1; }
 
 /* ── layout ─────────────────────────────────────────────────────────────── */
-/* Three grid children — rail, stats, results — placed explicitly so the single
- * column can reorder. On desktop the rail spans both rows and the reading order
- * matches the source. Below 1040px the stats jump ahead of the controls: the
- * page exists to show a number, and burying it under a full screen of inputs
- * meant every phone visitor paid for the controls before seeing the answer. */
+/* Three grid children — stats, rail, results — placed explicitly, because the
+ * source order and the desktop order genuinely differ. The answer leads the
+ * document: on one column it simply flows first, and on two the explicit
+ * placement lifts the rail into the left margin beside it.
+ *
+ * The answer used to lead only in pixels, via `order`, which reaches neither
+ * speech order nor reflow order — a screen reader met the whole console
+ * before the number. Source order carries it now, so `order` is gone. The
+ * stat bank holds nothing focusable, so leading costs the keyboard nothing. */
 .grid { display: grid; grid-template-columns: 322px 1fr; gap: 18px 30px; align-items: start; }
-.rail    { grid-column: 1; grid-row: 1 / span 2; }
 .stats   { grid-column: 2; grid-row: 1; }
-.results { grid-column: 2; grid-row: 2; min-width: 0; }
+.rail    { grid-column: 1; grid-row: 1 / span 2; }
+.results { grid-column: 2; grid-row: 2; min-width: 0; container-type: inline-size; }
 
 @media (max-width: 1040px) {
   .grid { grid-template-columns: 1fr; }
-  .stats   { grid-column: 1; grid-row: auto; order: 1; }
-  .rail    { grid-column: 1; grid-row: auto; order: 2; }
-  .results { grid-column: 1; grid-row: auto; order: 3; }
+  .stats, .rail, .results { grid-column: 1; grid-row: auto; }
 }
 
+/* Ranked by how often each part is used, not by topic. The threat card comes
+ * first because it is the half operated *while reading*; the estate card is
+ * set once, at the start, and follows. Before this the rail was one 1,935 to
+ * 2,612px scroller inside an ~868px sticky box, ordered by subject: one
+ * slider of twelve was visible at rest, the compression control sat 536px
+ * below the fold, and selecting traits pushed it a further 677px down. The
+ * contents list, which is navigation rather than instrument, has left the
+ * rail entirely — see .toc. */
 .rail {
   position: sticky; top: 16px; max-height: calc(100vh - 32px);
   overflow-y: auto; padding-right: 6px;
   transition: top .26s var(--ease), max-height .26s var(--ease);
+}
+
+/* Ranking is unconditional; pinning is not.
+ *
+ * Ranking costs nothing: the threat card comes first, so the compression
+ * slider that chapter 07 hands the reader by name sits 347-458px into the
+ * rail and is on screen at rest at every viewport. That alone fixes the case
+ * that mattered — it used to sit 536px below the fold, and selecting traits
+ * pushed it a further 677px away.
+ *
+ * Pinning it there permanently, so that it survives the reader scrolling the
+ * rail, costs the estate card whatever the threat card occupies, and that
+ * card is 550px. On a 900px viewport the rail is 868 and the pin would leave
+ * the configuration a 318px window onto 1,331px of content. At 1000 the rail
+ * is 968 and the window is 418; at 1100, 518. So the trade is bad on a laptop
+ * and fine on a tall display, and a height query decides it rather than a
+ * blanket rule: pin only where there is room to pin. */
+@media (min-width: 1041px) and (min-height: 1000px) {
+  .rail {
+    display: flex; flex-direction: column; min-height: 0;
+    overflow: visible; padding-right: 0;
+  }
+  /* flex-shrink must be 0. The two zones together overflow the rail by design
+   * — that is what the scroller is for — and a shrinkable pinned zone reads as
+   * slack: it collapsed the threat card from 386px to 207px and cut the
+   * compression slider in half.
+   *
+   * The ceiling is in vh, not %. A percentage max-height resolves against the
+   * parent's height, and .rail carries only a max-height, so the percentage
+   * was indefinite and silently did nothing — the zone sailed past a stated
+   * 55% cap to 65% of the rail. The ceiling exists so that opening
+   * "Additional threat parameters" cannot squeeze the scroller to nothing. */
+  .rail-fixed  { flex: 0 0 auto; min-height: 0; max-height: 60vh; overflow-y: auto; }
+  .rail-scroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding-right: 6px; }
 }
 /* The docked readout is fixed to the top of the viewport, so the sticky rail
  * has to step down out from under it rather than scroll behind it. Scoped to
@@ -268,25 +322,41 @@ button.ghost { background: transparent; }
 @media (min-width: 1041px) {
   .dock.up ~ .grid .rail { top: 74px; max-height: calc(100vh - 90px); }
 }
-@media (max-width: 1040px) { .rail { position: static; max-height: none; overflow: visible; } }
 /* Once the rail stops being a rail it inherits the whole page width, which
  * gave a 20-character chip 730px to sit in and stretched a slider to 1,470px
- * — a drag target so long that a 5% change needs a 70px gesture. Between a
- * tablet and the desktop breakpoint the console splits in two instead: the
- * environment card down the left, the threat card and the contents stacked
- * beside it. */
-@media (max-width: 1040px) and (min-width: 700px) {
-  .rail { display: grid; grid-template-columns: 1fr 1fr; gap: 0 22px; align-items: start; }
+ * — a drag target so long that a 5% change needs a 70px gesture. The console
+ * splits in two instead.
+ *
+ * Intrinsic, not a breakpoint. A hard 700px floor put the widest slider of the
+ * entire responsive range at 699px: 608px, against 275px one pixel wider. The
+ * track now holds two columns for exactly as long as two columns are worth
+ * having, and drops to one at ~630px, where a full-width control is the
+ * expected idiom rather than an accident. */
+@media (max-width: 1040px) {
+  .rail {
+    position: static; max-height: none; overflow: visible; padding-right: 0;
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 0 22px; align-items: start;
+  }
+  .rail-fixed, .rail-scroll { max-height: none; overflow: visible; padding-right: 0; }
 }
 /* The rail is its own scroll container, so the scrollbar has to be visible
  * enough that a wheel gesture landing on it is not read as a dead page. */
-.rail { scrollbar-width: thin; scrollbar-color: var(--rule2) transparent; }
-.rail::-webkit-scrollbar { width: 10px; }
-.rail::-webkit-scrollbar-thumb {
+.rail, .rail-scroll, .rail-fixed {
+  scrollbar-width: thin; scrollbar-color: var(--rule2) transparent;
+}
+.rail::-webkit-scrollbar,
+.rail-scroll::-webkit-scrollbar,
+.rail-fixed::-webkit-scrollbar { width: 10px; }
+.rail::-webkit-scrollbar-thumb,
+.rail-scroll::-webkit-scrollbar-thumb,
+.rail-fixed::-webkit-scrollbar-thumb {
   background: var(--rule2); border-radius: 5px;
   border: 3px solid var(--ink); background-clip: padding-box;
 }
-.rail:hover::-webkit-scrollbar-thumb { background: var(--dim); background-clip: padding-box; }
+.rail:hover::-webkit-scrollbar-thumb,
+.rail-scroll:hover::-webkit-scrollbar-thumb,
+.rail-fixed:hover::-webkit-scrollbar-thumb { background: var(--dim); background-clip: padding-box; }
 
 /* ── cards & panels ─────────────────────────────────────────────────────── */
 .card, .panel {
@@ -316,13 +386,30 @@ button.ghost { background: transparent; }
   padding: 20px 0 0; margin: 0 0 42px;
 }
 .results > .panel:last-of-type { margin-bottom: 0; }
+/* Ten chapters are not ten peers. They run in three movements — 01-06 the
+ * race, 07-09 the defence of the method, 10 the provenance — and a single
+ * uniform rule flattened the two places the argument changes register into
+ * eight identical breaks. Marked the only ways this system marks anything
+ * structural: more air, and a step up the neutral ramp on the ordinal. No new
+ * rule weight, no accent, no added copy. */
+/* 72, not 30. Adjacent chapter margins collapse, so a 30px top margin against
+ * the previous chapter's 42px bottom margin resolved to 42 and the part break
+ * measured exactly like every other break. The value has to clear 42 to be
+ * seen at all. */
+.panel.part { margin-top: 72px; padding-top: 32px; }
+.panel.part .ord { color: var(--txt); }
 .panel h3 {
   font-family: var(--disp); font-weight: 600; font-size: 21px;
   line-height: 1.22; letter-spacing: -.005em; margin: 0;
 }
-.panel .lead { color: var(--mut); font-size: 13.5px; margin: 6px 0 16px; max-width: 74ch; }
+/* Cadence inside a chapter, not just between them. Every interval used to sit
+ * within four pixels of every other — 6 / 16 / 12 / 14 — so the caption bound
+ * no more tightly to its figure than the figure did to the lead, and proximity
+ * expressed no grouping at all. Two groups now: the heading and its lead, then
+ * the legend, the figure and its caption, with the wider interval between. */
+.panel .lead { color: var(--mut); font-size: 13.5px; margin: 6px 0 18px; max-width: 74ch; }
 .panel .lead b { color: var(--txt); font-weight: 600; }
-.panel .lead.foot { margin: 14px 0 0; }
+.panel .lead.foot { margin: 8px 0 0; }
 .panel .codified {
   margin: 14px 0 0; border-top: 1px solid var(--rule); padding-top: 14px;
 }
@@ -361,9 +448,21 @@ button.ghost { background: transparent; }
 }
 /* BOD 26-04 is a mandated regime rather than a rung on the maturity ladder,
  * and the fifth detection posture completes a ladder of five — both take the
- * full width so neither row is left ragged. */
+ * full width so neither row is left ragged. The attribute chips are three, so
+ * the third takes the same treatment for the same reason. */
 .ladder-4 button:last-child, .ladder-5 button:last-child { grid-column: 1 / -1; }
-.ladder-4 button, .ladder-5 button { text-align: center; }
+.chips button:last-child { grid-column: 1 / -1; }
+.ladder-4 button, .ladder-5 button, .quad button { text-align: center; }
+/* Four rungs in an even 2x2 rather than the 3-plus-1 the maturity ladder uses.
+ * Its labels are single words that fit a third of the rail; "Opportunistic" is
+ * one word wider than that cell, and a single unbreakable word cannot wrap, so
+ * it ellipsised mid-word instead. Two columns give every rung room for its
+ * own name. */
+.quad { grid-template-columns: 1fr 1fr; }
+/* The exposure rungs are an ordered axis rather than a set of alternatives, so
+ * they stay left-aligned: a ladder read down a common left edge shows its order
+ * in a way five centred labels do not. */
+.ladder-5#sel-exposure button { text-align: left; }
 
 .seg { margin-bottom: 16px; }
 .seg-l {
@@ -371,6 +470,14 @@ button.ghost { background: transparent; }
   text-transform: uppercase; color: var(--mut); margin-bottom: 7px;
 }
 .seg-d { color: var(--mut); font-size: 11.5px; line-height: 1.45; margin: 8px 0 0; }
+/* The composed estate, reporting what all four controls above have produced.
+ * Ruled off and set in the mono face because it is a readout rather than
+ * another description — the one line on the card that is an answer. */
+.estate {
+  font-family: var(--mono); font-size: 11px; line-height: 1.55;
+  color: var(--dim); border-top: 1px solid var(--rule);
+  padding-top: 12px; margin-top: 16px;
+}
 /* 9px could not clear AA against the card in either theme; the border already
  * does the de-emphasis, so the type does not have to. */
 .seg-hint {
@@ -387,7 +494,14 @@ button.ghost { background: transparent; }
   transition: background .14s var(--ease), border-color .14s var(--ease);
 }
 #sel-profile button.on::before { background: currentColor; border-color: currentColor; }
-.seg + #cd { border-top: 1px solid var(--rule); padding-top: 16px; margin-top: 18px; }
+/* The sliders used to follow the last .seg directly. The estate readout now
+ * sits between them and carries the rule itself, so the sliders only draw
+ * their own when nothing else has. */
+/* The estate line (#desc-profile) now sits between the last .seg and #cd, so
+ * the adjacent-sibling form this rule used to take could no longer match
+ * anything. The rule is on #cd directly. */
+#cd { border-top: 1px solid var(--rule); padding-top: 16px; margin-top: 18px; }
+.estate + #cd { padding-top: 0; margin-top: 18px; }
 
 .ctrl { margin-bottom: 16px; }
 .ctrl .row { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
@@ -446,13 +560,22 @@ details.more > div { padding-top: 14px; }
 details.more[open] > div { animation: rise .28s var(--ease) both; }
 
 /* ── contents ───────────────────────────────────────────────────────────── */
-.toc { padding: 0 2px 6px; }
-.toc ol { list-style: none; margin: 0; padding: 0; counter-reset: toc; }
+/* Front matter, in the document, not a widget in the console. It never had a
+ * panel, a radius or a fill, so it was always document material — it was just
+ * living inside the instrument, 739px below the sticky rail's fold and 2,529px
+ * down a phone. Two columns because the results column is wide and a ten-item
+ * single file would be a 328px block ahead of the argument. */
+.toc { margin: 0 0 42px; }
+.toc ol {
+  list-style: none; margin: 0; padding: 0; counter-reset: toc;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 0 32px;
+}
+@media (max-width: 860px) { .toc ol { grid-template-columns: 1fr; } }
 .toc li { counter-increment: toc; }
 .toc a {
   display: flex; gap: 10px; align-items: baseline;
-  padding: 5px 0; font-size: 12.5px; color: var(--mut); text-decoration: none;
-  border-bottom: 1px solid transparent;
+  padding: 8px 0; font-size: 12.5px; color: var(--mut); text-decoration: none;
+  border-bottom: 1px solid var(--rule);
   transition: color .14s var(--ease);
 }
 .toc a::before {
@@ -537,7 +660,6 @@ details.more[open] > div { animation: rise .28s var(--ease) both; }
   line-height: 1.08; letter-spacing: -.035em; margin-top: 8px; color: var(--bad);
   font-variant-numeric: tabular-nums;
 }
-.stat.good .v { color: var(--def); }
 .stat.plain .v { color: var(--txt); font-size: clamp(24px, 1.95vw, 28px); }
 .stat .v .u {
   font-family: var(--body); font-size: 12px; font-weight: 500;
@@ -548,20 +670,30 @@ details.more[open] > div { animation: rise .28s var(--ease) both; }
 }
 
 /* ── chart frames ───────────────────────────────────────────────────────── */
-.chart { width: 100%; display: block; }
+/* The 1240px page cap exists because past roughly 900px of column the sparse
+ * charts go mostly empty plot area. Below 1040px the single column inherited
+ * the whole page and broke that ceiling on a tablet — drawing survival, sweep
+ * and volume at 977px, wider than they are ever drawn on a desktop. The
+ * ceiling belongs to the figure, not to one breakpoint. Measured Width still
+ * holds: the SVG's laid-out box is now 900, so 900 is what gets drawn. */
+.chart { width: 100%; max-width: 900px; display: block; }
 /* No font-family rule here on purpose. js/charts.js sets the family as an
  * attribute on every <text> node, because a chart is rasterised for PNG export
  * inside an <img> where no stylesheet applies. A CSS rule would win on screen
  * and lose in the export — which is exactly what happened: every mono chart
  * label rendered in the sans stack on the page and in the mono stack in the
  * image it was supposed to match. */
-.two { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
-/* Two ranges, not one, because the width that matters is the results column
- * rather than the viewport. Between 1041 and 1180 the rail is still taking
- * 352px of it, so a side-by-side pair would draw two 310px charts on a
- * desktop; below 1040 the column is the whole page and the pair fits again
- * until the page itself is narrow. */
-@media (max-width: 940px), (min-width: 1041px) and (max-width: 1180px) {
+/* Row gap is a chapter boundary, not an inside-a-card gap. Once the pair
+ * stacks, a single `gap: 22px` set chapters 05 and 06 twenty-two pixels apart
+ * while every other chapter break was forty-two — so 06 read as a subsection
+ * of 05 in exactly the two bands where they stack. */
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 42px 22px; }
+/* The width that matters is the results column, so ask the results column.
+ * Two viewport ranges were standing in for one container measurement, and
+ * they disagreed with it: widening 1040 -> 1041 shrank the main charts 977 ->
+ * 626, and 1180 -> 1181 halved this pair 765 -> 380. Asking the container
+ * directly makes the pair monotonic in the width it actually has. */
+@container (max-width: 800px) {
   .two { grid-template-columns: 1fr; }
 }
 .two { margin-bottom: 42px; }
@@ -569,7 +701,7 @@ details.more[open] > div { animation: rise .28s var(--ease) both; }
 
 .legend {
   display: flex; gap: 16px; flex-wrap: wrap; font-size: 11.5px;
-  color: var(--mut); margin-bottom: 12px;
+  color: var(--mut); margin-bottom: 8px;
 }
 /* Each detection posture reports the dwell time and coverage it writes. */
 .presets .mtr {
@@ -847,13 +979,13 @@ footer code {
       <p class="sub">A Monte Carlo model of exploit availability against remediation completion,
       resimulated on every parameter change. The adversary timeline is <b>not assumed</b>: it is the
       measured distribution of days from CVE publication to public exploit code, taken from the
-      CyberMon corpus. Around a fifth of that interval elapses before disclosure.</p>
+      CyberMon corpus. Around a fifth of those exploits appear before disclosure.</p>
     </div>
 
     <!-- The thesis in three measured figures, read off the vendored snapshot at
          render time rather than typed into the prose, so they cannot go stale. -->
     <aside class="clock" aria-labelledby="clock-h">
-      <div class="clock-h" id="clock-h">The clock, as measured <span class="tag m">measured</span></div>
+      <div class="clock-h" id="clock-h">The exploit clock <span class="tag m">measured</span></div>
       <dl id="clock"></dl>
     </aside>
   </div>
@@ -872,65 +1004,13 @@ footer code {
 
 <div class="wrap grid">
 
-  <!-- ══════════════════ CONTROLS ══════════════════ -->
-  <div class="rail">
-    <div class="card def">
-      <h2 class="d">Your environment</h2>
-      <p class="note">Select the attributes that apply, then adjust any parameter.</p>
-
-      <div class="seg">
-        <div class="seg-l">Environment attributes <span class="seg-hint">select any</span></div>
-        <div class="presets chips" id="sel-profile"></div>
-        <p class="seg-d" id="desc-profile"></p>
-        <div class="trait-notes" id="trait-notes"></div>
-      </div>
-      <div class="seg">
-        <div class="seg-l">Operational maturity</div>
-        <div class="presets ladder-4" id="sel-maturity"></div>
-        <p class="seg-d" id="desc-maturity"></p>
-      </div>
-      <div class="seg">
-        <div class="seg-l">Detection capability</div>
-        <div class="presets ladder-5" id="sel-detection"></div>
-        <p class="seg-d" id="desc-detection"></p>
-      </div>
-
-      <div id="cd"></div>
-      <details class="more"><summary>Additional defender parameters</summary><div id="cd-adv"></div></details>
-    </div>
-
-    <!-- Wrapped so the console can become two columns between a tablet and the
-         desktop breakpoint without the grid stretching a short card to match a
-         tall one. See .rail in app.css. -->
-    <div class="rail-side">
-    <div class="card att">
-      <h2 class="a">Threat environment</h2>
-      <p class="note">Parameters outside your control.</p>
-      <div id="ca"></div>
-      <details class="more"><summary>Additional threat parameters</summary><div id="ca-adv"></div></details>
-    </div>
-
-    <nav class="toc" aria-label="Sections">
-      <div class="seg-l">On this page</div>
-      <ol>
-        <li><a href="#p-race">Exploit against remediation</a></li>
-        <li><a href="#p-funnel">Attrition to compromise</a></li>
-        <li><a href="#p-torn">Sensitivity analysis</a></li>
-        <li><a href="#p-acts">Prioritised actions</a></li>
-        <li><a href="#p-routes">Initial access vector</a></li>
-        <li><a href="#p-surv">Time to first compromise</a></li>
-        <li><a href="#p-sweep">Has AI compressed the clock?</a></li>
-        <li><a href="#p-severity">Why not severity</a></li>
-        <li><a href="#p-volume">Severity-label inflation</a></li>
-        <li><a href="#p-anchors">Model provenance</a></li>
-      </ol>
-    </nav>
-    </div>
-  </div>
-
   <!-- ══════════════════ RESULTS ══════════════════ -->
-  <!-- .stats is a grid sibling, not a child of .results, so it can move ahead
-       of the controls on a single-column viewport. See .grid in app.css. -->
+  <!-- .stats leads the grid in source order, not only in pixels. "The answer
+       first" has to hold for speech and reflow order too, and a CSS `order`
+       reaches neither: a screen reader met the entire 1,887px console before
+       the number the page exists to show. It carries nothing focusable, so
+       leading here costs the keyboard reader nothing, and the desktop
+       position is set explicitly on the grid. See .grid in app.css. -->
   <div class="stats" role="group" aria-label="Headline results">
     <div class="stat">
       <span class="k">Probability of compromise, 12-month window</span>
@@ -952,8 +1032,94 @@ footer code {
     </div>
   </div>
 
+  <!-- ══════════════════ CONTROLS ══════════════════ -->
+  <!-- The rail is ranked by how often each part is needed, not by topic.
+       The threat card is used *while reading* — chapter 07 hands the reader the
+       compression slider by name — so it is pinned and stays on screen whatever
+       the rail is scrolled to. The estate configuration is set once, at the
+       start, and takes the bounded scroller beneath it. The contents list is
+       no longer here at all: it is front matter and now leads the document.
+       Before this the rail was a single 1,935-2,612px scroller inside an
+       ~868px sticky box: one slider of twelve was visible at rest, the
+       compression control sat 536px below the fold, and selecting traits
+       pushed it a further 677px away. See .rail in app.css. -->
+  <div class="rail">
+    <div class="rail-fixed">
+      <div class="card att">
+        <h2 class="a">Threat environment</h2>
+        <p class="note">Parameters outside your control.</p>
+        <div class="seg">
+          <div class="seg-l">Adversary attention <span class="seg-hint">pick one</span></div>
+          <div class="presets quad" id="sel-attention"></div>
+          <p class="seg-d" id="desc-attention"></p>
+        </div>
+        <div id="ca"></div>
+        <details class="more"><summary>Additional threat parameters</summary><div id="ca-adv"></div></details>
+      </div>
+    </div>
+
+    <!-- Set once, so it is the half that scrolls. Its own growth — the trait
+         notes run to 683px with every attribute selected — now moves nothing
+         but itself. -->
+    <div class="rail-scroll">
+      <div class="card def">
+        <h2 class="d">Your environment</h2>
+        <p class="note">Place yourself on each axis, then adjust any parameter.</p>
+
+        <div class="seg">
+          <div class="seg-l">Public exposure <span class="seg-hint">pick one</span></div>
+          <div class="presets ladder-5" id="sel-exposure"></div>
+          <p class="seg-d" id="desc-exposure"></p>
+        </div>
+        <div class="seg">
+          <div class="seg-l">Also true of us <span class="seg-hint">select any</span></div>
+          <div class="presets chips" id="sel-profile"></div>
+          <div class="trait-notes" id="trait-notes"></div>
+        </div>
+        <div class="seg">
+          <div class="seg-l">Operational maturity <span class="seg-hint">pick one</span></div>
+          <div class="presets ladder-4" id="sel-maturity"></div>
+          <p class="seg-d" id="desc-maturity"></p>
+        </div>
+        <div class="seg">
+          <div class="seg-l">Detection capability <span class="seg-hint">pick one</span></div>
+          <div class="presets ladder-5" id="sel-detection"></div>
+          <p class="seg-d" id="desc-detection"></p>
+        </div>
+        <!-- The composed result of all four controls above. It reported a total
+             before the reader had finished specifying it while it sat under the
+             chips; here it is the answer to the whole card. -->
+        <p class="seg-d estate" id="desc-profile"></p>
+
+        <div id="cd"></div>
+        <details class="more"><summary>Additional defender parameters</summary><div id="cd-adv"></div></details>
+      </div>
+    </div>
+  </div>
+
   <div class="results" id="results" tabindex="-1">
     <h2 class="vh">Results</h2>
+
+    <!-- Contents are front matter, not instrument. This list has never had a
+         panel, a radius or a fill — it was already document material sitting
+         inside the console, where it was 739px below the sticky rail's fold on
+         a desktop and 2,529px down a phone. A ruled document puts its contents
+         at the front. -->
+    <nav class="toc" aria-label="Sections">
+      <div class="seg-l">On this page</div>
+      <ol>
+        <li><a href="#p-race">Exploit against remediation</a></li>
+        <li><a href="#p-funnel">Attrition to compromise</a></li>
+        <li><a href="#p-torn">Sensitivity analysis</a></li>
+        <li><a href="#p-acts">Prioritised actions</a></li>
+        <li><a href="#p-routes">Initial access vector</a></li>
+        <li><a href="#p-surv">Time to first compromise</a></li>
+        <li><a href="#p-sweep">Has AI compressed the clock?</a></li>
+        <li><a href="#p-severity">Why not severity</a></li>
+        <li><a href="#p-volume">Severity-label inflation</a></li>
+        <li><a href="#p-anchors">Model provenance</a></li>
+      </ol>
+    </nav>
 
     <!-- ── the race ── -->
     <section class="panel" id="p-race">
@@ -976,7 +1142,7 @@ footer code {
         <span><i class="sw-zero"></i>pre-disclosure</span>
         <span><i class="sw-hatch"></i>unremediated exposure</span>
       </div>
-      <svg id="race" class="chart" role="img" aria-label="Exploit availability against remediation completion"></svg>
+      <svg id="race" class="chart" height="396" role="img" aria-label="Exploit availability against remediation completion"></svg>
       <p class="lead foot" id="race-note"></p>
     </section>
 
@@ -995,7 +1161,7 @@ footer code {
           <button class="icon-btn" data-dl="funnel" type="button">PNG</button>
         </div>
       </div>
-      <svg id="funnel" class="chart" role="img" aria-label="Attrition funnel from published vulnerabilities to compromise"></svg>
+      <svg id="funnel" class="chart" height="274" role="img" aria-label="Attrition funnel from published vulnerabilities to compromise"></svg>
       <p class="lead foot" id="wild-note"></p>
     </section>
 
@@ -1006,8 +1172,10 @@ footer code {
           <span class="ord">03</span>
           <h3>Sensitivity analysis</h3>
           <p class="lead">Each bar varies a single parameter across its plausible range with all
-          others held constant. <b>Compromise</b> and <b>incident</b> respond to different
-          parameters, and that divergence is what should drive remediation priority.</p>
+          others held constant. A <b>compromise</b> is an adversary establishing a foothold; it
+          becomes an <b>incident</b> when detection and response fail to contain it before the
+          adversary reaches its objective. The two respond to different parameters, and that
+          divergence is what should drive remediation priority.</p>
         </div>
         <div class="tools">
           <div class="switch" role="group" aria-label="Metric">
@@ -1018,7 +1186,7 @@ footer code {
           <button class="icon-btn" data-dl="torn" type="button">PNG</button>
         </div>
       </div>
-      <svg id="torn" class="chart" role="img" aria-label="Sensitivity of the outcome to each parameter"></svg>
+      <svg id="torn" class="chart" height="379" role="img" aria-label="Sensitivity of the outcome to each parameter"></svg>
     </section>
 
     <section class="panel" id="p-acts">
@@ -1047,7 +1215,7 @@ footer code {
             <button class="icon-btn" data-dl="routes" type="button">PNG</button>
           </div>
         </div>
-        <svg id="routes" class="chart" role="img" aria-label="Initial access vector of first compromise"></svg>
+        <svg id="routes" class="chart" height="174" role="img" aria-label="Initial access vector of first compromise"></svg>
       </section>
       <section class="panel" id="p-surv">
         <div class="panel-head">
@@ -1061,12 +1229,12 @@ footer code {
             <button class="icon-btn" data-dl="surv" type="button">PNG</button>
           </div>
         </div>
-        <svg id="surv" class="chart" role="img" aria-label="Survival function over twelve months"></svg>
+        <svg id="surv" class="chart" height="236" role="img" aria-label="Survival function over twelve months"></svg>
       </section>
     </div>
 
     <!-- ── compression what-if ── -->
-    <section class="panel" id="p-sweep">
+    <section class="panel part" id="p-sweep">
       <div class="panel-head">
         <div class="ph-copy">
           <span class="ord">07</span>
@@ -1083,7 +1251,7 @@ footer code {
           <button class="icon-btn" data-dl="sweep" type="button">PNG</button>
         </div>
       </div>
-      <svg id="sweep" class="chart" role="img" aria-label="Outcome against modelled exploit-clock compression"></svg>
+      <svg id="sweep" class="chart" height="236" role="img" aria-label="Outcome against modelled exploit-clock compression"></svg>
     </section>
 
     <!-- ── evidence ── -->
@@ -1101,7 +1269,7 @@ footer code {
           <button class="icon-btn" data-dl="severity" type="button">PNG</button>
         </div>
       </div>
-      <svg id="severity" class="chart" role="img" aria-label="Share of each CVSS severity band confirmed exploited"></svg>
+      <svg id="severity" class="chart" height="236" role="img" aria-label="Share of each CVSS severity band confirmed exploited"></svg>
       <div class="scroll-x">
         <table class="tbl">
           <thead><tr><th>CVSS band</th><th>Scored CVEs</th><th>Confirmed exploited</th><th>Rate</th></tr></thead>
@@ -1136,7 +1304,7 @@ footer code {
           <button class="icon-btn" data-dl="volume" type="button">PNG</button>
         </div>
       </div>
-      <svg id="volume" class="chart" role="img" aria-label="Published CVEs and the Critical-rated share, year over year"></svg>
+      <svg id="volume" class="chart" height="190" role="img" aria-label="Published CVEs and the Critical-rated share, year over year"></svg>
       <p class="lead foot">Part of that increase reflects
       scoring policy rather than vulnerability reality. CNAs self-assign scores, and the share each
       rates 9.0 or above ranges from near zero to roughly two in five against the same scale. NVD
@@ -1144,7 +1312,7 @@ footer code {
     </section>
 
     <!-- ── anchors ── -->
-    <section class="panel" id="p-anchors">
+    <section class="panel part" id="p-anchors">
       <div class="panel-head">
         <div class="ph-copy">
           <span class="ord">10</span>
@@ -1730,9 +1898,9 @@ footer code {
       { k: 'emergH',    l: 'Out-of-band remediation time',      min: 0,   max: 336,  step: 6,   v: 72,
         f: function (v) { return v === 0 ? 'none' : fmtH(v); },
         h: 'Emergency change path. Zero means every vulnerability waits for the routine cycle.' },
-      { k: 'emergHit',  l: 'Exploited vulns triggering out-of-band', min: 0, max: 100, step: 5, v: 60,
+      { k: 'emergHit',  l: 'Out-of-band trigger rate', min: 0, max: 100, step: 5, v: 60,
         f: function (v) { return v + '%'; },
-        h: 'Requires the vulnerability to be recognised as urgent first.' },
+        h: 'Share of exploited vulnerabilities recognised as urgent in time to take the out-of-band path.' },
       { k: 'virtual',   l: 'Mitigated by WAF or IPS rule', min: 0,   max: 80,   step: 5,   v: 20,
         f: function (v) { return v + '%'; },
         h: 'Recovers the exposure window while the permanent fix ships. Does not apply to appliances.' },
@@ -1744,24 +1912,24 @@ footer code {
         h: 'Appliances are excluded automatically, since they support no agent. Compromise outside telemetry is typically reported by a third party.' },
     ],
     att: [
-      { k: 'stackVulns', l: 'Critical vulns in your stack / yr', min: 0, max: 200, step: 1, v: 34,
+      { k: 'stackVulns', l: 'Criticals in your stack, per year', min: 0, max: 200, step: 1, v: 34,
         f: function (v) { return fmtN(v); },
-        h: 'Published criticals in software you operate. Worldwide run-rate is ' + fmtN(C.volume.curYearRunRate.critical) + '.' },
+        h: 'Published criticals in software you operate. Worldwide run-rate is ' + C.volume.curYearRunRate.critical.toLocaleString('en-US') + '.' },
       { k: 'ai',        l: 'Exploit-clock compression',   min: 0,   max: 100,  step: 1,   v: 0,
         f: function (v) { return v === 0 ? 'as measured' : '+' + v; },
         h: 'Zero is the measured ' + C.pocTiming.latest.year + ' distribution. Above zero models faster exploit development, greater volume, and more pre-disclosure availability.' },
       { k: 'scan',      l: 'Mass-exploitation pressure',  min: 0,   max: 100,  step: 1,   v: 50,
         f: function (v) { return String(v); },
         h: 'Rate at which opportunistic exploitation reaches you once exploit code is public.' },
-      { k: 'campaigns', l: 'Targeted campaigns / yr',     min: 0,   max: 100,  step: 1,   v: 6,
+      { k: 'campaigns', l: 'Targeted campaigns per year', min: 0,   max: 100,  step: 1,   v: 6,
         f: function (v) { return fmtN(v); },
         h: 'Operations that enumerate your estate specifically rather than scanning indiscriminately.' },
       { k: 'agentSkill', l: 'Campaign success vs a patched surface', min: 0, max: 10, step: 0.5, v: 1,
         f: function (v) { return v + '%'; },
         h: 'Per campaign, via misconfiguration, chained logic flaws or credential abuse.' },
-      { k: 'supply',    l: 'Supply-chain compromises reaching you / yr', min: 0, max: 3, step: 0.01, v: 0.12,
+      { k: 'supply',    l: 'Supply-chain compromises per year', min: 0, max: 3, step: 0.01, v: 0.12,
         f: function (v) { return v.toFixed(2); },
-        h: 'Compromised dependency or signed update. Remediation cadence does not apply to this vector.' },
+        h: 'Compromised dependency or signed update that reaches your estate. Remediation cadence does not apply to this vector.' },
     ],
   };
 
@@ -1775,12 +1943,60 @@ footer code {
   }
 
   /* ======================================================================
-   * TRAITS - things that are true about you. Pick any number; they compose.
+   * EXPOSURE - what you put in front of an unauthenticated stranger.
    *
-   * A real organisation is not one archetype. It is "SaaS and regulated", or
-   * "corporate network with an OT plant attached". So each trait is a MODIFIER
-   * on the baseline estate rather than a complete parameter set, and selecting
-   * several applies all of them.
+   * This is the page's founding claim, made selectable: the more of your
+   * estate a stranger can reach without credentials, the more of the
+   * attacker's clock applies to you at all. It is one axis, so it is one
+   * choice - the rungs are alternatives, not attributes. You cannot be both
+   * corporate-network-only and a SaaS vendor, and a multi-select could not
+   * say so; it averaged the two and produced an estate that exists nowhere.
+   *
+   * The rungs are ordered and monotone in reachable surface. Rung one is the
+   * floor the control previously had no way to express: an estate that
+   * publishes no unauthenticated listener is not merely below average, it is
+   * off the bottom of the baseline.
+   *
+   * Drives the four terms that describe reachable surface - how many systems,
+   * how many of them are appliances, how large a vulnerability stream the
+   * software they run commits you to, and how much of it a WAF can stand in
+   * front of. Everything else is left to the other three controls.
+   * ====================================================================== */
+  var EXPOSURE = {
+    none: {
+      l: 'Nothing inbound',
+      d: 'No unauthenticated listener on the public internet. Access is brokered outbound-only, and what remains reachable is the broker itself. The floor of this axis, not a typical estate.',
+      m: { exposed: 0.12, edge: 0.5, stackVulns: 0.4 },
+    },
+    corp: {
+      l: 'Corporate edge only',
+      d: 'VPN, mail and a handful of internal applications published to the internet. Software is operated, not distributed. A small surface, but appliance-heavy for its size, which is the worst composition per system.',
+      m: { exposed: 0.55, edge: 1.4, stackVulns: 0.7, virtual: '-5' },
+    },
+    web: {
+      l: 'Public web presence',
+      d: 'The corporate edge plus a public site, a customer portal and some APIs. Reachable by anyone, but not the thing being sold, so the web tier stays a minority of the estate.',
+      m: { exposed: 1, edge: 1, stackVulns: 1 },
+    },
+    product: {
+      l: 'The product is public',
+      d: 'The exposed surface is the revenue: a wide web tier, few appliances, and first-party fixes deployable within the hour. The trade-off is a substantially larger dependency stream.',
+      m: { exposed: 2.4, edge: 0.35, stackVulns: 1.9, virtual: '+20' },
+    },
+    others: {
+      l: 'We run other estates',
+      d: 'Hosting or managed service. The surface is a multiple of headcount rather than a function of it, and a single appliance vulnerability becomes a customer-wide event.',
+      m: { exposed: 6, edge: 1.1, stackVulns: 2.2, virtual: '+5' },
+    },
+  };
+
+  /* ======================================================================
+   * TRAITS - what else is true, on top of wherever you sit on that axis.
+   *
+   * Every trait here composes with every rung without contradicting it: you
+   * can sell software from any exposure posture, run an OT plant behind any
+   * of them, and depend on third parties regardless. That is the test a trait
+   * has to pass to be a trait rather than a rung.
    *
    * Numeric values multiply; string values like '+20' or '-6' offset. Every
    * result is clamped to the slider range afterwards, so combinations cannot
@@ -1790,45 +2006,27 @@ footer code {
    * per-sector estate composition. They exist because the alternative is
    * asking a reader to guess "criticals in my stack per year" cold. Every
    * slider stays editable once you have picked.
+   *
+   * Two former traits are deliberately absent. 'Legacy we cannot touch' set
+   * cadence, coverage, trigger rate and inventory in the same direction as
+   * MATURITY.loose, so selecting both counted one weakness twice and reached
+   * an 80-day change window nobody asked for; the maturity ladder owns that
+   * axis alone now. 'Regulated / finance' was not an environment attribute at
+   * all - it bought campaigns x4, which is adversary attention - and has moved
+   * to ATTENTION on the threat side, where the reader cannot mistake it for
+   * something they control.
    * ====================================================================== */
   var TRAITS = {
-    saas: {
-      l: 'We ship SaaS',
-      d: 'The product is the exposed surface: a wide web tier, few appliances, and first-party fixes deployable within the hour. The trade-off is a substantially larger dependency stream.',
-      m: { exposed: 2.4, edge: 0.35, cadence: 0.25, emergH: 0.25, awareH: 0.5,
-           stackVulns: 1.9, supply: 2.5, virtual: '+20', edrCoverage: '+12' },
-    },
     vendor: {
-      l: 'We sell software',
-      d: 'Customers operate what you build, which makes you a supply-chain node. Targeted well above what headcount would suggest, and the build and signing pipeline forms part of the attack surface.',
-      m: { campaigns: 3, supply: 3, stackVulns: 1.3 },
-    },
-    corponly: {
-      l: 'Corporate network only',
-      d: 'Software is operated, not distributed. A small exposed surface of VPN, mail and a few web applications, which makes it appliance-heavy for its size.',
-      m: { exposed: 0.55, edge: 1.4, stackVulns: 0.7, campaigns: 0.7 },
+      l: 'We sell software others run',
+      d: 'Customers operate what you build, which makes you a supply-chain node. The build and signing pipeline forms part of the attack surface, and the dependency stream is inherited by everyone downstream.',
+      m: { supply: 3, stackVulns: 1.3 },
     },
     ot: {
-      l: 'OT / ICS',
+      l: 'OT / ICS in scope',
       d: 'Change windows run to months and any reboot carries a safety case. Long-lived appliances, minimal endpoint telemetry, and a small surface with high consequence of loss.',
       m: { edge: 2.0, cadence: 4.0, emergH: 3.0, emergHit: 0.5, awareH: 3.0,
-           edrCoverage: 0.3, detect: 2.5, stackVulns: 0.7 },
-    },
-    regulated: {
-      l: 'Regulated / finance',
-      d: 'Heavily targeted and funded accordingly: enforced change control, maintained detection, and a third-party estate large enough to constitute its own exposure.',
-      m: { campaigns: 4, supply: 2, inventory: '+2', virtual: '+25',
-           emergHit: 1.35, edrCoverage: '+10' },
-    },
-    hosting: {
-      l: 'We host for others',
-      d: 'A large exposed surface operated on behalf of third parties, under sustained campaign pressure. A single appliance vulnerability becomes a customer-wide event.',
-      m: { exposed: 6, campaigns: 5, stackVulns: 2.2, inventory: '-6', scan: '+20' },
-    },
-    legacy: {
-      l: 'Legacy we cannot touch',
-      d: 'Systems with no approved downtime window, or past end of support. They leave the remediation cycle without leaving the estate.',
-      m: { cadence: 2.2, inventory: '-8', virtual: 0.4, edrCoverage: 0.6, emergHit: 0.7 },
+           edrCoverage: 0.3, detect: 2.5 },
     },
     thirdparty: {
       l: 'Heavy third-party / cloud',
@@ -1850,6 +2048,43 @@ footer code {
     managed: { l: 'Managed 24/7',     d: 'MDR or an in-house SOC with genuine out-of-hours cover. This is where adversary breakout time stops winning by default.',    p: { detect: 1,   edrCoverage: 93 } },
   };
 
+  /* ======================================================================
+   * ATTENTION - who is aiming at you, and how hard.
+   *
+   * Lives on the threat side because it is not a property of your estate. It
+   * used to be a trait called 'Regulated / finance', sitting among things the
+   * reader controls, described in defensive language - "enforced change
+   * control, maintained detection" - while quadrupling the campaign rate. A
+   * reader picked a chip that read as competence and watched the number rise
+   * by nineteen points. The effect was defensible; its placement was not.
+   *
+   * Ordered, single-select, and monotone in adversary interest. Drives the two
+   * terms that carry deliberate attention rather than opportunism: campaigns
+   * that enumerate you specifically, and supply-chain compromises aimed at
+   * whoever is downstream of you.
+   * ====================================================================== */
+  var ATTENTION = {
+    ambient: {
+      l: 'Opportunistic only',
+      d: 'Nobody is looking for you by name. What arrives is what arrives at every reachable address: mass scanning behind public exploit code.',
+      m: { campaigns: 0.15, supply: 0.6 },
+    },
+    ordinary: {
+      l: 'Ordinary interest',
+      d: 'The baseline. Occasional deliberate enumeration, mostly commodity ransomware affiliates working a target list you happen to be on.',
+      m: { campaigns: 1, supply: 1 },
+    },
+    sector: {
+      l: 'Sector under pressure',
+      d: 'Finance, healthcare, government supply and defence industrial base. Targeted well above what headcount would suggest, and the third-party estate is large enough to constitute its own exposure.',
+      m: { campaigns: 4, supply: 2 },
+    },
+    named: {
+      l: 'A named target',
+      d: 'Specific, persistent adversary interest in you rather than in your sector. State-nexus or a determined criminal group with a reason to keep coming back after a failure.',
+      m: { campaigns: 9, supply: 3, scan: '+15' },
+    },
+  };
   /* MATURITY - how well the estate is run. Orthogonal to what you are, so it
    * is a transform rather than another table of absolutes. */
   /* 'bod' is not a maturity level so much as a mandated regime. CISA BOD 26-04
@@ -1870,10 +2105,18 @@ footer code {
       cadence: 1,    emergH: 1,    emergHit: 1,   awareH: 1,    detect: 1,    virtual: 1,   inventory: 0,   edrCoverage: 0 },
     loose:   { l: 'Sprawling', d: 'Change control by exception, applicability established late, little virtual patching, and a material share of the estate in no remediation cycle at all.',
       cadence: 2.6,  emergH: 2.4,  emergHit: 0.5, awareH: 3.5,  detect: 3.2,  virtual: 0.3, inventory: -12, edrCoverage: -25 },
-    bod:     { l: 'BOD 26-04', d: 'A mandated regime rather than a rung on the ladder. Prioritising on KEV presence, exposure, automatability and impact buys faster, more reliable triage and a better-known estate — not a faster change window.',
+    bod:     { l: 'BOD 26-04', d: 'A mandated regime rather than a rung on the ladder. Prioritising on KEV presence, exposure, automatability and impact buys faster, more reliable triage and a better-known estate, not a faster change window.',
       cadence: 1,    emergH: 1,    emergHit: 1.55, awareH: 0.33, detect: 1,    virtual: 1,   inventory: 3,   edrCoverage: 4 },
   };
 
+  /* The rung and the attention level the baseline estate already represents.
+   * `SPEC` defaults describe a generic mid-size estate with a public web
+   * presence and no particular adversary interest, so these two are the
+   * identity of the composer: compose({}) must return defaults() unchanged,
+   * which is what the ordering test asserts. Both tables carry a x1 rung for
+   * exactly that reason. */
+  var DEFAULT_EXPOSURE = 'web';
+  var DEFAULT_ATTENTION = 'ordinary';
   function clampTo(k, v) {
     var s = SPEC.def.concat(SPEC.att).filter(function (x) { return x.k === k; })[0];
     if (!s) return v;
@@ -1883,9 +2126,28 @@ footer code {
     return Math.min(s.max, Math.max(s.min, +snapped.toFixed(4)));
   }
 
-  /* Compose a parameter set: baseline -> traits -> maturity -> detection.
-   * Traits multiply or offset, so the order they were clicked in cannot
-   * change the result. */
+  /* Compose a parameter set:
+   *   baseline -> exposure rung -> traits -> attention -> maturity -> detection
+   *
+   * The first three all speak the same `m` dialect and are gathered into one
+   * pass, so they cannot depend on the order they were applied in - and,
+   * because the rung and the attention level are single-select, a rung's
+   * multiplier and a trait's multiplier on the same term compound exactly the
+   * way two traits would. `edge` is the term where that matters: the corporate
+   * rung already tilts appliance-heavy, and an OT plant on top of it tilts
+   * further, which is the composition the old multi-select could not express
+   * without also averaging away the exposure claim. */
+  /* A table lookup by a key that came from a URL must not resolve an inherited
+   * Object.prototype member. `DETECTION['constructor']` is truthy, so the guard
+   * below used to pass and then dereference `det.p.detect` on undefined —
+   * index.html?det=constructor threw inside fromURL(), which runs at the top of
+   * init() outside any try/catch, and the whole console failed to build. The
+   * maturity table was quieter and worse: ?mat=toString composed eight NaN
+   * parameters and simulated them. */
+  function owns(table, key) {
+    return typeof key === 'string' && Object.prototype.hasOwnProperty.call(table, key);
+  }
+
   function compose(opts) {
     opts = opts || {};
     var traits = opts.traits || [];
@@ -1902,30 +2164,52 @@ footer code {
      * diminishing returns. A single trait is unaffected: excess 1.4 gives
      * exactly x2.4, the multiplier as written. */
     var up = {}, down = {}, off = {};
-    traits.forEach(function (key) {
-      var t = TRAITS[key];
-      if (!t) return;
-      Object.keys(t.m).forEach(function (prop) {
-        var mod = t.m[prop];
+    function gather(m) {
+      if (!m) return;
+      Object.keys(m).forEach(function (prop) {
+        var mod = m[prop];
         if (typeof mod === 'string') off[prop] = (off[prop] || 0) + parseFloat(mod);
         else if (mod >= 1) up[prop] = (up[prop] || 0) + (mod - 1);
         else if (mod > 0) down[prop] = (down[prop] || 0) + (1 / mod - 1);
       });
-    });
+    }
+    /* The rung is the only one of the three that is always present. An unknown
+     * or absent key falls back to the middle rung rather than to no rung at
+     * all, so a stale shared link cannot silently produce a surface-free
+     * estate that the reader never chose. */
+    gather(EXPOSURE[owns(EXPOSURE, opts.exposure) ? opts.exposure : DEFAULT_EXPOSURE].m);
+    traits.forEach(function (key) { if (TRAITS[key]) gather(TRAITS[key].m); });
+    gather(ATTENTION[owns(ATTENTION, opts.attention) ? opts.attention : DEFAULT_ATTENTION].m);
+
     Object.keys(out).forEach(function (prop) {
       var factor = (1 + (up[prop] || 0)) / (1 + (down[prop] || 0));
       out[prop] = out[prop] * factor + (off[prop] || 0);
     });
 
-    var mat = MATURITY[opts.maturity] || MATURITY.typical;
+    var mat = MATURITY[owns(MATURITY, opts.maturity) ? opts.maturity : 'typical'];
     ['cadence', 'emergH', 'emergHit', 'awareH', 'detect', 'virtual'].forEach(function (k) {
       out[k] = out[k] * mat[k];
     });
     out.inventory += mat.inventory;
     out.edrCoverage += mat.edrCoverage;
 
-    var det = DETECTION[opts.detection];
-    if (det) Object.keys(det.p).forEach(function (k) { out[k] = det.p[k]; });
+    /* Detection is an assignment, not a multiplier, because the reader picked
+     * a stack and the stack states its own dwell time and coverage. The one
+     * thing it must not do is overwrite a physical impossibility with an
+     * aspiration: an OT estate cannot reach 93% endpoint coverage by buying an
+     * MDR contract, because the appliances support no agent. So a trait that
+     * suppresses coverage keeps its suppression, applied to whatever the
+     * posture claims. Dwell time is genuinely purchasable and is not capped. */
+    var det = owns(DETECTION, opts.detection) ? DETECTION[opts.detection] : null;
+    if (det) {
+      var covCap = 1;
+      traits.forEach(function (key) {
+        var t = TRAITS[key];
+        if (t && typeof t.m.edrCoverage === 'number' && t.m.edrCoverage < 1) covCap *= t.m.edrCoverage;
+      });
+      out.detect = det.p.detect;
+      out.edrCoverage = det.p.edrCoverage * covCap;
+    }
 
     Object.keys(out).forEach(function (k) { out[k] = clampTo(k, out[k]); });
     out.ai = opts.ai || 0;
@@ -2070,6 +2354,17 @@ footer code {
     k.p75         = k.pocP75;
     /* measured quantile positions, shifted by the pre-publication mass */
     k.pMedian     = 0.5;
+    /* The inverse-CDF sampler walks these knots in order and interpolates
+     * between consecutive pairs, so they have to BE in order. They are, for
+     * the current snapshot at every compression setting — pBefore tops out at
+     * 0.47 against a median knot of 0.50. But pBefore is measured data times
+     * a slider: the 2015 row of the same series reads 62.9%, and a snapshot
+     * refresh that moved `latest` onto a year like that would put pBefore
+     * past pMedian and have the post-publication branch extrapolate outside
+     * its own segment. Clamping costs nothing today and keeps the sampler
+     * honest against data that has not arrived yet. */
+    k.pBefore     = Math.min(k.pBefore, k.pMedian);
+    k.pWithinWeek = Math.min(Math.max(k.pWithinWeek, k.pMedian), 0.75);
     k.scanHaz     = k.scanHazBase * Math.exp(0.030 * (P.scan - 50));
     return k;
   }
@@ -2092,13 +2387,30 @@ footer code {
     'Exploitation succeeds',
   ];
 
-  function simulate(P, trials, seed, opts) {
+  /* A run, suspendable between trials.
+   *
+   * The trial loop is the one genuinely expensive thing this file does: 60,000
+   * trials is about 92ms, which is roughly twice the budget a main thread has
+   * if it means to stay responsive to input. Exposing the loop as something a
+   * caller can advance in pieces lets the page spend that cost in slices
+   * without holding the frame.
+   *
+   * Splitting it changes nothing about the result. Every accumulator and the
+   * RNG itself live in this closure, so a run advanced 10,000 at a time visits
+   * exactly the trials, in exactly the order, with exactly the coefficient
+   * draws, that one advanced all at once would — including the block flushes
+   * the credible interval is built from. `simulate` below is the whole-run
+   * case and remains the API everything except the settle pass uses. */
+  function createRun(P, trials, seed, opts) {
     opts = opts || {};
     var wantSurv = opts.surv !== false;
     var spread = opts.spread === undefined ? 1 : opts.spread;
     var rnd = RNG(seed);
 
     var surv = new Float64Array(H + 2);
+    /* Day each trial stopped surviving; H+1 means it never did. surv[] is the
+     * suffix sum of this, taken once after the loop. */
+    var stopAt = new Int32Array(H + 2);
     var hit = 0, inc = 0, events = 0, expDays = 0;
     var firsts = [];
     var route = [0, 0, 0];
@@ -2130,164 +2442,207 @@ footer code {
     var eKnown = Math.round(nEdge * invF), eDark = nEdge - eKnown;
     var wKnown = Math.round(nWeb * invF), wDark = nWeb - wKnown;
 
-    for (var t = 0; t < trials; t++) {
-      if (k === null || bc === 0) k = drawCoeffs(rnd, P, spread);
-      var first = Infinity, firstRoute = -1, firstEdge = false, incident = false;
-      var n = 0, edSum = 0;
+    var t = 0;
+    /* Advance by `n` trials, or to the end when `n` is omitted. Returns true
+     * once the run is complete. */
+    function advance(n) {
+      var end = n > 0 ? Math.min(trials, t + n) : trials;
+      for (; t < end; t++) {
+        /* bc is 0 on the first trial and again after every block flush, which
+         * is exactly when a fresh coefficient set is due. */
+        if (bc === 0) k = drawCoeffs(rnd, P, spread);
+        var first = Infinity, firstRoute = -1, firstEdge = false, incident = false;
+        var n = 0, edSum = 0;
 
-      var K = rnd.pois(P.stackVulns);
-      fn[0] += K;
+        var K = rnd.pois(P.stackVulns);
+        fn[0] += K;
 
-      for (var i = 0; i < K; i++) {
-        var isEdge = rnd() < P.edge / 100;
+        for (var i = 0; i < K; i++) {
+          var isEdge = rnd() < P.edge / 100;
 
-        /* 1. do you run the affected product at all? */
-        if (rnd() >= (isEdge ? k.runsEdge : k.runsWeb)) continue;
-        fn[1]++;
+          /* 1. do you run the affected product at all? */
+          if (rnd() >= (isEdge ? k.runsEdge : k.runsWeb)) continue;
+          fn[1]++;
 
-        /* 2. does a working exploit ever exist, and is it used for real?
-         *    These are not sequential gates: a bug can be used in the wild with
-         *    no public PoC, and a public PoC can go unused. Either one arms it. */
-        var hasPoC = rnd() < k.pPoC;
-        var inWild = rnd() < (hasPoC ? k.pWildGivenPoC : k.pWildNoPoC);
-        if (!hasPoC && !inWild) continue;
-        fn[2]++;
-        armedN++;
-        if (inWild) wildN++;
+          /* 2. does a working exploit ever exist, and is it used for real?
+           *    These are not sequential gates: a bug can be used in the wild with
+           *    no public PoC, and a public PoC can go unused. Either one arms it. */
+          var hasPoC = rnd() < k.pPoC;
+          var inWild = rnd() < (hasPoC ? k.pWildGivenPoC : k.pWildNoPoC);
+          if (!hasPoC && !inWild) continue;
+          fn[2]++;
+          armedN++;
+          if (inWild) wildN++;
 
-        /* 3. when does the exploit exist, relative to the patch? */
-        var tX = hasPoC ? drawPoCTime(rnd, k)
-                        : -k.preMedian * Math.exp(0.95 * inverseNormal(rnd()));
-        if (isEdge) tX *= 0.6; /* appliance exploitation runs ahead of the field */
+          /* 3. when does the exploit exist, relative to the patch? */
+          var tX = hasPoC ? drawPoCTime(rnd, k)
+                          : -k.preMedian * Math.exp(0.95 * inverseNormal(rnd()));
+          if (isEdge) tX *= 0.6; /* appliance exploitation runs ahead of the field */
 
-        /* 4. how much of your estate does it touch? */
-        var af = isEdge
-          ? k.afEdgeMin + (0.90 - k.afEdgeMin) * rnd()
-          : 0.04 + (k.afWebMax - 0.04) * rnd() * rnd();
-        var popKnown = isEdge ? eKnown : wKnown;
-        var popDark = isEdge ? eDark : wDark;
-        var nKnown = rnd.binom(popKnown, af);
-        var nDark = rnd.binom(popDark, af);
-        if (nKnown + nDark < 1) continue;
+          /* 4. how much of your estate does it touch? */
+          var af = isEdge
+            ? k.afEdgeMin + (0.90 - k.afEdgeMin) * rnd()
+            : 0.04 + (k.afWebMax - 0.04) * rnd() * rnd();
+          var popKnown = isEdge ? eKnown : wKnown;
+          var popDark = isEdge ? eDark : wDark;
+          var nKnown = rnd.binom(popKnown, af);
+          var nDark = rnd.binom(popDark, af);
+          if (nKnown + nDark < 1) continue;
 
-        /* 5. when have you closed it? */
-        var aware = rnd.lnorm(P.awareH / 24, 0.6) * (isEdge ? 1.4 : 1);
-        var tp;
-        if (P.emergH > 0 && rnd() < (P.emergHit / 100) * (isEdge ? 0.8 : 1)) {
-          tp = aware + (P.emergH / 24) * Math.exp(0.3 * rnd.norm()) * (isEdge ? 1.5 : 1);
-        } else {
-          tp = aware + rnd() * P.cadence * (isEdge ? 1.6 : 1) + rnd.lnorm(0.6, 0.5);
+          /* 5. when have you closed it? */
+          var aware = rnd.lnorm(P.awareH / 24, 0.6) * (isEdge ? 1.4 : 1);
+          var tp;
+          if (P.emergH > 0 && rnd() < (P.emergHit / 100) * (isEdge ? 0.8 : 1)) {
+            tp = aware + (P.emergH / 24) * Math.exp(0.3 * rnd.norm()) * (isEdge ? 1.5 : 1);
+          } else {
+            tp = aware + rnd() * P.cadence * (isEdge ? 1.6 : 1) + rnd.lnorm(0.6, 0.5);
+          }
+          var shielded = !isEdge && rnd() < P.virtual / 100;
+
+          var win = shielded ? 0 : Math.max(0, tp - tX);
+          if (win > 0) fn[3]++;
+          edSum += Math.min(win, H) * nKnown;
+
+          /* 6. does a campaign reach you inside that window? */
+          var hazMul = Math.exp(0.9 * rnd.norm()) * (isEdge ? k.edgeHazard : 1)
+                     * (inWild ? 1 : k.pocOnlyHazard);
+          var landed = false, won = false;
+
+          var reach = function (cnt, wTotal, tStart) {
+            if (cnt < 1 || wTotal <= 0) return null;
+            var h = k.scanHaz * hazMul * Math.pow(cnt, 0.4);
+            /* pre-publication time is targeted, not mass: discount it */
+            var pre = Math.max(0, Math.min(0, tStart + wTotal) - Math.min(0, tStart));
+            var eff = Math.min(wTotal, H) - pre * (1 - k.preHazard);
+            if (eff <= 0) return null;
+            if (rnd() >= 1 - Math.exp(-h * eff)) return null;
+            return { c: Math.max(1, rnd.binom(cnt, 0.7)), t: Math.min(wTotal, rnd.expo(1 / h)) };
+          };
+          var land = function (r, when0) {
+            var c = rnd.binom(r.c, k.exploitWorks);
+            if (c < 1) return false;
+            n += c;
+            var when = when0 + Math.max(0, tX) + r.t;
+            if (when < first) { first = when; firstRoute = 0; firstEdge = isEdge; }
+            return true;
+          };
+
+          var day0 = rnd() * H;
+          var rK = reach(nKnown, win, tX);
+          if (rK) { landed = true; if (land(rK, day0)) won = true; }
+
+          if (nDark > 0) {
+            /* systems in no patch cycle: fixed on rebuild, or not at all */
+            var tpDark = rnd() < 0.5 ? aware + rnd() * 90 + rnd.lnorm(0.6, 0.5)
+                                     : aware + rnd.expo(300);
+            var winDark = Math.max(0, tpDark - tX);
+            edSum += Math.min(winDark, H) * nDark;
+            var rD = reach(nDark, winDark, tX);
+            if (rD) { landed = true; if (land(rD, day0)) won = true; }
+          }
+          if (landed) fn[4]++;
+          if (won) fn[5]++;
         }
-        var shielded = !isEdge && rnd() < P.virtual / 100;
 
-        var win = shielded ? 0 : Math.max(0, tp - tX);
-        if (win > 0) fn[3]++;
-        edSum += Math.min(win, H) * nKnown;
-
-        /* 6. does a campaign reach you inside that window? */
-        var hazMul = Math.exp(0.9 * rnd.norm()) * (isEdge ? k.edgeHazard : 1)
-                   * (inWild ? 1 : k.pocOnlyHazard);
-        var landed = false, won = false;
-
-        var reach = function (cnt, wTotal, tStart) {
-          if (cnt < 1 || wTotal <= 0) return null;
-          var h = k.scanHaz * hazMul * Math.pow(cnt, 0.4);
-          /* pre-publication time is targeted, not mass: discount it */
-          var pre = Math.max(0, Math.min(0, tStart + wTotal) - Math.min(0, tStart));
-          var eff = Math.min(wTotal, H) - pre * (1 - k.preHazard);
-          if (eff <= 0) return null;
-          if (rnd() >= 1 - Math.exp(-h * eff)) return null;
-          return { c: Math.max(1, rnd.binom(cnt, 0.7)), t: Math.min(wTotal, rnd.expo(1 / h)) };
-        };
-        var land = function (r, when0) {
-          var c = rnd.binom(r.c, k.exploitWorks);
-          if (c < 1) return false;
-          n += c;
-          var when = when0 + Math.max(0, tX) + r.t;
-          if (when < first) { first = when; firstRoute = 0; firstEdge = isEdge; }
-          return true;
-        };
-
-        var day0 = rnd() * H;
-        var rK = reach(nKnown, win, tX);
-        if (rK) { landed = true; if (land(rK, day0)) won = true; }
-
-        if (nDark > 0) {
-          /* systems in no patch cycle: fixed on rebuild, or not at all */
-          var tpDark = rnd() < 0.5 ? aware + rnd() * 90 + rnd.lnorm(0.6, 0.5)
-                                   : aware + rnd.expo(300);
-          var winDark = Math.max(0, tpDark - tX);
-          edSum += Math.min(winDark, H) * nDark;
-          var rD = reach(nDark, winDark, tX);
-          if (rD) { landed = true; if (land(rD, day0)) won = true; }
+        /* targeted campaigns: succeed more often when a window happens to be open */
+        var openFrac = Math.min(1, edSum / (H * Math.max(1, P.exposed)));
+        var pWin = openFrac * 0.7 + (1 - openFrac) * (P.agentSkill / 100);
+        var nC = rnd.pois(P.campaigns);
+        for (var ci = 0; ci < nC; ci++) {
+          if (rnd() < pWin) {
+            n++;
+            var wc = rnd() * H;
+            if (wc < first) { first = wc; firstRoute = 1; firstEdge = rnd() < P.edge / 100; }
+          }
         }
-        if (landed) fn[4]++;
-        if (won) fn[5]++;
-      }
-
-      /* targeted campaigns: succeed more often when a window happens to be open */
-      var openFrac = Math.min(1, edSum / (H * Math.max(1, P.exposed)));
-      var pWin = openFrac * 0.7 + (1 - openFrac) * (P.agentSkill / 100);
-      var nC = rnd.pois(P.campaigns);
-      for (var ci = 0; ci < nC; ci++) {
-        if (rnd() < pWin) {
+        /* supply chain: patch cadence is irrelevant */
+        var nS = rnd.pois(P.supply);
+        for (var si = 0; si < nS; si++) {
           n++;
-          var wc = rnd() * H;
-          if (wc < first) { first = wc; firstRoute = 1; firstEdge = rnd() < P.edge / 100; }
+          var ws = rnd() * H;
+          if (ws < first) { first = ws; firstRoute = 2; firstEdge = false; }
         }
-      }
-      /* supply chain: patch cadence is irrelevant */
-      var nS = rnd.pois(P.supply);
-      for (var si = 0; si < nS; si++) {
-        n++;
-        var ws = rnd() * H;
-        if (ws < first) { first = ws; firstRoute = 2; firstEdge = false; }
-      }
 
-      events += n;
-      expDays += edSum;
+        events += n;
+        expDays += edSum;
 
-      var compromised = first < H;
-      if (compromised) {
-        hit++;
-        firsts.push(first);
-        route[firstRoute]++;             /* once per trial — not once per improvement */
-        incident = !contained(rnd, P, k, firstEdge);
-        if (incident) inc++;
-      }
-      if (wantSurv) {
-        var stop = compromised ? Math.ceil(first) : H + 1;
-        for (var d = 0; d < stop && d <= H; d++) surv[d]++;
-      }
+        var compromised = first < H;
+        if (compromised) {
+          hit++;
+          firsts.push(first);
+          route[firstRoute]++;             /* once per trial — not once per improvement */
+          incident = !contained(rnd, P, k, firstEdge);
+          if (incident) inc++;
+        }
+        if (wantSurv) {
+          /* Record only WHERE this trial leaves the survivor set. Incrementing
+           * every day it survived cost 365 writes per trial — 21.9M at 60k
+           * trials — to build a suffix sum that one pass at the end produces
+           * exactly, and measurably faster. */
+          stopAt[compromised ? Math.ceil(first) : H + 1]++;
+        }
 
-      bh += compromised ? 1 : 0; bi += incident ? 1 : 0; bc++;
-      if (bc === blockN) { blockHits.push(bh / bc); blockInc.push(bi / bc); bh = 0; bi = 0; bc = 0; }
+        bh += compromised ? 1 : 0; bi += incident ? 1 : 0; bc++;
+        if (bc === blockN) { blockHits.push(bh / bc); blockInc.push(bi / bc); bh = 0; bi = 0; bc = 0; }
+      }
+      return t >= trials;
     }
 
-    firsts.sort(function (a, b) { return a - b; });
-    var pHit = hit / trials, pInc = inc / trials;
-    var ciH = decompose(blockHits, pHit, blockN), ciI = decompose(blockInc, pInc, blockN);
-    var totalRoute = route[0] + route[1] + route[2] || 1;
+    /* Aggregate. Reads the accumulators without disturbing them, so it is
+     * safe to call on a finished run more than once. */
+    function result() {
+      if (wantSurv) {
+        /* surv[d] is the number of trials still uncompromised at the end of day
+         * d — that is, those whose stop day is strictly greater than d. */
+        var alive = trials;
+        for (var sd = 0; sd <= H; sd++) { alive -= stopAt[sd]; surv[sd] = alive; }
+      }
+
+      firsts.sort(function (a, b) { return a - b; });
+      var pHit = hit / trials, pInc = inc / trials;
+      var ciH = decompose(blockHits, pHit, blockN), ciI = decompose(blockInc, pInc, blockN);
+      var totalRoute = route[0] + route[1] + route[2] || 1;
+      var medIdx = Math.floor(trials * 0.5);
+
+      return {
+        p: pHit, pLo: ciH[0], pHi: ciH[1],
+        incident: pInc, incLo: ciI[0], incHi: ciI[1],
+        /* Median across ALL trials, with the uncompromised years sorted past
+         * the end — so the index is into the trial count, not into `firsts`.
+         * Bounds-checked rather than gated on pHit >= 0.5: with exactly half
+         * the trials compromised the index is one past the last element, and
+         * the old form returned `undefined` there rather than null, leaking a
+         * third value out of a documented number-or-null field. */
+        med: medIdx < firsts.length ? firsts[medIdx] : null,
+        events: events / trials,
+        expDays: expDays / trials,
+        surv: Array.prototype.slice.call(surv, 0, H + 1).map(function (v) { return v / trials; }),
+        routes: route.map(function (v) { return v / totalRoute; }),
+        routeN: route.slice(),
+        fn: fn.map(function (v) { return v / trials; }),
+        armed: armedN / trials,
+        wild: wildN / trials,
+        wildShare: armedN ? wildN / armedN : 0,
+        se: Math.sqrt(pHit * (1 - pHit) / trials),
+        trials: trials,
+        /* the interval needs enough blocks AND enough trials per block to mean
+         * anything; below this the caller should keep showing the last good one */
+        bandReliable: trials >= 30000,
+      };
+    }
 
     return {
-      p: pHit, pLo: ciH[0], pHi: ciH[1],
-      incident: pInc, incLo: ciI[0], incHi: ciI[1],
-      med: pHit >= 0.5 ? firsts[Math.floor(trials * 0.5)] : null,
-      events: events / trials,
-      expDays: expDays / trials,
-      surv: Array.prototype.slice.call(surv, 0, H + 1).map(function (v) { return v / trials; }),
-      routes: route.map(function (v) { return v / totalRoute; }),
-      routeN: route.slice(),
-      fn: fn.map(function (v) { return v / trials; }),
-      armed: armedN / trials,
-      wild: wildN / trials,
-      wildShare: armedN ? wildN / armedN : 0,
-      se: Math.sqrt(pHit * (1 - pHit) / trials),
-      trials: trials,
-      /* the interval needs enough blocks AND enough trials per block to mean
-       * anything; below this the caller should keep showing the last good one */
-      bandReliable: trials >= 30000,
+      advance: advance,
+      done: function () { return t >= trials; },
+      result: result,
     };
+  }
+
+  /* The whole run, in one call — the original signature, unchanged. */
+  function simulate(P, trials, seed, opts) {
+    var run = createRun(P, trials, seed, opts);
+    run.advance();
+    return run.result();
   }
 
   /* Two-stage containment: beat breakout, or beat the objective, or neither.
@@ -2327,6 +2682,20 @@ footer code {
     var k = drawCoeffs(rnd, P, 0);
     var x0 = -30;
     var x1 = Math.max(24, Math.min(120, P.cadence * 1.7 * (1 + P.edge / 160) + P.emergH / 24 + P.awareH / 24 + 8));
+    /* These bins are sized for drawing a shape, not for reading a quantile off
+     * it. x0 is pinned at -30 and x1 floors at 24, so the narrowest bin this
+     * function can produce anywhere in the parameter space is 54/160 = 0.34d.
+     * That is coarser than the median it would be measuring under heavy
+     * compression: at ai=100 the modelled median is around 0.31d, so the whole
+     * quantity sits inside a single bin and no readout of `cum` can resolve
+     * it — interpolating within the crossing bin does not rescue it either,
+     * since that assumes a uniform density across the very interval in
+     * question. If a modelled median is ever wanted on the page, bin
+     * adaptively or sample it directly; do NOT read it off `cum`, and do not
+     * compute it as the measured median times `scale` (that product is never
+     * exact — the pre-publication branch is unscaled and its mass grows with
+     * ai independently, so it drifts several percent and is not a figure any
+     * run of this model produces). */
     var B = 160, dx = (x1 - x0) / B;
     var A = new Float64Array(B), D = new Float64Array(B);
     var before = 0, wins = 0;
@@ -2387,8 +2756,11 @@ footer code {
 
   return {
     H: H, SPEC: SPEC, PRESETS: PRESETS, MEASURED: MEASURED, ASSUMED: ASSUMED,
-    CAL: C, FUNNEL: FUNNEL, ROUTES: ROUTES, TRAITS: TRAITS, MATURITY: MATURITY, DETECTION: DETECTION, compose: compose,
-    defaults: defaults, simulate: simulate, densities: densities,
+    CAL: C, FUNNEL: FUNNEL, ROUTES: ROUTES,
+    EXPOSURE: EXPOSURE, TRAITS: TRAITS, ATTENTION: ATTENTION,
+    MATURITY: MATURITY, DETECTION: DETECTION, compose: compose,
+    DEFAULT_EXPOSURE: DEFAULT_EXPOSURE, DEFAULT_ATTENTION: DEFAULT_ATTENTION,
+    defaults: defaults, simulate: simulate, createRun: createRun, densities: densities,
     RNG: RNG, inverseNormal: inverseNormal,
     clockScale: clockScale, weapMult: weapMult, preMult: preMult,
     fmtN: fmtN, fmtH: fmtH,
@@ -2612,7 +2984,7 @@ footer code {
     });
     n1.textContent = pctS(d.pLate);
     svg.appendChild(n1);
-    txt(svg, bx + 14, by + 48, narrow ? 'EXPLOITED FIRST' : 'OF WEAPONISED VULNS, EXPLOITED FIRST',
+    txt(svg, bx + 14, by + 48, narrow ? 'EXPLOIT CODE FIRST' : 'EXPLOIT CODE BEFORE REMEDIATION',
       { c: pal.mut, fs: 10, ls: '.07em', mono: true });
 
     txt(svg, narrow ? L : R, BOT + (narrow ? 64 : 36),
@@ -2811,7 +3183,10 @@ footer code {
     var rh = 46, h = bands.length * rh + (w < 620 ? 68 : 52);
     frame(svg, w, h);
     var L = narrow ? 66 : 96, R = w - 92, T = 20;
-    var max = Math.max.apply(null, bands.map(function (b) { return b.pExploited; }));
+    /* Floored, like the funnel's and the sweep's. Every bar is a fraction of
+     * this maximum, so an all-zero band set would divide by zero and hand the
+     * renderer width="NaN" rather than an empty chart. */
+    var max = Math.max.apply(null, bands.map(function (b) { return b.pExploited; }).concat([1e-3]));
     var names = { '9.0-10.0': 'Critical', '7.0-8.9': 'High', '4.0-6.9': 'Medium', '0.1-3.9': 'Low' };
     var order = ['9.0-10.0', '7.0-8.9', '4.0-6.9', '0.1-3.9'];
 
@@ -2842,8 +3217,8 @@ footer code {
      * column narrower than about 620px, including the paired-chart row. */
     var fy = T + bands.length * rh + 18;
     var a = 'Critical is only ' + cal.exploitation.criticalVsHigh + '× High, and ' +
-      cal.exploitation.kevBelowCritical.toFixed(0) + '% of';
-    var b2 = 'confirmed-exploited bugs are rated below Critical.';
+      cal.exploitation.kevBelowCritical.toFixed(0) + '% of confirmed-exploited';
+    var b2 = 'vulnerabilities are rated below Critical.';
     if (w < 620) {
       txt(svg, 0, fy, a, { c: pal.txt, fs: 11.5 });
       txt(svg, 0, fy + 16, b2, { c: pal.txt, fs: 11.5 });
@@ -2866,7 +3241,7 @@ footer code {
     var h = 190;
     frame(svg, w, h);
     var L = 4, R = w - 4, T = 26;
-    var max = Math.max.apply(null, rows.map(function (r) { return r.pub; }));
+    var max = Math.max.apply(null, rows.map(function (r) { return r.pub; }).concat([1e-3]));
     txt(svg, L, 12, w < 400 ? 'PUBLISHED CVES · CRITICAL SHARE'
       : 'PUBLISHED CVES AND THE CRITICAL-RATED SHARE',
       { c: pal.mut, fs: 10, ls: '.08em', mono: true });
@@ -2904,8 +3279,19 @@ footer code {
     opts = opts || {};
     var scale = opts.scale || 2;
     var pad = 22, headH = opts.title ? (opts.subtitle ? 62 : 42) : 0, footH = 30;
-    var vb = svg.getAttribute('viewBox').split(/\s+/).map(Number);
+    /* A chart that has never been drawn carries no viewBox, and the Copy and
+     * PNG buttons are live from first paint — so this is reachable any time a
+     * render pass has not run for that chart yet. It must REJECT rather than
+     * throw: the caller attaches .then().catch() to the return value, and a
+     * synchronous throw escapes that chain entirely, so the reader would get
+     * an uncaught TypeError and a button that silently does nothing instead
+     * of the "Could not render PNG" toast. */
+    var vbAttr = svg && svg.getAttribute('viewBox');
+    var vb = vbAttr ? vbAttr.trim().split(/[\s,]+/).map(Number) : [];
     var w = vb[2], h = vb[3];
+    if (!isFinite(w) || !isFinite(h) || w <= 0 || h <= 0) {
+      return Promise.reject(new Error('chart has not been drawn yet'));
+    }
     var W = w + pad * 2, Hh = h + headH + footH + pad * 2;
     /* The header and footer are laid out in the same box as the chart, so a
      * title longer than a narrow chart ran off the image. Estimated from the
@@ -2923,23 +3309,32 @@ footer code {
     clone.setAttribute('x', pad);
     clone.setAttribute('y', pad + headH);
 
+    /* Last-resort chrome colours for a caller that passed none. js/app.js
+     * always supplies these from palette(), so these values do not reach the
+     * page — but an export must still come out legible on its own, and a
+     * literal invented here would be palette drift the moment it ever did
+     * fire. They are therefore the light theme's own --panel / --txt / --mut,
+     * copied as literals because a serialised SVG resolves no custom
+     * properties. Keep them in step with :root in css/app.css. */
+    var bg = opts.bg || '#FFFFFF', fg = opts.fg || '#0A1514', mut = opts.mut || '#536B67';
+
     var outer = document.createElementNS(NS, 'svg');
     outer.setAttribute('xmlns', NS);
     outer.setAttribute('width', W);
     outer.setAttribute('height', Hh);
     outer.setAttribute('viewBox', '0 0 ' + W + ' ' + Hh);
 
-    outer.appendChild(el('rect', { x: 0, y: 0, width: W, height: Hh, fill: opts.bg || '#ffffff' }));
+    outer.appendChild(el('rect', { x: 0, y: 0, width: W, height: Hh, fill: bg }));
     if (opts.title) {
       var t1 = el('text', {
-        x: pad, y: pad + 20, 'font-size': titleSize, 'font-weight': 700, fill: opts.fg || '#111',
+        x: pad, y: pad + 20, 'font-size': titleSize, 'font-weight': 700, fill: fg,
         'font-family': 'ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif',
       });
       t1.textContent = opts.title;
       outer.appendChild(t1);
       if (opts.subtitle) {
         var t2 = el('text', {
-          x: pad, y: pad + 42, 'font-size': subSize, fill: opts.mut || '#667',
+          x: pad, y: pad + 42, 'font-size': subSize, fill: mut,
           'font-family': 'ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif',
         });
         t2.textContent = opts.subtitle;
@@ -2949,7 +3344,7 @@ footer code {
     outer.appendChild(clone);
     if (opts.source) {
       var t3 = el('text', {
-        x: pad, y: Hh - pad + 4, 'font-size': srcSize, fill: opts.mut || '#667',
+        x: pad, y: Hh - pad + 4, 'font-size': srcSize, fill: mut,
         'font-family': 'ui-monospace, SFMono-Regular, Menlo, monospace',
       });
       t3.textContent = opts.source;
@@ -3005,6 +3400,10 @@ footer code {
   /* ── state ─────────────────────────────────────────────────────────────── */
   var P = M.defaults();
   var METRIC = 'p';                 /* 'p' = compromise, 'incident' = incident */
+  /* Four controls, four questions. EXP and ATTN are single-select ladders —
+   * one axis each, so one answer each; ON is the multi-select that carries
+   * everything which composes on top of a rung without contradicting it. */
+  var EXP = M.DEFAULT_EXPOSURE, ATTN = M.DEFAULT_ATTENTION;
   var ON = [], MAT = 'typical', DET = null;   /* ON = selected traits, multi-select */
   var SEED = 1234, SEED_SENS = 7;
   /* N_HEAVY is set by the credible interval, not by the point estimate: the
@@ -3118,10 +3517,19 @@ footer code {
   }
 
   /* ── URL state: only non-default values, so shared links stay short ────── */
+  /* Query values are attacker-supplied strings. A bare `TABLE[key]` truthiness
+   * test passes for every Object.prototype member, so ?det=constructor used to
+   * survive this guard and take down init(). */
+  function owns(table, key) {
+    return typeof key === 'string' && Object.prototype.hasOwnProperty.call(table, key);
+  }
+
   function toURL() {
     var d = M.defaults(), parts = [];
     Object.keys(d).forEach(function (k) { if (P[k] !== d[k]) parts.push(k + '=' + P[k]); });
     if (METRIC !== 'p') parts.push('m=' + METRIC);
+    if (EXP !== M.DEFAULT_EXPOSURE) parts.push('exp=' + EXP);
+    if (ATTN !== M.DEFAULT_ATTENTION) parts.push('attn=' + ATTN);
     if (ON.length) parts.push('traits=' + ON.join(','));
     if (MAT !== 'typical') parts.push('mat=' + MAT);
     if (DET) parts.push('det=' + DET);
@@ -3130,11 +3538,17 @@ footer code {
   }
   function fromURL() {
     var q = new URLSearchParams(location.search), d = M.defaults();
+    /* The trait table lost five entries when the exposure axis became a rung.
+     * A link shared before that carries keys this build no longer knows, and
+     * the filter drops them rather than throwing — the reader gets the rest of
+     * their selection instead of a blank console. */
+    if (owns(M.EXPOSURE, q.get('exp'))) EXP = q.get('exp');
+    if (owns(M.ATTENTION, q.get('attn'))) ATTN = q.get('attn');
     if (q.get('traits')) {
-      ON = q.get('traits').split(',').filter(function (t) { return M.TRAITS[t]; });
+      ON = q.get('traits').split(',').filter(function (t) { return owns(M.TRAITS, t); });
     }
-    if (M.MATURITY[q.get('mat')]) MAT = q.get('mat');
-    if (M.DETECTION[q.get('det')]) DET = q.get('det');
+    if (owns(M.MATURITY, q.get('mat'))) MAT = q.get('mat');
+    if (owns(M.DETECTION, q.get('det'))) DET = q.get('det');
     applyShape();
     Object.keys(d).forEach(function (k) {
       if (!q.has(k)) return;
@@ -3149,9 +3563,15 @@ footer code {
   function pushURL() {
     try { history.replaceState(null, '', toURL()); } catch (e) { /* file:// */ }
   }
-  function spec(k) {
-    return M.SPEC.def.concat(M.SPEC.att).filter(function (s) { return s.k === k; })[0];
-  }
+  /* Every slider, indexed once. `spec()` used to concatenate the two spec
+   * arrays and filter them on each call, and syncAll() concatenated them
+   * again on every trait click; KEYS also gives the parameter signature the
+   * race chart is memoised on a stable order to build from. */
+  var ALL_SPEC = M.SPEC.def.concat(M.SPEC.att);
+  var KEYS = ALL_SPEC.map(function (s) { return s.k; });
+  var SPEC_BY_KEY = {};
+  ALL_SPEC.forEach(function (s) { SPEC_BY_KEY[s.k] = s; });
+  function spec(k) { return SPEC_BY_KEY[k]; }
 
   /* ── controls ──────────────────────────────────────────────────────────── */
   function buildControls(list, basicHost, advHost) {
@@ -3208,7 +3628,7 @@ footer code {
   }
 
   function syncAll() {
-    M.SPEC.def.concat(M.SPEC.att).forEach(function (s) {
+    ALL_SPEC.forEach(function (s) {
       var i = $('i-' + s.k);
       if (i) { i.value = P[s.k]; setVal(s); setFill(i, s); }
     });
@@ -3216,7 +3636,8 @@ footer code {
 
   /* ── shape: traits x maturity x detection posture ─────────────────────── */
   function applyShape() {
-    P = M.compose({ traits: ON, maturity: MAT, detection: DET, ai: P.ai });
+    P = M.compose({ exposure: EXP, traits: ON, attention: ATTN,
+                    maturity: MAT, detection: DET, ai: P.ai });
   }
   /* Which posture does the current detect/coverage pair most resemble? Used to
    * light the right button when traits set those values rather than a click. */
@@ -3237,11 +3658,11 @@ footer code {
     var bits = [
       M.fmtN(P.exposed) + ' exposed systems',
       P.edge + '% appliances',
-      P.stackVulns + ' criticals/yr in your stack',
+      P.stackVulns + ' criticals a year',
       P.cadence + '-day patch cycle',
       P.edrCoverage + '% on telemetry',
     ];
-    if (P.supply >= 0.3) bits.push(P.supply.toFixed(2) + ' supply-chain hits/yr');
+    if (P.supply >= 0.3) bits.push(P.supply.toFixed(2) + ' supply-chain hits a year');
     return bits.join(' · ');
   }
 
@@ -3299,7 +3720,7 @@ footer code {
        * the button's accessible name. The dashed border says the same thing,
        * and says it to sighted readers only. */
       if (meta) btn.appendChild(E('span', 'vh near-note',
-        ' — closest match to your current dwell time and coverage'));
+        ', closest match to your current dwell time and coverage'));
       btn.setAttribute('aria-pressed', String(!!isOn(key)));
       btn.addEventListener('click', function () { onPick(key); });
       host.appendChild(btn);
@@ -3312,7 +3733,8 @@ footer code {
       b2.classList.toggle('on', on);
       b2.setAttribute('aria-pressed', String(on));
     });
-    [['sel-maturity', MAT], ['sel-detection', det]].forEach(function (pair) {
+    [['sel-exposure', EXP], ['sel-attention', ATTN],
+     ['sel-maturity', MAT], ['sel-detection', det]].forEach(function (pair) {
       /* Moving the dwell or coverage slider clears the explicit choice and
        * lights whichever posture the numbers now resemble. Shown identically
        * to a click, that reads as a selection the reader never made — so a
@@ -3325,11 +3747,15 @@ footer code {
         b2.setAttribute('aria-pressed', String(on && !derived));
       });
     });
+    setDesc($('desc-exposure'), M.EXPOSURE[EXP] ? M.EXPOSURE[EXP].d : '');
+    setDesc($('desc-attention'), M.ATTENTION[ATTN] ? M.ATTENTION[ATTN].d : '');
     setDesc($('desc-maturity'), M.MATURITY[MAT] ? M.MATURITY[MAT].d : '');
     renderTraitNotes();
-    setDesc($('desc-profile'), ON.length
-      ? estateSummary()
-      : 'No attributes selected. Generic mid-size estate: ' + estateSummary());
+    /* The estate line is the composed result of all four controls, so it sits
+     * below the last of them rather than under the chips — where it used to
+     * report a total the reader had not finished specifying. There is always a
+     * rung selected now, so it no longer has an empty case to caption. */
+    setDesc($('desc-profile'), estateSummary());
     setDesc($('desc-detection'), M.DETECTION[det] ? M.DETECTION[det].d : '');
   }
   /* The metric toggle is a selected-state control like the chips, so it
@@ -3343,6 +3769,18 @@ footer code {
   }
 
   function buildShapeUI() {
+    /* Exposure first, because it is the page's founding claim and the term
+     * every other control is a correction to: how much of you a stranger can
+     * reach without credentials. Single-select, so the two rungs a reader
+     * might have wanted at once are the two that contradict each other. */
+    buildToggles('sel-exposure', M.EXPOSURE,
+      function (k) { return k === EXP; },
+      function (k) { EXP = k; applyShape(); syncAll(); refreshSelectors(); schedule(); });
+    /* Attention lives on the threat card — it is the one shape control the
+     * reader does not get to choose about themselves. */
+    buildToggles('sel-attention', M.ATTENTION,
+      function (k) { return k === ATTN; },
+      function (k) { ATTN = k; applyShape(); syncAll(); refreshSelectors(); schedule(); });
     buildToggles('sel-profile', M.TRAITS,
       function (k) { return ON.indexOf(k) >= 0; },
       function (k) {
@@ -3368,7 +3806,7 @@ footer code {
 
   /* ── sensitivity ───────────────────────────────────────────────────────── */
   var LEVERS = [
-    { k: 'stackVulns', lo: 8,    hi: 90,  l: 'Vulns in your stack' },
+    { k: 'stackVulns', lo: 8,    hi: 90,  l: 'Criticals in your stack' },
     { k: 'exposed',    lo: 25,   hi: 400, l: 'Exposed systems' },
     { k: 'edge',       lo: 0,    hi: 70,  l: 'Edge appliance share' },
     { k: 'inventory',  lo: 100,  hi: 86,  l: 'Inventory coverage' },
@@ -3395,23 +3833,28 @@ footer code {
     virtual:    ['Front exposed services with enforceable rulesets', 'Recovers the exposure window while the permanent fix is tested. Does not cover appliances.'],
     campaigns:  ['Instrument the edge for enumeration', 'Targeted campaigns are distinguishable from background scanning where telemetry exists.'],
     supply:     ['Verify software provenance and integrity', 'Remediation cadence has no effect on this vector.'],
-    ai:         ['Outside defender control', 'Plan the remediation timeline against it rather than assuming the adversary timeline holds constant.'],
   };
 
-  function over(k, v) { var o = {}; Object.keys(P).forEach(function (x) { o[x] = P[x]; }); o[k] = v; return o; }
+  function copyOf(src) { var o = {}; Object.keys(src).forEach(function (x) { o[x] = src[x]; }); return o; }
+  function over(k, v, base) { var o = copyOf(base || P); o[k] = v; return o; }
   function sim(params, n, seed, wantSurv) {
     return M.simulate(params, n, seed, { surv: !!wantSurv, spread: 1 });
   }
-  function sensitivity() {
-    return LEVERS.map(function (t) {
-      var lo = sim(over(t.k, t.lo), N_SENS, SEED_SENS)[METRIC];
-      var hi = sim(over(t.k, t.hi), N_SENS, SEED_SENS)[METRIC];
-      return { k: t.k, l: t.l, lo: lo, hi: hi, span: Math.abs(hi - lo) };
-    }).sort(function (a, b2) { return b2.span - a.span; });
+  /* One lever, both ends. Each run reseeds from SEED_SENS, so a row does not
+   * depend on which rows were computed before it — which is what lets the
+   * settle pass compute them one per turn without moving a single figure. */
+  function sensitivityRow(t, base) {
+    var lo = sim(over(t.k, t.lo, base), N_SENS, SEED_SENS)[METRIC];
+    var hi = sim(over(t.k, t.hi, base), N_SENS, SEED_SENS)[METRIC];
+    return { k: t.k, l: t.l, lo: lo, hi: hi, span: Math.abs(hi - lo) };
   }
 
   /* ── render ────────────────────────────────────────────────────────────── */
-  var lastHeavy = null, lastSens = null, lastDens = null;
+  var lastRun = null, lastSens = null, lastDens = null;
+  /* The compression the drawn sweep belongs to. Redrawing it against the live
+   * P.ai would move the "current settings" marker off the curve it was
+   * computed for whenever a redraw lands between passes. */
+  var lastSweepAi = 0;
 
   /* The SVG's own laid-out width, not its parent's border box. Measuring the
    * parent included the panel's padding and border, so every chart was drawn
@@ -3502,8 +3945,6 @@ footer code {
     if (r.bandReliable) {
       lastBand.p = '90% band ' + pctS(r.pLo) + ' to ' + pctS(r.pHi);
       lastBand.i = '90% band ' + pctS(r.incLo) + ' to ' + pctS(r.incHi);
-    }
-    if (r.bandReliable) {
       setBand('s-p-band', r.pLo, r.pHi);
       setBand('s-i-band', r.incLo, r.incHi);
     }
@@ -3531,15 +3972,34 @@ footer code {
     $('dock-est').textContent = estateSummary();
   }
 
+  /* densities() seeds its own RNG with a constant, so it is a pure function of
+   * the parameter set — the same estate always produces the same curve. It
+   * costs ~6ms for 30,000 samples, and it was being paid three times over for
+   * one answer: once on the fast pass, again on the heavy pass that follows it
+   * with identical parameters, and again on every theme toggle and every
+   * resize. Keyed on the parameters instead, so it is recomputed exactly when
+   * the curve would actually differ. */
+  var densAt = null;
+  function raceDensities() {
+    var sig = '';
+    for (var i = 0; i < KEYS.length; i++) sig += P[KEYS[i]] + ',';
+    if (!lastDens || densAt !== sig) { lastDens = M.densities(P, 30000); densAt = sig; }
+    return lastDens;
+  }
+
   function drawRace() {
-    var d = M.densities(P, 30000);
-    lastDens = d;
+    var d = raceDensities();
     CH.race($('race'), width('race'), d, palette());
     var n = empty($('race-note'));
     add(n, 'Measured ' + C.pocTiming.latest.year + ' clock: median ',
-      b(CH.fmtDays(d.median)), ' from publication to public exploit code, ',
-      b(pctS(d.beforeFrac)), ' of it ahead of patch availability.');
-    if (P.ai > 0) add(n, ' Compression is at ', b('+' + P.ai), ', scaling that clock by ×' + d.scale.toFixed(2) + '.');
+      b(CH.fmtDays(d.median)), ' from publication to public exploit code.');
+    if (P.ai > 0) {
+      add(n, ' Modelled at ', b('+' + P.ai), ' compression, scaling that clock by ×' +
+        d.scale.toFixed(2) + ': ', b(pctS(d.beforeFrac)),
+        ' of exploits arrive ahead of patch availability.');
+    } else {
+      add(n, ' ', b(pctS(d.beforeFrac)), ' of exploits arrive ahead of patch availability.');
+    }
   }
 
   function drawMain(r) {
@@ -3550,52 +4010,161 @@ footer code {
     CH.survival($('surv'), width('surv'), r, pal);
     updateWild(r);
   }
-  function redrawAll() {
-    if (!lastHeavy) return;
-    var pal = palette();
-    drawMain(lastHeavy);
+  /* Chapters 08 and 09 read the vendored snapshot, never the simulation, so
+   * their only inputs are the palette and the drawn width. They were being
+   * redrawn on every settle regardless — DOM churn for a figure that cannot
+   * have changed. They are drawn once at init and again only when one of
+   * those two inputs actually moves. */
+  function drawEvidence(pal) {
     CH.severity($('severity'), width('severity'), C, pal);
     CH.volume($('volume'), width('volume'), C, pal);
+  }
+  function redrawAll() {
+    var pal = palette();
+    drawEvidence(pal);
+    if (!lastRun) return;
+    drawMain(lastRun);
     if (lastSens) {
       CH.tornado($('torn'), width('torn'), lastSens.rows, lastSens.base, pal);
-      CH.sweep($('sweep'), width('sweep'), lastSens.sweep, P.ai, lastSens.sweepCur, pal);
+      /* Only once the sweep points belong to the same pass as the bars. */
+      if (lastSens.sweep) {
+        CH.sweep($('sweep'), width('sweep'), lastSens.sweep, lastSweepAi, lastSens.sweepCur, pal);
+      }
     }
   }
 
   function fast() {
     var r = sim(P, N_FAST, SEED, true);
-    lastHeavy = r;
+    lastRun = r;
     renderHead(r);
     drawMain(r);
   }
 
+  /* The settle pass is about 380ms of arithmetic on this machine: a 60,000
+   * trial run, then 26 sensitivity runs, then 11 sweep points. Run as one
+   * block it holds the main thread for all of it — scrolling stops, hover
+   * states stick, and the theme button does not answer until it ends.
+   *
+   * It is therefore cut into stages that yield to the browser between them —
+   * six slices of the main run, then the render, then one stage per lever and
+   * one per sweep point, about thirty-four in all. No stage runs more than
+   * 10,000 trials or one lever, which measured 55ms as the longest remaining
+   * block against 260ms for the unsliced pass. Nothing is approximated: the
+   * run carries its own RNG and accumulators (see createRun), and each
+   * sensitivity run reseeds from SEED_SENS independently of the others, so
+   * stage-at-a-time gives bit-identical figures to one straight loop.
+   *
+   * A generation counter rather than a boolean: a pass superseded by fresh
+   * input abandons the stages it has left instead of finishing arithmetic
+   * about an estate the reader has already moved on from. */
+  /* How a stage hands control back. setTimeout(…, 0) is the obvious choice and
+   * the wrong one: a background tab clamps timers to roughly one a second, so
+   * a 26-stage pass that takes 380ms in front of a reader would take 26
+   * SECONDS behind one — measured here, where the sweep chart was still
+   * undrawn seconds after every other chart had settled. A MessageChannel task
+   * is not subject to that clamp. It is still a macrotask, so paint and input
+   * get their turn between stages exactly as they would with a timer. */
+  var yieldChan = null, yieldQueue = [];
+  if (typeof MessageChannel === 'function') {
+    yieldChan = new MessageChannel();
+    yieldChan.port1.onmessage = function () {
+      var fn = yieldQueue.shift();
+      if (fn) fn();
+    };
+  }
+  function yieldTo(fn) {
+    if (!yieldChan) return setTimeout(fn, 0);
+    yieldQueue.push(fn);
+    yieldChan.port2.postMessage(0);
+    return null;
+  }
+
+  /* A queued MessageChannel task cannot be cancelled, so the generation
+   * counter is what actually stops a superseded pass: a stale stage sees a
+   * gen that no longer matches and returns without doing any work. The timer
+   * handle is cleared too, for the fallback path. */
+  var heavyGen = 0, heavyTimer = null;
+  function cancelHeavy() {
+    heavyGen++;
+    if (heavyTimer) { clearTimeout(heavyTimer); heavyTimer = null; }
+  }
+  /* 10,000 trials a slice: ~15ms of the 92ms the full run costs, which keeps
+   * every slice inside the budget a main thread needs to stay responsive to
+   * input. The slicing does not approximate anything — see createRun in
+   * js/model.js: the accumulators and the RNG live in the run, so a sliced
+   * run and a whole one visit the same trials in the same order. */
+  var HEAVY_CHUNK = 10000;
+
   function heavy() {
-    var r = sim(P, N_HEAVY, SEED, true);
-    lastHeavy = r;
-    renderHead(r);
-    drawMain(r);
+    cancelHeavy();
+    var gen = heavyGen;
+
+    /* One coherent estate for the whole pass. Every stage reads this rather
+     * than the live parameters: a control moved mid-pass abandons the pass
+     * outright, so no stage should ever be in a position to answer half about
+     * one estate and half about another. */
+    var snap = copyOf(P);
+    var run = M.createRun(snap, N_HEAVY, SEED, { surv: true, spread: 1 });
+
+    var base = null, rows = [], sweepPts = [];
+    var stages = [];
+    for (var c = 0; c < N_HEAVY; c += HEAVY_CHUNK) {
+      stages.push(function () { run.advance(HEAVY_CHUNK); });
+    }
+    stages.push(function () {
+      var r = run.result();
+      lastRun = r;
+      renderHead(r);
+      drawMain(r);
+      pushURL();
+    });
 
     /* Baseline computed with EXACTLY the seed and trial count the bars use, so
      * a bar can never be offset against a mismatched base. */
-    var base = sim(P, N_SENS, SEED_SENS)[METRIC];
-    var rows = sensitivity();
-    var sweepPts = [];
-    for (var a = 0; a <= 100; a += 10) sweepPts.push([a, sim(over('ai', a), N_SENS, SEED_SENS)[METRIC]]);
-    var sweepCur = sim(over('ai', P.ai), N_SENS, SEED_SENS)[METRIC];
-    lastSens = { base: base, rows: rows, sweep: sweepPts, sweepCur: sweepCur };
+    stages.push(function () { base = sim(snap, N_SENS, SEED_SENS)[METRIC]; });
+    LEVERS.forEach(function (t) {
+      stages.push(function () { rows.push(sensitivityRow(t, snap)); });
+    });
+    stages.push(function () {
+      rows.sort(function (x, y) { return y.span - x.span; });
+      CH.tornado($('torn'), width('torn'), rows, base, palette());
+      renderActions(rows, base);
+      /* Published with the bars, not eleven stages later with the sweep. A
+       * redraw in that gap — a theme toggle, the resize debounce, beforeprint —
+       * read lastSens and repainted the tornado with the PREVIOUS estate's
+       * numbers, over bars that had already been redrawn with these. `sweep`
+       * stays null until its points exist, so the same redraw leaves the sweep
+       * chart alone rather than drawing it from a half-filled array. */
+      lastSens = { base: base, rows: rows, sweep: null, sweepCur: base };
+    });
+    for (var a = 0; a <= 100; a += 10) {
+      (function (ai) {
+        stages.push(function () { sweepPts.push([ai, sim(over('ai', ai, snap), N_SENS, SEED_SENS)[METRIC]]); });
+      })(a);
+    }
+    stages.push(function () {
+      /* `over('ai', snap.ai)` is the snapshot itself, run at the same seed and
+       * trial count as the baseline — so the "current settings" marker IS the
+       * baseline. It was a further 5,000-trial simulation of a number already
+       * in hand. */
+      lastSens = { base: base, rows: rows, sweep: sweepPts, sweepCur: base };
+      CH.sweep($('sweep'), width('sweep'), sweepPts, snap.ai, base, palette());
+      lastSweepAi = snap.ai;
+    });
 
-    var pal = palette();
-    CH.tornado($('torn'), width('torn'), rows, base, pal);
-    CH.sweep($('sweep'), width('sweep'), sweepPts, P.ai, sweepCur, pal);
-    CH.severity($('severity'), width('severity'), C, pal);
-    CH.volume($('volume'), width('volume'), C, pal);
-    renderActions(rows, base);
-    pushURL();
+    var i = 0;
+    var step = function () {
+      heavyTimer = null;
+      if (gen !== heavyGen) return;
+      stages[i++]();
+      if (i < stages.length) heavyTimer = yieldTo(step);
+    };
+    heavyTimer = yieldTo(step);
   }
 
   function updateWild(r) {
     var n = empty($('wild-note'));
-    add(n, 'Of the ', b(num(r.fn[2], 2)), ' weaponised vulnerabilities a year, ', b(num(r.wild, 2)),
+    add(n, 'Of the ', b(num(r.fn[2], 2)), ' vulnerabilities a year that receive public exploit code, ', b(num(r.wild, 2)),
       ' (' + pctS(r.wildShare) + ') are confirmed exploited against live targets. The remainder still attract ' +
       'opportunistic traffic at a fraction of the hazard rate.');
   }
@@ -3688,6 +4257,10 @@ footer code {
      * on the new nodes, once per pass. Drop the flag as soon as the reader
      * touches anything. */
     if (ANIM) document.querySelectorAll('.chart.fresh').forEach(function (c) { c.classList.remove('fresh'); });
+    /* Whatever the last settle had left to compute is about to be answered by
+     * a newer one. Drop it, rather than let it finish and paint a stale chart
+     * over a fresher reading. */
+    cancelHeavy();
     if (raf) cancelAnimationFrame(raf);
     raf = requestAnimationFrame(runFast);
     clearTimeout(fallback);
@@ -3713,13 +4286,13 @@ footer code {
     };
   }
   function subtitleFor(id) {
-    var r = lastHeavy;
+    var r = lastRun;
     if (!r) return '';
-    /* Read the drawn figure, never a fresh sample: a second 8,000-trial pass
+    /* Read the drawn figure, never a fresh sample: a second 4,000-trial pass
      * would put a different percentage in the caption than the one printed
      * inside the image it captions. */
     if (id === 'race') return lastDens
-      ? pctS(lastDens.pLate) + ' of armed bugs have a working exploit before the hole is closed' : '';
+      ? pctS(lastDens.pLate) + ' have public exploit code before remediation completes' : '';
     if (id === 'funnel') return num(r.fn[0]) + ' criticals a year become ' + num(r.fn[5], 2) + ' compromises';
     if (id === 'routes') return 'first compromise of the year, by route';
     if (id === 'surv') return pctS(r.p) + ' chance of compromise within 12 months';
@@ -3791,7 +4364,7 @@ footer code {
     anchorRow(host, 'Criticals published worldwide, ' + C.volume.curYearRunRate.year + ' run-rate', 'measured',
       thou(C.volume.curYearRunRate.critical),
       'CyberMon · cvelistV5, ' + num(C.yearElapsed * 100) + '% of the year elapsed');
-    anchorRow(host, 'Confirmed-exploited vulns added worldwide per year', 'measured',
+    anchorRow(host, 'Confirmed-exploited CVEs added worldwide per year', 'measured',
       C.inWild.kevAddedRunRate + ' (' + C.volume.curYearRunRate.year + ' run-rate)',
       'CyberMon · CISA KEV additions');
     anchorRow(host, 'CVEs NVD has stopped analysing', 'measured',
@@ -3907,12 +4480,12 @@ footer code {
        * 1180px, so picking one meant the other could never light and its
        * contents entry looked broken. aria-current goes on the first, which is
        * the one a reader jumping there would land on. */
-      var live = [];
-      secs.forEach(function (x) { if (seen[x.id] && links[x.id]) live.push(x.id); });
+      var onScreen = [];
+      secs.forEach(function (x) { if (seen[x.id] && links[x.id]) onScreen.push(x.id); });
       Object.keys(links).forEach(function (k) {
-        var on = live.indexOf(k) >= 0;
+        var on = onScreen.indexOf(k) >= 0;
         links[k].classList.toggle('cur', on);
-        if (k === live[0]) links[k].setAttribute('aria-current', 'true');
+        if (k === onScreen[0]) links[k].setAttribute('aria-current', 'true');
         else links[k].removeAttribute('aria-current');
       });
     }, { rootMargin: '-42% 0px -48% 0px' });
@@ -3944,6 +4517,14 @@ footer code {
     });
     $('share-btn').addEventListener('click', function () {
       var url = toURL();
+      /* Stamp the address bar before saying anything about it. The URL is
+       * otherwise only written at the end of a settle, so for the ~280ms after
+       * a control moves it still describes the previous estate — and BOTH
+       * fallback messages below assert that the URL bar carries the link the
+       * reader just asked for. The copied string is always correct, because
+       * toURL() is computed fresh here rather than read off location, so this
+       * is about making the claim true rather than about the link. */
+      pushURL();
       if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(url).then(
           function () { toast('Link copied, including current settings'); },
@@ -3951,6 +4532,13 @@ footer code {
       } else { toast('The URL bar already carries your settings'); }
     });
     $('reset-btn').addEventListener('click', function () {
+      /* Every piece of shape state, not just the ones that existed when this
+       * handler was written. Leaving EXP and ATTN behind did not merely light
+       * a stale rung: toURL() still emitted exp=/attn=, so a link copied after
+       * a reset reproduced the pre-reset estate rather than the baseline the
+       * sender was looking at, and the next selector click re-derived the
+       * sliders from the rung the reader thought they had cleared. */
+      EXP = M.DEFAULT_EXPOSURE; ATTN = M.DEFAULT_ATTENTION;
       ON = []; MAT = 'typical'; DET = null;
       P = M.defaults();
       syncAll();
@@ -4002,20 +4590,44 @@ footer code {
       clearTimeout(resizeT);
       resizeT = setTimeout(redrawAll, 140);
     });
-    var mq = window.matchMedia('(prefers-color-scheme: dark)');
-    if (mq.addEventListener) mq.addEventListener('change', function () {
-      if (!document.documentElement.getAttribute('data-theme')) redrawAll();
-    });
+    /* There was a prefers-color-scheme listener here that redrew the charts
+     * when the OS theme changed and no explicit choice had been made. It could
+     * never fire: index.html ships `<html data-theme="dark">`, so the attribute
+     * it tested for is always present. That is deliberate and documented —
+     * DESIGN.md calls light the definitional baseline and dark the default
+     * experience — so the dead branch goes rather than the markup. The
+     * stylesheet's prefers-color-scheme block stays: it is the Single
+     * Definition Rule, and CI enforces it. */
 
     fast();
+    drawEvidence(palette());
     /* Let the first frame paint and the entry animations commit before the
-     * heavy pass takes the main thread for the better part of a second. An
-     * animation that has already started runs on the compositor and is
-     * unaffected by the block; one that has not simply arrives late, which is
-     * what a reader sees as the page hesitating on load. */
+     * settle pass takes the main thread. An animation that has already started
+     * runs on the compositor and is unaffected; one that has not simply
+     * arrives late, which is what a reader sees as the page hesitating on
+     * load.
+     *
+     * The two frames are an optimisation and MUST NOT be the only route in.
+     * requestAnimationFrame does not fire at all in a background tab, an
+     * embedded pane, or a power-saving mode, and some of those still report
+     * visibilityState "visible". Measured in one such pane: rAF never ran, so
+     * the sensitivity, sweep, severity and volume charts were never drawn at
+     * all, the prioritised-actions list stayed empty, the credible bands never
+     * appeared, and the page sat on its 4,000-trial estimate indefinitely —
+     * every one of those a permanent blank rather than a late arrival. The
+     * scheduler and the stat tween both carry a timer backstop for exactly
+     * this reason; the first pass, which is the one every reader gets, had
+     * none. Whichever route arrives first runs, and `once` retires the other. */
+    var started = false;
+    var startHeavy = function () {
+      if (started) return;
+      started = true;
+      heavy();
+    };
     requestAnimationFrame(function () {
-      requestAnimationFrame(function () { setTimeout(heavy, 60); });
+      requestAnimationFrame(function () { setTimeout(startHeavy, 60); });
     });
+    setTimeout(startHeavy, 400);
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);

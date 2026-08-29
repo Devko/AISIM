@@ -15,6 +15,17 @@ jobs:
         with:
           node-version: '20'
 
+      # js/app.js and js/charts.js are browser-only: nothing in the test suite
+      # requires them, so until this step existed a syntax error in either one
+      # passed every gate and shipped to the published page. `node --check`
+      # parses without executing, which is the only way to gate a file that
+      # needs a DOM. Cheapest failure in the pipeline, so it runs first.
+      - name: Verify every script parses
+        run: |
+          for f in js/*.js tools/*.js test/*.js; do
+            node --check "$f" || { echo "::error file=$f::$f does not parse"; exit 1; }
+          done
+
       - name: Run the model test suite
         run: node test/model.test.js
 

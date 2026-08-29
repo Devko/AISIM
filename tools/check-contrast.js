@@ -113,13 +113,15 @@ for (const [themeName, tokens] of [['light', light], ['dark', Object.assign({}, 
       }
     }
   }
-  /* The one reversed pair in the system: a selected control and ::selection
-   * both put --ink on --def. */
-  const sel = ratio(tokens.ink, tokens.def);
-  rows.push([themeName, '--ink', 'on --def', sel.toFixed(2), sel >= TEXT_MIN ? 'ok' : 'FAIL']);
-  if (sel < TEXT_MIN) {
-    fails.push(themeName + ': --ink on --def is ' + sel.toFixed(2) + ':1, under ' + TEXT_MIN + ':1');
-  }
+  /* No reversed-pair check here, deliberately. ::selection and `button.on`
+   * paint --ink ON an accent — the opposite direction to the loop above, which
+   * sets each accent on a surface. It is tempting to add rows for it, and one
+   * was added and then removed: WCAG contrast is symmetric, and ratio() sorts
+   * its two luminances, so ratio(ink, def) is the SAME NUMBER as ratio(def,
+   * ink), which the TEXT x SURFACES loop already asserts against the same
+   * floor. Rows for it would restate a passing assertion and inflate the pair
+   * count while adding no coverage. The reversed usage is certified by the
+   * forward check; there is nothing further to compute. */
 }
 
 const w = [0, 1, 2, 3].map((i) => Math.max.apply(null, rows.map((r) => r[i].length)));
