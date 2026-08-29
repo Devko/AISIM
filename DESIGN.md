@@ -318,7 +318,11 @@ at 1.55:1, which meant the only thing identifying a button was invisible.
 already carries the boundary.
 
 No formal WCAG level is claimed — `PRODUCT.md` leaves that an open decision —
-but the numbers above are the floor a change must not regress.
+but the numbers above are the floor a change must not regress, and
+`tools/check-contrast.js` enforces them in CI alongside the calibration and
+dist-freshness gates. It also enforces the Single Definition Rule directly: the
+two dark blocks must carry identical values, and no token may be defined only
+in one of them.
 
 ### Named Rules
 

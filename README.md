@@ -203,11 +203,13 @@ data/cybermon/*.json       vendored snapshot, so the page is reproducible offlin
 test/model.test.js         96 assertions
 tools/refresh-data.js      re-pull the snapshot
 tools/derive-calibration.js  snapshot -> js/calibration.js
+tools/check-contrast.js    palette -> contrast floor, both themes
 tools/build.js             inline everything -> dist/exposure-race.html
 ```
 
 ```bash
 node test/model.test.js                                  # verify the model
+node tools/check-contrast.js                             # verify the palette
 node tools/refresh-data.js && node tools/derive-calibration.js   # update the data
 node tools/build.js                                      # single-file build
 ```

@@ -18,6 +18,14 @@ jobs:
       - name: Run the model test suite
         run: node test/model.test.js
 
+      # DESIGN.md quotes contrast ratios and calls them the floor a change must
+      # not regress. A number in a design document rots the first time somebody
+      # nudges a hex, so the arithmetic runs here instead of being asserted
+      # there. It also enforces that dark is defined identically in both dark
+      # blocks and that no colour is defined only in one of them.
+      - name: Verify the palette still clears its stated contrast floor
+        run: node tools/check-contrast.js
+
       # The calibration module is generated from the vendored snapshot. If it
       # drifts from the data it claims to describe, the page is quoting numbers
       # that are not in the corpus any more — so fail the build.
