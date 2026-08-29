@@ -1,5 +1,6 @@
 # Local tooling
 .claude/
+.impeccable/
 node_modules/
 
 # Reference material — CISA pages saved locally while building the model.
