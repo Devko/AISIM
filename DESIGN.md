@@ -74,6 +74,21 @@ typography:
     fontSize: "11.5px"
     fontWeight: 400
     lineHeight: 1.45
+  caption-xs:
+    fontFamily: "IBM Plex Sans, ui-sans-serif, system-ui, sans-serif"
+    fontSize: "11px"
+    fontWeight: 400
+    lineHeight: 1.45
+  preset:
+    fontFamily: "IBM Plex Sans, ui-sans-serif, system-ui, sans-serif"
+    fontSize: "11.5px"
+    fontWeight: 400
+    lineHeight: 1.3
+  toc:
+    fontFamily: "IBM Plex Sans, ui-sans-serif, system-ui, sans-serif"
+    fontSize: "12.5px"
+    fontWeight: 400
+    lineHeight: 1.4
   label:
     fontFamily: "IBM Plex Mono, ui-monospace, SFMono-Regular, Menlo, monospace"
     fontSize: "10.5px"
@@ -361,7 +376,8 @@ OS.
 **Display Font:** Newsreader (with `ui-serif`, Georgia, Times New Roman)
 **Body Font:** IBM Plex Sans (with `ui-sans-serif`, `system-ui`, `-apple-system`)
 **Readout / Label Font:** IBM Plex Mono (with `ui-monospace`, SFMono-Regular, Menlo)
-**Chart Font:** system stack only — deliberately no webfont
+**Chart Font:** system stack only, and set in `js/charts.js` rather than in the
+stylesheet — see The PNG Rule
 
 **Character:** A text serif with real editorial authority at 500, paired with
 the most institutionally neutral technical superfamily available. Plex Sans and
@@ -410,11 +426,17 @@ and `tools/check-contrast.js` enforces — and under a floor a token-level check
 cannot see, because the token is fine and the alpha is not. Chart text is
 de-emphasised by choosing a quieter token, never by fading a loud one.
 
-**The PNG Rule.** Chart text uses `--chart` — a pure system stack — never a
-webfont, and every `<text>` node carries its font-family as an *attribute*.
-Charts export to PNG by serialising to a standalone SVG where no stylesheet
-applies, so a label without an explicit family rasterises in the renderer's
-default serif.
+**The PNG Rule.** Chart text is a pure system stack, never a webfont, and every
+`<text>` node carries its font-family as an *attribute* — set from the `SANS`
+and `MONO` constants at the top of `js/charts.js`. Charts export to PNG by
+serialising to a standalone SVG where no stylesheet applies, so a label without
+an explicit family rasterises in the renderer's default serif. There is
+deliberately no `.chart text` rule in the stylesheet: it would win on screen and
+lose in the export, which is exactly what it did — every mono chart label
+rendered in the sans stack on the page and in the mono stack in the image it was
+supposed to match. The one hard-coded colour in the system lives in the same
+place and for the same reason: `toPNG`'s three fallbacks, used only by a caller
+that passes no palette at all.
 
 **The Long Label Rule.** Uppercase with wide tracking is a device for labels of
 two or three words. The readout labels are 40-character sentences, and caps
@@ -451,6 +473,8 @@ Breakpoints, each with a specific job rather than a device name:
 
 - **1040px** — grid collapses to one column and the stat bank moves *ahead* of
   the controls.
+- **420px** — the page gutter tightens from 24px to 16px, which is what keeps
+  the chapter toolbar on the row at 320px.
 - **1040–700px** — the rail stops being a rail and would otherwise inherit the
   whole page width, so the console splits into two columns: the environment
   card down the left, the threat card and the contents stacked beside it. Left
@@ -499,10 +523,10 @@ changes a chart's container changes its drawing width exactly, with no slack.
 
 ## Elevation & Depth
 
-Depth marks **material, not importance**. There are exactly two raised surfaces
-on the page — the two control cards and the readout bank — and they are raised
-because they are the instrument. Everything in the results column sits directly
-on the ground.
+Depth marks **material, not importance**. Three surfaces are raised — the two
+control cards, the readout bank, and the docked readout, which is the bank in
+another position — and they are raised because they are the instrument.
+Everything in the results column sits directly on the ground.
 
 Within that, depth is **asymmetric by design**. In light, `--shadow` is a
 two-layer lift: a 1px contact shadow plus a wide, heavily-negative-spread
@@ -534,10 +558,10 @@ by colour and border alone.
 ## Shapes
 
 A radius ladder scaled to element size: 2px on the trait chip's checkbox
-marker, 3px on focus rings and segment hints, 4px on provenance tags and legend
-swatches, 5px on the rail's scrollbar thumb, 7px on buttons, 9px on the toast,
-14px on the two card types and the readout bank. The only full radius in the
-system is the range thumb.
+marker, the legend swatches and the interval rail, 3px on focus rings and
+segment hints, 4px on provenance tags, 5px on the rail's scrollbar thumb, 7px
+on buttons, 9px on the toast, 14px on the two card types and the readout bank.
+The only full radius in the system is the range thumb.
 
 **The results column has no radius at all.** Chapters are ruled, not boxed.
 
@@ -552,8 +576,12 @@ declaration rather than two.
 
 ### Named Rules
 
-**The Hairline Rule.** Every border in the system is 1px. Weight is expressed by
-choosing `--rule` or `--rule2`, never by thickening the stroke.
+**The Hairline Rule.** Every border that separates content is 1px. Weight is
+expressed by choosing `--rule` or `--rule2`, never by thickening the stroke. Two
+borders are not separators and are exempt: the range thumb's 2px `--panel` ring,
+which punches the thumb out of the track it sits on, and the rail scrollbar
+thumb's 3px `--ink` border, which is inset padding drawn as a border because
+that is the only way to inset a scrollbar thumb.
 
 ## Components
 
@@ -713,7 +741,7 @@ that class absent, so no content depends on an animation having run.
 | What | Trigger | Property | Duration |
 |---|---|---|---|
 | Chapter reveal | IntersectionObserver, once per element | opacity + 10px rise | 500ms |
-| Chart interiors | first time a chapter enters view | bars scale from `scaleX(0)`, lines and areas fade, 45ms stagger | 500ms |
+| Chart interiors | first time a chapter enters view | bars scale from `scaleX(0)` with a 45ms stagger; lines, areas and markers fade after a 100ms delay | 500ms bars, 550ms fades |
 | Readout settle | a discrete change, never a held control | the numeral counts to its new value | 320ms |
 | Interval rail | a pass whose band is reliable | the band's two edges | 300ms |
 | Dock | the readout bank leaves the viewport | `translateY` | 260ms |

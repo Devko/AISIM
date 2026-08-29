@@ -34,8 +34,6 @@
   --disp: 'Newsreader', ui-serif, Georgia, 'Times New Roman', serif;
   --body: 'IBM Plex Sans', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
-  /* charts render into PNG, so their type must not depend on a webfont */
-  --chart: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
 
   --ease: cubic-bezier(.22, .61, .36, 1);
 }
@@ -178,16 +176,22 @@ h1 em { font-style: italic; color: var(--att); }
 .dock-in {
   display: flex; align-items: baseline; gap: 14px;
   padding-top: 10px; padding-bottom: 10px;
+  /* One line or nothing: wrapped, it broke "90% band 21% to 34%" across two
+   * rows and doubled the height the sticky rail has to clear. */
+  flex-wrap: nowrap; overflow: hidden;
 }
 .dock-k {
   font-family: var(--mono); font-size: 10px; letter-spacing: .13em;
-  text-transform: uppercase; color: var(--mut);
+  text-transform: uppercase; color: var(--mut); white-space: nowrap;
 }
 .dock-v {
   font-family: var(--mono); font-size: 19px; font-weight: 600; color: var(--bad);
   font-variant-numeric: tabular-nums; letter-spacing: -.02em;
 }
-.dock-ci { font-family: var(--mono); font-size: 11px; color: var(--mut); }
+.dock-ci {
+  font-family: var(--mono); font-size: 11px; color: var(--mut);
+  white-space: nowrap;
+}
 .dock-est {
   font-size: 11.5px; color: var(--dim); margin-left: auto;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
@@ -242,8 +246,13 @@ button.ghost { background: transparent; }
   transition: top .26s var(--ease), max-height .26s var(--ease);
 }
 /* The docked readout is fixed to the top of the viewport, so the sticky rail
- * has to step down out from under it rather than scroll behind it. */
-.dock.up ~ .grid .rail { top: 74px; max-height: calc(100vh - 90px); }
+ * has to step down out from under it rather than scroll behind it. Scoped to
+ * the two-column grid: below 1041px the rail is static and full-height, and
+ * clamping it there cut the control cards off at the viewport and painted the
+ * remainder straight over the results column. */
+@media (min-width: 1041px) {
+  .dock.up ~ .grid .rail { top: 74px; max-height: calc(100vh - 90px); }
+}
 @media (max-width: 1040px) { .rail { position: static; max-height: none; overflow: visible; } }
 /* Once the rail stops being a rail it inherits the whole page width, which
  * gave a 20-character chip 730px to sit in and stretched a slider to 1,470px
@@ -321,7 +330,7 @@ button.ghost { background: transparent; }
  * pushing the chapter wider than the page. */
 .tools {
   display: flex; gap: 6px; flex-shrink: 0; align-items: flex-start;
-  flex-wrap: wrap; max-width: 100%;
+  flex-wrap: wrap; max-width: 100%; margin-bottom: 4px;
 }
 
 /* ── controls ───────────────────────────────────────────────────────────── */
@@ -468,6 +477,10 @@ details.more[open] > div { animation: rise .28s var(--ease) both; }
 .stat {
   padding: 16px 18px 17px; border-left: 1px solid var(--rule);
   display: flex; flex-direction: column;
+  /* Without this a cell cannot shrink below the min-content width of its own
+   * label, so the two supporting cells stopped being equal once the bank got
+   * tight and the divider between the pair and the counts drifted off centre. */
+  min-width: 0;
 }
 .stat:first-child { border-left: 0; }
 @media (max-width: 1040px) { .stats { grid-template-columns: repeat(4, 1fr); } }
@@ -521,7 +534,12 @@ details.more[open] > div { animation: rise .28s var(--ease) both; }
 
 /* ── chart frames ───────────────────────────────────────────────────────── */
 .chart { width: 100%; display: block; }
-.chart text { font-family: var(--chart); }
+/* No font-family rule here on purpose. js/charts.js sets the family as an
+ * attribute on every <text> node, because a chart is rasterised for PNG export
+ * inside an <img> where no stylesheet applies. A CSS rule would win on screen
+ * and lose in the export — which is exactly what happened: every mono chart
+ * label rendered in the sans stack on the page and in the mono stack in the
+ * image it was supposed to match. */
 .two { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
 /* Two ranges, not one, because the width that matters is the results column
  * rather than the viewport. Between 1041 and 1180 the rail is still taking
@@ -531,6 +549,7 @@ details.more[open] > div { animation: rise .28s var(--ease) both; }
 @media (max-width: 940px), (min-width: 1041px) and (max-width: 1180px) {
   .two { grid-template-columns: 1fr; }
 }
+.two { margin-bottom: 42px; }
 .two .panel { margin-bottom: 0; }
 
 .legend {
@@ -542,8 +561,8 @@ details.more[open] > div { animation: rise .28s var(--ease) both; }
   display: block; font-family: var(--mono); font-size: 10px;
   color: var(--dim); letter-spacing: .04em; margin-top: 3px;
 }
-.presets button.on .mtr { color: var(--ink); opacity: .8; }
-.presets button.near .mtr { color: var(--def); opacity: .8; }
+.presets button.on .mtr { color: var(--ink); }
+.presets button.near .mtr { color: var(--def); }
 
 /* The description under each selector group changes length as the reader
  * picks, and without a floor the whole rail below it jumps on every click. */

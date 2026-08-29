@@ -76,8 +76,14 @@
      * labels, the band name, then the scale caption. They get reserved slots
      * (BOT+18 / +36 / +50) rather than hand-tuned offsets, because two labels
      * anchored to the same edge will always eventually collide. */
-    var h = narrow ? 348 : 396;
-    var L = 46, R = w - 14, T = narrow ? 44 : 38, BOT = h - 62, MID = Math.round(T + (BOT - T) * 0.52);
+    /* The narrow gutter carries one more row than the wide one: the
+     * pre-disclosure readout cannot share a line with the band name at phone
+     * width, so it drops beneath the cumulative caption. */
+    var h = narrow ? 362 : 396;
+    /* BOT is measured back from the bottom, so a fourth caption row has to
+     * come out of the gutter rather than be added past the edge. */
+    var L = 46, R = w - 14, T = narrow ? 44 : 38;
+    var BOT = h - (narrow ? 76 : 62), MID = Math.round(T + (BOT - T) * 0.52);
     frame(svg, w, h);
 
     var defs = el('defs');
@@ -190,13 +196,18 @@
     /* headline badge */
     var bw = narrow ? 152 : 272, bh = 60, bx = R - bw - 2, by = T + 4;
     svg.appendChild(el('rect', { x: bx, y: by, width: bw, height: bh, rx: 8, fill: pal.sunk, stroke: pal.rule }));
-    var n1 = el('text', { x: bx + 14, y: by + 32, 'font-size': 28, fill: pal.bad, 'font-weight': 800 });
+    var n1 = el('text', {
+      x: bx + 14, y: by + 32, 'font-size': 28, fill: pal.bad, 'font-weight': 800,
+      'font-family': SANS,
+    });
     n1.textContent = pctS(d.pLate);
     svg.appendChild(n1);
     txt(svg, bx + 14, by + 48, narrow ? 'EXPLOITED FIRST' : 'OF WEAPONISED VULNS, EXPLOITED FIRST',
       { c: pal.mut, fs: 10, ls: '.07em', mono: true });
 
-    txt(svg, R, BOT + 36, pctS(d.beforeFrac) + ' precede disclosure', { a: 'end', c: pal.mut, fs: 10.5 });
+    txt(svg, narrow ? L : R, BOT + (narrow ? 64 : 36),
+      pctS(d.beforeFrac) + ' precede disclosure',
+      { a: narrow ? 'start' : 'end', c: pal.mut, fs: 10.5 });
     return svg;
   }
 
@@ -229,8 +240,11 @@
 
       if (i) {
         var drop = r.fn[i - 1] > 0 ? (1 - v / r.fn[i - 1]) * 100 : 0;
-        var dx = narrow ? R : L - 12;
-        txt(svg, dx, narrow ? y - 4 : y + 1, '−' + drop.toFixed(0) + '%', { a: 'end', c: pal.dim, fs: 10, mono: true });
+        /* Narrow puts the label above the bar, so the delta goes below it
+         * rather than sharing the label's line — six of these labels are long
+         * enough to reach the right edge at phone width. */
+        txt(svg, narrow ? R : L - 12, narrow ? barY + 32 : y + 1,
+          '−' + drop.toFixed(0) + '%', { a: 'end', c: pal.dim, fs: 10, mono: true });
       }
     });
     txt(svg, L, T + labels.length * rh + (narrow ? 26 : 16), 'per simulated year, bar width square-root scaled', { c: pal.dim, fs: 10 });
@@ -341,7 +355,10 @@
     var fy = T + rows.length * rh + 16;
     txt(svg, CX - 8, fy, '← better', { a: 'end', c: pal.def, fs: 10 });
     txt(svg, CX + 8, fy, 'worse →', { c: pal.att, fs: 10 });
-    txt(svg, CX, T - 10, 'baseline ' + pctS(base), { a: 'middle', c: pal.mut, fs: 10, mono: true });
+    /* Centred, the caption lands on the first row's label once the labels move
+     * to the left edge in the narrow branch. */
+    txt(svg, narrow ? w - 2 : CX, T - 10, 'baseline ' + pctS(base),
+      { a: narrow ? 'end' : 'middle', c: pal.mut, fs: 10, mono: true });
     return svg;
   }
 
@@ -480,6 +497,17 @@
     var vb = svg.getAttribute('viewBox').split(/\s+/).map(Number);
     var w = vb[2], h = vb[3];
     var W = w + pad * 2, Hh = h + headH + footH + pad * 2;
+    /* The header and footer are laid out in the same box as the chart, so a
+     * title longer than a narrow chart ran off the image. Estimated from the
+     * glyph widths of the two stacks rather than measured, because measuring
+     * needs a layout pass the export path does not have. */
+    var fit = function (str, size, factor) {
+      var want = String(str).length * size * factor;
+      return want > W - pad * 2 ? Math.max(9, size * (W - pad * 2) / want) : size;
+    };
+    var titleSize = opts.title ? fit(opts.title, 19, 0.55) : 19;
+    var subSize = opts.subtitle ? fit(opts.subtitle, 12.5, 0.52) : 12.5;
+    var srcSize = opts.source ? fit(opts.source, 11, 0.60) : 11;
 
     var clone = svg.cloneNode(true);
     clone.setAttribute('x', pad);
@@ -494,14 +522,14 @@
     outer.appendChild(el('rect', { x: 0, y: 0, width: W, height: Hh, fill: opts.bg || '#ffffff' }));
     if (opts.title) {
       var t1 = el('text', {
-        x: pad, y: pad + 20, 'font-size': 19, 'font-weight': 700, fill: opts.fg || '#111',
+        x: pad, y: pad + 20, 'font-size': titleSize, 'font-weight': 700, fill: opts.fg || '#111',
         'font-family': 'ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif',
       });
       t1.textContent = opts.title;
       outer.appendChild(t1);
       if (opts.subtitle) {
         var t2 = el('text', {
-          x: pad, y: pad + 42, 'font-size': 12.5, fill: opts.mut || '#667',
+          x: pad, y: pad + 42, 'font-size': subSize, fill: opts.mut || '#667',
           'font-family': 'ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif',
         });
         t2.textContent = opts.subtitle;
@@ -511,7 +539,7 @@
     outer.appendChild(clone);
     if (opts.source) {
       var t3 = el('text', {
-        x: pad, y: Hh - pad + 4, 'font-size': 11, fill: opts.mut || '#667',
+        x: pad, y: Hh - pad + 4, 'font-size': srcSize, fill: opts.mut || '#667',
         'font-family': 'ui-monospace, SFMono-Regular, Menlo, monospace',
       });
       t3.textContent = opts.source;

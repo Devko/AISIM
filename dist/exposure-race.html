@@ -49,8 +49,6 @@
   --disp: 'Newsreader', ui-serif, Georgia, 'Times New Roman', serif;
   --body: 'IBM Plex Sans', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
-  /* charts render into PNG, so their type must not depend on a webfont */
-  --chart: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
 
   --ease: cubic-bezier(.22, .61, .36, 1);
 }
@@ -193,16 +191,22 @@ h1 em { font-style: italic; color: var(--att); }
 .dock-in {
   display: flex; align-items: baseline; gap: 14px;
   padding-top: 10px; padding-bottom: 10px;
+  /* One line or nothing: wrapped, it broke "90% band 21% to 34%" across two
+   * rows and doubled the height the sticky rail has to clear. */
+  flex-wrap: nowrap; overflow: hidden;
 }
 .dock-k {
   font-family: var(--mono); font-size: 10px; letter-spacing: .13em;
-  text-transform: uppercase; color: var(--mut);
+  text-transform: uppercase; color: var(--mut); white-space: nowrap;
 }
 .dock-v {
   font-family: var(--mono); font-size: 19px; font-weight: 600; color: var(--bad);
   font-variant-numeric: tabular-nums; letter-spacing: -.02em;
 }
-.dock-ci { font-family: var(--mono); font-size: 11px; color: var(--mut); }
+.dock-ci {
+  font-family: var(--mono); font-size: 11px; color: var(--mut);
+  white-space: nowrap;
+}
 .dock-est {
   font-size: 11.5px; color: var(--dim); margin-left: auto;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
@@ -257,8 +261,13 @@ button.ghost { background: transparent; }
   transition: top .26s var(--ease), max-height .26s var(--ease);
 }
 /* The docked readout is fixed to the top of the viewport, so the sticky rail
- * has to step down out from under it rather than scroll behind it. */
-.dock.up ~ .grid .rail { top: 74px; max-height: calc(100vh - 90px); }
+ * has to step down out from under it rather than scroll behind it. Scoped to
+ * the two-column grid: below 1041px the rail is static and full-height, and
+ * clamping it there cut the control cards off at the viewport and painted the
+ * remainder straight over the results column. */
+@media (min-width: 1041px) {
+  .dock.up ~ .grid .rail { top: 74px; max-height: calc(100vh - 90px); }
+}
 @media (max-width: 1040px) { .rail { position: static; max-height: none; overflow: visible; } }
 /* Once the rail stops being a rail it inherits the whole page width, which
  * gave a 20-character chip 730px to sit in and stretched a slider to 1,470px
@@ -336,7 +345,7 @@ button.ghost { background: transparent; }
  * pushing the chapter wider than the page. */
 .tools {
   display: flex; gap: 6px; flex-shrink: 0; align-items: flex-start;
-  flex-wrap: wrap; max-width: 100%;
+  flex-wrap: wrap; max-width: 100%; margin-bottom: 4px;
 }
 
 /* ── controls ───────────────────────────────────────────────────────────── */
@@ -483,6 +492,10 @@ details.more[open] > div { animation: rise .28s var(--ease) both; }
 .stat {
   padding: 16px 18px 17px; border-left: 1px solid var(--rule);
   display: flex; flex-direction: column;
+  /* Without this a cell cannot shrink below the min-content width of its own
+   * label, so the two supporting cells stopped being equal once the bank got
+   * tight and the divider between the pair and the counts drifted off centre. */
+  min-width: 0;
 }
 .stat:first-child { border-left: 0; }
 @media (max-width: 1040px) { .stats { grid-template-columns: repeat(4, 1fr); } }
@@ -536,7 +549,12 @@ details.more[open] > div { animation: rise .28s var(--ease) both; }
 
 /* ── chart frames ───────────────────────────────────────────────────────── */
 .chart { width: 100%; display: block; }
-.chart text { font-family: var(--chart); }
+/* No font-family rule here on purpose. js/charts.js sets the family as an
+ * attribute on every <text> node, because a chart is rasterised for PNG export
+ * inside an <img> where no stylesheet applies. A CSS rule would win on screen
+ * and lose in the export — which is exactly what happened: every mono chart
+ * label rendered in the sans stack on the page and in the mono stack in the
+ * image it was supposed to match. */
 .two { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
 /* Two ranges, not one, because the width that matters is the results column
  * rather than the viewport. Between 1041 and 1180 the rail is still taking
@@ -546,6 +564,7 @@ details.more[open] > div { animation: rise .28s var(--ease) both; }
 @media (max-width: 940px), (min-width: 1041px) and (max-width: 1180px) {
   .two { grid-template-columns: 1fr; }
 }
+.two { margin-bottom: 42px; }
 .two .panel { margin-bottom: 0; }
 
 .legend {
@@ -557,8 +576,8 @@ details.more[open] > div { animation: rise .28s var(--ease) both; }
   display: block; font-family: var(--mono); font-size: 10px;
   color: var(--dim); letter-spacing: .04em; margin-top: 3px;
 }
-.presets button.on .mtr { color: var(--ink); opacity: .8; }
-.presets button.near .mtr { color: var(--def); opacity: .8; }
+.presets button.on .mtr { color: var(--ink); }
+.presets button.near .mtr { color: var(--def); }
 
 /* The description under each selector group changes length as the reader
  * picks, and without a floor the whole rail below it jumps on every click. */
@@ -1109,7 +1128,8 @@ footer code {
     <footer>
       <div class="fnote">
         <div class="seg-l">Method</div>
-        <p>14,000 simulated years per parameter change. The adversary timeline is
+        <p>60,000 simulated years across 150 blocks per parameter change, with a
+        4,000-year pass while a control is moving. The adversary timeline is
         sampled from the measured distribution of days between CVE publication and public exploit
         code. The remediation timeline is derived from triage delay, out-of-band capability and
         routine cadence. Compromise is modelled as a correlated campaign arrival rather than as
@@ -2418,8 +2438,14 @@ footer code {
      * labels, the band name, then the scale caption. They get reserved slots
      * (BOT+18 / +36 / +50) rather than hand-tuned offsets, because two labels
      * anchored to the same edge will always eventually collide. */
-    var h = narrow ? 348 : 396;
-    var L = 46, R = w - 14, T = narrow ? 44 : 38, BOT = h - 62, MID = Math.round(T + (BOT - T) * 0.52);
+    /* The narrow gutter carries one more row than the wide one: the
+     * pre-disclosure readout cannot share a line with the band name at phone
+     * width, so it drops beneath the cumulative caption. */
+    var h = narrow ? 362 : 396;
+    /* BOT is measured back from the bottom, so a fourth caption row has to
+     * come out of the gutter rather than be added past the edge. */
+    var L = 46, R = w - 14, T = narrow ? 44 : 38;
+    var BOT = h - (narrow ? 76 : 62), MID = Math.round(T + (BOT - T) * 0.52);
     frame(svg, w, h);
 
     var defs = el('defs');
@@ -2532,13 +2558,18 @@ footer code {
     /* headline badge */
     var bw = narrow ? 152 : 272, bh = 60, bx = R - bw - 2, by = T + 4;
     svg.appendChild(el('rect', { x: bx, y: by, width: bw, height: bh, rx: 8, fill: pal.sunk, stroke: pal.rule }));
-    var n1 = el('text', { x: bx + 14, y: by + 32, 'font-size': 28, fill: pal.bad, 'font-weight': 800 });
+    var n1 = el('text', {
+      x: bx + 14, y: by + 32, 'font-size': 28, fill: pal.bad, 'font-weight': 800,
+      'font-family': SANS,
+    });
     n1.textContent = pctS(d.pLate);
     svg.appendChild(n1);
     txt(svg, bx + 14, by + 48, narrow ? 'EXPLOITED FIRST' : 'OF WEAPONISED VULNS, EXPLOITED FIRST',
       { c: pal.mut, fs: 10, ls: '.07em', mono: true });
 
-    txt(svg, R, BOT + 36, pctS(d.beforeFrac) + ' precede disclosure', { a: 'end', c: pal.mut, fs: 10.5 });
+    txt(svg, narrow ? L : R, BOT + (narrow ? 64 : 36),
+      pctS(d.beforeFrac) + ' precede disclosure',
+      { a: narrow ? 'start' : 'end', c: pal.mut, fs: 10.5 });
     return svg;
   }
 
@@ -2571,8 +2602,11 @@ footer code {
 
       if (i) {
         var drop = r.fn[i - 1] > 0 ? (1 - v / r.fn[i - 1]) * 100 : 0;
-        var dx = narrow ? R : L - 12;
-        txt(svg, dx, narrow ? y - 4 : y + 1, '−' + drop.toFixed(0) + '%', { a: 'end', c: pal.dim, fs: 10, mono: true });
+        /* Narrow puts the label above the bar, so the delta goes below it
+         * rather than sharing the label's line — six of these labels are long
+         * enough to reach the right edge at phone width. */
+        txt(svg, narrow ? R : L - 12, narrow ? barY + 32 : y + 1,
+          '−' + drop.toFixed(0) + '%', { a: 'end', c: pal.dim, fs: 10, mono: true });
       }
     });
     txt(svg, L, T + labels.length * rh + (narrow ? 26 : 16), 'per simulated year, bar width square-root scaled', { c: pal.dim, fs: 10 });
@@ -2683,7 +2717,10 @@ footer code {
     var fy = T + rows.length * rh + 16;
     txt(svg, CX - 8, fy, '← better', { a: 'end', c: pal.def, fs: 10 });
     txt(svg, CX + 8, fy, 'worse →', { c: pal.att, fs: 10 });
-    txt(svg, CX, T - 10, 'baseline ' + pctS(base), { a: 'middle', c: pal.mut, fs: 10, mono: true });
+    /* Centred, the caption lands on the first row's label once the labels move
+     * to the left edge in the narrow branch. */
+    txt(svg, narrow ? w - 2 : CX, T - 10, 'baseline ' + pctS(base),
+      { a: narrow ? 'end' : 'middle', c: pal.mut, fs: 10, mono: true });
     return svg;
   }
 
@@ -2822,6 +2859,17 @@ footer code {
     var vb = svg.getAttribute('viewBox').split(/\s+/).map(Number);
     var w = vb[2], h = vb[3];
     var W = w + pad * 2, Hh = h + headH + footH + pad * 2;
+    /* The header and footer are laid out in the same box as the chart, so a
+     * title longer than a narrow chart ran off the image. Estimated from the
+     * glyph widths of the two stacks rather than measured, because measuring
+     * needs a layout pass the export path does not have. */
+    var fit = function (str, size, factor) {
+      var want = String(str).length * size * factor;
+      return want > W - pad * 2 ? Math.max(9, size * (W - pad * 2) / want) : size;
+    };
+    var titleSize = opts.title ? fit(opts.title, 19, 0.55) : 19;
+    var subSize = opts.subtitle ? fit(opts.subtitle, 12.5, 0.52) : 12.5;
+    var srcSize = opts.source ? fit(opts.source, 11, 0.60) : 11;
 
     var clone = svg.cloneNode(true);
     clone.setAttribute('x', pad);
@@ -2836,14 +2884,14 @@ footer code {
     outer.appendChild(el('rect', { x: 0, y: 0, width: W, height: Hh, fill: opts.bg || '#ffffff' }));
     if (opts.title) {
       var t1 = el('text', {
-        x: pad, y: pad + 20, 'font-size': 19, 'font-weight': 700, fill: opts.fg || '#111',
+        x: pad, y: pad + 20, 'font-size': titleSize, 'font-weight': 700, fill: opts.fg || '#111',
         'font-family': 'ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif',
       });
       t1.textContent = opts.title;
       outer.appendChild(t1);
       if (opts.subtitle) {
         var t2 = el('text', {
-          x: pad, y: pad + 42, 'font-size': 12.5, fill: opts.mut || '#667',
+          x: pad, y: pad + 42, 'font-size': subSize, fill: opts.mut || '#667',
           'font-family': 'ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif',
         });
         t2.textContent = opts.subtitle;
@@ -2853,7 +2901,7 @@ footer code {
     outer.appendChild(clone);
     if (opts.source) {
       var t3 = el('text', {
-        x: pad, y: Hh - pad + 4, 'font-size': 11, fill: opts.mut || '#667',
+        x: pad, y: Hh - pad + 4, 'font-size': srcSize, fill: opts.mut || '#667',
         'font-family': 'ui-monospace, SFMono-Regular, Menlo, monospace',
       });
       t3.textContent = opts.source;
@@ -2964,11 +3012,34 @@ footer code {
     return document.documentElement.getAttribute('data-theme') ||
       (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
   }
-  function setTheme(t) {
+  function applyTheme(t) {
     document.documentElement.setAttribute('data-theme', t);
-    try { localStorage.setItem('er-theme', t); } catch (e) { /* private mode */ }
-    $('theme-btn').textContent = t === 'dark' ? 'Light' : 'Dark';
+    var b2 = $('theme-btn');
+    if (b2) b2.textContent = t === 'dark' ? 'Light' : 'Dark';
     redrawAll();
+  }
+  function setTheme(t) {
+    try { localStorage.setItem('er-theme', t); } catch (e) { /* private mode */ }
+    applyTheme(t);
+  }
+  /* Chart colours are literal hex baked in at draw time, so a page printed
+   * from the dark theme puts #E4EFEC labels on white paper — twenty-six of
+   * them, invisible. The theme is swapped and the charts redrawn for the
+   * duration of the print, then put back. Not persisted: this is not a choice
+   * the reader made. */
+  var themeBeforePrint = null;
+  function bindPrint() {
+    if (!window.addEventListener) return;
+    window.addEventListener('beforeprint', function () {
+      if (currentTheme() !== 'dark') return;
+      themeBeforePrint = 'dark';
+      applyTheme('light');
+    });
+    window.addEventListener('afterprint', function () {
+      if (!themeBeforePrint) return;
+      applyTheme(themeBeforePrint);
+      themeBeforePrint = null;
+    });
   }
   function palette() {
     var cs = getComputedStyle(document.documentElement);
@@ -3298,9 +3369,13 @@ footer code {
       if (!t0) t0 = now;
       var k = Math.min(1, (now - t0) / 320);
       var e = 1 - Math.pow(1 - k, 3);
-      paintStat(el, fmt(from + span * e), unit);
-      if (k < 1) statRaf[id] = requestAnimationFrame(step);
-      else statRaf[id] = 0;
+      /* Record what is on screen, not what it is heading for: interrupted at
+       * 40%, the next tween has to start from the figure the reader can see. */
+      statAt[id] = from + span * e;
+      paintStat(el, fmt(statAt[id]), unit);
+      if (k < 1) { statRaf[id] = requestAnimationFrame(step); return; }
+      statRaf[id] = 0;
+      statAt[id] = value;
     };
     statRaf[id] = requestAnimationFrame(step);
   }
@@ -3420,7 +3495,15 @@ footer code {
 
   function renderActions(rows, base) {
     var host = empty($('acts'));
-    var items = rows.filter(function (r) { return base - r.lo > 0.004 && ADVICE[r.k]; }).slice(0, 5);
+    /* rows arrive ranked by the full span of the sensitivity bar, but what is
+     * printed here is the one-sided reduction from moving the parameter the
+     * good way. Ranking by one number and printing another gave a list that
+     * read −8.1, −7.9, −4.7, −1.7, −6.0. */
+    var items = rows.filter(function (r) { return base - r.lo > 0.004 && ADVICE[r.k]; })
+      .map(function (r) { var o = {}; Object.keys(r).forEach(function (k) { o[k] = r[k]; });
+        o.gain = base - r.lo; return o; })
+      .sort(function (x, y) { return y.gain - x.gain; })
+      .slice(0, 5);
     if (!items.length) {
       var li0 = E('li');
       var t0 = E('div', 'a-t');
@@ -3434,7 +3517,7 @@ footer code {
         var li = E('li');
         var t = E('div', 'a-t');
         add(t, b(a[0]), E('span', null, a[1]));
-        add(li, t, E('div', 'a-d', '−' + ((base - r.lo) * 100).toFixed(1) + ' pts'));
+        add(li, t, E('div', 'a-d', '−' + (r.gain * 100).toFixed(1) + ' pts'));
         host.appendChild(li);
       });
     }
@@ -3676,12 +3759,16 @@ footer code {
     var seen = {};
     var io = new IntersectionObserver(function (entries) {
       entries.forEach(function (en) { seen[en.target.id] = en.isIntersecting; });
-      var cur = null;
-      secs.forEach(function (x) { if (seen[x.id] && !cur) cur = x.id; });
+      /* All of them, not the first: chapters 05 and 06 sit side by side above
+       * 1180px, so picking one meant the other could never light and its
+       * contents entry looked broken. aria-current goes on the first, which is
+       * the one a reader jumping there would land on. */
+      var live = [];
+      secs.forEach(function (x) { if (seen[x.id] && links[x.id]) live.push(x.id); });
       Object.keys(links).forEach(function (k) {
-        var on = k === cur;
+        var on = live.indexOf(k) >= 0;
         links[k].classList.toggle('cur', on);
-        if (on) links[k].setAttribute('aria-current', 'true');
+        if (k === live[0]) links[k].setAttribute('aria-current', 'true');
         else links[k].removeAttribute('aria-current');
       });
     }, { rootMargin: '-42% 0px -48% 0px' });
@@ -3739,13 +3826,11 @@ footer code {
     document.querySelectorAll('[data-curyear]').forEach(function (e) {
       e.textContent = String(C.currentYear);
     });
-    document.querySelectorAll('[data-prevyear]').forEach(function (e) {
-      e.textContent = String(C.volume.prevYear.year);
-    });
 
     renderAnchors();
     renderEvidence();
     renderClock();
+    bindPrint();
     observeReveal();
     observeDock();
     observeToc();
@@ -3759,8 +3844,14 @@ footer code {
       if (t) setTimeout(function () { t.focus({ preventScroll: true }); }, 0);
     });
 
-    window.addEventListener('pointerup', function () { DRAG = false; });
-    window.addEventListener('pointercancel', function () { DRAG = false; });
+    /* blur and visibilitychange as well as the pointer events: a pointer
+     * released outside the window, or a tab switched away mid-drag, would
+     * otherwise leave DRAG latched and every later change painting without
+     * its settle. */
+    ['pointerup', 'pointercancel', 'blur'].forEach(function (ev) {
+      window.addEventListener(ev, function () { DRAG = false; });
+    });
+    document.addEventListener('visibilitychange', function () { DRAG = false; });
 
     var resizeT = null;
     window.addEventListener('resize', function () {

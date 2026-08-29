@@ -86,10 +86,12 @@ so a reader can hand a colleague the exact configuration they were looking at.
   dependency, no build step required to view. Deployed on GitHub Pages with
   `.nojekyll`.
 - `js/model.js` is MIT and runs headless under Node as well as in the browser.
-- Three CI gates, all blocking: the model test suite; `js/calibration.js` must
-  be reproducible from the vendored snapshot; `dist/exposure-race.html` must be
+- Four CI gates, all blocking: the model test suite; the palette must still
+  clear the contrast floor `DESIGN.md` states; `js/calibration.js` must be
+  reproducible from the vendored snapshot; `dist/exposure-race.html` must be
   current. Drift in any of these means the page is quoting numbers no longer in
-  the corpus, and fails the build.
+  the corpus, or asserting an accessibility floor it no longer meets, and fails
+  the build.
 - 60,000 interactive trials across 150 blocks. The point estimate settles long
   before that; the credible interval does not, and block count is what makes the
   reported width stable across seeds and trial counts.

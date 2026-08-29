@@ -72,11 +72,34 @@
     return document.documentElement.getAttribute('data-theme') ||
       (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
   }
-  function setTheme(t) {
+  function applyTheme(t) {
     document.documentElement.setAttribute('data-theme', t);
-    try { localStorage.setItem('er-theme', t); } catch (e) { /* private mode */ }
-    $('theme-btn').textContent = t === 'dark' ? 'Light' : 'Dark';
+    var b2 = $('theme-btn');
+    if (b2) b2.textContent = t === 'dark' ? 'Light' : 'Dark';
     redrawAll();
+  }
+  function setTheme(t) {
+    try { localStorage.setItem('er-theme', t); } catch (e) { /* private mode */ }
+    applyTheme(t);
+  }
+  /* Chart colours are literal hex baked in at draw time, so a page printed
+   * from the dark theme puts #E4EFEC labels on white paper — twenty-six of
+   * them, invisible. The theme is swapped and the charts redrawn for the
+   * duration of the print, then put back. Not persisted: this is not a choice
+   * the reader made. */
+  var themeBeforePrint = null;
+  function bindPrint() {
+    if (!window.addEventListener) return;
+    window.addEventListener('beforeprint', function () {
+      if (currentTheme() !== 'dark') return;
+      themeBeforePrint = 'dark';
+      applyTheme('light');
+    });
+    window.addEventListener('afterprint', function () {
+      if (!themeBeforePrint) return;
+      applyTheme(themeBeforePrint);
+      themeBeforePrint = null;
+    });
   }
   function palette() {
     var cs = getComputedStyle(document.documentElement);
@@ -406,9 +429,13 @@
       if (!t0) t0 = now;
       var k = Math.min(1, (now - t0) / 320);
       var e = 1 - Math.pow(1 - k, 3);
-      paintStat(el, fmt(from + span * e), unit);
-      if (k < 1) statRaf[id] = requestAnimationFrame(step);
-      else statRaf[id] = 0;
+      /* Record what is on screen, not what it is heading for: interrupted at
+       * 40%, the next tween has to start from the figure the reader can see. */
+      statAt[id] = from + span * e;
+      paintStat(el, fmt(statAt[id]), unit);
+      if (k < 1) { statRaf[id] = requestAnimationFrame(step); return; }
+      statRaf[id] = 0;
+      statAt[id] = value;
     };
     statRaf[id] = requestAnimationFrame(step);
   }
@@ -528,7 +555,15 @@
 
   function renderActions(rows, base) {
     var host = empty($('acts'));
-    var items = rows.filter(function (r) { return base - r.lo > 0.004 && ADVICE[r.k]; }).slice(0, 5);
+    /* rows arrive ranked by the full span of the sensitivity bar, but what is
+     * printed here is the one-sided reduction from moving the parameter the
+     * good way. Ranking by one number and printing another gave a list that
+     * read −8.1, −7.9, −4.7, −1.7, −6.0. */
+    var items = rows.filter(function (r) { return base - r.lo > 0.004 && ADVICE[r.k]; })
+      .map(function (r) { var o = {}; Object.keys(r).forEach(function (k) { o[k] = r[k]; });
+        o.gain = base - r.lo; return o; })
+      .sort(function (x, y) { return y.gain - x.gain; })
+      .slice(0, 5);
     if (!items.length) {
       var li0 = E('li');
       var t0 = E('div', 'a-t');
@@ -542,7 +577,7 @@
         var li = E('li');
         var t = E('div', 'a-t');
         add(t, b(a[0]), E('span', null, a[1]));
-        add(li, t, E('div', 'a-d', '−' + ((base - r.lo) * 100).toFixed(1) + ' pts'));
+        add(li, t, E('div', 'a-d', '−' + (r.gain * 100).toFixed(1) + ' pts'));
         host.appendChild(li);
       });
     }
@@ -784,12 +819,16 @@
     var seen = {};
     var io = new IntersectionObserver(function (entries) {
       entries.forEach(function (en) { seen[en.target.id] = en.isIntersecting; });
-      var cur = null;
-      secs.forEach(function (x) { if (seen[x.id] && !cur) cur = x.id; });
+      /* All of them, not the first: chapters 05 and 06 sit side by side above
+       * 1180px, so picking one meant the other could never light and its
+       * contents entry looked broken. aria-current goes on the first, which is
+       * the one a reader jumping there would land on. */
+      var live = [];
+      secs.forEach(function (x) { if (seen[x.id] && links[x.id]) live.push(x.id); });
       Object.keys(links).forEach(function (k) {
-        var on = k === cur;
+        var on = live.indexOf(k) >= 0;
         links[k].classList.toggle('cur', on);
-        if (on) links[k].setAttribute('aria-current', 'true');
+        if (k === live[0]) links[k].setAttribute('aria-current', 'true');
         else links[k].removeAttribute('aria-current');
       });
     }, { rootMargin: '-42% 0px -48% 0px' });
@@ -847,13 +886,11 @@
     document.querySelectorAll('[data-curyear]').forEach(function (e) {
       e.textContent = String(C.currentYear);
     });
-    document.querySelectorAll('[data-prevyear]').forEach(function (e) {
-      e.textContent = String(C.volume.prevYear.year);
-    });
 
     renderAnchors();
     renderEvidence();
     renderClock();
+    bindPrint();
     observeReveal();
     observeDock();
     observeToc();
@@ -867,8 +904,14 @@
       if (t) setTimeout(function () { t.focus({ preventScroll: true }); }, 0);
     });
 
-    window.addEventListener('pointerup', function () { DRAG = false; });
-    window.addEventListener('pointercancel', function () { DRAG = false; });
+    /* blur and visibilitychange as well as the pointer events: a pointer
+     * released outside the window, or a tab switched away mid-drag, would
+     * otherwise leave DRAG latched and every later change painting without
+     * its settle. */
+    ['pointerup', 'pointercancel', 'blur'].forEach(function (ev) {
+      window.addEventListener(ev, function () { DRAG = false; });
+    });
+    document.addEventListener('visibilitychange', function () { DRAG = false; });
 
     var resizeT = null;
     window.addEventListener('resize', function () {
