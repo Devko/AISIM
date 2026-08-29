@@ -12,6 +12,12 @@
   --shadow: 0 1px 2px rgba(11,22,21,.06), 0 8px 24px -12px rgba(11,22,21,.18);
   --track: #DDE6E4;
 
+  /* Binds the UA surfaces we do not draw — scrollbars, form controls — to the
+   * theme the page actually chose, not to the OS. Without this an explicit
+   * toggle that disagrees with prefers-color-scheme leaves a light scrollbar
+   * on a near-black page. */
+  color-scheme: light;
+
   --disp: 'Bricolage Grotesque', ui-sans-serif, system-ui, sans-serif;
   --body: 'IBM Plex Sans', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
@@ -21,6 +27,7 @@
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
+    color-scheme: dark;
     --ink:   #080F0E;  --panel: #0D1817;  --sunk:  #0A1413;
     --rule:  #1B2E2C;  --rule2: #2C4A46;
     --txt:   #E2EDEA;  --mut:   #8AA5A1;  --dim:   #688C87;
@@ -31,6 +38,7 @@
   }
 }
 :root[data-theme="dark"] {
+  color-scheme: dark;
   --ink:   #080F0E;  --panel: #0D1817;  --sunk:  #0A1413;
   --rule:  #1B2E2C;  --rule2: #2C4A46;
   --txt:   #E2EDEA;  --mut:   #8AA5A1;  --dim:   #688C87;
@@ -47,8 +55,12 @@ body {
   font-family: var(--body); font-size: 15px; line-height: 1.55;
   -webkit-font-smoothing: antialiased; padding-bottom: 72px;
 }
-a { color: inherit; }
+a { color: inherit; text-underline-offset: .18em; text-decoration-thickness: 1px; }
 :focus-visible { outline: 2px solid var(--def); outline-offset: 2px; border-radius: 3px; }
+/* The selection colour ships from the browser and belongs to no palette. Take
+ * it from the one accent that already means "measured", so highlighting a
+ * figure to check it looks like part of the instrument. */
+::selection { background: var(--def); color: var(--ink); }
 
 .wrap { max-width: 1340px; margin: 0 auto; padding: 0 20px; }
 
@@ -133,8 +145,13 @@ button.ghost { background: transparent; }
 }
 .panel .lead { color: var(--mut); font-size: 13.5px; margin: 0 0 14px; max-width: 78ch; }
 .panel .lead b { color: var(--txt); font-weight: 600; }
-.panel-head { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 4px; }
-.panel-head > div:first-child { flex: 1; min-width: 0; }
+/* The title keeps a 260px basis and the row is allowed to wrap, so the tools
+ * drop below the heading exactly when they would otherwise squeeze it. Held
+ * inline, a 375px card gave "Why severity is not the prioritisation trigger"
+ * 55% of the row and four wrapped lines; the widest toolbar took a two-word
+ * title down to 19%. Intrinsic, so it needs no breakpoint of its own. */
+.panel-head { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 4px; flex-wrap: wrap; }
+.panel-head > div:first-child { flex: 1 1 260px; min-width: 0; }
 .tools { display: flex; gap: 6px; flex-shrink: 0; }
 
 /* ── controls ───────────────────────────────────────────────────────────── */
@@ -176,7 +193,9 @@ button.ghost { background: transparent; }
 
 input[type=range] {
   -webkit-appearance: none; appearance: none; width: 100%;
-  height: 22px; background: transparent; margin: 5px 0 0; cursor: grab;
+  /* 24px so the drag target clears the AA minimum; the thumb stays centred
+   * because its offset is measured from the track, not the box. */
+  height: 24px; background: transparent; margin: 5px 0 0; cursor: grab;
 }
 input[type=range]:active { cursor: grabbing; }
 input[type=range]::-webkit-slider-runnable-track {
@@ -199,7 +218,7 @@ details.more { margin-top: 4px; border-top: 1px solid var(--rule); padding-top: 
 details.more > summary {
   cursor: pointer; font-size: 12px; color: var(--mut); list-style: none;
   font-family: var(--mono); letter-spacing: .08em; text-transform: uppercase;
-  padding: 2px 0; user-select: none;
+  padding: 4px 0; user-select: none;
 }
 details.more > summary::-webkit-details-marker { display: none; }
 details.more > summary::before { content: "+ "; color: var(--def); }
@@ -226,9 +245,13 @@ details.more > div { padding-top: 12px; }
   color: var(--mut); line-height: 1.35;
   display: block; flex: 1;
 }
+/* These four resimulate on every parameter change, and Bricolage's default
+ * figures are proportional — a 41px spread across four digits, so dragging a
+ * slider made the whole row twitch sideways. Tabular figures pin the width. */
 .stat .v {
   font-family: var(--disp); font-weight: 800; font-size: 34px;
   line-height: 1.05; letter-spacing: -.03em; margin-top: 5px; color: var(--bad);
+  font-variant-numeric: tabular-nums;
 }
 .stat.good .v { color: var(--def); }
 .stat.plain .v { color: var(--txt); }
