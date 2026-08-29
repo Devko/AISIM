@@ -711,9 +711,46 @@ footer code {
   animation: bar-in .5s var(--ease) both;
   animation-delay: calc(var(--i, 0) * 45ms);
 }
-.anim .chart.fresh .ch-line, .anim .chart.fresh .ch-area, .anim .chart.fresh .ch-mark {
+.anim .chart.fresh .ch-line:not(.ch-draw), .anim .chart.fresh .ch-area,
+.anim .chart.fresh .ch-mark:not(.ch-late) {
   animation: fade .55s .1s var(--ease) both;
 }
+
+/* ── the race, run once ──────────────────────────────────────────────────
+ * Chapter 01 is the thesis: the exploit curve is already high by the time it
+ * reaches the patch line. On the chart's first appearance it is drawn rather
+ * than faded in, so a reader watches the cumulative share climb and sees where
+ * it stands when it crosses day zero.
+ *
+ * Constant rate, not an eased one. A race is run at a speed, and linear time
+ * makes elapsed animation equal to elapsed distance — which is what lets the
+ * day-zero marker be timed off `--zt`, the fraction of the drawing where the
+ * patch line sits, rather than off a guess. An eased draw would need the
+ * inverse of the easing curve to place it, which CSS cannot express.
+ *
+ * The dash lives here and never in an attribute: `toPNG` clones the SVG into a
+ * context with no stylesheet, so an attribute-borne dash would export the
+ * curve half-drawn. With `pathLength="1"` on the path, `stroke-dasharray: 1`
+ * is one dash the full length of the curve — so if this animation is killed,
+ * suppressed, or never runs, the curve is simply solid. */
+@keyframes draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+.anim .chart.fresh .ch-draw {
+  stroke-dasharray: 1;
+  animation: draw .7s linear 60ms both;
+}
+/* The marker and its readout are the claim the curve is making. They arrive as
+ * the curve reaches them and not a frame earlier, so the number is read off a
+ * line that is already there. */
+.anim .chart.fresh .ch-late {
+  animation: fade .3s var(--ease) both;
+  animation-delay: calc(120ms + var(--zt, .6) * 700ms);
+}
+
+/* A row that is new to a rebuilt list, as opposed to one that moved within it.
+ * The node is always freshly created, so the keyframe runs once on its own
+ * without any restart. Movement within a list is handled in js/app.js, where
+ * the distance is measurable. */
+.anim .enter { animation: rise .3s var(--ease) both; }
 
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }

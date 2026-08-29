@@ -43,6 +43,23 @@
    * window would show figures the model never produced and lag the truth by
    * its own duration, so live values are painted straight. */
   function live() { return DRAG || (Date.now() - lastInputAt) < 150; }
+  /* Script-driven motion reads its curve off the stylesheet rather than
+   * restating it, so `--ease` stays the one definition of how this page moves.
+   * Resolved once, lazily, because it needs a laid-out document. */
+  var easeAt = null;
+  function ease() {
+    if (easeAt === null) {
+      easeAt = (getComputedStyle(document.documentElement)
+        .getPropertyValue('--ease') || '').trim() || 'ease-out';
+    }
+    return easeAt;
+  }
+  /* Element.animate carries the two motions CSS cannot express here: a
+   * distance only measurable at runtime, and a restart on a node that was
+   * never replaced. Both are gated on ANIM, so a reader who asked for reduced
+   * motion never reaches them — the stylesheet's kill-switch does not apply to
+   * script-driven animations. */
+  var CAN_ANIMATE = typeof Element !== 'undefined' && !!Element.prototype.animate;
 
   var $ = function (id) { return document.getElementById(id); };
   var pctS = function (v) { return (v * 100).toFixed(0) + '%'; };
@@ -254,15 +271,32 @@
      * changed. */
     var sig = ON.join(',');
     if (sig === traitNotesAt) return;
+    /* A chip is at the top of the rail and its note lands several rows below
+     * it, so nothing connects the click to what changed. The notes that are
+     * new to this selection arrive; the ones already standing do not move. On
+     * the first render there is no previous selection and nothing is new. */
+    var seen = traitNotesAt === null ? null : traitNotesAt.split(',');
     traitNotesAt = sig;
     empty(host);
     ON.forEach(function (k) {
       var t = M.TRAITS[k];
       if (!t || !t.d) return;
-      var row = E('div');
+      var row = E('div', seen && seen.indexOf(k) < 0 ? 'enter' : null);
       add(row, E('b', null, t.l), document.createTextNode(' ' + t.d));
       host.appendChild(row);
     });
+  }
+
+  /* The console's description slots rewrite themselves on every selection.
+   * Swapping the text outright reads as a flicker in the corner of the eye;
+   * bringing the new line up over 180ms reads as the console reporting what
+   * was just chosen. Suppressed under `live()`, which is what keeps a slider
+   * that re-derives the detection posture from strobing this line. */
+  function setDesc(el, text) {
+    if (!el || el.textContent === text) return;
+    el.textContent = text;
+    if (!ANIM || !CAN_ANIMATE || live()) return;
+    el.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 180, easing: ease() });
   }
 
   function buildToggles(hostId, table, isOn, onPick, meta) {
@@ -303,13 +337,12 @@
         b2.setAttribute('aria-pressed', String(on && !derived));
       });
     });
-    var dm = $('desc-maturity');
-    if (dm) dm.textContent = M.MATURITY[MAT] ? M.MATURITY[MAT].d : '';
+    setDesc($('desc-maturity'), M.MATURITY[MAT] ? M.MATURITY[MAT].d : '');
     renderTraitNotes();
-    $('desc-profile').textContent = ON.length
+    setDesc($('desc-profile'), ON.length
       ? estateSummary()
-      : 'No attributes selected. Generic mid-size estate: ' + estateSummary();
-    $('desc-detection').textContent = M.DETECTION[det] ? M.DETECTION[det].d : '';
+      : 'No attributes selected. Generic mid-size estate: ' + estateSummary());
+    setDesc($('desc-detection'), M.DETECTION[det] ? M.DETECTION[det].d : '');
   }
   /* The metric toggle is a selected-state control like the chips, so it
    * carries the same state to assistive technology. */
@@ -406,20 +439,28 @@
    * tween entirely: a drag in progress, where the model re-runs faster than
    * any animation could finish and a lagging numeral would simply be wrong,
    * and a value that is not a number ('>12'), which has nothing to count. */
-  var statAt = {}, statRaf = {};
+  var statAt = {}, statRaf = {}, statEnd = {};
+  function stopStat(id) {
+    if (statRaf[id]) { cancelAnimationFrame(statRaf[id]); statRaf[id] = 0; }
+    if (statEnd[id]) { clearTimeout(statEnd[id]); statEnd[id] = 0; }
+  }
   function paintStat(el, text, unit) {
     empty(el);
-    add(el, document.createTextNode(text), E('span', 'u', unit));
+    add(el, document.createTextNode(text), unit ? E('span', 'u', unit) : null);
   }
-  function setStat(id, value, fmt, unit, ci) {
+  /* `straight` paints the figure without the tween for a caller that knows the
+   * settle would not be seen — the docked readout while it is translated out
+   * of view. It still records the value, so the next visible change counts
+   * from the figure actually on screen. */
+  function setStat(id, value, fmt, unit, ci, straight) {
     var el = $(id), ciEl = $(id + '-ci');
     if (!el) return;
     if (ciEl) ciEl.textContent = ci;
-    if (statRaf[id]) { cancelAnimationFrame(statRaf[id]); statRaf[id] = 0; }
+    stopStat(id);
 
     var from = statAt[id];
     statAt[id] = value;
-    if (!ANIM || live() || value === null || !isFinite(value) ||
+    if (!ANIM || straight || live() || value === null || !isFinite(value) ||
         typeof from !== 'number' || !isFinite(from) || from === value) {
       paintStat(el, fmt(value), unit);
       return;
@@ -434,10 +475,24 @@
       statAt[id] = from + span * e;
       paintStat(el, fmt(statAt[id]), unit);
       if (k < 1) { statRaf[id] = requestAnimationFrame(step); return; }
-      statRaf[id] = 0;
+      stopStat(id);
       statAt[id] = value;
     };
     statRaf[id] = requestAnimationFrame(step);
+    /* rAF is not merely throttled but suspended outright in a background tab,
+     * an embedded pane or a power-saving mode, and some of those still report
+     * the document visible — which is why the redraw scheduler already carries
+     * a timer backstop. The settle needs the same one, and needs it more: a
+     * redraw that never runs repeats the last chart, but a settle that never
+     * gets a frame leaves the previous reading on screen for good. The
+     * instrument would be quietly displaying a figure the model has already
+     * superseded, which is worse than not animating at all. */
+    statEnd[id] = setTimeout(function () {
+      if (!statRaf[id]) return;
+      stopStat(id);
+      statAt[id] = value;
+      paintStat(el, fmt(value), unit);
+    }, 400);
   }
   /* The band is drawn on a full 0-100% scale rather than fitted to itself, so
    * a wide interval looks wide. It follows the text above it and is therefore
@@ -477,9 +532,13 @@
 
   /* ── docked readout ────────────────────────────────────────────────────── */
   function renderDock(r) {
-    var v = $('dock-v');
+    var v = $('dock-v'), d = $('dock');
     if (!v) return;
-    v.textContent = pctS(r.p);
+    /* The dock is the readout bank in another position, so the same reading
+     * settles the same way rather than snapping because the reader happens to
+     * have scrolled. Counted only while the dock is actually up: below that,
+     * it is a tween nobody can see. */
+    setStat('dock-v', r.p, fmtPct, '', null, !(d && d.classList.contains('up')));
     $('dock-ci').textContent = lastBand.p;
     $('dock-est').textContent = estateSummary();
   }
@@ -553,8 +612,43 @@
       'opportunistic traffic at a fraction of the hazard rate.');
   }
 
+  /* The five actions are ranked by their effect at the current settings, so
+   * the list reorders whenever the estate does — and that reordering is one of
+   * the page's findings, not a redraw. Rows that teleport into a new order
+   * report the ranking without ever showing it change.
+   *
+   * The rows are rebuilt from scratch on every pass, so there is no element to
+   * transition. Positions are measured before the rebuild and again after,
+   * each survivor is put back where it was and then released, which is the
+   * only way to animate a layout change that has already happened. Nothing but
+   * `transform` moves, so a five-row reorder costs no layout work. */
+  function actPositions(host) {
+    if (!ANIM || !CAN_ANIMATE || live()) return null;
+    var at = {};
+    host.querySelectorAll('li[data-k]').forEach(function (li) {
+      at[li.dataset.k] = li.getBoundingClientRect().top;
+    });
+    return at;
+  }
+  function playActs(host, before) {
+    /* No previous list means the first render, where the chapter's own reveal
+     * is the entrance and a second one on top of it would be a stutter. */
+    if (!before) return;
+    host.querySelectorAll('li[data-k]').forEach(function (li) {
+      var was = before[li.dataset.k];
+      if (was === undefined) { li.className = 'enter'; return; }
+      var dy = was - li.getBoundingClientRect().top;
+      if (Math.abs(dy) < 1) return;
+      li.animate(
+        [{ transform: 'translateY(' + dy.toFixed(1) + 'px)' }, { transform: 'none' }],
+        { duration: 320, easing: ease() });
+    });
+  }
+
   function renderActions(rows, base) {
-    var host = empty($('acts'));
+    var acts = $('acts');
+    var before = actPositions(acts);
+    var host = empty(acts);
     /* rows arrive ranked by the full span of the sensitivity bar, but what is
      * printed here is the one-sided reduction from moving the parameter the
      * good way. Ranking by one number and printing another gave a list that
@@ -575,12 +669,14 @@
       items.forEach(function (r) {
         var a = ADVICE[r.k];
         var li = E('li');
+        li.dataset.k = r.k;
         var t = E('div', 'a-t');
         add(t, b(a[0]), E('span', null, a[1]));
         add(li, t, E('div', 'a-d', '−' + (r.gain * 100).toFixed(1) + ' pts'));
         host.appendChild(li);
       });
     }
+    playActs(host, before);
     $('acts-metric').textContent = METRIC === 'p'
       ? 'annual probability of compromise' : 'annual probability of an incident';
   }
@@ -793,7 +889,7 @@
         if (DRAG) return;
         el.querySelectorAll('.chart').forEach(function (c) {
           c.classList.add('fresh');
-          setTimeout(function () { c.classList.remove('fresh'); }, 1300);
+          setTimeout(function () { c.classList.remove('fresh'); }, 1500);
         });
       });
     }, { rootMargin: '0px 0px -6% 0px', threshold: 0.02 });

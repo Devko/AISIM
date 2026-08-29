@@ -40,7 +40,7 @@
     var e = el('text', {
       x: x, y: y, 'font-size': o.fs || 11, 'text-anchor': o.a || 'start',
       fill: o.c, 'font-weight': o.w, 'letter-spacing': o.ls,
-      'font-family': o.mono ? MONO : SANS,
+      'font-family': o.mono ? MONO : SANS, 'class': o.cls,
     });
     e.textContent = s;
     svg.appendChild(e);
@@ -99,6 +99,11 @@
     var X = function (v) { return L + (R - L) * ((v - d.x0) / (d.x1 - d.x0)); };
     var Xi = function (i) { return X(d.x0 + (i + 0.5) * d.dx); };
     var x0px = X(0);
+    /* Where day zero falls across the drawing, 0-1. The stylesheet draws the
+     * cumulative curve at a constant rate, so this fraction is also the moment
+     * the curve reaches the patch line — which is when the marker and its
+     * readout are allowed to arrive, and not before. */
+    svg.style.setProperty('--zt', Math.max(0, Math.min(1, (x0px - L) / (R - L))).toFixed(3));
 
     /* pre-disclosure zone */
     svg.appendChild(el('rect', { x: L, y: T, width: Math.max(0, x0px - L), height: BOT - T, fill: pal.zero, 'fill-opacity': 0.07 }));
@@ -148,7 +153,13 @@
     if (d.cum) {
       var cp = [];
       for (var q = 0; q < d.B; q++) cp.push([Xi(q), MID + d.cum[q] * hDn]);
-      svg.appendChild(el('path', { 'class': 'ch-line', d: path(cp), fill: 'none', stroke: pal.att, 'stroke-width': 2.4, 'stroke-linejoin': 'round' }));
+      /* `pathLength` normalises the dash unit to 1 so the stylesheet can draw
+       * this curve without knowing its length. The dash itself is CSS-only:
+       * a dasharray attribute here would export a half-drawn line. */
+      svg.appendChild(el('path', {
+        'class': 'ch-line ch-draw', d: path(cp), fill: 'none', stroke: pal.att,
+        'stroke-width': 2.4, 'stroke-linejoin': 'round', pathLength: 1,
+      }));
 
       /* gridlines for the cumulative axis */
       [0.25, 0.5, 0.75, 1].forEach(function (f) {
@@ -160,13 +171,13 @@
       /* the share already armed at day zero — the number the page is about */
       var atZero = d.beforeFrac;
       var yz = MID + atZero * hDn;
-      svg.appendChild(el('circle', { 'class': 'ch-mark', cx: x0px, cy: yz, r: 4, fill: pal.att, stroke: pal.ink, 'stroke-width': 1.5 }));
+      svg.appendChild(el('circle', { 'class': 'ch-mark ch-late', cx: x0px, cy: yz, r: 4, fill: pal.att, stroke: pal.ink, 'stroke-width': 1.5 }));
       /* Clamped and shortened rather than left to run past the right edge:
        * the marker sits wherever day zero falls, which on a phone can be most
        * of the way across the drawing. */
       var zLab = narrow ? pctS(atZero) + ' exploitable' : pctS(atZero) + ' already exploitable';
       txt(svg, Math.min(x0px + 8, R - zLab.length * 6.2), yz + 4, zLab,
-        { c: pal.att, fs: 10.5, w: 600 });
+        { c: pal.att, fs: 10.5, w: 600, cls: 'ch-mark ch-late' });
     }
 
     /* Overflow: mass outside the drawn window is labelled, not folded into the

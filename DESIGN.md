@@ -141,6 +141,8 @@ motion:
   dock: "260ms"
   settle: "320ms"
   reveal: "500ms"
+  reorder: "320ms"
+  race: "700ms"
 components:
   button:
     backgroundColor: "{colors.panel}"
@@ -742,7 +744,11 @@ that class absent, so no content depends on an animation having run.
 |---|---|---|---|
 | Chapter reveal | IntersectionObserver, once per element | opacity + 10px rise | 500ms |
 | Chart interiors | first time a chapter enters view | bars scale from `scaleX(0)` with a 45ms stagger; lines, areas and markers fade after a 100ms delay | 500ms bars, 550ms fades |
-| Readout settle | a discrete change, never a held control | the numeral counts to its new value | 320ms |
+| The race | first appearance of chapter 01 only | the cumulative exploit curve draws by `stroke-dashoffset` at a constant rate; its day-zero marker and readout fade in as the curve reaches them | 700ms draw, 300ms marker |
+| Readout settle | a discrete change, never a held control | the numeral counts to its new value, in the bank and in the dock alike | 320ms |
+| Action reorder | a heavy pass that changes the ranking | surviving rows FLIP to their new positions; rows new to the list rise in | 320ms move, 300ms enter |
+| Description settle | a selection that rewrites a console description | opacity on the new line | 180ms |
+| Trait note | a trait chip being selected | opacity + 10px rise on the note that is new | 300ms |
 | Interval rail | a pass whose band is reliable | the band's two edges | 300ms |
 | Dock | the readout bank leaves the viewport | `translateY` | 260ms |
 | Rail step-down | the dock arriving | `top`, `max-height` | 260ms |
@@ -753,6 +759,43 @@ that class absent, so no content depends on an animation having run.
 | Skip link | focus | `top` | 160ms |
 
 ### Named Rules
+
+**The Race Is Run Once Rule.** Chapter 01 is the thesis, so it is the one place
+on the page that gets an authored entrance rather than a reveal: the cumulative
+exploit curve is drawn instead of faded, and a reader watches where it stands by
+the time it reaches the patch line. It runs at a *constant rate* and not on
+`--ease`, because linear time makes elapsed animation equal elapsed distance —
+which is what allows the day-zero marker to be timed off `--zt`, the fraction of
+the drawing where day zero actually falls, rather than off a guess. An eased
+draw would need the inverse of the easing curve to place it, which CSS cannot
+express. This is the only linear timing in the system and the only chart that
+does not simply fade in; a second one would make it a house style rather than an
+argument.
+
+**The Undoable Dash Rule.** The draw is expressed as `stroke-dasharray: 1`
+against `pathLength="1"` on the path, so the dash is exactly one full-length
+segment. Every way the animation can fail to run — no `anim` class, the
+reduced-motion kill-switch, a cancelled `fresh` — leaves a solid curve rather
+than a hidden one, and the PNG clone, which carries no dash attribute at all,
+exports it whole. This is the shape any future draw-on animation must take.
+
+**The Reorder Is A Finding Rule.** The prioritised actions are ranked by effect
+at the current settings, so the list reorders whenever the estate does — and
+that reordering is one of the page's claims, not a redraw. The rows are rebuilt
+from scratch on every pass and therefore have no element to transition, so
+`js/app.js` measures positions before and after, puts each survivor back where
+it was, and releases it. Only `transform` moves. A ranking that changes without
+being seen to change is a ranking the reader has to take on trust.
+
+**The Settle Needs A Backstop Rule.** `requestAnimationFrame` is not merely
+throttled but suspended outright in a background tab, an embedded pane or a
+power-saving mode, and some of those still report the document visible — which
+is why the redraw scheduler already carries a timer backstop. The numeral settle
+carries the same one, and needs it more: a redraw that never runs repeats the
+last chart, but a settle that never gets a frame leaves the previous reading on
+screen for good, so the instrument would quietly display a figure the model has
+already superseded. Any future tween that paints a measured value finishes on a
+timer as well as on a frame.
 
 **The Not-While-Working Rule.** Nothing animates while a control is being
 operated. The model re-runs at up to sixty passes a second under a dragged
