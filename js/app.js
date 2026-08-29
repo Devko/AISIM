@@ -24,6 +24,21 @@
    * time they have no way to estimate. */
   var BASIC = { exposed: 1, edge: 1, cadence: 1, stackVulns: 1, ai: 1 };
 
+  /* Motion is opt-in. `ANIM` is what every entry animation in the stylesheet
+   * hangs off — it is never set for a reader who has asked for reduced motion,
+   * so the page renders complete and static for them rather than relying on an
+   * animation having run. `DRAG` suppresses the tween and the chart reveals
+   * while a slider is held: the model re-runs faster there than any animation
+   * could finish, and a lagging numeral is simply a wrong reading. */
+  var ANIM = !(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  var DRAG = false, lastInputAt = 0;
+  /* True while the reader is actually working a control — a held pointer, or
+   * a held arrow key, which auto-repeats every few tens of milliseconds and
+   * would otherwise start a fresh 320ms tween on each press. A tween in that
+   * window would show figures the model never produced and lag the truth by
+   * its own duration, so live values are painted straight. */
+  function live() { return DRAG || (Date.now() - lastInputAt) < 150; }
+
   var $ = function (id) { return document.getElementById(id); };
   var pctS = function (v) { return (v * 100).toFixed(0) + '%'; };
   var num = function (v, d) { return Number(v).toFixed(d === undefined ? 0 : d); };
@@ -55,7 +70,7 @@
   function setTheme(t) {
     document.documentElement.setAttribute('data-theme', t);
     try { localStorage.setItem('er-theme', t); } catch (e) { /* private mode */ }
-    $('theme-btn').textContent = t === 'dark' ? '☀ Light' : '☾ Dark';
+    $('theme-btn').textContent = t === 'dark' ? 'Light' : 'Dark';
     redrawAll();
   }
   function palette() {
@@ -128,9 +143,13 @@
       add(d, row, input, hint);
       (BASIC[s.k] ? basicHost : advHost).appendChild(d);
 
+      setFill(input, s);
+      input.addEventListener('pointerdown', function () { DRAG = true; });
       input.addEventListener('input', function (e) {
+        lastInputAt = Date.now();
         P[s.k] = +e.target.value;
         setVal(s);
+        setFill(e.target, s);
         if (s.k === 'detect' || s.k === 'edrCoverage') DET = null;
         refreshSelectors();
         schedule();
@@ -139,11 +158,17 @@
     });
   }
   function setVal(s) { var e = $('v-' + s.k); if (e) e.textContent = s.f(P[s.k]); }
+  /* The groove is filled up to the thumb so the reader can see where in the
+   * range they are without reading the number back. */
+  function setFill(input, s) {
+    var pct = (input.value - s.min) / (s.max - s.min) * 100;
+    input.style.setProperty('--fill', Math.max(0, Math.min(100, pct)).toFixed(2) + '%');
+  }
 
   function syncAll() {
     M.SPEC.def.concat(M.SPEC.att).forEach(function (s) {
       var i = $('i-' + s.k);
-      if (i) { i.value = P[s.k]; setVal(s); }
+      if (i) { i.value = P[s.k]; setVal(s); setFill(i, s); }
     });
   }
 
@@ -198,17 +223,34 @@
       b2.setAttribute('aria-pressed', String(on));
     });
     [['sel-maturity', MAT], ['sel-detection', det]].forEach(function (pair) {
+      /* Moving the dwell or coverage slider clears the explicit choice and
+       * lights whichever posture the numbers now resemble. Shown identically
+       * to a click, that reads as a selection the reader never made — so a
+       * derived match is drawn as a match, and reports itself unpressed. */
+      var derived = pair[0] === 'sel-detection' && !DET;
       document.querySelectorAll('#' + pair[0] + ' button').forEach(function (b2) {
         var on = b2.dataset.key === pair[1];
-        b2.classList.toggle('on', on);
-        b2.setAttribute('aria-pressed', String(on));
+        b2.classList.toggle('on', on && !derived);
+        b2.classList.toggle('near', on && derived);
+        b2.setAttribute('aria-pressed', String(on && !derived));
       });
     });
+    $('desc-maturity').textContent = M.MATURITY[MAT] ? M.MATURITY[MAT].d : '';
     $('desc-profile').textContent = ON.length
       ? estateSummary()
       : 'No attributes selected. Generic mid-size estate: ' + estateSummary();
     $('desc-detection').textContent = M.DETECTION[det] ? M.DETECTION[det].d : '';
   }
+  /* The metric toggle is a selected-state control like the chips, so it
+   * carries the same state to assistive technology. */
+  function syncMetric() {
+    document.querySelectorAll('[data-metric]').forEach(function (x) {
+      var on = x.dataset.metric === METRIC;
+      x.classList.toggle('on', on);
+      x.setAttribute('aria-pressed', String(on));
+    });
+  }
+
   function buildShapeUI() {
     buildToggles('sel-profile', M.TRAITS,
       function (k) { return ON.indexOf(k) >= 0; },
@@ -271,18 +313,62 @@
   }
 
   /* ── render ────────────────────────────────────────────────────────────── */
-  var lastHeavy = null, lastSens = null;
+  var lastHeavy = null, lastSens = null, lastDens = null;
 
+  /* The SVG's own laid-out width, not its parent's border box. Measuring the
+   * parent included the panel's padding and border, so every chart was drawn
+   * ~34px wider than it was displayed and then uniformly shrunk by
+   * preserveAspectRatio — 11px labels rendered at 10.4px, with dead
+   * letterbox bands top and bottom. `.chart { width: 100% }` means the
+   * element itself already reports the exact drawing width. */
   function width(id) {
-    return Math.max(280, Math.floor($(id).parentNode.getBoundingClientRect().width));
+    return Math.max(280, Math.floor($(id).getBoundingClientRect().width));
   }
-  function setStat(id, value, unit, ci) {
-    var v = $(id);
-    empty(v);
-    add(v, document.createTextNode(value), E('span', 'u', unit));
-    $(id + '-ci').textContent = ci;
+  /* Stat values are counted to their new figure rather than swapped, so a
+   * change reads as the instrument settling on a reading. Two cases skip the
+   * tween entirely: a drag in progress, where the model re-runs faster than
+   * any animation could finish and a lagging numeral would simply be wrong,
+   * and a value that is not a number ('>12'), which has nothing to count. */
+  var statAt = {}, statRaf = {};
+  function paintStat(el, text, unit) {
+    empty(el);
+    add(el, document.createTextNode(text), E('span', 'u', unit));
+  }
+  function setStat(id, value, fmt, unit, ci) {
+    var el = $(id), ciEl = $(id + '-ci');
+    if (ciEl) ciEl.textContent = ci;
+    if (statRaf[id]) { cancelAnimationFrame(statRaf[id]); statRaf[id] = 0; }
+
+    var from = statAt[id];
+    statAt[id] = value;
+    if (!ANIM || live() || value === null || typeof from !== 'number' || from === value) {
+      paintStat(el, fmt(value), unit);
+      return;
+    }
+    var t0 = 0, span = value - from;
+    var step = function (now) {
+      if (!t0) t0 = now;
+      var k = Math.min(1, (now - t0) / 320);
+      var e = 1 - Math.pow(1 - k, 3);
+      paintStat(el, fmt(from + span * e), unit);
+      if (k < 1) statRaf[id] = requestAnimationFrame(step);
+      else statRaf[id] = 0;
+    };
+    statRaf[id] = requestAnimationFrame(step);
+  }
+  /* The band is drawn on a full 0-100% scale rather than fitted to itself, so
+   * a wide interval looks wide. It follows the text above it and is therefore
+   * only redrawn on a pass whose interval means anything. */
+  function setBand(id, lo, hi) {
+    var el = $(id);
+    if (!el) return;
+    el.style.setProperty('--lo', (lo * 100).toFixed(1) + '%');
+    el.style.setProperty('--hi', (hi * 100).toFixed(1) + '%');
   }
   var lastBand = { p: '', i: '' };
+  var fmtPct = function (v) { return pctS(v); };
+  var fmtEvents = function (v) { return v < 10 ? num(v, 2) : num(v); };
+  var fmtDaysN = function (v) { return v === null ? '>12' : num(v); };
   function renderHead(r) {
     /* The fast pass while a slider is moving does not run enough blocks for the
      * interval to mean anything. Show the point estimate live and keep the last
@@ -291,17 +377,31 @@
       lastBand.p = '90% band ' + pctS(r.pLo) + ' to ' + pctS(r.pHi);
       lastBand.i = '90% band ' + pctS(r.incLo) + ' to ' + pctS(r.incHi);
     }
-    setStat('s-p', pctS(r.p), 'of years', lastBand.p);
-    setStat('s-i', pctS(r.incident), 'of years', lastBand.i);
-    setStat('s-n', r.events < 10 ? num(r.events, 2) : num(r.events), 'systems', 'across the 12-month window');
+    if (r.bandReliable) {
+      setBand('s-p-band', r.pLo, r.pHi);
+      setBand('s-i-band', r.incLo, r.incHi);
+    }
+    setStat('s-p', r.p, fmtPct, 'of years', lastBand.p);
+    setStat('s-i', r.incident, fmtPct, 'of years', lastBand.i);
+    setStat('s-n', r.events, fmtEvents, 'systems', 'across the 12-month window');
     /* A bare rule in the value slot reads as a failed render, not as "this does
      * not happen inside the window". Give it an actual bound. */
-    if (r.med == null) setStat('s-t', '>12', 'months', 'no compromise in most simulated years');
-    else setStat('s-t', num(r.med), 'days', 'across simulated years');
+    setStat('s-t', r.med == null ? null : r.med, fmtDaysN,
+      r.med == null ? 'months' : 'days',
+      r.med == null ? 'no compromise in most simulated years' : 'across simulated years');
+    renderDock(r);
+  }
+
+  /* ── docked readout ────────────────────────────────────────────────────── */
+  function renderDock(r) {
+    $('dock-v').textContent = pctS(r.p);
+    $('dock-ci').textContent = lastBand.p;
+    $('dock-est').textContent = estateSummary();
   }
 
   function drawRace() {
     var d = M.densities(P, 30000);
+    lastDens = d;
     CH.race($('race'), width('race'), d, palette());
     var n = empty($('race-note'));
     add(n, 'Measured ' + C.pocTiming.latest.year + ' clock: median ',
@@ -407,6 +507,10 @@
     fast();
   }
   function schedule() {
+    /* A chart mid-reveal that is redrawn by a slider would replay the reveal
+     * on the new nodes, once per pass. Drop the flag as soon as the reader
+     * touches anything. */
+    if (ANIM) document.querySelectorAll('.chart.fresh').forEach(function (c) { c.classList.remove('fresh'); });
     if (raf) cancelAnimationFrame(raf);
     raf = requestAnimationFrame(runFast);
     clearTimeout(fallback);
@@ -427,14 +531,18 @@
     var pal = palette();
     return {
       title: title, subtitle: subtitle, scale: 2,
-      bg: pal.panel, fg: pal.txt, mut: pal.mut,
+      bg: pal.ink, fg: pal.txt, mut: pal.mut,
       source: 'Exposure Race · calibrated to CyberMon ' + C.snapshot.cvelist + ' · devko.github.io/CyberMon',
     };
   }
   function subtitleFor(id) {
     var r = lastHeavy;
     if (!r) return '';
-    if (id === 'race') return pctS(M.densities(P, 8000).pLate) + ' of armed bugs have a working exploit before the hole is closed';
+    /* Read the drawn figure, never a fresh sample: a second 8,000-trial pass
+     * would put a different percentage in the caption than the one printed
+     * inside the image it captions. */
+    if (id === 'race') return lastDens
+      ? pctS(lastDens.pLate) + ' of armed bugs have a working exploit before the hole is closed' : '';
     if (id === 'funnel') return num(r.fn[0]) + ' criticals a year become ' + num(r.fn[5], 2) + ' compromises';
     if (id === 'routes') return 'first compromise of the year, by route';
     if (id === 'surv') return pctS(r.p) + ' chance of compromise within 12 months';
@@ -486,10 +594,7 @@
     var dt = E('dt');
     add(dt, document.createTextNode(label + ' '), E('span', 'tag ' + TAG[kind], kind));
     var dd = E('dd', kind, value);
-    var sm = E('span', null, note);
-    sm.style.fontSize = '11px';
-    sm.style.color = 'var(--dim)';
-    add(wrap, dt, dd, sm);
+    add(wrap, dt, dd, E('span', 'anchor-note', note));
     host.appendChild(wrap);
   }
   function renderAnchors() {
@@ -518,14 +623,17 @@
     /* cited figures first, then the pure judgement calls — a reader scanning
      * for what to argue with should reach the weakest material last, not first */
     var keys = Object.keys(M.ASSUMED);
+    /* The key is an identifier, not a label: showing `breakoutMedian` to a
+     * reader asked them to decode the source to read their own provenance
+     * panel. Every coefficient names itself in prose now. */
     keys.filter(function (k) { return M.ASSUMED[k].src; }).forEach(function (k) {
       var a = M.ASSUMED[k];
-      anchorRow(host, k, 'reported', a.v + '   (range ' + a.lo + ' to ' + a.hi + ')',
+      anchorRow(host, a.l || k, 'reported', a.v + '   (range ' + a.lo + ' to ' + a.hi + ')',
         a.src + '. ' + a.why);
     });
     keys.filter(function (k) { return !M.ASSUMED[k].src; }).forEach(function (k) {
       var a = M.ASSUMED[k];
-      anchorRow(host, k, 'assumed', a.v + '   (range ' + a.lo + ' to ' + a.hi + ')', a.why);
+      anchorRow(host, a.l || k, 'assumed', a.v + '   (range ' + a.lo + ' to ' + a.hi + ')', a.why);
     });
   }
 
@@ -537,11 +645,7 @@
         if (!r) return;
         var tr = E('tr');
         var td0 = E('td', null, n[1] + ' ');
-        var sp = E('span', null, n[0]);
-        sp.style.color = 'var(--dim)';
-        sp.style.fontFamily = 'var(--mono)';
-        sp.style.fontSize = '11px';
-        td0.appendChild(sp);
+        td0.appendChild(E('span', 'band-range', n[0]));
         add(tr, td0, E('td', 'n', thou(r.population)), E('td', 'n', thou(r.inKev)),
           E('td', 'n' + (n[1] === 'Critical' ? ' hi' : ''), r.pExploited.toFixed(3) + '%'));
         body.appendChild(tr);
@@ -555,13 +659,87 @@
       ' High. That is a weak signal, not a filter, which is why this model is driven by exploit availability rather than by severity band.');
   }
 
+  /* ── masthead clock ────────────────────────────────────────────────────── */
+  /* The three figures the whole argument rests on, read off the vendored
+   * snapshot at render time. Typed into the prose they would go stale the
+   * first time the corpus was refreshed. */
+  function clockRow(host, label, value) {
+    var wrap = E('div');
+    add(wrap, E('dt', null, label), E('dd', null, value));
+    host.appendChild(wrap);
+  }
+  function renderClock() {
+    var host = empty($('clock'));
+    clockRow(host, 'Median days from publication to public exploit code, ' +
+      C.pocTiming.latest.year, C.pocTiming.latest.medianDays + ' d');
+    clockRow(host, 'Exploits that arrive before the patch does',
+      C.pocTiming.latest.pctBefore + '%');
+    clockRow(host, 'Criticals that ever get a public working exploit',
+      C.armed.pPoCCritical + '%');
+  }
+
+  /* ── reveal, dock and contents ─────────────────────────────────────────── */
+  /* One observer per job, all of them optional: with no IntersectionObserver
+   * the page loses a reveal, a docked readout and a highlighted contents entry,
+   * and keeps everything it is actually for. */
+  function observeReveal() {
+    if (!ANIM || !window.IntersectionObserver) {
+      document.documentElement.classList.remove('anim');
+      return;
+    }
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        if (!en.isIntersecting) return;
+        var el = en.target;
+        el.classList.add('in');
+        io.unobserve(el);
+        /* Chart interiors animate on the pass that first brings them into
+         * view, never on init: eight charts are drawn before a reader has
+         * scrolled to any of them, and an animation nobody sees is only a
+         * cost. */
+        if (DRAG) return;
+        el.querySelectorAll('.chart').forEach(function (c) {
+          c.classList.add('fresh');
+          setTimeout(function () { c.classList.remove('fresh'); }, 1300);
+        });
+      });
+    }, { rootMargin: '0px 0px -6% 0px', threshold: 0.02 });
+    document.querySelectorAll('.stats, .clock, .two, .results > .panel')
+      .forEach(function (el) { io.observe(el); });
+  }
+
+  function observeDock() {
+    var stats = document.querySelector('.stats'), dock = $('dock');
+    if (!stats || !dock || !window.IntersectionObserver) return;
+    new IntersectionObserver(function (e) {
+      dock.classList.toggle('up', !e[0].isIntersecting && e[0].boundingClientRect.top < 0);
+    }, { threshold: 0 }).observe(stats);
+  }
+
+  function observeToc() {
+    var secs = document.querySelectorAll('.results [id]');
+    var links = {};
+    document.querySelectorAll('.toc a').forEach(function (a) {
+      links[a.getAttribute('href').slice(1)] = a;
+    });
+    if (!window.IntersectionObserver) return;
+    var seen = {};
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) { seen[en.target.id] = en.isIntersecting; });
+      var cur = null;
+      secs.forEach(function (x) { if (seen[x.id] && !cur) cur = x.id; });
+      Object.keys(links).forEach(function (k) { links[k].classList.toggle('cur', k === cur); });
+    }, { rootMargin: '-42% 0px -48% 0px' });
+    secs.forEach(function (x) { if (links[x.id]) io.observe(x); });
+  }
+
   /* ── init ──────────────────────────────────────────────────────────────── */
   function init() {
     try {
       var stored = localStorage.getItem('er-theme');
       if (stored) document.documentElement.setAttribute('data-theme', stored);
     } catch (e) { /* ignore */ }
-    $('theme-btn').textContent = currentTheme() === 'dark' ? '☀ Light' : '☾ Dark';
+    $('theme-btn').textContent = currentTheme() === 'dark' ? 'Light' : 'Dark';
 
     fromURL();
     buildControls(M.SPEC.def, $('cd'), $('cd-adv'));
@@ -571,7 +749,7 @@
     document.querySelectorAll('[data-metric]').forEach(function (btn) {
       btn.addEventListener('click', function () {
         METRIC = btn.dataset.metric;
-        document.querySelectorAll('[data-metric]').forEach(function (x) { x.classList.toggle('on', x === btn); });
+        syncMetric();
         heavy();
       });
     });
@@ -596,9 +774,7 @@
 
     /* The metric toggle is markup-default "Compromise"; a shared link may say
      * otherwise, and the chart would then disagree with its own button. */
-    document.querySelectorAll('[data-metric]').forEach(function (x) {
-      x.classList.toggle('on', x.dataset.metric === METRIC);
-    });
+    syncMetric();
 
     ['race', 'funnel', 'routes', 'surv', 'torn', 'sweep', 'severity', 'volume'].forEach(wireExport);
 
@@ -614,6 +790,13 @@
 
     renderAnchors();
     renderEvidence();
+    renderClock();
+    observeReveal();
+    observeDock();
+    observeToc();
+
+    window.addEventListener('pointerup', function () { DRAG = false; });
+    window.addEventListener('pointercancel', function () { DRAG = false; });
 
     var resizeT = null;
     window.addEventListener('resize', function () {

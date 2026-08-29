@@ -50,40 +50,40 @@
    * ═══════════════════════════════════════════════════════════════════════ */
   var ASSUMED = {
     /* days before publication that a pre-disclosure exploit appears (median) */
-    preMedian:      { v: 7,    lo: 3,    hi: 21,   why: 'No public measurement of pre-disclosure exploit age. Shape assumed lognormal.' },
+    preMedian:      { l: 'Days a pre-disclosure exploit precedes publication (median)', v: 7,    lo: 3,    hi: 21,   why: 'No public measurement of pre-disclosure exploit age. Shape assumed lognormal.' },
     /* 75th percentile of the PoC clock, days (anchors the slow tail) */
-    pocP75:         { v: 47.5, lo: 30,   hi: 90,   why: 'CyberMon hero series p75 for the current year; widened for censoring.' },
+    pocP75:         { l: 'Days from publication to public exploit code (75th percentile)', v: 47.5, lo: 30,   hi: 90,   why: 'CyberMon hero series p75 for the current year; widened for censoring.' },
     /* daily hazard that a mass-exploitation campaign reaches one exposed system */
-    scanHazBase:    { v: 0.010, lo: 0.004, hi: 0.022, why: 'No public per-asset campaign-arrival rate. Widest band in the model.' },
+    scanHazBase:    { l: 'Daily chance a mass-exploitation campaign reaches one exposed system', v: 0.010, lo: 0.004, hi: 0.022, why: 'No public per-asset campaign-arrival rate. Widest band in the model.' },
     /* hazard multiplier when an exploit exists publicly but is not known to be used */
-    pocOnlyHazard:  { v: 0.08, lo: 0.02, hi: 0.20, why: 'Public PoC without confirmed in-the-wild use still draws opportunistic traffic.' },
+    pocOnlyHazard:  { l: 'Hazard multiplier when exploit code is public but not known to be used', v: 0.08, lo: 0.02, hi: 0.20, why: 'Public PoC without confirmed in-the-wild use still draws opportunistic traffic.' },
     /* hazard multiplier for edge appliances vs ordinary web systems */
-    edgeHazard:     { v: 2.2,  lo: 1.4,  hi: 3.6,  why: 'Edge appliances are hit harder and carry no endpoint telemetry.' },
+    edgeHazard:     { l: 'Hazard multiplier for edge appliances against ordinary systems', v: 2.2,  lo: 1.4,  hi: 3.6,  why: 'Edge appliances are hit harder and carry no endpoint telemetry.' },
     /* hazard multiplier applied to the pre-publication window (targeted, not mass) */
-    preHazard:      { v: 0.25, lo: 0.08, hi: 0.60, why: 'Zero-day activity is targeted; mass scanning follows public code.' },
+    preHazard:      { l: 'Hazard multiplier before publication, where activity is targeted', v: 0.25, lo: 0.08, hi: 0.60, why: 'Zero-day activity is targeted; mass scanning follows public code.' },
     /* P(you actually run the affected product at all) */
-    runsEdge:       { v: 0.55, lo: 0.30, hi: 0.85, why: 'No measurement of estate-to-CVE product overlap. The single largest lever.' },
-    runsWeb:        { v: 0.35, lo: 0.15, hi: 0.65, why: 'As above, for ordinary internet-facing software.' },
+    runsEdge:       { l: 'Chance you run an affected appliance product at all', v: 0.55, lo: 0.30, hi: 0.85, why: 'No measurement of estate-to-CVE product overlap. The single largest lever.' },
+    runsWeb:        { l: 'Chance you run an affected ordinary product at all', v: 0.35, lo: 0.15, hi: 0.65, why: 'As above, for ordinary internet-facing software.' },
     /* containment: breakout and objective timings, days */
-    breakoutMedian: { v: 0.0134, lo: 0.009, hi: 0.033,
+    breakoutMedian: { l: 'Days from foothold to lateral movement (median)', v: 0.0134, lo: 0.009, hi: 0.033,
       why: 'Median that reproduces the reported 29-minute average eCrime breakout under this model\'s lognormal spread. Upper bound is the 2024 figure (~48 min average).',
       src: 'CrowdStrike Global Threat Report 2026' },
-    objectiveMedian:{ v: 5,    lo: 2,    hi: 12,
+    objectiveMedian:{ l: 'Days from foothold to the adversary objective (median)', v: 5,    lo: 2,    hi: 12,
       why: 'Median dwell when the adversary announces itself, usually via a ransomware note, giving a direct read on time from foothold to objective.',
       src: 'Mandiant M-Trends 2026' },
     /* P(contain) in each of the three detection regimes */
-    containFast:    { v: 0.92, lo: 0.80, hi: 0.98, why: 'Detected before breakout.' },
-    containMid:     { v: 0.55, lo: 0.35, hi: 0.75,
+    containFast:    { l: 'Containment when detected before breakout', v: 0.92, lo: 0.80, hi: 0.98, why: 'Detected before breakout.' },
+    containMid:     { l: 'Containment when detected before the objective', v: 0.55, lo: 0.35, hi: 0.75,
       why: 'Detected after breakout but before the objective. Corroborated by 44% of ransomware attacks being stopped before encryption (34% at small organisations, 46% at large).',
       src: 'Sophos State of Ransomware 2026' },
-    containLate:    { v: 0.10, lo: 0.02, hi: 0.25, why: 'Detected after the objective is reached.' },
+    containLate:    { l: 'Containment when detected after the objective', v: 0.10, lo: 0.02, hi: 0.25, why: 'Detected after the objective is reached.' },
     /* fraction of your estate an affected product covers */
-    afEdgeMin:      { v: 0.30, lo: 0.15, hi: 0.45, why: 'Appliance fleets are homogeneous: one vendor covers much of the tier.' },
-    afWebMax:       { v: 0.44, lo: 0.25, hi: 0.65, why: 'Ordinary software is spread thinner across an estate.' },
+    afEdgeMin:      { l: 'Share of the appliance tier one affected product covers', v: 0.30, lo: 0.15, hi: 0.45, why: 'Appliance fleets are homogeneous: one vendor covers much of the tier.' },
+    afWebMax:       { l: 'Share of the estate one affected ordinary product covers', v: 0.44, lo: 0.25, hi: 0.65, why: 'Ordinary software is spread thinner across an estate.' },
     /* P(a landed campaign actually compromises a reachable affected system) */
-    exploitWorks:   { v: 0.35, lo: 0.18, hi: 0.55, why: 'Exploits fail: wrong version, hardening, luck.' },
+    exploitWorks:   { l: 'Chance a landed campaign compromises a reachable system', v: 0.35, lo: 0.18, hi: 0.55, why: 'Exploits fail: wrong version, hardening, luck.' },
     /* how much slower detection is on a system with no endpoint telemetry */
-    blindMult:      { v: 2.6,  lo: 1.8,  hi: 5,
+    blindMult:      { l: 'Detection slowdown on systems with no endpoint telemetry', v: 2.6,  lo: 1.8,  hi: 5,
       why: 'Median dwell is 26 days when an external party notifies you and 10 days when detected internally, a measured 2.6x penalty for external notification.',
       src: 'Mandiant M-Trends 2026' },
   };
@@ -241,11 +241,18 @@
    * proof-of-concept that achieves RCE and reliably executes, which is the
    * same primitive this model runs on. The numbers below express that regime
    * as a transform on the baseline estate. */
+  /* The `d` strings describe what each regime does to the estate, in the same
+   * terms as the multipliers beside them. 'BOD 26-04' in particular is the one
+   * control on the page whose label cannot be guessed from the label alone. */
   var MATURITY = {
-    tight:   { l: 'Mature',  cadence: 0.25, emergH: 0.20, emergHit: 1.5, awareH: 0.25, detect: 0.05, virtual: 2.5, inventory: 4,   edrCoverage: 12 },
-    typical: { l: 'Typical',   cadence: 1,    emergH: 1,    emergHit: 1,   awareH: 1,    detect: 1,    virtual: 1,   inventory: 0,   edrCoverage: 0 },
-    loose:   { l: 'Sprawling', cadence: 2.6,  emergH: 2.4,  emergHit: 0.5, awareH: 3.5,  detect: 3.2,  virtual: 0.3, inventory: -12, edrCoverage: -25 },
-    bod:     { l: 'BOD 26-04',  cadence: 1,    emergH: 1,    emergHit: 1.55, awareH: 0.33, detect: 1,    virtual: 1,   inventory: 3,   edrCoverage: 4 },
+    tight:   { l: 'Mature',    d: 'Change windows in days rather than weeks, an emergency path that genuinely runs, applicability established quickly, and detection content maintained against live telemetry.',
+      cadence: 0.25, emergH: 0.20, emergHit: 1.5, awareH: 0.25, detect: 0.05, virtual: 2.5, inventory: 4,   edrCoverage: 12 },
+    typical: { l: 'Typical',   d: 'The baseline estate: scheduled change windows, an out-of-band path used when somebody escalates, and partial telemetry coverage.',
+      cadence: 1,    emergH: 1,    emergHit: 1,   awareH: 1,    detect: 1,    virtual: 1,   inventory: 0,   edrCoverage: 0 },
+    loose:   { l: 'Sprawling', d: 'Change control by exception, applicability established late, little virtual patching, and a material share of the estate in no remediation cycle at all.',
+      cadence: 2.6,  emergH: 2.4,  emergHit: 0.5, awareH: 3.5,  detect: 3.2,  virtual: 0.3, inventory: -12, edrCoverage: -25 },
+    bod:     { l: 'BOD 26-04', d: 'A mandated regime rather than a rung on the ladder. Prioritising on KEV presence, exposure, automatability and impact buys faster, more reliable triage and a better-known estate — not a faster change window.',
+      cadence: 1,    emergH: 1,    emergHit: 1.55, awareH: 0.33, detect: 1,    virtual: 1,   inventory: 3,   edrCoverage: 4 },
   };
 
   function clampTo(k, v) {

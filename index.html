@@ -11,34 +11,75 @@
 <meta property="og:type" content="article">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/app.css">
 <script>
-  /* set the theme before first paint so there is no flash */
+  /* Set the theme before first paint so there is no flash. */
   try {
     var t = localStorage.getItem('er-theme');
     if (t) document.documentElement.setAttribute('data-theme', t);
+  } catch (e) {}
+  /* The entry animations hide their elements until they scroll into view, so
+   * the class that arms them has to be decided before first paint too — set
+   * afterwards it would show every panel and then blink it away. Anything
+   * that would stop js/app.js from revealing them again — no observer, a
+   * reader who wants reduced motion, or a script error — disarms it and the
+   * page renders complete and static. */
+  try {
+    if (window.IntersectionObserver &&
+        !(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches)) {
+      document.documentElement.classList.add('anim');
+      window.addEventListener('error', function () {
+        document.documentElement.classList.remove('anim');
+      });
+    }
   } catch (e) {}
 </script>
 </head>
 <body>
 
+<a class="skip" href="#results">Skip to the results</a>
+
+<!-- ══════════════════ MASTHEAD ══════════════════ -->
 <header><div class="wrap">
   <div class="eyebrow">
     <span>exposure race</span><span>monte carlo</span><span>v3</span>
     <span>calibrated <span data-snapshot>…</span></span>
     <span class="topbar">
-      <button id="theme-btn" class="icon-btn ghost" type="button">☾ Dark</button>
-      <button id="share-btn" class="icon-btn ghost" type="button">⇗ Copy link</button>
-      <button id="reset-btn" class="icon-btn ghost" type="button">↺ Reset</button>
+      <button id="theme-btn" class="icon-btn ghost" type="button">Light</button>
+      <button id="share-btn" class="icon-btn ghost" type="button">Copy link</button>
+      <button id="reset-btn" class="icon-btn ghost" type="button">Reset</button>
     </span>
   </div>
-  <h1>Does the exploit arrive <em>before</em> your patch?</h1>
-  <p class="sub">A Monte Carlo model of exploit availability against remediation completion,
-  resimulated on every parameter change. The adversary timeline is <b>not assumed</b>: it is the
-  measured distribution of days from CVE publication to public exploit code, taken from the
-  CyberMon corpus. Around a fifth of that interval elapses before disclosure.</p>
+
+  <div class="mast">
+    <div class="mast-copy">
+      <h1>Does the exploit arrive <em>before</em> your patch?</h1>
+      <p class="sub">A Monte Carlo model of exploit availability against remediation completion,
+      resimulated on every parameter change. The adversary timeline is <b>not assumed</b>: it is the
+      measured distribution of days from CVE publication to public exploit code, taken from the
+      CyberMon corpus. Around a fifth of that interval elapses before disclosure.</p>
+    </div>
+
+    <!-- The thesis in three measured figures, read off the vendored snapshot at
+         render time rather than typed into the prose, so they cannot go stale. -->
+    <aside class="clock" aria-labelledby="clock-h">
+      <div class="clock-h" id="clock-h">The clock, as measured <span class="tag m">measured</span></div>
+      <dl id="clock"></dl>
+    </aside>
+  </div>
 </div></header>
+
+<!-- Compact readout that takes over when the stat row scrolls away, so the
+     answer stays on screen while the instrument is being operated. -->
+<div class="dock" id="dock" aria-hidden="true">
+  <div class="wrap dock-in">
+    <span class="dock-k">Probability of compromise, 12&nbsp;months</span>
+    <span class="dock-v" id="dock-v">…</span>
+    <span class="dock-ci" id="dock-ci"></span>
+    <span class="dock-est" id="dock-est"></span>
+  </div>
+</div>
 
 <div class="wrap grid">
 
@@ -50,16 +91,17 @@
 
       <div class="seg">
         <div class="seg-l">Environment attributes <span class="seg-hint">select any</span></div>
-        <div class="presets" id="sel-profile"></div>
+        <div class="presets chips" id="sel-profile"></div>
         <p class="seg-d" id="desc-profile"></p>
       </div>
       <div class="seg">
         <div class="seg-l">Operational maturity</div>
-        <div class="presets" id="sel-maturity"></div>
+        <div class="presets ladder-4" id="sel-maturity"></div>
+        <p class="seg-d" id="desc-maturity"></p>
       </div>
       <div class="seg">
         <div class="seg-l">Detection capability</div>
-        <div class="presets" id="sel-detection"></div>
+        <div class="presets ladder-5" id="sel-detection"></div>
         <p class="seg-d" id="desc-detection"></p>
       </div>
 
@@ -73,6 +115,22 @@
       <div id="ca"></div>
       <details class="more"><summary>Additional threat parameters</summary><div id="ca-adv"></div></details>
     </div>
+
+    <nav class="toc" aria-label="Sections">
+      <div class="seg-l">On this page</div>
+      <ol>
+        <li><a href="#p-race">Exploit against remediation</a></li>
+        <li><a href="#p-funnel">Attrition to compromise</a></li>
+        <li><a href="#p-torn">Sensitivity analysis</a></li>
+        <li><a href="#p-acts">Prioritised actions</a></li>
+        <li><a href="#p-routes">Initial access vector</a></li>
+        <li><a href="#p-surv">Time to first compromise</a></li>
+        <li><a href="#p-sweep">Has AI compressed the clock?</a></li>
+        <li><a href="#p-severity">Why not severity</a></li>
+        <li><a href="#p-volume">Severity-label inflation</a></li>
+        <li><a href="#p-anchors">Model provenance</a></li>
+      </ol>
+    </nav>
   </div>
 
   <!-- ══════════════════ RESULTS ══════════════════ -->
@@ -82,10 +140,12 @@
     <div class="stat">
       <span class="k">Probability of compromise, 12-month window</span>
       <div class="v" id="s-p">…</div><div class="ci" id="s-p-ci"></div>
+      <div class="band" id="s-p-band" aria-hidden="true"></div>
     </div>
     <div class="stat">
       <span class="k">Probability of an incident, 12-month window</span>
       <div class="v" id="s-i">…</div><div class="ci" id="s-i-ci"></div>
+      <div class="band" id="s-i-band" aria-hidden="true"></div>
     </div>
     <div class="stat plain">
       <span class="k">Expected systems compromised per year</span>
@@ -97,20 +157,21 @@
     </div>
   </div>
 
-  <div class="results">
+  <div class="results" id="results">
 
     <!-- ── the race ── -->
-    <div class="panel">
+    <section class="panel" id="p-race">
       <div class="panel-head">
-        <div>
+        <div class="ph-copy">
+          <span class="ord">01</span>
           <h3>Exploit availability against remediation</h3>
           <p class="lead">Day zero is patch availability. Everything to the left of it is
           exploitation that precedes any available fix. The hatched region is the probability that
           public exploit code exists before remediation completes.</p>
         </div>
         <div class="tools">
-          <button class="icon-btn" data-copy="race" type="button">⧉ Copy</button>
-          <button class="icon-btn" data-dl="race" type="button">↓ PNG</button>
+          <button class="icon-btn" data-copy="race" type="button">Copy</button>
+          <button class="icon-btn" data-dl="race" type="button">PNG</button>
         </div>
       </div>
       <div class="legend">
@@ -120,77 +181,99 @@
         <span><i style="background:var(--bad)"></i>unremediated exposure</span>
       </div>
       <svg id="race" class="chart" role="img" aria-label="Exploit availability against remediation completion"></svg>
-      <p class="lead" id="race-note" style="margin-top:12px;margin-bottom:0"></p>
-    </div>
+      <p class="lead foot" id="race-note"></p>
+    </section>
 
     <!-- ── funnel ── -->
-    <div class="panel">
+    <section class="panel" id="p-funnel">
       <div class="panel-head">
-        <div>
+        <div class="ph-copy">
+          <span class="ord">02</span>
           <h3>Attrition from publication to compromise</h3>
           <p class="lead">Each stage is a subset of the one above it. The two largest reductions
           occur outside the remediation process: most published criticals affect software not
           present in the estate, and most of the remainder never receive public exploit code.</p>
         </div>
         <div class="tools">
-          <button class="icon-btn" data-copy="funnel" type="button">⧉ Copy</button>
-          <button class="icon-btn" data-dl="funnel" type="button">↓ PNG</button>
+          <button class="icon-btn" data-copy="funnel" type="button">Copy</button>
+          <button class="icon-btn" data-dl="funnel" type="button">PNG</button>
         </div>
       </div>
       <svg id="funnel" class="chart" role="img" aria-label="Attrition funnel from published vulnerabilities to compromise"></svg>
-      <p class="lead" id="wild-note" style="margin-top:10px;margin-bottom:0"></p>
-    </div>
+      <p class="lead foot" id="wild-note"></p>
+    </section>
 
     <!-- ── sensitivity ── -->
-    <div class="panel">
+    <section class="panel" id="p-torn">
       <div class="panel-head">
-        <div>
+        <div class="ph-copy">
+          <span class="ord">03</span>
           <h3>Sensitivity analysis</h3>
           <p class="lead">Each bar varies a single parameter across its plausible range with all
           others held constant. <b>Compromise</b> and <b>incident</b> respond to different
           parameters, and that divergence is what should drive remediation priority.</p>
         </div>
         <div class="tools">
-          <button class="icon-btn on" data-metric="p" type="button">Compromise</button>
-          <button class="icon-btn" data-metric="incident" type="button">Incident</button>
-          <button class="icon-btn" data-copy="torn" type="button">⧉</button>
-          <button class="icon-btn" data-dl="torn" type="button">↓</button>
+          <div class="switch" role="group" aria-label="Metric">
+            <button class="icon-btn on" data-metric="p" type="button">Compromise</button>
+            <button class="icon-btn" data-metric="incident" type="button">Incident</button>
+          </div>
+          <button class="icon-btn" data-copy="torn" type="button">Copy</button>
+          <button class="icon-btn" data-dl="torn" type="button">PNG</button>
         </div>
       </div>
       <svg id="torn" class="chart" role="img" aria-label="Sensitivity of the outcome to each parameter"></svg>
-    </div>
+    </section>
 
-    <div class="panel">
-      <h3>Prioritised remediation actions</h3>
-      <p class="lead">The five parameter changes with the largest effect on
-      <span id="acts-metric">annual probability of compromise</span> at current settings.</p>
+    <section class="panel" id="p-acts">
+      <div class="panel-head">
+        <div class="ph-copy">
+          <span class="ord">04</span>
+          <h3>Prioritised remediation actions</h3>
+          <p class="lead">The five parameter changes with the largest effect on
+          <span id="acts-metric">annual probability of compromise</span> at current settings.</p>
+        </div>
+      </div>
       <ul class="acts" id="acts"></ul>
-    </div>
+    </section>
 
     <!-- ── routes + survival ── -->
     <div class="two">
-      <div class="panel">
+      <section class="panel" id="p-routes">
         <div class="panel-head">
-          <div><h3>Initial access vector</h3>
-          <p class="lead">Vector of the <em>first</em> compromise, counted once per simulated year.</p></div>
-          <div class="tools"><button class="icon-btn" data-dl="routes" type="button">↓</button></div>
+          <div class="ph-copy">
+            <span class="ord">05</span>
+            <h3>Initial access vector</h3>
+            <p class="lead">Vector of the <em>first</em> compromise, counted once per simulated year.</p>
+          </div>
+          <div class="tools">
+            <button class="icon-btn" data-copy="routes" type="button">Copy</button>
+            <button class="icon-btn" data-dl="routes" type="button">PNG</button>
+          </div>
         </div>
         <svg id="routes" class="chart" role="img" aria-label="Initial access vector of first compromise"></svg>
-      </div>
-      <div class="panel">
+      </section>
+      <section class="panel" id="p-surv">
         <div class="panel-head">
-          <div><h3>Time to first compromise</h3>
-          <p class="lead">Proportion of simulated years without compromise, by day.</p></div>
-          <div class="tools"><button class="icon-btn" data-dl="surv" type="button">↓</button></div>
+          <div class="ph-copy">
+            <span class="ord">06</span>
+            <h3>Time to first compromise</h3>
+            <p class="lead">Proportion of simulated years without compromise, by day.</p>
+          </div>
+          <div class="tools">
+            <button class="icon-btn" data-copy="surv" type="button">Copy</button>
+            <button class="icon-btn" data-dl="surv" type="button">PNG</button>
+          </div>
         </div>
         <svg id="surv" class="chart" role="img" aria-label="Survival function over twelve months"></svg>
-      </div>
+      </section>
     </div>
 
     <!-- ── compression what-if ── -->
-    <div class="panel">
+    <section class="panel" id="p-sweep">
       <div class="panel-head">
-        <div>
+        <div class="ph-copy">
+          <span class="ord">07</span>
           <h3>Has AI compressed the exploit clock?</h3>
           <p class="lead">BOD 26-04 names adversary use of AI as a reason the window between patch
           release and exploitation may narrow. This curve models that scenario: exploit code
@@ -200,37 +283,37 @@
           defaults to the measured distribution and puts compression behind this slider.</p>
         </div>
         <div class="tools">
-          <button class="icon-btn" data-copy="sweep" type="button">⧉ Copy</button>
-          <button class="icon-btn" data-dl="sweep" type="button">↓ PNG</button>
+          <button class="icon-btn" data-copy="sweep" type="button">Copy</button>
+          <button class="icon-btn" data-dl="sweep" type="button">PNG</button>
         </div>
       </div>
       <svg id="sweep" class="chart" role="img" aria-label="Outcome against modelled exploit-clock compression"></svg>
-    </div>
+    </section>
 
     <!-- ── evidence ── -->
-    <div class="panel">
+    <section class="panel" id="p-severity">
       <div class="panel-head">
-        <div>
+        <div class="ph-copy">
+          <span class="ord">08</span>
           <h3>Why severity is not the prioritisation trigger</h3>
           <p class="lead">The conventional approach counts Critical-rated CVEs. The corpus does not
           support it. Below is the full scored CVE population, bucketed by CVSS band, against the
           share of each band that has reached the confirmed-exploited catalogue.</p>
         </div>
         <div class="tools">
-          <button class="icon-btn" data-copy="severity" type="button">⧉ Copy</button>
-          <button class="icon-btn" data-dl="severity" type="button">↓ PNG</button>
+          <button class="icon-btn" data-copy="severity" type="button">Copy</button>
+          <button class="icon-btn" data-dl="severity" type="button">PNG</button>
         </div>
       </div>
       <svg id="severity" class="chart" role="img" aria-label="Share of each CVSS severity band confirmed exploited"></svg>
-      <div class="scroll-x" style="margin-top:16px">
+      <div class="scroll-x">
         <table class="tbl">
           <thead><tr><th>CVSS band</th><th>Scored CVEs</th><th>Confirmed exploited</th><th>Rate</th></tr></thead>
           <tbody id="ev-body"></tbody>
         </table>
       </div>
-      <p class="lead" id="ev-foot" style="margin-top:14px;margin-bottom:0"></p>
-      <p class="lead" style="margin-top:12px;margin-bottom:0;border-top:1px solid var(--rule);padding-top:12px">
-      <b>This position is now codified.</b> CISA Binding Operational Directive
+      <p class="lead foot" id="ev-foot"></p>
+      <p class="lead codified"><b>This position is now codified.</b> CISA Binding Operational Directive
       <b>26-04</b> (10 June 2026) supersedes BOD 22-01 and removes severity as the
       trigger entirely. It prioritises on four SSVC decision points: presence in the
       KEV catalogue, public exposure of the asset, whether exploitation is
@@ -239,12 +322,13 @@
       The published heuristic for <em>automatable</em> is a public proof-of-concept
       achieving remote code execution that executes reliably, which is the same
       primitive this model measures.</p>
-    </div>
+    </section>
 
     <!-- ── volume ── -->
-    <div class="panel">
+    <section class="panel" id="p-volume">
       <div class="panel-head">
-        <div>
+        <div class="ph-copy">
+          <span class="ord">09</span>
           <h3>Severity-label inflation</h3>
           <p class="lead">The Critical-rated population is growing faster than the corpus that
           contains it. A model anchored to criticals per year therefore drifts more pessimistic
@@ -252,56 +336,73 @@
           severity is not used as an input here.</p>
         </div>
         <div class="tools">
-          <button class="icon-btn" data-copy="volume" type="button">⧉ Copy</button>
-          <button class="icon-btn" data-dl="volume" type="button">↓ PNG</button>
+          <button class="icon-btn" data-copy="volume" type="button">Copy</button>
+          <button class="icon-btn" data-dl="volume" type="button">PNG</button>
         </div>
       </div>
       <svg id="volume" class="chart" role="img" aria-label="Published CVEs and the Critical-rated share, year over year"></svg>
-      <p class="lead" style="margin-top:12px;margin-bottom:0">Part of that increase reflects
+      <p class="lead foot">Part of that increase reflects
       scoring policy rather than vulnerability reality. CNAs self-assign scores, and the share each
       rates 9.0 or above ranges from near zero to roughly two in five against the same scale. NVD
       has also ceased analysis on a growing share of the corpus.</p>
-    </div>
+    </section>
 
     <!-- ── anchors ── -->
-    <div class="panel">
-      <h3>Model provenance</h3>
-      <p class="lead">Three classes of coefficient, distinguished rather than blended.
-      <span class="tag m">measured</span> is read directly from the vendored corpus and is
-      reproducible offline. <span class="tag r">reported</span> is a dated published figure:
-      cited, but dependent on a third party's methodology.
-      <span class="tag a">assumed</span> is judgement, used where no public measurement exists.
-      The latter two are drawn from their stated range on every block of trials, which is the
-      source of the credible bands. Where a coefficient is contested, the stated range is the
-      parameter to challenge.</p>
+    <section class="panel" id="p-anchors">
+      <div class="panel-head">
+        <div class="ph-copy">
+          <span class="ord">10</span>
+          <h3>Model provenance</h3>
+          <p class="lead">Three classes of coefficient, distinguished rather than blended.
+          <span class="tag m">measured</span> is read directly from the vendored corpus and is
+          reproducible offline. <span class="tag r">reported</span> is a dated published figure:
+          cited, but dependent on a third party's methodology.
+          <span class="tag a">assumed</span> is judgement, used where no public measurement exists.
+          The latter two are drawn from their stated range on every block of trials, which is the
+          source of the credible bands. Where a coefficient is contested, the stated range is the
+          parameter to challenge.</p>
+        </div>
+      </div>
       <div class="anchors" id="anchors"></div>
-    </div>
+    </section>
 
     <footer>
-      <p><b>Method.</b> 14,000 simulated years per parameter change. The adversary timeline is
-      sampled from the measured distribution of days between CVE publication and public exploit
-      code. The remediation timeline is derived from triage delay, out-of-band capability and
-      routine cadence. Compromise is modelled as a correlated campaign arrival rather than as
-      independent per-system trials, since independent draws saturate at 100% and misstate the
-      result.</p>
-      <p><b>Provenance.</b> Vulnerability, exploit-catalogue, EPSS and KEV figures are from the
-      <a href="https://devko.github.io/CyberMon/">CyberMon</a> snapshot
-      <code data-snapshot>…</code>, vendored under <code>data/cybermon/</code> so every number here is
-      reproducible offline. Regenerate with <code>node tools/refresh-data.js &amp;&amp; node
-      tools/derive-calibration.js</code>. Verify the model with <code>node test/model.test.js</code>.</p>
-      <p><b>Scope.</b> Vulnerability exploitation only. Credential abuse, phishing and insider
-      vectors are out of scope, so the output is a lower bound on intrusion risk rather than a
-      complete picture of it. The 2026 DBIR attributes 31% of breaches to vulnerability
-      exploitation, ahead of credential abuse but well short of the total. Run-rate figures are
-      linear extrapolation from a partial year.</p>
-      <p><b>Sources for the reported tier.</b> Breakout timing from the CrowdStrike Global Threat
-      Report 2026 (29-minute average eCrime breakout, fastest observed 27 seconds); dwell and
-      notification-path timings from Mandiant M-Trends 2026 (14-day global median, 10 days when an
-      organisation finds it itself against 26 when somebody else tells them); containment
-      corroborated against Sophos State of Ransomware 2026 (44% of attacks stopped before
-      encryption). These are vendor incident-response populations, which skew toward organisations
-      that required incident response. Read them as the shape of the distribution rather than as a
-      population baseline.</p>
+      <div class="fnote">
+        <div class="seg-l">Method</div>
+        <p>14,000 simulated years per parameter change. The adversary timeline is
+        sampled from the measured distribution of days between CVE publication and public exploit
+        code. The remediation timeline is derived from triage delay, out-of-band capability and
+        routine cadence. Compromise is modelled as a correlated campaign arrival rather than as
+        independent per-system trials, since independent draws saturate at 100% and misstate the
+        result.</p>
+      </div>
+      <div class="fnote">
+        <div class="seg-l">Provenance</div>
+        <p>Vulnerability, exploit-catalogue, EPSS and KEV figures are from the
+        <a href="https://devko.github.io/CyberMon/">CyberMon</a> snapshot
+        <code data-snapshot>…</code>, vendored under <code>data/cybermon/</code> so every number here is
+        reproducible offline. Regenerate with <code>node tools/refresh-data.js &amp;&amp; node
+        tools/derive-calibration.js</code>. Verify the model with <code>node test/model.test.js</code>.</p>
+      </div>
+      <div class="fnote">
+        <div class="seg-l">Scope</div>
+        <p>Vulnerability exploitation only. Credential abuse, phishing and insider
+        vectors are out of scope, so the output is a lower bound on intrusion risk rather than a
+        complete picture of it. The <span data-curyear>2026</span> DBIR attributes 31% of breaches to vulnerability
+        exploitation, ahead of credential abuse but well short of the total. Run-rate figures are
+        linear extrapolation from a partial year.</p>
+      </div>
+      <div class="fnote">
+        <div class="seg-l">Sources for the reported tier</div>
+        <p>Breakout timing from the CrowdStrike Global Threat
+        Report 2026 (29-minute average eCrime breakout, fastest observed 27 seconds); dwell and
+        notification-path timings from Mandiant M-Trends 2026 (14-day global median, 10 days when an
+        organisation finds it itself against 26 when somebody else tells them); containment
+        corroborated against Sophos State of Ransomware 2026 (44% of attacks stopped before
+        encryption). These are vendor incident-response populations, which skew toward organisations
+        that required incident response. Read them as the shape of the distribution rather than as a
+        population baseline.</p>
+      </div>
     </footer>
 
   </div>

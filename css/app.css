@@ -1,16 +1,29 @@
 /* Exposure Race — styles.
+ *
  * Theme model: the complete palette is defined on :root (light). Dark is a
  * token-only override, applied both by preference and by explicit data-theme,
- * so nothing is ever defined *only* inside a media query. */
+ * so nothing is ever defined *only* inside a media query.
+ *
+ * Type model: three families, one job each. A serif carries the argument, a
+ * grotesque carries the prose, and the monospace carries every measurement.
+ * The split is the thesis in miniature — an opinionated voice making claims,
+ * resting on instrumentation that is conspicuously not trying to persuade.
+ */
 
 :root {
-  --ink:   #FBFCFC;  --panel: #FFFFFF;  --sunk:  #F1F5F4;
-  --rule:  #DDE6E4;  --rule2: #C4D3D0;
-  --txt:   #0B1615;  --mut:   #5A716D;  --dim:   #657B77;
-  --att:   #D0451B;  --def:   #0A7A69;  --bad:   #C81E3C;
-  --zero:  #7A2FD6;  --warn:  #96670A;
-  --shadow: 0 1px 2px rgba(11,22,21,.06), 0 8px 24px -12px rgba(11,22,21,.18);
-  --track: #DDE6E4;
+  /* Paper rather than white: the ground carries the same green cast as the
+   * rest of the system, so a card reads as a raised sheet on a treated
+   * surface rather than as white-on-white. */
+  --ink:   #F6F8F7;  --panel: #FFFFFF;  --sunk:  #E7EEEB;
+  --rule:  #DCE6E3;  --rule2: #7F9490;
+  --txt:   #0A1514;  --mut:   #536B67;  --dim:   #5C726E;
+  --att:   #C4400F;  --def:   #0A7A69;  --bad:   #C11834;
+  --zero:  #7029CC;  --warn:  #8A6008;
+  --shadow: 0 1px 2px rgba(10,21,20,.05), 0 10px 30px -14px rgba(10,21,20,.20);
+  --track: #CBD8D5;
+  /* Tint used to wash a surface with an accent without inventing a token:
+   * the accent itself at low alpha, so it follows the theme automatically. */
+  --wash: 5%;
 
   /* Binds the UA surfaces we do not draw — scrollbars, form controls — to the
    * theme the page actually chose, not to the OS. Without this an explicit
@@ -18,42 +31,47 @@
    * on a near-black page. */
   color-scheme: light;
 
-  --disp: 'Bricolage Grotesque', ui-sans-serif, system-ui, sans-serif;
+  --disp: 'Newsreader', ui-serif, Georgia, 'Times New Roman', serif;
   --body: 'IBM Plex Sans', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
   /* charts render into PNG, so their type must not depend on a webfont */
   --chart: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+
+  --ease: cubic-bezier(.22, .61, .36, 1);
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     color-scheme: dark;
-    --ink:   #080F0E;  --panel: #0D1817;  --sunk:  #0A1413;
-    --rule:  #1B2E2C;  --rule2: #2C4A46;
-    --txt:   #E2EDEA;  --mut:   #8AA5A1;  --dim:   #688C87;
-    --att:   #FF6B4A;  --def:   #4FD5C2;  --bad:   #FF3D5E;
-    --zero:  #B85CFF;  --warn:  #FFC24D;
+    --ink:   #07100F;  --panel: #101D1B;  --sunk:  #0B1615;
+    --rule:  #1E302E;  --rule2: #456B66;
+    --txt:   #E4EFEC;  --mut:   #93ABA7;  --dim:   #7B9591;
+    --att:   #FF6B4A;  --def:   #4FD5C2;  --bad:   #FF4A67;
+    --zero:  #BE6BFF;  --warn:  #FFC24D;
     --shadow: none;
-    --track: #223A37;
+    --track: #24403D;
+    --wash: 9%;
   }
 }
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --ink:   #080F0E;  --panel: #0D1817;  --sunk:  #0A1413;
-  --rule:  #1B2E2C;  --rule2: #2C4A46;
-  --txt:   #E2EDEA;  --mut:   #8AA5A1;  --dim:   #688C87;
-  --att:   #FF6B4A;  --def:   #4FD5C2;  --bad:   #FF3D5E;
-  --zero:  #B85CFF;  --warn:  #FFC24D;
+  --ink:   #07100F;  --panel: #101D1B;  --sunk:  #0B1615;
+  --rule:  #1E302E;  --rule2: #456B66;
+  --txt:   #E4EFEC;  --mut:   #93ABA7;  --dim:   #7B9591;
+  --att:   #FF6B4A;  --def:   #4FD5C2;  --bad:   #FF4A67;
+  --zero:  #BE6BFF;  --warn:  #FFC24D;
   --shadow: none;
-  --track: #223A37;
+  --track: #24403D;
+  --wash: 9%;
 }
 
+/* ── base ───────────────────────────────────────────────────────────────── */
 * { box-sizing: border-box; }
-html { -webkit-text-size-adjust: 100%; }
+html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
 body {
   margin: 0; background: var(--ink); color: var(--txt);
   font-family: var(--body); font-size: 15px; line-height: 1.55;
-  -webkit-font-smoothing: antialiased; padding-bottom: 72px;
+  -webkit-font-smoothing: antialiased; padding-bottom: 76px;
 }
 a { color: inherit; text-underline-offset: .18em; text-decoration-thickness: 1px; }
 :focus-visible { outline: 2px solid var(--def); outline-offset: 2px; border-radius: 3px; }
@@ -62,39 +80,125 @@ a { color: inherit; text-underline-offset: .18em; text-decoration-thickness: 1px
  * figure to check it looks like part of the instrument. */
 ::selection { background: var(--def); color: var(--ink); }
 
-.wrap { max-width: 1340px; margin: 0 auto; padding: 0 20px; }
+/* Anchored sections must clear the docked readout, which is fixed to the top
+ * of the viewport and would otherwise cover the heading you just jumped to. */
+[id^="p-"] { scroll-margin-top: 74px; }
 
-/* ── header ─────────────────────────────────────────────────────────────── */
-header { border-bottom: 1px solid var(--rule); padding: 34px 0 26px; margin-bottom: 22px; }
+.wrap { max-width: 1240px; margin: 0 auto; padding: 0 24px; }
+
+.skip {
+  position: absolute; left: 12px; top: -60px; z-index: 100;
+  background: var(--panel); color: var(--txt); border: 1px solid var(--rule2);
+  border-radius: 7px; padding: 9px 14px; font-size: 13px;
+  transition: top .16s var(--ease);
+}
+.skip:focus { top: 12px; }
+
+/* ── masthead ───────────────────────────────────────────────────────────── */
+header { border-bottom: 1px solid var(--rule); padding: 30px 0 30px; margin-bottom: 26px; }
 .eyebrow {
   font-family: var(--mono); font-size: 10.5px; letter-spacing: .18em;
   text-transform: uppercase; color: var(--mut);
   display: flex; gap: 12px; align-items: center; flex-wrap: wrap;
 }
 .eyebrow::after { content: ""; flex: 1; height: 1px; background: var(--rule); min-width: 20px; }
-h1 {
-  font-family: var(--disp); font-weight: 800;
-  font-size: clamp(30px, 5.4vw, 58px); line-height: .96; letter-spacing: -.032em;
-  margin: 14px 0 0; max-width: 17ch;
+
+/* The masthead runs two columns so the headline is not left with half a
+ * screen of empty paper beside it: the argument sits left, the three measured
+ * figures it rests on sit right. Below 900px the figures fall underneath and
+ * become a horizontal strip. */
+.mast {
+  display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(260px, .65fr);
+  gap: 20px 44px; align-items: end; margin-top: 20px;
 }
-h1 em { font-style: normal; color: var(--att); }
-.sub { color: var(--mut); max-width: 76ch; margin-top: 13px; font-size: 15px; }
+@media (max-width: 900px) { .mast { grid-template-columns: 1fr; align-items: start; } }
+
+h1 {
+  font-family: var(--disp); font-weight: 500;
+  font-size: clamp(33px, 5.1vw, 60px); line-height: 1.02; letter-spacing: -.016em;
+  margin: 0; max-width: 16ch; text-wrap: balance;
+}
+/* The clause where the argument turns. Italic does the work a colour cannot:
+ * it survives greyscale, print and colour-blindness. */
+h1 em { font-style: italic; color: var(--att); }
+.sub { color: var(--mut); max-width: 66ch; margin: 16px 0 0; font-size: 15px; }
 .sub b { color: var(--txt); font-weight: 600; }
 
-.topbar { display: flex; gap: 8px; align-items: center; margin-left: auto; }
+.topbar { display: flex; gap: 6px; align-items: center; margin-left: auto; }
 .eyebrow .topbar::after { content: none; }
+
+/* ── the measured clock ─────────────────────────────────────────────────── */
+.clock { border-top: 1px solid var(--rule2); padding-top: 12px; }
+.clock-h {
+  font-family: var(--mono); font-size: 10px; letter-spacing: .14em;
+  text-transform: uppercase; color: var(--mut);
+  display: flex; align-items: center; gap: 8px; margin-bottom: 4px;
+}
+.clock dl { margin: 0; }
+.clock dl > div {
+  display: flex; align-items: baseline; gap: 12px;
+  padding: 9px 0; border-bottom: 1px solid var(--rule);
+}
+.clock dl > div:last-child { border-bottom: 0; padding-bottom: 0; }
+.clock dt { flex: 1; font-size: 12.5px; color: var(--mut); line-height: 1.35; }
+.clock dd {
+  margin: 0; font-family: var(--mono); font-size: 17px; font-weight: 500;
+  color: var(--def); font-variant-numeric: tabular-nums; letter-spacing: -.02em;
+}
+
+/* ── docked readout ─────────────────────────────────────────────────────── */
+/* The instrument is long and the rail is sticky, so a reader adjusting a
+ * slider two thousand pixels down had no sight of the number they were
+ * moving. This carries it, and only appears once the real stat row is gone. */
+.dock {
+  position: fixed; inset: 0 0 auto 0; z-index: 40;
+  background: var(--panel); border-bottom: 1px solid var(--rule);
+  transform: translateY(-101%); transition: transform .26s var(--ease);
+  box-shadow: var(--shadow);
+}
+.dock.up { transform: none; }
+.dock-in {
+  display: flex; align-items: baseline; gap: 14px;
+  padding-top: 10px; padding-bottom: 10px;
+}
+.dock-k {
+  font-family: var(--mono); font-size: 10px; letter-spacing: .13em;
+  text-transform: uppercase; color: var(--mut);
+}
+.dock-v {
+  font-family: var(--mono); font-size: 19px; font-weight: 600; color: var(--bad);
+  font-variant-numeric: tabular-nums; letter-spacing: -.02em;
+}
+.dock-ci { font-family: var(--mono); font-size: 11px; color: var(--mut); }
+.dock-est {
+  font-size: 11.5px; color: var(--dim); margin-left: auto;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+@media (max-width: 720px) { .dock-ci, .dock-est { display: none; } }
 
 /* ── buttons ────────────────────────────────────────────────────────────── */
 button {
-  font: inherit; font-size: 12px; color: var(--txt);
+  font: inherit; font-size: 12.5px; color: var(--txt);
   background: var(--panel); border: 1px solid var(--rule2); border-radius: 7px;
   padding: 6px 11px; cursor: pointer; line-height: 1.3;
-  transition: background .12s, border-color .12s, color .12s;
+  transition: background .14s var(--ease), border-color .14s var(--ease),
+              color .14s var(--ease);
 }
 button:hover { border-color: var(--def); color: var(--def); }
 button.on { background: var(--def); border-color: var(--def); color: var(--ink); font-weight: 600; }
+button.on:hover { color: var(--ink); }
 button.ghost { background: transparent; }
-.icon-btn { padding: 5px 8px; font-family: var(--mono); font-size: 11px; letter-spacing: .04em; }
+.icon-btn {
+  padding: 5px 9px; font-family: var(--mono); font-size: 11px; letter-spacing: .04em;
+}
+
+/* A two-state metric switch reads as one control, not two loose buttons that
+ * happen to be adjacent. The shared edge is drawn once. */
+.switch { display: flex; }
+.switch button { border-radius: 0; }
+.switch button:first-child { border-radius: 7px 0 0 7px; }
+.switch button:last-child { border-radius: 0 7px 7px 0; margin-left: -1px; }
+.switch button.on { position: relative; z-index: 1; }
 
 /* ── layout ─────────────────────────────────────────────────────────────── */
 /* Three grid children — rail, stats, results — placed explicitly so the single
@@ -102,7 +206,7 @@ button.ghost { background: transparent; }
  * matches the source. Below 1040px the stats jump ahead of the controls: the
  * page exists to show a number, and burying it under a full screen of inputs
  * meant every phone visitor paid for the controls before seeing the answer. */
-.grid { display: grid; grid-template-columns: 330px 1fr; gap: 14px 22px; align-items: start; }
+.grid { display: grid; grid-template-columns: 322px 1fr; gap: 18px 30px; align-items: start; }
 .rail    { grid-column: 1; grid-row: 1 / span 2; }
 .stats   { grid-column: 2; grid-row: 1; }
 .results { grid-column: 2; grid-row: 2; min-width: 0; }
@@ -114,7 +218,14 @@ button.ghost { background: transparent; }
   .results { grid-column: 1; grid-row: auto; order: 3; }
 }
 
-.rail { position: sticky; top: 14px; max-height: calc(100vh - 28px); overflow-y: auto; padding-right: 6px; }
+.rail {
+  position: sticky; top: 16px; max-height: calc(100vh - 32px);
+  overflow-y: auto; padding-right: 6px;
+  transition: top .26s var(--ease), max-height .26s var(--ease);
+}
+/* The docked readout is fixed to the top of the viewport, so the sticky rail
+ * has to step down out from under it rather than scroll behind it. */
+.dock.up ~ .grid .rail { top: 74px; max-height: calc(100vh - 90px); }
 @media (max-width: 1040px) { .rail { position: static; max-height: none; overflow: visible; } }
 /* The rail is its own scroll container, so the scrollbar has to be visible
  * enough that a wheel gesture landing on it is not read as a dead page. */
@@ -129,7 +240,7 @@ button.ghost { background: transparent; }
 /* ── cards & panels ─────────────────────────────────────────────────────── */
 .card, .panel {
   background: var(--panel); border: 1px solid var(--rule);
-  border-radius: 12px; padding: 16px; margin-bottom: 14px; box-shadow: var(--shadow);
+  border-radius: 14px; padding: 18px; margin-bottom: 18px; box-shadow: var(--shadow);
 }
 .card h2 {
   font-family: var(--mono); font-size: 10.5px; letter-spacing: .16em;
@@ -137,33 +248,72 @@ button.ghost { background: transparent; }
 }
 .card h2.d { color: var(--def); }
 .card h2.a { color: var(--att); }
-.note { color: var(--mut); font-size: 12px; margin: 4px 0 12px; }
+/* A card declares which side of the model it belongs to, and that choice
+ * cascades to its slider fills, thumbs and values. */
+.card.def { --accent: var(--def); }
+.card.att { --accent: var(--att); }
+.note { color: var(--mut); font-size: 12px; margin: 5px 0 14px; }
 
-.panel h3 {
-  font-family: var(--disp); font-weight: 700; font-size: 19px;
-  letter-spacing: -.015em; margin: 0 0 3px;
+/* The results column is a document, not a stack of cards. The instrument —
+ * the rail and the readout bank — keeps its surfaces because it is a thing
+ * you operate; the argument is ruled rather than boxed, because it is a thing
+ * you read and cite. Making the two halves different materials is what stops
+ * a page with ten sections reading as a dashboard with ten widgets. */
+.panel {
+  background: none; border: 0; border-radius: 0; box-shadow: none;
+  border-top: 1px solid var(--rule2);
+  padding: 20px 0 0; margin: 0 0 42px;
 }
-.panel .lead { color: var(--mut); font-size: 13.5px; margin: 0 0 14px; max-width: 78ch; }
+.results > .panel:last-of-type { margin-bottom: 0; }
+.panel h3 {
+  font-family: var(--disp); font-weight: 600; font-size: 21px;
+  line-height: 1.22; letter-spacing: -.005em; margin: 0;
+}
+.panel .lead { color: var(--mut); font-size: 13.5px; margin: 6px 0 16px; max-width: 74ch; }
 .panel .lead b { color: var(--txt); font-weight: 600; }
+.panel .lead.foot { margin: 14px 0 0; }
+.panel .codified {
+  margin: 14px 0 0; border-top: 1px solid var(--rule); padding-top: 14px;
+}
+/* The ordinal is a sibling of the heading, never a child: js/app.js reads the
+ * h3's textContent for the exported PNG title, and a number folded into the
+ * heading would end up in every exported image. */
+.ord {
+  font-family: var(--mono); font-size: 10px; font-weight: 600; letter-spacing: .14em;
+  color: var(--dim); display: block; margin-bottom: 7px;
+}
 /* The title keeps a 260px basis and the row is allowed to wrap, so the tools
  * drop below the heading exactly when they would otherwise squeeze it. Held
  * inline, a 375px card gave "Why severity is not the prioritisation trigger"
  * 55% of the row and four wrapped lines; the widest toolbar took a two-word
  * title down to 19%. Intrinsic, so it needs no breakpoint of its own. */
-.panel-head { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 4px; flex-wrap: wrap; }
+.panel-head { display: flex; align-items: flex-start; gap: 14px; flex-wrap: wrap; }
 .panel-head > div:first-child { flex: 1 1 260px; min-width: 0; }
-.tools { display: flex; gap: 6px; flex-shrink: 0; }
+.tools { display: flex; gap: 6px; flex-shrink: 0; align-items: flex-start; }
 
 /* ── controls ───────────────────────────────────────────────────────────── */
-.presets { display: flex; gap: 5px; flex-wrap: wrap; }
-.presets button { flex: 1 1 auto; min-width: 72px; padding: 6px 8px; font-size: 11.5px; }
+/* Equal-width cells rather than flex-wrap. Ragged rows of differently sized
+ * buttons read as an accident; a grid reads as a set of options. */
+.presets { display: grid; gap: 6px; }
+.chips { grid-template-columns: 1fr 1fr; }
+.ladder-4 { grid-template-columns: repeat(3, 1fr); }
+.ladder-5 { grid-template-columns: 1fr 1fr; }
+.presets button {
+  padding: 7px 9px; font-size: 11.5px; text-align: left; min-width: 0;
+  overflow: hidden; text-overflow: ellipsis;
+}
+/* BOD 26-04 is a mandated regime rather than a rung on the maturity ladder,
+ * and the fifth detection posture completes a ladder of five — both take the
+ * full width so neither row is left ragged. */
+.ladder-4 button:last-child, .ladder-5 button:last-child { grid-column: 1 / -1; }
+.ladder-4 button, .ladder-5 button { text-align: center; }
 
-.seg { margin-bottom: 14px; }
+.seg { margin-bottom: 16px; }
 .seg-l {
   font-family: var(--mono); font-size: 9.5px; letter-spacing: .14em;
-  text-transform: uppercase; color: var(--mut); margin-bottom: 6px;
+  text-transform: uppercase; color: var(--mut); margin-bottom: 7px;
 }
-.seg-d { color: var(--mut); font-size: 11.5px; line-height: 1.45; margin: 7px 0 0; }
+.seg-d { color: var(--mut); font-size: 11.5px; line-height: 1.45; margin: 8px 0 0; }
 /* 9px could not clear AA against the card in either theme; the border already
  * does the de-emphasis, so the type does not have to. */
 .seg-hint {
@@ -171,50 +321,61 @@ button.ghost { background: transparent; }
   border: 1px solid var(--rule2); border-radius: 3px; padding: 1px 4px; margin-left: 5px;
 }
 /* multi-select traits read as checkable chips, not as one-of-N */
-#sel-profile button { position: relative; padding-left: 20px; text-align: left; }
+#sel-profile button { position: relative; padding-left: 22px; }
+/* Top-aligned rather than centred: a two-line chip with a vertically centred
+ * marker reads as a bullet floating beside the text instead of a checkbox. */
 #sel-profile button::before {
-  content: ""; position: absolute; left: 7px; top: 50%; margin-top: -5px;
+  content: ""; position: absolute; left: 8px; top: 10px;
   width: 9px; height: 9px; border: 1px solid var(--rule2); border-radius: 2px;
+  transition: background .14s var(--ease), border-color .14s var(--ease);
 }
-#sel-profile button.on::before {
-  background: currentColor; border-color: currentColor;
-}
-.seg + #cd { border-top: 1px solid var(--rule); padding-top: 14px; margin-top: 16px; }
+#sel-profile button.on::before { background: currentColor; border-color: currentColor; }
+.seg + #cd { border-top: 1px solid var(--rule); padding-top: 16px; margin-top: 18px; }
 
-.ctrl { margin-bottom: 15px; }
+.ctrl { margin-bottom: 16px; }
 .ctrl .row { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
 .ctrl label { font-size: 13px; font-weight: 500; }
 .ctrl .val {
   font-family: var(--mono); font-size: 12.5px; font-weight: 600;
-  color: var(--def); white-space: nowrap;
+  color: var(--accent, var(--def)); white-space: nowrap;
+  font-variant-numeric: tabular-nums;
 }
-.card.att .ctrl .val { color: var(--att); }
-.hint { color: var(--mut); font-size: 11.5px; margin-top: 3px; line-height: 1.45; }
+.hint { color: var(--mut); font-size: 11.5px; margin-top: 4px; line-height: 1.45; }
 
+/* A slider that shows only a thumb makes the reader estimate where in the
+ * range they are. Filling the groove to the thumb states it. --fill is
+ * written by js/app.js on every input event. */
 input[type=range] {
   -webkit-appearance: none; appearance: none; width: 100%;
   /* 24px so the drag target clears the AA minimum; the thumb stays centred
    * because its offset is measured from the track, not the box. */
-  height: 24px; background: transparent; margin: 5px 0 0; cursor: grab;
+  height: 24px; background: transparent; margin: 6px 0 0; cursor: grab;
+  --fill: 0%;
 }
 input[type=range]:active { cursor: grabbing; }
 input[type=range]::-webkit-slider-runnable-track {
-  height: 3px; background: var(--track); border-radius: 2px;
+  height: 4px; border-radius: 2px;
+  background: linear-gradient(90deg,
+    var(--accent, var(--def)) 0 var(--fill), var(--track) var(--fill) 100%);
 }
-input[type=range]::-moz-range-track { height: 3px; background: var(--track); border-radius: 2px; }
+input[type=range]::-moz-range-track { height: 4px; background: var(--track); border-radius: 2px; }
+input[type=range]::-moz-range-progress {
+  height: 4px; background: var(--accent, var(--def)); border-radius: 2px;
+}
 input[type=range]::-webkit-slider-thumb {
-  -webkit-appearance: none; width: 15px; height: 15px; margin-top: -6px;
-  border-radius: 50%; background: var(--def); border: 2px solid var(--panel);
-  box-shadow: 0 0 0 1px var(--def);
+  -webkit-appearance: none; width: 15px; height: 15px; margin-top: -5.5px;
+  border-radius: 50%; background: var(--accent, var(--def)); border: 2px solid var(--panel);
+  box-shadow: 0 0 0 1px var(--accent, var(--def));
+  transition: transform .12s var(--ease);
 }
 input[type=range]::-moz-range-thumb {
   width: 13px; height: 13px; border-radius: 50%;
-  background: var(--def); border: 2px solid var(--panel); box-shadow: 0 0 0 1px var(--def);
+  background: var(--accent, var(--def)); border: 2px solid var(--panel);
+  box-shadow: 0 0 0 1px var(--accent, var(--def));
 }
-.card.att input[type=range]::-webkit-slider-thumb { background: var(--att); box-shadow: 0 0 0 1px var(--att); }
-.card.att input[type=range]::-moz-range-thumb { background: var(--att); box-shadow: 0 0 0 1px var(--att); }
+input[type=range]:active::-webkit-slider-thumb { transform: scale(1.18); }
 
-details.more { margin-top: 4px; border-top: 1px solid var(--rule); padding-top: 10px; }
+details.more { margin-top: 6px; border-top: 1px solid var(--rule); padding-top: 12px; }
 details.more > summary {
   cursor: pointer; font-size: 12px; color: var(--mut); list-style: none;
   font-family: var(--mono); letter-spacing: .08em; text-transform: uppercase;
@@ -224,18 +385,64 @@ details.more > summary::-webkit-details-marker { display: none; }
 details.more > summary::before { content: "+ "; color: var(--def); }
 details.more[open] > summary::before { content: "− "; }
 details.more > summary:hover { color: var(--txt); }
-details.more > div { padding-top: 12px; }
+details.more > div { padding-top: 14px; }
+details.more[open] > div { animation: rise .28s var(--ease) both; }
 
-/* ── stat row ───────────────────────────────────────────────────────────── */
-.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
-@media (max-width: 780px) { .stats { grid-template-columns: repeat(2, 1fr); } }
-/* Labels wrap to different line counts, so the value is pushed to the bottom of
- * the card rather than sitting under a guessed min-height. Grid stretches the
- * cards to equal height, so the numbers line up across the row either way. */
-.stat {
+/* ── contents ───────────────────────────────────────────────────────────── */
+.toc { padding: 0 2px 6px; }
+.toc ol { list-style: none; margin: 0; padding: 0; counter-reset: toc; }
+.toc li { counter-increment: toc; }
+.toc a {
+  display: flex; gap: 10px; align-items: baseline;
+  padding: 5px 0; font-size: 12.5px; color: var(--mut); text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: color .14s var(--ease);
+}
+.toc a::before {
+  content: counter(toc, decimal-leading-zero);
+  font-family: var(--mono); font-size: 10px; color: var(--dim);
+  letter-spacing: .06em; flex: none;
+}
+.toc a:hover { color: var(--txt); }
+.toc a.cur { color: var(--def); }
+.toc a.cur::before { color: var(--def); }
+
+/* ── readout bank ───────────────────────────────────────────────────────── */
+/* One plate divided by rules rather than four floating tiles: four separate
+ * cards read as a KPI row, which is the register the argument is trying to
+ * out-rank. Divided, they read as one instrument with four dials. */
+.stats {
+  display: grid; grid-template-columns: repeat(4, 1fr);
   background: var(--panel); border: 1px solid var(--rule);
-  border-radius: 12px; padding: 13px 14px 12px; box-shadow: var(--shadow);
+  border-radius: 14px; box-shadow: var(--shadow); overflow: hidden;
+  margin-bottom: 34px;
+}
+/* Labels wrap to different line counts, so the value is pushed to the bottom of
+ * the cell rather than sitting under a guessed min-height. Grid stretches the
+ * cells to equal height, so the numbers line up across the row either way. */
+.stat {
+  padding: 16px 18px 17px; border-left: 1px solid var(--rule);
   display: flex; flex-direction: column;
+}
+.stat:first-child { border-left: 0; }
+@media (max-width: 780px) {
+  .stats { grid-template-columns: repeat(2, 1fr); }
+  .stat:nth-child(odd) { border-left: 0; }
+  .stat:nth-child(n+3) { border-top: 1px solid var(--rule); }
+}
+
+/* The credible interval as a figure rather than only as a sentence, drawn on
+ * a full 0-100% scale so a wide band looks wide. It moves only on a pass that
+ * ran enough blocks for the interval to mean anything. */
+.band {
+  height: 3px; margin-top: 10px; border-radius: 2px;
+  background: var(--track); position: relative;
+}
+.band::before {
+  content: ""; position: absolute; top: 0; bottom: 0;
+  left: var(--lo, 0%); right: calc(100% - var(--hi, 0%));
+  background: var(--bad); border-radius: 2px;
+  transition: left .3s var(--ease), right .3s var(--ease);
 }
 /* These labels are 40-odd character sentences. Caps plus wide tracking is a
  * device for two-word labels; at this length it removes the word shapes you
@@ -245,41 +452,51 @@ details.more > div { padding-top: 12px; }
   color: var(--mut); line-height: 1.35;
   display: block; flex: 1;
 }
-/* These four resimulate on every parameter change, and Bricolage's default
- * figures are proportional — a 41px spread across four digits, so dragging a
- * slider made the whole row twitch sideways. Tabular figures pin the width. */
+/* The four figures resimulate on every parameter change: they are readouts,
+ * not headlines, and they are set in the instrument's own face. Monospace
+ * digits are tabular by construction, so the row cannot twitch sideways while
+ * a slider is dragged. */
 .stat .v {
-  font-family: var(--disp); font-weight: 800; font-size: 34px;
-  line-height: 1.05; letter-spacing: -.03em; margin-top: 5px; color: var(--bad);
+  font-family: var(--mono); font-weight: 600;
+  font-size: clamp(28px, 2.4vw, 34px);
+  line-height: 1.08; letter-spacing: -.035em; margin-top: 8px; color: var(--bad);
   font-variant-numeric: tabular-nums;
 }
 .stat.good .v { color: var(--def); }
 .stat.plain .v { color: var(--txt); }
 .stat .v .u {
   font-family: var(--body); font-size: 12px; font-weight: 500;
-  color: var(--mut); letter-spacing: 0; margin-left: 4px;
+  color: var(--mut); letter-spacing: 0; margin-left: 5px;
 }
 .stat .ci {
-  font-family: var(--mono); font-size: 10.5px; color: var(--mut); margin-top: 3px;
+  font-family: var(--mono); font-size: 10.5px; color: var(--mut); margin-top: 4px;
 }
 
 /* ── chart frames ───────────────────────────────────────────────────────── */
 .chart { width: 100%; display: block; }
 .chart text { font-family: var(--chart); }
-.two { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
 @media (max-width: 940px) { .two { grid-template-columns: 1fr; } }
+.two .panel { margin-bottom: 0; }
 
 .legend {
-  display: flex; gap: 14px; flex-wrap: wrap; font-size: 11.5px;
-  color: var(--mut); margin-bottom: 10px;
+  display: flex; gap: 16px; flex-wrap: wrap; font-size: 11.5px;
+  color: var(--mut); margin-bottom: 12px;
 }
-.legend i { width: 10px; height: 10px; border-radius: 2px; display: inline-block; margin-right: 5px; vertical-align: -1px; }
+/* A posture the sliders imply rather than one the reader picked. Drawn as a
+ * match, not as a selection, so a derived value is never mistaken for a
+ * decision somebody made. */
+.presets button.near {
+  border-color: var(--def); border-style: dashed; color: var(--def);
+  background: transparent; font-weight: 500;
+}
+.legend i { width: 10px; height: 10px; border-radius: 2px; display: inline-block; margin-right: 6px; vertical-align: -1px; }
 
 /* ── actions list ───────────────────────────────────────────────────────── */
 ul.acts { list-style: none; margin: 0; padding: 0; }
 ul.acts li {
-  display: flex; gap: 14px; align-items: flex-start;
-  padding: 11px 0; border-bottom: 1px solid var(--rule);
+  display: flex; gap: 16px; align-items: flex-start;
+  padding: 12px 0; border-bottom: 1px solid var(--rule);
 }
 ul.acts li:last-child { border-bottom: 0; padding-bottom: 0; }
 .a-t { flex: 1; min-width: 0; }
@@ -288,32 +505,35 @@ ul.acts li:last-child { border-bottom: 0; padding-bottom: 0; }
 .a-d {
   font-family: var(--mono); font-size: 14px; font-weight: 600;
   color: var(--def); white-space: nowrap; padding-top: 1px;
+  font-variant-numeric: tabular-nums;
 }
 
 /* ── evidence table ─────────────────────────────────────────────────────── */
-.tbl { width: 100%; border-collapse: collapse; font-size: 13px; }
+.tbl { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 18px; }
 .tbl th {
   text-align: right; font-family: var(--mono); font-size: 10px; letter-spacing: .1em;
   text-transform: uppercase; color: var(--mut); font-weight: 600;
-  padding: 0 0 8px; border-bottom: 1px solid var(--rule2);
+  padding: 0 0 9px; border-bottom: 1px solid var(--rule2);
 }
 .tbl th:first-child, .tbl td:first-child { text-align: left; }
-.tbl td { padding: 8px 0; border-bottom: 1px solid var(--rule); font-variant-numeric: tabular-nums; text-align: right; }
+.tbl td { padding: 9px 0; border-bottom: 1px solid var(--rule); font-variant-numeric: tabular-nums; text-align: right; }
 .tbl td.n { font-family: var(--mono); }
 .tbl tr:last-child td { border-bottom: 0; }
 .tbl .hi { color: var(--bad); font-weight: 600; }
+.band-range { font-family: var(--mono); font-size: 11px; color: var(--dim); }
 .scroll-x { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 
 /* ── anchors ────────────────────────────────────────────────────────────── */
-.anchors { display: grid; grid-template-columns: 1fr 1fr; gap: 0 26px; }
+.anchors { display: grid; grid-template-columns: 1fr 1fr; gap: 0 32px; }
 @media (max-width: 860px) { .anchors { grid-template-columns: 1fr; } }
-.anchors > div { padding: 11px 0; border-bottom: 1px solid var(--rule); }
-.anchors dt { font-size: 13px; font-weight: 500; margin-bottom: 3px; }
+.anchors > div { padding: 12px 0; border-bottom: 1px solid var(--rule); }
+.anchors dt { font-size: 13px; font-weight: 500; margin-bottom: 4px; }
 .anchors dt b { font-weight: 700; }
 .anchors dd { margin: 0; font-size: 11.5px; color: var(--mut); font-family: var(--mono); }
 .anchors .measured { color: var(--def); }
 .anchors .reported { color: var(--zero); }
 .anchors .assumed  { color: var(--warn); }
+.anchor-note { display: block; font-size: 11px; color: var(--dim); font-family: var(--body); margin-top: 3px; }
 
 .tag {
   font-family: var(--mono); font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase;
@@ -323,10 +543,14 @@ ul.acts li:last-child { border-bottom: 0; padding-bottom: 0; }
 .tag.r { color: var(--zero); }
 .tag.a { color: var(--warn); }
 
+/* ── footer ─────────────────────────────────────────────────────────────── */
 footer {
-  margin-top: 30px; padding-top: 20px; border-top: 1px solid var(--rule);
+  margin-top: 34px; padding-top: 22px; border-top: 1px solid var(--rule);
   color: var(--mut); font-size: 12px;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 22px 32px;
 }
+@media (max-width: 860px) { footer { grid-template-columns: 1fr; } }
+.fnote p { margin: 0; max-width: 66ch; }
 footer code {
   font-family: var(--mono); font-size: 11.5px;
   background: var(--sunk); padding: 1px 5px; border-radius: 4px;
@@ -335,15 +559,69 @@ footer code {
 .toast {
   position: fixed; left: 50%; bottom: 26px; transform: translateX(-50%) translateY(12px);
   background: var(--txt); color: var(--ink); font-size: 13px; font-weight: 500;
-  padding: 9px 16px; border-radius: 8px; opacity: 0; pointer-events: none;
-  transition: opacity .18s, transform .18s; z-index: 50;
+  padding: 10px 17px; border-radius: 9px; opacity: 0; pointer-events: none;
+  transition: opacity .18s var(--ease), transform .18s var(--ease); z-index: 50;
 }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+/* ══ motion ══════════════════════════════════════════════════════════════
+ * Every animation here is one-shot and gated on the `anim` class, which
+ * js/app.js sets only when the reader has not asked for reduced motion. The
+ * page is fully legible with the class absent, so no content depends on an
+ * animation having run.
+ *
+ * Nothing animates while a slider is being dragged: the model re-runs at up
+ * to sixty passes a second there, and an entry animation replayed on each one
+ * is a strobe, not a flourish. */
+/* Each keyframe set states its own end point. Without an explicit `to`, the
+ * synthesised final frame takes the element's underlying value — which is the
+ * opacity: 0 that armed the reveal in the first place, so the animation would
+ * run from hidden to hidden. */
+@keyframes rise {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes bar-in {
+  from { transform: scaleX(0); opacity: .35; }
+  to   { transform: none; opacity: 1; }
+}
+
+.anim .panel, .anim .stats, .anim .clock, .anim .two { opacity: 0; }
+.anim .panel.in, .anim .stats.in, .anim .clock.in, .anim .two.in {
+  animation: rise .5s var(--ease) both;
+  animation-delay: calc(var(--i, 0) * 55ms);
+}
+.anim .two.in .panel { opacity: 1; animation: none; }
+
+/* Chart interiors animate only on a chart's first appearance. The SVG
+ * attributes always hold the final geometry, so an export taken mid-animation
+ * still rasterises the finished chart. */
+.chart .ch-bar { transform-box: fill-box; transform-origin: left center; }
+.chart .ch-bar-r { transform-origin: right center; }
+.anim .chart.fresh .ch-bar {
+  animation: bar-in .5s var(--ease) both;
+  animation-delay: calc(var(--i, 0) * 45ms);
+}
+.anim .chart.fresh .ch-line, .anim .chart.fresh .ch-area, .anim .chart.fresh .ch-mark {
+  animation: fade .55s .1s var(--ease) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+  .anim .panel, .anim .stats, .anim .clock, .anim .two { opacity: 1; }
+}
+
 @media print {
-  .rail, .tools, .topbar { display: none; }
+  .rail, .tools, .topbar, .dock, .skip, .toc { display: none; }
   .grid { grid-template-columns: 1fr; }
   /* explicit placement would otherwise leave an empty first column */
   .stats, .results { grid-column: 1; grid-row: auto; }
+  .panel, .card, .stat { break-inside: avoid; box-shadow: none; }
+  .anim .panel, .anim .stats, .anim .clock, .anim .two { opacity: 1; }
 }

@@ -24,12 +24,20 @@
   function path(pts) {
     return pts.map(function (p, i) { return (i ? 'L' : 'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1); }).join(' ');
   }
+  /* Both stacks are literals rather than CSS tokens on purpose: charts are
+   * serialised into a standalone SVG for PNG export, where no stylesheet
+   * applies. A label with no font-family attribute rasterised as the
+   * renderer's default serif — so every label carries its stack explicitly. */
+  var SANS = 'ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif';
+  var MONO = 'ui-monospace, SFMono-Regular, Menlo, monospace';
+
   function txt(svg, x, y, s, o) {
     o = o || {};
     var e = el('text', {
       x: x, y: y, 'font-size': o.fs || 11, 'text-anchor': o.a || 'start',
       fill: o.c, 'font-weight': o.w, 'letter-spacing': o.ls,
-      'font-family': o.mono ? 'ui-monospace, SFMono-Regular, Menlo, monospace' : undefined,
+      'fill-opacity': o.fo,
+      'font-family': o.mono ? MONO : SANS,
     });
     e.textContent = s;
     svg.appendChild(e);
@@ -104,7 +112,7 @@
     var dp = [[L, MID]];
     for (var i = 0; i < d.B; i++) dp.push([Xi(i), MID - d.D[i] * hUp]);
     dp.push([R, MID]);
-    svg.appendChild(el('path', { d: path(dp) + ' Z', fill: pal.def, 'fill-opacity': 0.14, stroke: pal.def, 'stroke-width': 2, 'stroke-linejoin': 'round' }));
+    svg.appendChild(el('path', { 'class': 'ch-area', d: path(dp) + ' Z', fill: pal.def, 'fill-opacity': 0.14, stroke: pal.def, 'stroke-width': 2, 'stroke-linejoin': 'round' }));
 
     /* overlap = P(exploit already exists when you finally close it) */
     var sc = d.ovMax ? hUp / d.ovMax : 0;
@@ -122,24 +130,24 @@
     var ap = [[L, MID]];
     for (var m = 0; m < d.B; m++) ap.push([Xi(m), MID + d.A[m] * hDn]);
     ap.push([R, MID]);
-    svg.appendChild(el('path', { d: path(ap) + ' Z', fill: pal.att, 'fill-opacity': 0.13, stroke: pal.att, 'stroke-width': 1, 'stroke-opacity': 0.45, 'stroke-linejoin': 'round' }));
+    svg.appendChild(el('path', { 'class': 'ch-area', d: path(ap) + ' Z', fill: pal.att, 'fill-opacity': 0.13, stroke: pal.att, 'stroke-width': 1, 'stroke-opacity': 0.45, 'stroke-linejoin': 'round' }));
 
     if (d.cum) {
       var cp = [];
       for (var q = 0; q < d.B; q++) cp.push([Xi(q), MID + d.cum[q] * hDn]);
-      svg.appendChild(el('path', { d: path(cp), fill: 'none', stroke: pal.att, 'stroke-width': 2.4, 'stroke-linejoin': 'round' }));
+      svg.appendChild(el('path', { 'class': 'ch-line', d: path(cp), fill: 'none', stroke: pal.att, 'stroke-width': 2.4, 'stroke-linejoin': 'round' }));
 
       /* gridlines for the cumulative axis */
       [0.25, 0.5, 0.75, 1].forEach(function (f) {
         var y = MID + f * hDn;
         svg.appendChild(el('line', { x1: L, y1: y, x2: R, y2: y, stroke: pal.att, 'stroke-opacity': 0.16, 'stroke-dasharray': '2 4' }));
-        txt(svg, L - 5, y + 3, Math.round(f * 100) + '%', { a: 'end', c: pal.att, fs: 10, 'fill-opacity': 0.7, mono: true });
+        txt(svg, L - 5, y + 3, Math.round(f * 100) + '%', { a: 'end', c: pal.att, fs: 10, fo: 0.7, mono: true });
       });
 
       /* the share already armed at day zero — the number the page is about */
       var atZero = d.beforeFrac;
       var yz = MID + atZero * hDn;
-      svg.appendChild(el('circle', { cx: x0px, cy: yz, r: 4, fill: pal.att, stroke: pal.panel, 'stroke-width': 1.5 }));
+      svg.appendChild(el('circle', { 'class': 'ch-mark', cx: x0px, cy: yz, r: 4, fill: pal.att, stroke: pal.ink, 'stroke-width': 1.5 }));
       txt(svg, x0px + 8, yz + 4, pctS(atZero) + ' already exploitable', { c: pal.att, fs: 10.5, w: 600 });
     }
 
@@ -162,11 +170,11 @@
       { c: pal.att, fs: 10.5, ls: '.09em', mono: true });
     if (d.cum) {
       txt(svg, L, BOT + 50, 'cumulative share of exploits available by day',
-        { c: pal.att, fs: 10, 'fill-opacity': 0.75 });
+        { c: pal.att, fs: 10, fo: 0.75 });
     }
 
     /* headline badge */
-    var bw = narrow ? 150 : 248, bh = 60, bx = R - bw - 2, by = T + 4;
+    var bw = narrow ? 152 : 272, bh = 60, bx = R - bw - 2, by = T + 4;
     svg.appendChild(el('rect', { x: bx, y: by, width: bw, height: bh, rx: 8, fill: pal.sunk, stroke: pal.rule }));
     var n1 = el('text', { x: bx + 14, y: by + 32, 'font-size': 28, fill: pal.bad, 'font-weight': 800 });
     n1.textContent = pctS(d.pLate);
@@ -198,8 +206,8 @@
       if (narrow) txt(svg, L, y - 4, labels[i], { c: i === 5 ? pal.txt : pal.mut, fs: 11.5 });
       else txt(svg, L - 12, y + 15, labels[i], { a: 'end', c: i === 5 ? pal.txt : pal.mut, fs: 11.5 });
 
-      svg.appendChild(el('rect', { x: L, y: barY, width: Math.max(0, R - L), height: 19, rx: 3, fill: pal.sunk }));
-      svg.appendChild(el('rect', { x: L, y: barY, width: bw, height: 19, rx: 3, fill: col, 'fill-opacity': i === 5 ? 1 : 0.8 }));
+      svg.appendChild(el('rect', { 'class': 'ch-track', x: L, y: barY, width: Math.max(0, R - L), height: 19, rx: 3, fill: pal.sunk }));
+      svg.appendChild(el('rect', { 'class': 'ch-bar', style: '--i:' + i, x: L, y: barY, width: bw, height: 19, rx: 3, fill: col, 'fill-opacity': i === 5 ? 1 : 0.8 }));
       txt(svg, Math.min(R + 6, L + bw + 7), barY + 14, v < 1 ? v.toFixed(2) : v.toFixed(1), { c: col, fs: 12, w: 600, mono: true });
 
       if (i) {
@@ -228,8 +236,8 @@
     r.routes.forEach(function (v, i) {
       var y = 20 + i * rh;
       txt(svg, L, y - 7, names[i], { c: pal.txt, fs: 11.5 });
-      svg.appendChild(el('rect', { x: L, y: y, width: R - L, height: 12, rx: 3, fill: pal.sunk }));
-      svg.appendChild(el('rect', { x: L, y: y, width: Math.max(0, (R - L) * v), height: 12, rx: 3, fill: cols[i] }));
+      svg.appendChild(el('rect', { 'class': 'ch-track', x: L, y: y, width: R - L, height: 12, rx: 3, fill: pal.sunk }));
+      svg.appendChild(el('rect', { 'class': 'ch-bar', style: '--i:' + i, x: L, y: y, width: Math.max(0, (R - L) * v), height: 12, rx: 3, fill: cols[i] }));
       txt(svg, L, y + 30, pctS(v), { c: cols[i], fs: 14, w: 700, mono: true });
     });
     return svg;
@@ -247,12 +255,15 @@
       svg.appendChild(el('line', { x1: L, y1: y, x2: R, y2: y, stroke: pal.rule }));
       txt(svg, L - 7, y + 4, (100 - i * 25) + '%', { a: 'end', c: pal.mut, fs: 10 });
     }
+    /* The last tick sits exactly on the right edge, so it is anchored to it:
+     * centred, half the label hangs outside the drawing and is cut off. */
     [0, 90, 180, 270, 365].forEach(function (d) {
-      txt(svg, L + (R - L) * d / 365, B + 17, d ? d + 'd' : 'day 0', { a: 'middle', c: pal.mut, fs: 10 });
+      txt(svg, L + (R - L) * d / 365, B + 17, d ? d + 'd' : 'day 0',
+        { a: d === 365 ? 'end' : 'middle', c: pal.mut, fs: 10 });
     });
     var pts = r.surv.map(function (v, i) { return [L + (R - L) * i / 365, T + (B - T) * (1 - v)]; });
-    svg.appendChild(el('path', { d: path(pts) + ' L ' + R + ' ' + B + ' L ' + L + ' ' + B + ' Z', fill: pal.def, 'fill-opacity': 0.10 }));
-    svg.appendChild(el('path', { d: path(pts), fill: 'none', stroke: pal.def, 'stroke-width': 2.2 }));
+    svg.appendChild(el('path', { 'class': 'ch-area', d: path(pts) + ' L ' + R + ' ' + B + ' L ' + L + ' ' + B + ' Z', fill: pal.def, 'fill-opacity': 0.10 }));
+    svg.appendChild(el('path', { 'class': 'ch-line', d: path(pts), fill: 'none', stroke: pal.def, 'stroke-width': 2.2 }));
 
     var half = -1;
     for (var k = 0; k <= 365; k++) if (r.surv[k] <= 0.5) { half = k; break; }
@@ -272,13 +283,17 @@
   function tornado(svg, w, rows, base, pal) {
     var narrow = w < 560;
     var rh = narrow ? 34 : 25;
-    var h = rows.length * rh + 40;
+    /* The top gutter has to clear the baseline caption drawn above the first
+     * row, and the bottom one the better/worse legend. Both were previously
+     * saved by the letterboxing that came from measuring the chart too wide;
+     * drawn at true width there is nothing to hide a label in. */
+    var h = rows.length * rh + 54;
     frame(svg, w, h);
     var labelW = narrow ? 0 : Math.min(190, w * 0.36);
     var valW = 52;
     var CX = narrow ? (w - valW) / 2 : labelW + (w - labelW - valW) / 2;
     var half = narrow ? (w - valW) / 2 - 6 : (w - labelW - valW) / 2 - 8;
-    var T = narrow ? 20 : 12;
+    var T = narrow ? 26 : 22;
     var span = Math.max(0.02, Math.max.apply(null, rows.map(function (r) {
       return Math.max(Math.abs(r.hi - base), Math.abs(base - r.lo));
     })));
@@ -291,7 +306,10 @@
       [[(r.lo - base) / span * half, pal.def], [(r.hi - base) / span * half, pal.att]].forEach(function (pair) {
         var dxv = pair[0], col = pair[1], bw = Math.abs(dxv);
         if (bw < 0.7) return;
-        svg.appendChild(el('rect', { x: dxv < 0 ? CX - bw : CX, y: y + (narrow ? 1 : 3), width: bw, height: 13, rx: 2, fill: col, 'fill-opacity': 0.9 }));
+        svg.appendChild(el('rect', {
+          'class': dxv < 0 ? 'ch-bar ch-bar-r' : 'ch-bar', style: '--i:' + i,
+          x: dxv < 0 ? CX - bw : CX, y: y + (narrow ? 1 : 3), width: bw, height: 13, rx: 2, fill: col, 'fill-opacity': 0.9,
+        }));
       });
       txt(svg, w - 2, y + (narrow ? 12 : 13), pctS(r.lo) + '→' + pctS(r.hi), { a: 'end', c: pal.mut, fs: 10, mono: true });
     });
@@ -316,15 +334,16 @@
       txt(svg, L - 7, y + 4, pctS(max * (1 - i / 4)), { a: 'end', c: pal.mut, fs: 10 });
     }
     [0, 25, 50, 75, 100].forEach(function (a) {
-      txt(svg, L + (R - L) * a / 100, B + 17, a === 0 ? 'measured' : '+' + a, { a: 'middle', c: pal.mut, fs: 10 });
+      txt(svg, L + (R - L) * a / 100, B + 17, a === 0 ? 'measured' : '+' + a,
+        { a: a === 100 ? 'end' : 'middle', c: pal.mut, fs: 10 });
     });
     var XY = function (p) { return [L + (R - L) * p[0] / 100, T + (B - T) * (1 - p[1] / max)]; };
     var P2 = pts.map(XY);
-    svg.appendChild(el('path', { d: path(P2) + ' L ' + R + ' ' + B + ' L ' + L + ' ' + B + ' Z', fill: pal.att, 'fill-opacity': 0.10 }));
-    svg.appendChild(el('path', { d: path(P2), fill: 'none', stroke: pal.att, 'stroke-width': 2.2 }));
+    svg.appendChild(el('path', { 'class': 'ch-area', d: path(P2) + ' L ' + R + ' ' + B + ' L ' + L + ' ' + B + ' Z', fill: pal.att, 'fill-opacity': 0.10 }));
+    svg.appendChild(el('path', { 'class': 'ch-line', d: path(P2), fill: 'none', stroke: pal.att, 'stroke-width': 2.2 }));
     var c = XY([curX, curY]);
     svg.appendChild(el('line', { x1: c[0], y1: T, x2: c[0], y2: B, stroke: pal.txt, 'stroke-dasharray': '3 3', 'stroke-opacity': 0.6 }));
-    svg.appendChild(el('circle', { cx: c[0], cy: c[1], r: 4.5, fill: pal.txt }));
+    svg.appendChild(el('circle', { 'class': 'ch-mark', cx: c[0], cy: c[1], r: 4.5, fill: pal.txt }));
     txt(svg, Math.min(c[0] + 8, R - 60), Math.max(T + 12, c[1] - 9), 'current settings', { c: pal.txt, fs: 10.5 });
     txt(svg, L, B + 34, 'modelled exploit-clock compression →', { c: pal.dim, fs: 10 });
     return svg;
@@ -354,8 +373,8 @@
       var col = i === 0 ? pal.bad : i === 1 ? pal.att : pal.mut;
       txt(svg, L - 10, y + 15, names[key], { a: 'end', c: pal.txt, fs: 12.5, w: 600 });
       txt(svg, L - 10, y + 28, key, { a: 'end', c: pal.dim, fs: 10, mono: true });
-      svg.appendChild(el('rect', { x: L, y: y, width: Math.max(0, R - L), height: 21, rx: 3, fill: pal.sunk }));
-      svg.appendChild(el('rect', { x: L, y: y, width: bw, height: 21, rx: 3, fill: col, 'fill-opacity': 0.9 }));
+      svg.appendChild(el('rect', { 'class': 'ch-track', x: L, y: y, width: Math.max(0, R - L), height: 21, rx: 3, fill: pal.sunk }));
+      svg.appendChild(el('rect', { 'class': 'ch-bar', style: '--i:' + i, x: L, y: y, width: bw, height: 21, rx: 3, fill: col, 'fill-opacity': 0.9 }));
       txt(svg, L + bw + 8, y + 15, b.pExploited.toFixed(2) + '%', { c: col, fs: 12.5, w: 700, mono: true });
       txt(svg, w - 2, y + 28, b.inKev.toLocaleString('en-US') + ' of ' + b.population.toLocaleString('en-US'),
         { a: 'end', c: pal.dim, fs: 10, mono: true });
@@ -390,8 +409,15 @@
       var cw = (R - L) * (r.crit / max);
       txt(svg, L, y + 11, r.label, { c: pal.txt, fs: 12.5, w: 600 });
       txt(svg, R, y + 11, r.pub.toLocaleString('en-US') + ' published', { a: 'end', c: pal.mut, fs: 11, mono: true });
-      svg.appendChild(el('rect', { x: L, y: y + 20, width: bw, height: 22, rx: 3, fill: pal.rule2, 'fill-opacity': r.partial ? 0.55 : 0.9 }));
-      svg.appendChild(el('rect', { x: L, y: y + 20, width: Math.max(2, cw), height: 22, rx: 3, fill: pal.bad, 'fill-opacity': r.partial ? 0.75 : 1 }));
+      /* The published total is an outlined track rather than a solid fill, so
+       * the critical figure printed over it reads against --sunk instead of
+       * against a mid-tone bar. The run-rate row dashes its outline: it is an
+       * extrapolation of a partial year, and should not look measured. */
+      svg.appendChild(el('rect', {
+        'class': 'ch-bar', style: '--i:' + (i * 2), x: L, y: y + 20, width: bw, height: 22, rx: 3,
+        fill: pal.sunk, stroke: pal.rule2, 'stroke-dasharray': r.partial ? '4 3' : null,
+      }));
+      svg.appendChild(el('rect', { 'class': 'ch-bar', style: '--i:' + (i * 2 + 1), x: L, y: y + 20, width: Math.max(2, cw), height: 22, rx: 3, fill: pal.bad, 'fill-opacity': r.partial ? 0.75 : 1 }));
       txt(svg, L + Math.max(2, cw) + 8, y + 35,
         r.crit.toLocaleString('en-US') + ' critical · ' + r.share.toFixed(1) + '% of scored',
         { c: pal.bad, fs: 11.5, w: 600, mono: true });
