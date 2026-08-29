@@ -2465,7 +2465,12 @@ footer code {
       var atZero = d.beforeFrac;
       var yz = MID + atZero * hDn;
       svg.appendChild(el('circle', { 'class': 'ch-mark', cx: x0px, cy: yz, r: 4, fill: pal.att, stroke: pal.ink, 'stroke-width': 1.5 }));
-      txt(svg, x0px + 8, yz + 4, pctS(atZero) + ' already exploitable', { c: pal.att, fs: 10.5, w: 600 });
+      /* Clamped and shortened rather than left to run past the right edge:
+       * the marker sits wherever day zero falls, which on a phone can be most
+       * of the way across the drawing. */
+      var zLab = narrow ? pctS(atZero) + ' exploitable' : pctS(atZero) + ' already exploitable';
+      txt(svg, Math.min(x0px + 8, R - zLab.length * 6.2), yz + 4, zLab,
+        { c: pal.att, fs: 10.5, w: 600 });
     }
 
     /* Overflow: mass outside the drawn window is labelled, not folded into the
@@ -2477,7 +2482,9 @@ footer code {
     };
     if (of.aBelow > 0.004) chip(L + 2, BOT - 4, 'start', pal.att, '◂ ' + pctS(of.aBelow) + ' earlier');
     if (of.aAbove > 0.004) chip(R - 2, BOT - 4, 'end', pal.att, pctS(of.aAbove) + ' later ▸');
-    if (of.dAbove > 0.004) chip(R - 2, T + 26, 'end', pal.def, pctS(of.dAbove) + ' unremediated ▸');
+    /* Clear of the headline badge, which is opaque, drawn later, and occupies
+     * T+4 to T+64 against the right edge. */
+    if (of.dAbove > 0.004) chip(R - 2, T + 80, 'end', pal.def, pctS(of.dAbove) + ' unremediated ▸');
 
     /* Narrow shortens both band names: the full strings run under the headline
      * badge and the day-zero readout at phone widths. */
@@ -2509,7 +2516,10 @@ footer code {
   function funnel(svg, w, r, labels, pal) {
     var narrow = w < 640;
     var rh = narrow ? 52 : 40;
-    var h = labels.length * rh + 34;
+    /* The narrow branch puts the label above its bar, which pushes the whole
+     * stack down by one row's worth; the caption underneath then needs the
+     * extra gutter or it is drawn past the bottom edge. */
+    var h = labels.length * rh + (narrow ? 48 : 34);
     frame(svg, w, h);
     var L = narrow ? 8 : 300, R = w - 58, T = 10;
     var max = Math.max.apply(null, r.fn.concat([1e-3]));
@@ -2544,7 +2554,7 @@ footer code {
     /* SVG text does not wrap, so the full labels run off the drawing below
      * roughly 430px. The short forms say the same thing in the space there
      * actually is. */
-    var narrow = w < 440;
+    var narrow = w < 400;
     var names = narrow ? [
       'Opportunistic exploitation',
       'Targeted campaign',
@@ -2681,14 +2691,16 @@ footer code {
   function severity(svg, w, cal, pal) {
     var bands = cal.exploitation.bands;
     var narrow = w < 560;
-    var rh = 46, h = bands.length * rh + 52;
+    var rh = 46, h = bands.length * rh + (w < 620 ? 68 : 52);
     frame(svg, w, h);
     var L = narrow ? 66 : 96, R = w - 92, T = 20;
     var max = Math.max.apply(null, bands.map(function (b) { return b.pExploited; }));
     var names = { '9.0-10.0': 'Critical', '7.0-8.9': 'High', '4.0-6.9': 'Medium', '0.1-3.9': 'Low' };
     var order = ['9.0-10.0', '7.0-8.9', '4.0-6.9', '0.1-3.9'];
 
-    txt(svg, L, T - 6, 'SHARE OF EACH SEVERITY BAND CONFIRMED EXPLOITED', { c: pal.mut, fs: 10, ls: '.08em', mono: true });
+    txt(svg, L, T - 6, narrow ? 'CONFIRMED EXPLOITED, BY BAND'
+      : 'SHARE OF EACH SEVERITY BAND CONFIRMED EXPLOITED',
+      { c: pal.mut, fs: 10, ls: '.08em', mono: true });
 
     order.forEach(function (key, i) {
       var b = bands.find(function (x) { return x.band === key; });
@@ -2705,10 +2717,19 @@ footer code {
         { a: 'end', c: pal.dim, fs: 10, mono: true });
     });
 
+    /* SVG text does not wrap, so the closing sentence is broken by hand rather
+     * than left to run off the right edge — which is what it did at every
+     * column narrower than about 620px, including the paired-chart row. */
     var fy = T + bands.length * rh + 18;
-    txt(svg, L, fy, 'Critical is only ' + cal.exploitation.criticalVsHigh + '× High, and ' +
-      cal.exploitation.kevBelowCritical.toFixed(0) + '% of confirmed-exploited bugs are rated below Critical.',
-      { c: pal.txt, fs: 11.5 });
+    var a = 'Critical is only ' + cal.exploitation.criticalVsHigh + '× High, and ' +
+      cal.exploitation.kevBelowCritical.toFixed(0) + '% of';
+    var b2 = 'confirmed-exploited bugs are rated below Critical.';
+    if (w < 620) {
+      txt(svg, 0, fy, a, { c: pal.txt, fs: 11.5 });
+      txt(svg, 0, fy + 16, b2, { c: pal.txt, fs: 11.5 });
+    } else {
+      txt(svg, L, fy, a + ' ' + b2, { c: pal.txt, fs: 11.5 });
+    }
     return svg;
   }
 
@@ -2726,7 +2747,9 @@ footer code {
     frame(svg, w, h);
     var L = 4, R = w - 4, T = 26;
     var max = Math.max.apply(null, rows.map(function (r) { return r.pub; }));
-    txt(svg, L, 12, 'PUBLISHED CVES AND THE CRITICAL-RATED SHARE', { c: pal.mut, fs: 10, ls: '.08em', mono: true });
+    txt(svg, L, 12, w < 400 ? 'PUBLISHED CVES · CRITICAL SHARE'
+      : 'PUBLISHED CVES AND THE CRITICAL-RATED SHARE',
+      { c: pal.mut, fs: 10, ls: '.08em', mono: true });
 
     rows.forEach(function (r, i) {
       var y = T + i * 74;
