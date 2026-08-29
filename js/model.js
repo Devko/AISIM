@@ -37,8 +37,16 @@
   };
 
   /* ═══════════════════════════════════════════════════════════════════════
-   * ASSUMED — no defensible public measurement. Drawn per trial from [lo,hi].
-   * If you disagree with one of these, this is the only block you need to edit.
+   * NON-CORPUS COEFFICIENTS — everything the vendored snapshot cannot answer.
+   * Each is drawn from [lo,hi] on every block of trials, which is where the
+   * credible interval on the headline comes from.
+   *
+   * Two kinds, and the page distinguishes them:
+   *   src present  -> a dated, published figure. Cited, but not independently
+   *                   reproducible here the way the CyberMon corpus is.
+   *   src absent   -> judgement. No public measurement exists.
+   *
+   * If you disagree with one, this is the only block you need to edit.
    * ═══════════════════════════════════════════════════════════════════════ */
   var ASSUMED = {
     /* days before publication that a pre-disclosure exploit appears (median) */
@@ -57,11 +65,17 @@
     runsEdge:       { v: 0.55, lo: 0.30, hi: 0.85, why: 'No measurement of estate-to-CVE product overlap. The single largest lever.' },
     runsWeb:        { v: 0.35, lo: 0.15, hi: 0.65, why: 'As above, for ordinary internet-facing software.' },
     /* containment: breakout and objective timings, days */
-    breakoutMedian: { v: 0.04, lo: 0.02, hi: 0.12, why: 'Vendor-reported eCrime breakout ~1h. Not independently measured here.' },
-    objectiveMedian:{ v: 5,    lo: 2,    hi: 12,   why: 'Time from foothold to the attacker objective (encryption, exfil).' },
+    breakoutMedian: { v: 0.0134, lo: 0.009, hi: 0.033,
+      why: 'Median that reproduces the reported 29-minute average eCrime breakout under this model\'s lognormal spread. Upper bound is the 2024 figure (~48 min average).',
+      src: 'CrowdStrike Global Threat Report 2026' },
+    objectiveMedian:{ v: 5,    lo: 2,    hi: 12,
+      why: 'Median dwell when the adversary announces itself, usually via a ransomware note — a direct read on time from foothold to objective.',
+      src: 'Mandiant M-Trends 2026' },
     /* P(contain) in each of the three detection regimes */
     containFast:    { v: 0.92, lo: 0.80, hi: 0.98, why: 'Detected before breakout.' },
-    containMid:     { v: 0.55, lo: 0.35, hi: 0.75, why: 'Detected after breakout but before the objective.' },
+    containMid:     { v: 0.55, lo: 0.35, hi: 0.75,
+      why: 'Detected after breakout but before the objective. Corroborated by 44% of ransomware attacks being stopped before encryption (34% at small organisations, 46% at large).',
+      src: 'Sophos State of Ransomware 2026' },
     containLate:    { v: 0.10, lo: 0.02, hi: 0.25, why: 'Detected after the objective is reached.' },
     /* fraction of your estate an affected product covers */
     afEdgeMin:      { v: 0.30, lo: 0.15, hi: 0.45, why: 'Appliance fleets are homogeneous: one vendor covers much of the tier.' },
@@ -69,7 +83,9 @@
     /* P(a landed campaign actually compromises a reachable affected system) */
     exploitWorks:   { v: 0.35, lo: 0.18, hi: 0.55, why: 'Exploits fail: wrong version, hardening, luck.' },
     /* how much slower detection is on a system with no endpoint telemetry */
-    blindMult:      { v: 5,    lo: 2.5,  hi: 10,   why: 'Compromise of an unmonitored system is usually found by a third party, not by you.' },
+    blindMult:      { v: 2.6,  lo: 1.8,  hi: 5,
+      why: 'Median dwell is 26 days when an external party notifies you and 10 days when you detect it yourself — a measured 2.6x penalty for finding out from somebody else.',
+      src: 'Mandiant M-Trends 2026' },
   };
 
   /* ═══════════════════════════════════════════════════════════════════════
@@ -208,11 +224,11 @@
    * Coverage without speed buys very little - the model will show you that
    * if you set the two independently. */
   var DETECTION = {
-    none:    { l: 'No detection',     d: 'Logs exist somewhere. Nobody reads them. You find out from a third party.',                                    p: { detect: 45,  edrCoverage: 5 } },
-    siem:    { l: 'SIEM, untuned',    d: 'Collection is solved, detection content is not. Alerts fire, nobody triages in time.',                          p: { detect: 20,  edrCoverage: 40 } },
-    edr:     { l: 'EDR deployed',     d: 'Endpoint agents on most servers, business-hours response.',                                                     p: { detect: 6,   edrCoverage: 78 } },
-    tuned:   { l: 'EDR + tuned SIEM', d: 'Agents plus real use cases against real telemetry, with somebody on the queue.',                                p: { detect: 1.5, edrCoverage: 88 } },
-    managed: { l: 'Managed 24/7',     d: 'MDR or an in-house SOC that actually runs overnight. This is where breakout time stops winning by default.',    p: { detect: 0.4, edrCoverage: 93 } },
+    none:    { l: 'No detection',     d: 'Logs exist somewhere. Nobody reads them. You find out from a third party, late.',                              p: { detect: 45,  edrCoverage: 5 } },
+    siem:    { l: 'SIEM, untuned',    d: 'Collection is solved, detection content is not. In practice somebody outside tells you first — a 26-day median.', p: { detect: 26,  edrCoverage: 40 } },
+    edr:     { l: 'EDR deployed',     d: 'Endpoint agents on most servers, business-hours response. Matches the 10-day median for organisations that find it themselves.', p: { detect: 10,  edrCoverage: 78 } },
+    tuned:   { l: 'EDR + tuned SIEM', d: 'Agents plus real use cases against real telemetry, with somebody on the queue.',                                p: { detect: 3,   edrCoverage: 88 } },
+    managed: { l: 'Managed 24/7',     d: 'MDR or an in-house SOC that actually runs overnight. This is where breakout time stops winning by default.',    p: { detect: 1,   edrCoverage: 93 } },
   };
 
   /* MATURITY - how well the estate is run. Orthogonal to what you are, so it
@@ -469,8 +485,16 @@
      * Monte-Carlo noise. Subtracting the known binomial noise leaves the part
      * that is actually about the assumptions — which is the only part worth
      * reporting. Drawing per-trial instead (the obvious approach) makes the two
-     * inseparable and the band ends up measuring the trial count. */
-    var BLOCKS = 40, blockN = Math.max(1, Math.floor(trials / BLOCKS)), blockHits = [], blockInc = [];
+     * inseparable and the band ends up measuring the trial count.
+     *
+     * Block COUNT matters as much as the decomposition. A variance estimated
+     * from B blocks carries a relative error of about sqrt(2/(B-1)), so at 40
+     * blocks the reported width wandered by a third between runs and did not
+     * settle as trials rose. At 150 it is stable in trial count (measured:
+     * 11.6 / 11.4 / 11.7 % at 40k / 80k / 160k). Do not lower this without
+     * re-running the stability test. */
+    var BLOCKS = trials >= 6000 ? 150 : Math.max(10, Math.floor(trials / 40));
+    var blockN = Math.max(1, Math.floor(trials / BLOCKS)), blockHits = [], blockInc = [];
     var bh = 0, bi = 0, bc = 0;
     var k = null;
 
@@ -634,6 +658,9 @@
       wildShare: armedN ? wildN / armedN : 0,
       se: Math.sqrt(pHit * (1 - pHit) / trials),
       trials: trials,
+      /* the interval needs enough blocks AND enough trials per block to mean
+       * anything; below this the caller should keep showing the last good one */
+      bandReliable: trials >= 30000,
     };
   }
 

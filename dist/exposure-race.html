@@ -274,13 +274,15 @@ ul.acts li:last-child { border-bottom: 0; padding-bottom: 0; }
 .anchors dt b { font-weight: 700; }
 .anchors dd { margin: 0; font-size: 11.5px; color: var(--mut); font-family: var(--mono); }
 .anchors .measured { color: var(--def); }
-.anchors .assumed { color: var(--warn); }
+.anchors .reported { color: var(--zero); }
+.anchors .assumed  { color: var(--warn); }
 
 .tag {
   font-family: var(--mono); font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase;
   padding: 2px 6px; border-radius: 4px; border: 1px solid currentColor; white-space: nowrap;
 }
 .tag.m { color: var(--def); }
+.tag.r { color: var(--zero); }
 .tag.a { color: var(--warn); }
 
 footer {
@@ -559,11 +561,13 @@ footer code {
     <!-- ── anchors ── -->
     <div class="panel">
       <h3>What the model is anchored on</h3>
-      <p class="lead">Every coefficient is either <span class="tag m">measured</span> — read
-      directly off a dated public corpus — or <span class="tag a">assumed</span>, in which case it
-      is drawn from the stated range on every single trial. That is where the credible bands on the
-      headline numbers come from. If you disagree with an assumption, the range is the argument to
-      have.</p>
+      <p class="lead">Three kinds of number, and the page will not pretend they are the same.
+      <span class="tag m">measured</span> is read directly off the vendored corpus and is
+      reproducible offline. <span class="tag r">reported</span> is a dated published figure —
+      cited, but you are trusting somebody else's methodology.
+      <span class="tag a">assumed</span> is judgement, because no public measurement exists.
+      The last two are drawn from their stated range on every block of trials, which is where the
+      credible bands come from. If you disagree with one, the range is the argument to have.</p>
       <div class="anchors" id="anchors"></div>
     </div>
 
@@ -580,7 +584,16 @@ footer code {
       tools/derive-calibration.js</code>. Verify the model with <code>node test/model.test.js</code>.</p>
       <p><b>Scope.</b> This models vulnerability exploitation only. Credential abuse, phishing and
       insider routes are absent, so treat the output as a lower bound on intrusion risk rather than a
-      picture of it. Run-rate figures are linear extrapolation of a partial year.</p>
+      picture of it — the 2026 DBIR puts vulnerability exploitation at 31% of breaches, ahead of
+      credentials but far from all of it. Run-rate figures are linear extrapolation of a partial year.</p>
+      <p><b>Sources for the reported tier.</b> Breakout timing from the CrowdStrike Global Threat
+      Report 2026 (29-minute average eCrime breakout, fastest observed 27 seconds); dwell and
+      notification-path timings from Mandiant M-Trends 2026 (14-day global median, 10 days when an
+      organisation finds it itself against 26 when somebody else tells them); containment
+      corroborated against Sophos State of Ransomware 2026 (44% of attacks stopped before
+      encryption). These are vendor incident-response populations, which skew toward organisations
+      that needed incident response — read them as the shape of the distribution rather than as a
+      population baseline.</p>
     </footer>
 
   </div>
@@ -1037,8 +1050,16 @@ footer code {
   };
 
   /* ═══════════════════════════════════════════════════════════════════════
-   * ASSUMED — no defensible public measurement. Drawn per trial from [lo,hi].
-   * If you disagree with one of these, this is the only block you need to edit.
+   * NON-CORPUS COEFFICIENTS — everything the vendored snapshot cannot answer.
+   * Each is drawn from [lo,hi] on every block of trials, which is where the
+   * credible interval on the headline comes from.
+   *
+   * Two kinds, and the page distinguishes them:
+   *   src present  -> a dated, published figure. Cited, but not independently
+   *                   reproducible here the way the CyberMon corpus is.
+   *   src absent   -> judgement. No public measurement exists.
+   *
+   * If you disagree with one, this is the only block you need to edit.
    * ═══════════════════════════════════════════════════════════════════════ */
   var ASSUMED = {
     /* days before publication that a pre-disclosure exploit appears (median) */
@@ -1057,11 +1078,17 @@ footer code {
     runsEdge:       { v: 0.55, lo: 0.30, hi: 0.85, why: 'No measurement of estate-to-CVE product overlap. The single largest lever.' },
     runsWeb:        { v: 0.35, lo: 0.15, hi: 0.65, why: 'As above, for ordinary internet-facing software.' },
     /* containment: breakout and objective timings, days */
-    breakoutMedian: { v: 0.04, lo: 0.02, hi: 0.12, why: 'Vendor-reported eCrime breakout ~1h. Not independently measured here.' },
-    objectiveMedian:{ v: 5,    lo: 2,    hi: 12,   why: 'Time from foothold to the attacker objective (encryption, exfil).' },
+    breakoutMedian: { v: 0.0134, lo: 0.009, hi: 0.033,
+      why: 'Median that reproduces the reported 29-minute average eCrime breakout under this model\'s lognormal spread. Upper bound is the 2024 figure (~48 min average).',
+      src: 'CrowdStrike Global Threat Report 2026' },
+    objectiveMedian:{ v: 5,    lo: 2,    hi: 12,
+      why: 'Median dwell when the adversary announces itself, usually via a ransomware note — a direct read on time from foothold to objective.',
+      src: 'Mandiant M-Trends 2026' },
     /* P(contain) in each of the three detection regimes */
     containFast:    { v: 0.92, lo: 0.80, hi: 0.98, why: 'Detected before breakout.' },
-    containMid:     { v: 0.55, lo: 0.35, hi: 0.75, why: 'Detected after breakout but before the objective.' },
+    containMid:     { v: 0.55, lo: 0.35, hi: 0.75,
+      why: 'Detected after breakout but before the objective. Corroborated by 44% of ransomware attacks being stopped before encryption (34% at small organisations, 46% at large).',
+      src: 'Sophos State of Ransomware 2026' },
     containLate:    { v: 0.10, lo: 0.02, hi: 0.25, why: 'Detected after the objective is reached.' },
     /* fraction of your estate an affected product covers */
     afEdgeMin:      { v: 0.30, lo: 0.15, hi: 0.45, why: 'Appliance fleets are homogeneous: one vendor covers much of the tier.' },
@@ -1069,7 +1096,9 @@ footer code {
     /* P(a landed campaign actually compromises a reachable affected system) */
     exploitWorks:   { v: 0.35, lo: 0.18, hi: 0.55, why: 'Exploits fail: wrong version, hardening, luck.' },
     /* how much slower detection is on a system with no endpoint telemetry */
-    blindMult:      { v: 5,    lo: 2.5,  hi: 10,   why: 'Compromise of an unmonitored system is usually found by a third party, not by you.' },
+    blindMult:      { v: 2.6,  lo: 1.8,  hi: 5,
+      why: 'Median dwell is 26 days when an external party notifies you and 10 days when you detect it yourself — a measured 2.6x penalty for finding out from somebody else.',
+      src: 'Mandiant M-Trends 2026' },
   };
 
   /* ═══════════════════════════════════════════════════════════════════════
@@ -1208,11 +1237,11 @@ footer code {
    * Coverage without speed buys very little - the model will show you that
    * if you set the two independently. */
   var DETECTION = {
-    none:    { l: 'No detection',     d: 'Logs exist somewhere. Nobody reads them. You find out from a third party.',                                    p: { detect: 45,  edrCoverage: 5 } },
-    siem:    { l: 'SIEM, untuned',    d: 'Collection is solved, detection content is not. Alerts fire, nobody triages in time.',                          p: { detect: 20,  edrCoverage: 40 } },
-    edr:     { l: 'EDR deployed',     d: 'Endpoint agents on most servers, business-hours response.',                                                     p: { detect: 6,   edrCoverage: 78 } },
-    tuned:   { l: 'EDR + tuned SIEM', d: 'Agents plus real use cases against real telemetry, with somebody on the queue.',                                p: { detect: 1.5, edrCoverage: 88 } },
-    managed: { l: 'Managed 24/7',     d: 'MDR or an in-house SOC that actually runs overnight. This is where breakout time stops winning by default.',    p: { detect: 0.4, edrCoverage: 93 } },
+    none:    { l: 'No detection',     d: 'Logs exist somewhere. Nobody reads them. You find out from a third party, late.',                              p: { detect: 45,  edrCoverage: 5 } },
+    siem:    { l: 'SIEM, untuned',    d: 'Collection is solved, detection content is not. In practice somebody outside tells you first — a 26-day median.', p: { detect: 26,  edrCoverage: 40 } },
+    edr:     { l: 'EDR deployed',     d: 'Endpoint agents on most servers, business-hours response. Matches the 10-day median for organisations that find it themselves.', p: { detect: 10,  edrCoverage: 78 } },
+    tuned:   { l: 'EDR + tuned SIEM', d: 'Agents plus real use cases against real telemetry, with somebody on the queue.',                                p: { detect: 3,   edrCoverage: 88 } },
+    managed: { l: 'Managed 24/7',     d: 'MDR or an in-house SOC that actually runs overnight. This is where breakout time stops winning by default.',    p: { detect: 1,   edrCoverage: 93 } },
   };
 
   /* MATURITY - how well the estate is run. Orthogonal to what you are, so it
@@ -1469,8 +1498,16 @@ footer code {
      * Monte-Carlo noise. Subtracting the known binomial noise leaves the part
      * that is actually about the assumptions — which is the only part worth
      * reporting. Drawing per-trial instead (the obvious approach) makes the two
-     * inseparable and the band ends up measuring the trial count. */
-    var BLOCKS = 40, blockN = Math.max(1, Math.floor(trials / BLOCKS)), blockHits = [], blockInc = [];
+     * inseparable and the band ends up measuring the trial count.
+     *
+     * Block COUNT matters as much as the decomposition. A variance estimated
+     * from B blocks carries a relative error of about sqrt(2/(B-1)), so at 40
+     * blocks the reported width wandered by a third between runs and did not
+     * settle as trials rose. At 150 it is stable in trial count (measured:
+     * 11.6 / 11.4 / 11.7 % at 40k / 80k / 160k). Do not lower this without
+     * re-running the stability test. */
+    var BLOCKS = trials >= 6000 ? 150 : Math.max(10, Math.floor(trials / 40));
+    var blockN = Math.max(1, Math.floor(trials / BLOCKS)), blockHits = [], blockInc = [];
     var bh = 0, bi = 0, bc = 0;
     var k = null;
 
@@ -1634,6 +1671,9 @@ footer code {
       wildShare: armedN ? wildN / armedN : 0,
       se: Math.sqrt(pHit * (1 - pHit) / trials),
       trials: trials,
+      /* the interval needs enough blocks AND enough trials per block to mean
+       * anything; below this the caller should keep showing the last good one */
+      bandReliable: trials >= 30000,
     };
   }
 
@@ -2232,7 +2272,10 @@ footer code {
   var METRIC = 'p';                 /* 'p' = compromise, 'incident' = incident */
   var ON = [], MAT = 'typical', DET = null;   /* ON = selected traits, multi-select */
   var SEED = 1234, SEED_SENS = 7;
-  var N_FAST = 4000, N_HEAVY = 14000, N_SENS = 5000;
+  /* N_HEAVY is set by the credible interval, not by the point estimate: the
+   * variance decomposition needs ~150 blocks with enough trials in each. The
+   * point estimate is settled long before this. ~116ms on a laptop. */
+  var N_FAST = 4000, N_HEAVY = 60000, N_SENS = 5000;
 
   /* Sliders shown up front. Detection is driven by the posture selector, so the
    * two knobs behind it live in "more" — the reader picks a stack, not a dwell
@@ -2497,9 +2540,17 @@ footer code {
     add(v, document.createTextNode(value), E('span', 'u', unit));
     $(id + '-ci').textContent = ci;
   }
+  var lastBand = { p: '', i: '' };
   function renderHead(r) {
-    setStat('s-p', pctS(r.p), 'of years', '90% band ' + pctS(r.pLo) + '–' + pctS(r.pHi));
-    setStat('s-i', pctS(r.incident), 'of years', '90% band ' + pctS(r.incLo) + '–' + pctS(r.incHi));
+    /* The fast pass while a slider is moving does not run enough blocks for the
+     * interval to mean anything. Show the point estimate live and keep the last
+     * trustworthy band rather than flashing a number that is mostly noise. */
+    if (r.bandReliable) {
+      lastBand.p = '90% band ' + pctS(r.pLo) + '–' + pctS(r.pHi);
+      lastBand.i = '90% band ' + pctS(r.incLo) + '–' + pctS(r.incHi);
+    }
+    setStat('s-p', pctS(r.p), 'of years', lastBand.p);
+    setStat('s-i', pctS(r.incident), 'of years', lastBand.i);
     setStat('s-n', r.events < 10 ? num(r.events, 2) : num(r.events), 'expected', 'compromised systems / yr');
     if (r.med == null) setStat('s-t', '—', 'not reached', 'most years stay clean');
     else setStat('s-t', num(r.med), 'days', 'median time to first compromise');
@@ -2598,12 +2649,26 @@ footer code {
   }
 
   /* ── scheduling ────────────────────────────────────────────────────────── */
-  var raf = null, slow = null;
+  /* requestAnimationFrame is the right way to coalesce redraws while a slider
+   * moves, but it is not guaranteed to fire: background tabs, embedded panes
+   * and power-saving modes throttle or suspend it, and some of those still
+   * report visibilityState "visible", so a visibility check does not catch it.
+   * rAF is therefore an optimisation with a timer backstop — whichever arrives
+   * first runs the pass and cancels the other. */
+  var raf = null, fallback = null, slow = null;
+  function runFast() {
+    if (raf) { cancelAnimationFrame(raf); raf = null; }
+    clearTimeout(fallback);
+    fallback = null;
+    fast();
+  }
   function schedule() {
     if (raf) cancelAnimationFrame(raf);
-    raf = requestAnimationFrame(fast);
+    raf = requestAnimationFrame(runFast);
+    clearTimeout(fallback);
+    fallback = setTimeout(runFast, 90);
     clearTimeout(slow);
-    slow = setTimeout(heavy, 260);
+    slow = setTimeout(heavy, 280);
   }
 
   /* ── sharing ───────────────────────────────────────────────────────────── */
@@ -2671,11 +2736,12 @@ footer code {
   }
 
   /* ── anchors ───────────────────────────────────────────────────────────── */
+  var TAG = { measured: 'm', reported: 'r', assumed: 'a' };
   function anchorRow(host, label, kind, value, note) {
     var wrap = E('div');
     var dt = E('dt');
-    add(dt, document.createTextNode(label + ' '), E('span', 'tag ' + (kind === 'measured' ? 'm' : 'a'), kind));
-    var dd = E('dd', kind === 'measured' ? 'measured' : 'assumed', value);
+    add(dt, document.createTextNode(label + ' '), E('span', 'tag ' + TAG[kind], kind));
+    var dd = E('dd', kind, value);
     var sm = E('span', null, note);
     sm.style.fontSize = '11px';
     sm.style.color = 'var(--dim)';
@@ -2705,7 +2771,15 @@ footer code {
     anchorRow(host, 'CVEs NVD has stopped analysing', 'measured',
       thou(C.nvd.deferred) + ' (' + C.nvd.deferredShare.toFixed(1) + '%)',
       'CyberMon · NVD API status labels');
-    Object.keys(M.ASSUMED).forEach(function (k) {
+    /* cited figures first, then the pure judgement calls — a reader scanning
+     * for what to argue with should reach the weakest material last, not first */
+    var keys = Object.keys(M.ASSUMED);
+    keys.filter(function (k) { return M.ASSUMED[k].src; }).forEach(function (k) {
+      var a = M.ASSUMED[k];
+      anchorRow(host, k, 'reported', a.v + '   (range ' + a.lo + '–' + a.hi + ')',
+        a.src + ' — ' + a.why);
+    });
+    keys.filter(function (k) { return !M.ASSUMED[k].src; }).forEach(function (k) {
       var a = M.ASSUMED[k];
       anchorRow(host, k, 'assumed', a.v + '   (range ' + a.lo + '–' + a.hi + ')', a.why);
     });

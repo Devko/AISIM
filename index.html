@@ -265,11 +265,13 @@
     <!-- ── anchors ── -->
     <div class="panel">
       <h3>What the model is anchored on</h3>
-      <p class="lead">Every coefficient is either <span class="tag m">measured</span> — read
-      directly off a dated public corpus — or <span class="tag a">assumed</span>, in which case it
-      is drawn from the stated range on every single trial. That is where the credible bands on the
-      headline numbers come from. If you disagree with an assumption, the range is the argument to
-      have.</p>
+      <p class="lead">Three kinds of number, and the page will not pretend they are the same.
+      <span class="tag m">measured</span> is read directly off the vendored corpus and is
+      reproducible offline. <span class="tag r">reported</span> is a dated published figure —
+      cited, but you are trusting somebody else's methodology.
+      <span class="tag a">assumed</span> is judgement, because no public measurement exists.
+      The last two are drawn from their stated range on every block of trials, which is where the
+      credible bands come from. If you disagree with one, the range is the argument to have.</p>
       <div class="anchors" id="anchors"></div>
     </div>
 
@@ -286,7 +288,16 @@
       tools/derive-calibration.js</code>. Verify the model with <code>node test/model.test.js</code>.</p>
       <p><b>Scope.</b> This models vulnerability exploitation only. Credential abuse, phishing and
       insider routes are absent, so treat the output as a lower bound on intrusion risk rather than a
-      picture of it. Run-rate figures are linear extrapolation of a partial year.</p>
+      picture of it — the 2026 DBIR puts vulnerability exploitation at 31% of breaches, ahead of
+      credentials but far from all of it. Run-rate figures are linear extrapolation of a partial year.</p>
+      <p><b>Sources for the reported tier.</b> Breakout timing from the CrowdStrike Global Threat
+      Report 2026 (29-minute average eCrime breakout, fastest observed 27 seconds); dwell and
+      notification-path timings from Mandiant M-Trends 2026 (14-day global median, 10 days when an
+      organisation finds it itself against 26 when somebody else tells them); containment
+      corroborated against Sophos State of Ransomware 2026 (44% of attacks stopped before
+      encryption). These are vendor incident-response populations, which skew toward organisations
+      that needed incident response — read them as the shape of the distribution rather than as a
+      population baseline.</p>
     </footer>
 
   </div>

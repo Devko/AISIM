@@ -14,7 +14,10 @@
   var METRIC = 'p';                 /* 'p' = compromise, 'incident' = incident */
   var ON = [], MAT = 'typical', DET = null;   /* ON = selected traits, multi-select */
   var SEED = 1234, SEED_SENS = 7;
-  var N_FAST = 4000, N_HEAVY = 14000, N_SENS = 5000;
+  /* N_HEAVY is set by the credible interval, not by the point estimate: the
+   * variance decomposition needs ~150 blocks with enough trials in each. The
+   * point estimate is settled long before this. ~116ms on a laptop. */
+  var N_FAST = 4000, N_HEAVY = 60000, N_SENS = 5000;
 
   /* Sliders shown up front. Detection is driven by the posture selector, so the
    * two knobs behind it live in "more" — the reader picks a stack, not a dwell
@@ -279,9 +282,17 @@
     add(v, document.createTextNode(value), E('span', 'u', unit));
     $(id + '-ci').textContent = ci;
   }
+  var lastBand = { p: '', i: '' };
   function renderHead(r) {
-    setStat('s-p', pctS(r.p), 'of years', '90% band ' + pctS(r.pLo) + '–' + pctS(r.pHi));
-    setStat('s-i', pctS(r.incident), 'of years', '90% band ' + pctS(r.incLo) + '–' + pctS(r.incHi));
+    /* The fast pass while a slider is moving does not run enough blocks for the
+     * interval to mean anything. Show the point estimate live and keep the last
+     * trustworthy band rather than flashing a number that is mostly noise. */
+    if (r.bandReliable) {
+      lastBand.p = '90% band ' + pctS(r.pLo) + '–' + pctS(r.pHi);
+      lastBand.i = '90% band ' + pctS(r.incLo) + '–' + pctS(r.incHi);
+    }
+    setStat('s-p', pctS(r.p), 'of years', lastBand.p);
+    setStat('s-i', pctS(r.incident), 'of years', lastBand.i);
     setStat('s-n', r.events < 10 ? num(r.events, 2) : num(r.events), 'expected', 'compromised systems / yr');
     if (r.med == null) setStat('s-t', '—', 'not reached', 'most years stay clean');
     else setStat('s-t', num(r.med), 'days', 'median time to first compromise');
@@ -380,12 +391,26 @@
   }
 
   /* ── scheduling ────────────────────────────────────────────────────────── */
-  var raf = null, slow = null;
+  /* requestAnimationFrame is the right way to coalesce redraws while a slider
+   * moves, but it is not guaranteed to fire: background tabs, embedded panes
+   * and power-saving modes throttle or suspend it, and some of those still
+   * report visibilityState "visible", so a visibility check does not catch it.
+   * rAF is therefore an optimisation with a timer backstop — whichever arrives
+   * first runs the pass and cancels the other. */
+  var raf = null, fallback = null, slow = null;
+  function runFast() {
+    if (raf) { cancelAnimationFrame(raf); raf = null; }
+    clearTimeout(fallback);
+    fallback = null;
+    fast();
+  }
   function schedule() {
     if (raf) cancelAnimationFrame(raf);
-    raf = requestAnimationFrame(fast);
+    raf = requestAnimationFrame(runFast);
+    clearTimeout(fallback);
+    fallback = setTimeout(runFast, 90);
     clearTimeout(slow);
-    slow = setTimeout(heavy, 260);
+    slow = setTimeout(heavy, 280);
   }
 
   /* ── sharing ───────────────────────────────────────────────────────────── */
@@ -453,11 +478,12 @@
   }
 
   /* ── anchors ───────────────────────────────────────────────────────────── */
+  var TAG = { measured: 'm', reported: 'r', assumed: 'a' };
   function anchorRow(host, label, kind, value, note) {
     var wrap = E('div');
     var dt = E('dt');
-    add(dt, document.createTextNode(label + ' '), E('span', 'tag ' + (kind === 'measured' ? 'm' : 'a'), kind));
-    var dd = E('dd', kind === 'measured' ? 'measured' : 'assumed', value);
+    add(dt, document.createTextNode(label + ' '), E('span', 'tag ' + TAG[kind], kind));
+    var dd = E('dd', kind, value);
     var sm = E('span', null, note);
     sm.style.fontSize = '11px';
     sm.style.color = 'var(--dim)';
@@ -487,7 +513,15 @@
     anchorRow(host, 'CVEs NVD has stopped analysing', 'measured',
       thou(C.nvd.deferred) + ' (' + C.nvd.deferredShare.toFixed(1) + '%)',
       'CyberMon · NVD API status labels');
-    Object.keys(M.ASSUMED).forEach(function (k) {
+    /* cited figures first, then the pure judgement calls — a reader scanning
+     * for what to argue with should reach the weakest material last, not first */
+    var keys = Object.keys(M.ASSUMED);
+    keys.filter(function (k) { return M.ASSUMED[k].src; }).forEach(function (k) {
+      var a = M.ASSUMED[k];
+      anchorRow(host, k, 'reported', a.v + '   (range ' + a.lo + '–' + a.hi + ')',
+        a.src + ' — ' + a.why);
+    });
+    keys.filter(function (k) { return !M.ASSUMED[k].src; }).forEach(function (k) {
       var a = M.ASSUMED[k];
       anchorRow(host, k, 'assumed', a.v + '   (range ' + a.lo + '–' + a.hi + ')', a.why);
     });

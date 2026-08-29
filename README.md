@@ -115,30 +115,56 @@ what-if slider, rather than baking an assumption into the baseline.
 
 ---
 
-## Measured vs assumed
+## Three kinds of number
 
-Every coefficient is one or the other, and the page says which.
+The page will not pretend they are the same, and tags each one.
 
-**Measured** comes from the vendored [CyberMon](https://devko.github.io/CyberMon/)
-snapshot in `data/cybermon/`: exploit availability by severity band, confirmed
+**`measured`** — read directly off the vendored
+[CyberMon](https://devko.github.io/CyberMon/) snapshot in `data/cybermon/`, and
+reproducible offline: exploit availability by severity band, confirmed
 exploitation rates, the publication-to-exploit distribution, CVE volume, KEV
 additions, NVD analysis status.
 
-**Assumed** coefficients have no defensible public measurement — per-asset
-campaign arrival rates, product-overlap between your estate and the CVE stream,
-breakout and containment timings. Each declares a plausible range in
-`js/model.js`, and **the range is drawn from on every block of trials**, which
-is where the credible interval on the headline comes from. Pin them
-(`spread: 0`) and the band collapses to zero; open them fully and it is about
-six points wide. If you disagree with one, the range is the argument to have —
-it is one block at the top of one file.
+**`reported`** — a dated published figure. Cited, but you are trusting somebody
+else's methodology and population:
 
-The interval is computed by variance decomposition: the spread between blocks
-contains both parameter uncertainty and Monte-Carlo noise, and the known
-binomial component is subtracted so the band reports only the part that is
-actually about the assumptions. Drawing per-trial instead — the obvious
-approach — makes the two inseparable and the band ends up measuring your trial
-count.
+| Coefficient | Value | Source |
+|---|---|---|
+| Breakout time | 29 min average (fastest 27 s) | CrowdStrike Global Threat Report 2026 |
+| Time to objective | 5 d median when the adversary announces itself | Mandiant M-Trends 2026 |
+| Off-telemetry penalty | 2.6× — 26 d dwell when told by an outsider vs 10 d self-detected | Mandiant M-Trends 2026 |
+| Containment | 44% of ransomware stopped before encryption | Sophos State of Ransomware 2026 |
+
+These are vendor incident-response populations, which skew toward organisations
+that needed incident response. Read them as the shape of the distribution
+rather than as a population baseline. Note also that the breakout figure is an
+*average* while the model samples a lognormal *median* — the two differ by ~1.5×
+at this spread, and taking the reported number at face value would make breakout
+half again slower than it is.
+
+**`assumed`** — judgement, because no public measurement exists: per-asset
+campaign arrival rates, product-overlap between your estate and the CVE stream.
+The widest is the campaign arrival rate, and the model is sensitive to it.
+
+The last two kinds are drawn from their range on every block of trials, which is
+where the credible interval comes from. Pin them (`spread: 0`) and the band
+collapses; open them fully and it is about twelve points wide.
+
+### How the interval is computed
+
+By variance decomposition. The spread between blocks contains both parameter
+uncertainty and Monte-Carlo noise, and the known binomial component is
+subtracted so the band reports only the part that is actually about the
+assumptions. Drawing per-trial instead — the obvious approach — makes the two
+inseparable and the band ends up measuring your trial count.
+
+Block *count* turned out to matter as much as the decomposition. A variance
+estimated from `B` blocks carries a relative error of about `sqrt(2/(B-1))`, so
+at 40 blocks the reported width swung between 6.6% and 13.5% as trials rose and
+never settled. At 150 it is stable in trial count and across seeds, which
+`test/model.test.js` now asserts directly. That is also why the interactive
+trial count is 60,000: the point estimate is settled long before that, but the
+interval is not.
 
 ---
 
@@ -154,7 +180,7 @@ Three results that hold across most settings:
    other. The page has a toggle for exactly this.
 3. **Telemetry coverage without speed buys almost nothing.** Appliances take no
    agent at all, and a compromise you cannot see is not found on your median
-   dwell time — it is found by somebody else, much later.
+   dwell time — it is found by somebody else, roughly 2.6× later.
 
 ---
 

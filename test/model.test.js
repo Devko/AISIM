@@ -250,6 +250,53 @@ console.log('\n══ Exposure Race — model tests ═════════�
     `${fmt(pinned.pHi - pinned.pLo)} < ${fmt(r.pHi - r.pLo)}`);
   ok('incident interval brackets the incident estimate',
     r.incLo <= r.incident && r.incident <= r.incHi);
+
+  /* REGRESSION. The band must describe the assumptions, not the trial count.
+   * At 40 blocks it did the latter: the reported width swung 6.6%-13.5% as
+   * trials rose and wandered by a third between seeds, because a variance
+   * estimated from B blocks carries a relative error of ~sqrt(2/(B-1)). */
+  const widths = [30000, 60000, 120000].map(
+    (n) => { const x = M.simulate(D(), n, 1234, { surv: false, spread: 1 }); return x.pHi - x.pLo; });
+  const wSpread = Math.max(...widths) - Math.min(...widths);
+  ok('band width is stable as trials rise', wSpread < 0.035,
+    widths.map((w) => fmt(w)).join(' / ') + `  spread ${fmt(wSpread)}`);
+
+  const bySeed = [1, 7, 99, 1234].map(
+    (s) => { const x = M.simulate(D(), 60000, s, { surv: false, spread: 1 }); return x.pHi - x.pLo; });
+  ok('band width is stable across seeds', Math.max(...bySeed) - Math.min(...bySeed) < 0.035,
+    bySeed.map((w) => fmt(w)).join(' / '));
+
+  const pBySeed = [1, 7, 99, 1234].map(
+    (s) => M.simulate(D(), 60000, s, { surv: false, spread: 1 }).p);
+  ok('point estimate is stable across seeds', Math.max(...pBySeed) - Math.min(...pBySeed) < 0.02,
+    pBySeed.map((p) => fmt(p)).join(' / '));
+
+  ok('the band is flagged unreliable at interactive trial counts',
+    M.simulate(D(), 4000, 1, { surv: false }).bandReliable === false &&
+    M.simulate(D(), 60000, 1, { surv: false }).bandReliable === true);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+ * 11b. Coefficient provenance — every non-corpus coefficient must declare a
+ *      range, and the ones carrying a published figure must cite it.
+ * ───────────────────────────────────────────────────────────────────────── */
+{
+  const keys = Object.keys(M.ASSUMED);
+  const bad = keys.filter((k) => {
+    const a = M.ASSUMED[k];
+    return !(typeof a.v === 'number' && typeof a.lo === 'number' && typeof a.hi === 'number');
+  });
+  ok('every coefficient declares v/lo/hi', bad.length === 0, bad.join(','));
+
+  const unordered = keys.filter((k) => !(M.ASSUMED[k].lo <= M.ASSUMED[k].v && M.ASSUMED[k].v <= M.ASSUMED[k].hi));
+  ok('every central value sits inside its own range', unordered.length === 0, unordered.join(','));
+
+  const unexplained = keys.filter((k) => !M.ASSUMED[k].why || M.ASSUMED[k].why.length < 20);
+  ok('every coefficient explains itself', unexplained.length === 0, unexplained.join(','));
+
+  const cited = keys.filter((k) => M.ASSUMED[k].src);
+  ok('the vendor-sourced coefficients carry a citation', cited.length >= 4,
+    cited.join(', '));
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
