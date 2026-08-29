@@ -2290,7 +2290,7 @@ footer code {
     Object.keys(d).forEach(function (k) { if (P[k] !== d[k]) parts.push(k + '=' + P[k]); });
     if (METRIC !== 'p') parts.push('m=' + METRIC);
     if (ON.length) parts.push('traits=' + ON.join(','));
-    parts.push('mat=' + MAT);
+    if (MAT !== 'typical') parts.push('mat=' + MAT);
     if (DET) parts.push('det=' + DET);
     var q = parts.join('&');
     return location.origin + location.pathname + (q ? '?' + q : '');
