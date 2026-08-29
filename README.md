@@ -200,7 +200,7 @@ js/model.js                simulation core; MIT; runs in node and the browser
 js/charts.js               SVG rendering + PNG export
 js/app.js                  state, URL sharing, wiring
 data/cybermon/*.json       vendored snapshot, so the page is reproducible offline
-test/model.test.js         88 assertions
+test/model.test.js         96 assertions
 tools/refresh-data.js      re-pull the snapshot
 tools/derive-calibration.js  snapshot -> js/calibration.js
 tools/build.js             inline everything -> dist/exposure-race.html

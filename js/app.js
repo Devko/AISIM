@@ -157,7 +157,15 @@
       setVal(s);
     });
   }
-  function setVal(s) { var e = $('v-' + s.k); if (e) e.textContent = s.f(P[s.k]); }
+  /* The formatted readout ("14 d", "as measured") is the value that means
+   * something; the raw number a screen reader would otherwise announce is not.
+   * On the compression slider in particular, "0" is exactly the wrong thing to
+   * hear when the point of zero is that it is the measured distribution. */
+  function setVal(s) {
+    var e = $('v-' + s.k), i = $('i-' + s.k), t = s.f(P[s.k]);
+    if (e) e.textContent = t;
+    if (i) i.setAttribute('aria-valuetext', t);
+  }
   /* The groove is filled up to the thumb so the reader can see where in the
    * range they are without reading the number back. */
   function setFill(input, s) {
@@ -203,13 +211,32 @@
     return bits.join(' · ');
   }
 
-  function buildToggles(hostId, table, isOn, onPick) {
+  /* Each trait carries a paragraph explaining what it does to the estate, and
+   * until now the only way to read one was to hover a mouse over the chip —
+   * unreachable on a touch screen and by keyboard. The descriptions of the
+   * traits actually selected are shown instead, so the reasoning behind the
+   * numbers is on the page rather than behind a pointer. */
+  function renderTraitNotes() {
+    var host = $('trait-notes');
+    if (!host) return;
+    empty(host);
+    ON.forEach(function (k) {
+      var t = M.TRAITS[k];
+      if (!t || !t.d) return;
+      var row = E('div');
+      add(row, E('b', null, t.l), document.createTextNode(' ' + t.d));
+      host.appendChild(row);
+    });
+  }
+
+  function buildToggles(hostId, table, isOn, onPick, meta) {
     var host = empty($(hostId));
     Object.keys(table).forEach(function (key) {
       var btn = E('button', null, table[key].l);
       btn.type = 'button';
       btn.dataset.key = key;
       if (table[key].d) btn.title = table[key].d;
+      if (meta) btn.appendChild(E('span', 'mtr', meta(key)));
       btn.setAttribute('aria-pressed', String(!!isOn(key)));
       btn.addEventListener('click', function () { onPick(key); });
       host.appendChild(btn);
@@ -235,7 +262,9 @@
         b2.setAttribute('aria-pressed', String(on && !derived));
       });
     });
-    $('desc-maturity').textContent = M.MATURITY[MAT] ? M.MATURITY[MAT].d : '';
+    var dm = $('desc-maturity');
+    if (dm) dm.textContent = M.MATURITY[MAT] ? M.MATURITY[MAT].d : '';
+    renderTraitNotes();
     $('desc-profile').textContent = ON.length
       ? estateSummary()
       : 'No attributes selected. Generic mid-size estate: ' + estateSummary();
@@ -262,9 +291,16 @@
     buildToggles('sel-maturity', M.MATURITY,
       function (k) { return k === MAT; },
       function (k) { MAT = k; applyShape(); syncAll(); refreshSelectors(); schedule(); });
+    /* A console that does not show what its presets write is not a console:
+     * each posture reports the dwell time and coverage it sets. */
     buildToggles('sel-detection', M.DETECTION,
       function (k) { return k === (DET || closestDetection()); },
-      function (k) { DET = k; applyShape(); syncAll(); refreshSelectors(); schedule(); });
+      function (k) { DET = k; applyShape(); syncAll(); refreshSelectors(); schedule(); },
+      function (k) {
+        var d = M.DETECTION[k].p;
+        return (d.detect < 1 ? Math.round(d.detect * 24) + ' h' : d.detect + ' d') +
+          ' · ' + d.edrCoverage + '%';
+      });
     refreshSelectors();
   }
 
@@ -394,7 +430,9 @@
 
   /* ── docked readout ────────────────────────────────────────────────────── */
   function renderDock(r) {
-    $('dock-v').textContent = pctS(r.p);
+    var v = $('dock-v');
+    if (!v) return;
+    v.textContent = pctS(r.p);
     $('dock-ci').textContent = lastBand.p;
     $('dock-est').textContent = estateSummary();
   }

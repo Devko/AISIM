@@ -1,45 +1,59 @@
 ---
 name: Exposure Race
-description: An argument typeset with a masthead, running on a measuring device's chassis.
+description: A ruled document with a measuring instrument in its margin.
 colors:
-  ink: "#FBFCFC"
+  ink: "#F6F8F7"
   panel: "#FFFFFF"
-  sunk: "#F1F5F4"
-  rule: "#DDE6E4"
-  rule-strong: "#C4D3D0"
-  txt: "#0B1615"
-  muted: "#5A716D"
-  dim: "#657B77"
+  sunk: "#E9EFED"
+  rule: "#DCE6E3"
+  rule-strong: "#7F9490"
+  track: "#CBD8D5"
+  txt: "#0A1514"
+  muted: "#536B67"
+  dim: "#5C726E"
   defender-teal: "#0A7A69"
-  attacker-vermilion: "#D0451B"
-  compromise-crimson: "#C81E3C"
-  pre-patch-violet: "#7A2FD6"
-  assumed-amber: "#96670A"
+  attacker-vermilion: "#C4400F"
+  compromise-crimson: "#C11834"
+  pre-patch-violet: "#7029CC"
+  assumed-amber: "#8A6008"
 typography:
   display:
-    fontFamily: "Bricolage Grotesque, ui-sans-serif, system-ui, sans-serif"
-    fontSize: "clamp(30px, 5.4vw, 58px)"
-    fontWeight: 800
-    lineHeight: 0.96
-    letterSpacing: "-0.032em"
-  headline:
-    fontFamily: "Bricolage Grotesque, ui-sans-serif, system-ui, sans-serif"
-    fontSize: "34px"
-    fontWeight: 800
-    lineHeight: 1.05
-    letterSpacing: "-0.03em"
+    fontFamily: "Newsreader, ui-serif, Georgia, Times New Roman, serif"
+    fontSize: "clamp(33px, 5.1vw, 60px)"
+    fontWeight: 500
+    lineHeight: 1.02
+    letterSpacing: "-0.016em"
+  display-em:
+    fontFamily: "Newsreader, ui-serif, Georgia, serif"
+    fontStyle: italic
+    fontWeight: 500
   title:
-    fontFamily: "Bricolage Grotesque, ui-sans-serif, system-ui, sans-serif"
+    fontFamily: "Newsreader, ui-serif, Georgia, serif"
+    fontSize: "21px"
+    fontWeight: 600
+    lineHeight: 1.22
+    letterSpacing: "-0.005em"
+  readout:
+    fontFamily: "IBM Plex Mono, ui-monospace, SFMono-Regular, Menlo, monospace"
+    fontSize: "clamp(28px, 2.4vw, 34px)"
+    fontWeight: 600
+    lineHeight: 1.08
+    letterSpacing: "-0.035em"
+  readout-dock:
+    fontFamily: "IBM Plex Mono, ui-monospace, SFMono-Regular, Menlo, monospace"
     fontSize: "19px"
-    fontWeight: 700
-    lineHeight: 1.3
-    letterSpacing: "-0.015em"
+    fontWeight: 600
+    letterSpacing: "-0.02em"
+  readout-clock:
+    fontFamily: "IBM Plex Mono, ui-monospace, SFMono-Regular, Menlo, monospace"
+    fontSize: "17px"
+    fontWeight: 500
+    letterSpacing: "-0.02em"
   body:
     fontFamily: "IBM Plex Sans, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif"
     fontSize: "15px"
     fontWeight: 400
     lineHeight: 1.55
-    letterSpacing: "normal"
   lead:
     fontFamily: "IBM Plex Sans, ui-sans-serif, system-ui, sans-serif"
     fontSize: "13.5px"
@@ -71,7 +85,7 @@ typography:
     fontSize: "10px"
     fontWeight: 600
     lineHeight: 1.3
-    letterSpacing: "0.1em"
+    letterSpacing: "0.14em"
   label-min:
     fontFamily: "IBM Plex Mono, ui-monospace, SFMono-Regular, Menlo, monospace"
     fontSize: "9.5px"
@@ -84,11 +98,6 @@ typography:
     fontWeight: 400
     lineHeight: 1.3
     letterSpacing: "0.04em"
-  value:
-    fontFamily: "IBM Plex Mono, ui-monospace, SFMono-Regular, Menlo, monospace"
-    fontSize: "14px"
-    fontWeight: 600
-    lineHeight: 1.3
   value-sm:
     fontFamily: "IBM Plex Mono, ui-monospace, SFMono-Regular, Menlo, monospace"
     fontSize: "12.5px"
@@ -100,28 +109,40 @@ rounded:
   sm: "4px"
   thumb: "5px"
   md: "7px"
-  lg: "8px"
-  xl: "12px"
+  lg: "9px"
+  xl: "14px"
   full: "50%"
 spacing:
   xs: "6px"
   sm: "8px"
   md: "14px"
-  lg: "16px"
+  lg: "18px"
   xl: "22px"
+  xxl: "30px"
+  chapter: "42px"
+motion:
+  ease: "cubic-bezier(.22, .61, .36, 1)"
+  state: "140ms"
+  dock: "260ms"
+  settle: "320ms"
+  reveal: "500ms"
 components:
   button:
     backgroundColor: "{colors.panel}"
     textColor: "{colors.txt}"
     rounded: "{rounded.md}"
     padding: "6px 11px"
-    typography: "{typography.body}"
+    typography: "{typography.caption}"
   button-hover:
     backgroundColor: "{colors.panel}"
     textColor: "{colors.defender-teal}"
   button-on:
     backgroundColor: "{colors.defender-teal}"
     textColor: "{colors.ink}"
+  button-near:
+    backgroundColor: "transparent"
+    textColor: "{colors.defender-teal}"
+    borderStyle: dashed
   button-ghost:
     backgroundColor: "transparent"
     textColor: "{colors.txt}"
@@ -129,18 +150,26 @@ components:
     backgroundColor: "transparent"
     textColor: "{colors.txt}"
     rounded: "{rounded.md}"
-    padding: "5px 8px"
-    typography: "{typography.label}"
+    padding: "5px 9px"
+    typography: "{typography.label-btn}"
   card:
     backgroundColor: "{colors.panel}"
     textColor: "{colors.txt}"
     rounded: "{rounded.xl}"
     padding: "{spacing.lg}"
-  stat:
+  chapter:
+    backgroundColor: "transparent"
+    borderTop: "1px solid {colors.rule-strong}"
+    padding: "20px 0 0"
+    marginBottom: "{spacing.chapter}"
+  readout-bank:
     backgroundColor: "{colors.panel}"
-    textColor: "{colors.compromise-crimson}"
     rounded: "{rounded.xl}"
-    padding: "13px 14px 12px"
+    padding: "16px 18px 17px"
+  dock:
+    backgroundColor: "{colors.panel}"
+    textColor: "{colors.txt}"
+    padding: "10px 24px"
   tag-measured:
     backgroundColor: "transparent"
     textColor: "{colors.defender-teal}"
@@ -160,73 +189,93 @@ components:
     backgroundColor: "{colors.txt}"
     textColor: "{colors.ink}"
     rounded: "{rounded.lg}"
-    padding: "9px 16px"
+    padding: "10px 17px"
 ---
 
 # Design System: Exposure Race
 
 ## Overview
 
-**Creative North Star: "The Instrumented Broadsheet"**
+**Creative North Star: "The Ruled Document"**
 
-An argument typeset with a masthead, running on a measuring device's chassis.
-The page has a thesis and states it in display type at the top of the screen —
-then hands the reader an instrument and lets them try to break it. Neither half
-is decoration for the other. The masthead earns the instrument; the instrument
-is why the masthead is believable.
+A page with a thesis, ten numbered chapters and eight figures — ruled, not
+boxed — with a measuring instrument standing in the margin beside it.
 
-The proportions are deliberate and worth preserving. The display face appears in
-exactly three roles — the headline, panel titles, and the four stat values.
-Everything structural is monospace, uppercase, tracked wide at 9.5–10.5px:
-eyebrow, card headings, segment labels, table headers, provenance tags, anchor
-values. That makes the instrument engraving the majority surface and the
-editorial voice the punctuation. When display type does appear it carries real
-weight — 800, tracked to −0.032em, leading at 0.96, capped at 17ch so it breaks
-as a masthead rather than a paragraph.
+The product carries two jobs that pull against each other: it is an argument
+that has to survive being retold to a board, and it is a tool a reader
+configures and reads their own numbers off. The system resolves that by making
+the two halves **different materials** rather than the same material at
+different sizes.
+
+The **argument is a document**. The results column has no card, no radius, no
+fill and no shadow. Chapters are separated by a single `--rule2` hairline and
+42px of air, numbered `01`–`10` in monospace, and headed in a serif. Nothing in
+that column is a surface, because nothing in it is a control.
+
+The **instrument is an object**. The control rail and the readout bank are the
+only raised surfaces on the page: `--panel` on `--ink`, 14px radius, a hairline
+border, and in light mode a shadow. They look like things you operate because
+they are.
+
+Type splits three ways with one job each, and that split is the thesis in
+miniature — an opinionated voice making claims, resting on instrumentation that
+is conspicuously not trying to persuade anyone:
+
+- **Newsreader**, a text serif, carries the argument: the headline, the clause
+  where it turns, and every chapter title.
+- **IBM Plex Sans** carries the prose, the control labels and the interface.
+- **IBM Plex Mono** carries every measurement: the four headline figures, the
+  docked readout, the masthead clock, slider values, table figures, structural
+  labels and provenance tags.
+
+The four headline numbers moved from the display face to the monospace on
+purpose. They resimulate on every parameter change; they are readouts, not
+headlines, and they belong to the instrument. Monospace figures are also
+tabular by construction, so the bank cannot twitch sideways while a slider is
+dragged.
 
 Colour is signal and nothing else. Five accents exist, each bound to a concept
-in the model — attacker, defender, pre-patch, assumed, compromised — and none of
-them appears for emphasis, rhythm, or brand warmth. The one place the display
-face turns colour is `h1 em`, on the clause where the argument turns. Density is
-high and unapologetic: this reader is defending a policy position and does not
-need progressive disclosure of things they already know.
+in the model — attacker, defender, pre-patch, assumed, compromised — and none
+of them appears for emphasis, rhythm, or brand warmth.
 
 **Key Characteristics:**
 
-- Instrument substrate in monospace; editorial voice in a heavyweight grotesque
+- Two materials: a ruled document, and a raised instrument beside it
+- A serif for argument, a grotesque for prose, a monospace for measurement
 - Five semantic accents, zero decorative colour
 - One palette definition; dark is a token-only override, never a separate design
-- Near-black-green ground rather than neutral grey — the whole system is hued
-- Hairline rules and tonal steps do the structural work that shadows usually do
-- Provenance is visible ornament: every number is tagged `measured`, `reported`,
-  or `assumed`
+- Hued near-monochrome — every neutral carries a green cast
+- Provenance is visible ornament: every number is tagged `measured`,
+  `reported`, or `assumed`
+- Motion is one-shot, scroll-triggered, and never fires while a control is held
 
 ## Colors
 
 A hued near-monochrome — every neutral carries a green cast, so the surface
-reads as a treated material rather than default grey — cut by five accents that
+reads as treated material rather than default grey — cut by five accents that
 each mean exactly one thing.
 
 The palette is normative in the frontmatter above as its light values, because
 `css/app.css` defines the complete palette on `:root` in light and treats dark
-as an override. Note that the shipped page nevertheless opens in dark
+as an override. The shipped page nevertheless opens in dark
 (`<html data-theme="dark">`): light is the *definitional* baseline, dark is the
-*default experience*. Dark equivalents live in `.impeccable/design.json`.
+*default experience*.
 
 ### Primary
 
 - **Defender Teal** (`--def`): the colour of things working. Measured
   provenance, the active state on every control, slider fills and thumbs, the
-  "good" stat value, remediation figures in the actions list, and the focus
-  ring. It is the single most load-bearing accent and the only one that appears
-  on interactive chrome.
+  masthead clock's figures, remediation figures in the actions list, and the
+  focus ring. It is the single most load-bearing accent and the only one that
+  appears on interactive chrome.
 
 ### Secondary
 
 - **Attacker Vermilion** (`--att`): the adversary side of every opposition.
   Threat-environment card headings, the emphasised clause in the headline, and
-  the attacker series in charts. Where it appears on a control card, the card's
-  slider thumbs and values invert to it — the panel changes sides.
+  the attacker series in charts. Where it appears on a control card, that
+  card's slider fills, thumbs and values invert to it — the panel changes
+  sides, via a single `--accent` alias set on `.card.att`.
 
 ### Tertiary
 
@@ -235,21 +284,41 @@ as an override. Note that the shipped page nevertheless opens in dark
   patch, and labels both. It doubles as the `reported` provenance tag.
 - **Assumed Amber** (`--warn`): judgement rather than measurement. The `assumed`
   provenance tag, and the mid-tier band in severity charts.
-- **Compromise Crimson** (`--bad`): outcomes gone wrong. The default stat value,
-  the worst severity band, and highlighted rows in the evidence table.
+- **Compromise Crimson** (`--bad`): outcomes gone wrong. The two probability
+  readouts and their credible-interval rails, the worst severity band, and
+  highlighted rows in the evidence table.
 
 ### Neutral
 
-- **Ink** (`--ink`): the page ground. Near-white in light, near-black-green in
-  dark.
-- **Panel** (`--panel`): every raised surface — cards, panels, stat tiles.
-- **Sunk** (`--sunk`): recessed fills; inline code in the footer.
+- **Ink** (`--ink`): the page ground, and the ground every chart now draws on.
+  Paper rather than white in light; near-black-green in dark.
+- **Panel** (`--panel`): the two raised surfaces — the control rail's cards and
+  the readout bank. Nothing in the results column uses it.
+- **Sunk** (`--sunk`): recessed fills. Chart tracks, and inline code.
 - **Rule** (`--rule`) and **Rule Strong** (`--rule2`): the hairline vocabulary.
-  Rule for dividers inside content, Rule Strong for control borders, table head
-  underlines, and the scrollbar thumb.
+  Rule for dividers within content; Rule Strong for anything that reads as an
+  edge a reader can act on or a boundary between chapters.
 - **Text** (`--txt`), **Muted** (`--mut`), **Dim** (`--dim`): the three-step
   reading ramp. Muted carries all secondary prose; Dim is reserved for chart
-  interiors and hover states.
+  interiors, source notes and ordinals.
+
+### Contrast
+
+Every text token clears 4.5:1 against both `--ink` and `--panel` in both
+themes. The tightest pairs are `--dim` and `--att` at 4.82 on light ink, and
+`--bad` at 5.30 on dark panel. On `--sunk` — which only ever backs chart tracks
+and inline code — `--dim` and `--att` sit at 4.41; that is the one place the
+ramp does not clear AA, it is 10px chart type, and it is an improvement on the
+4.11 the previous palette carried there.
+
+`--rule2` clears the 3:1 non-text threshold on both surfaces in both themes
+(3.21 / 3.01 light, 3.06 / 3.40 dark). It did not before: control borders sat
+at 1.55:1, which meant the only thing identifying a button was invisible.
+`--rule` is deliberately below that and is only ever used where something else
+already carries the boundary.
+
+No formal WCAG level is claimed — `PRODUCT.md` leaves that an open decision —
+but the numbers above are the floor a change must not regress.
 
 ### Named Rules
 
@@ -266,153 +335,195 @@ first.
 
 **The Palette Bridge Rule.** Charts do not carry their own colours. `js/app.js`
 reads the same custom properties off the document at draw time and passes them
-into the SVG layer, so a theme change repaints the charts from one source. Never
-hardcode a hex into chart code.
+into the SVG layer as literal strings, so a theme change repaints the charts
+from one source. Never hardcode a hex into chart code, and never leave a
+`var()`, `color-mix()` or `light-dark()` unresolved in a token — it exports to
+PNG as nothing at all.
+
+**The Chart Ground Rule.** Charts draw on `--ink`, because the results column
+has no panel. `exportOpts` in `js/app.js` therefore renders PNGs on `--ink`
+too, and any chart element that needs to punch out of its background strokes
+with `pal.ink`. A chart that assumes `--panel` behind it is a chart that
+assumes a card the design no longer has.
 
 **The Browser Surface Rule.** The surfaces the page does not draw are themed
-from the palette too. `::selection` takes Defender Teal with ink text (5.1:1 in
-light, 10.7:1 in dark), and `color-scheme` is declared alongside the tokens in
-every theme block so scrollbars and form controls follow the page's explicit
-choice rather than the OS. A light scrollbar on a near-black page is the tell
-that a theme was only half implemented.
+from the palette too. `::selection` takes Defender Teal with ink text, and
+`color-scheme` is declared alongside the tokens in every theme block so
+scrollbars and form controls follow the page's explicit choice rather than the
+OS.
 
 ## Typography
 
-**Display Font:** Bricolage Grotesque (with `ui-sans-serif`, `system-ui`)
+**Display Font:** Newsreader (with `ui-serif`, Georgia, Times New Roman)
 **Body Font:** IBM Plex Sans (with `ui-sans-serif`, `system-ui`, `-apple-system`)
-**Label/Mono Font:** IBM Plex Mono (with `ui-monospace`, `SFMono-Regular`, Menlo)
+**Readout / Label Font:** IBM Plex Mono (with `ui-monospace`, SFMono-Regular, Menlo)
 **Chart Font:** system stack only — deliberately no webfont
 
-**Character:** A variable grotesque with real personality at heavy weights,
-paired with the most institutionally neutral technical family available. The
-pairing is the thesis in miniature: an opinionated voice making claims, resting
-on instrumentation that is conspicuously not trying to persuade anyone.
+**Character:** A text serif with real editorial authority at 500, paired with
+the most institutionally neutral technical superfamily available. Plex Sans and
+Plex Mono are siblings, so the prose and the instrumentation sit on one set of
+proportions and the serif is the only voice that stands apart — which is
+exactly the hierarchy the page wants. All three fallback chains are genuinely
+usable, so a reader who never receives the webfonts gets a correct-looking
+document rather than a broken one.
 
 ### Hierarchy
 
-- **Display** (800, `clamp(30px, 5.4vw, 58px)`, 0.96, −0.032em): the page
-  headline only. Capped at 17ch so it breaks like a masthead.
-- **Headline** (800, 34px, 1.05, −0.03em): the four stat values. Units are set
-  alongside in the body face at 12px so the numeral keeps the whole weight.
-- **Title** (700, 19px, −0.015em): panel headings.
-- **Body** (400, 15px, 1.55): all prose. Measure is capped — 76ch for the
-  standfirst, 78ch for panel leads.
-- **Label** (600, 10.5px, 0.16em, uppercase, mono): every structural label.
-  Tracking runs 0.08em–0.18em depending on size; the smaller the type, the wider
-  the tracking.
+- **Display** (Newsreader 500, `clamp(33px, 5.1vw, 60px)`, 1.02, −0.016em): the
+  page headline only, capped at 16ch with `text-wrap: balance` so it breaks as
+  a masthead rather than a paragraph.
+- **Display em** (Newsreader italic): the clause where the argument turns. It
+  keeps Attacker Vermilion, but the italic is what carries it — a colour-only
+  distinction disappears in greyscale, in print, and for a colour-blind reader.
+- **Title** (Newsreader 600, 21px, −0.005em): chapter headings.
+- **Readout** (Plex Mono 600, `clamp(28px, 2.4vw, 34px)`, −0.035em): the four
+  headline figures. Units sit alongside in the body face at 12px so the numeral
+  keeps the whole weight.
+- **Body** (Plex Sans 400, 15px, 1.55): all prose. Measure is capped — 66ch for
+  the standfirst and footer notes, 74ch for chapter leads.
+- **Label** (Plex Mono 600, 10.5px, 0.16em, uppercase): every structural label.
+  Tracking runs 0.04em–0.18em depending on size; the smaller the type, the
+  wider the tracking.
 
-Beneath those five sit nine secondary steps — `lead` 13.5, `control` 13,
-`caption` 12, `caption-sm` 11.5, `label-btn` 11, `label-micro` 10, `label-min`
-9.5, and the mono readouts `value` 14 and `value-sm` 12.5. Fourteen steps is a
-dense ramp, and that density is the design rather than drift: an instrument with
-this much simultaneous labelling needs finer gradation than an editorial page,
-and the steps are what keep four levels of subordinate text legible inside a
-330px rail. They are all in the frontmatter; treat that as the closed set and
-add a step only by documenting it there first.
+Beneath those sit the secondary steps — `lead` 13.5, `control` 13, `caption`
+12, `caption-sm` 11.5, `label-btn` 11, `label-micro` 10, `label-min` 9.5, and
+the mono readouts `readout-dock` 19, `readout-clock` 17 and `value-sm` 12.5.
+They are all in the frontmatter; treat that as the closed set and add a step
+only by documenting it there first.
 
 ### Named Rules
 
+**The Three Voices Rule.** Serif argues, sans explains, mono measures. A number
+the model produced is set in the mono, at whatever size its importance
+requires. A heading is set in the serif. Everything a reader operates or reads
+as prose is set in the sans. Nothing is set in the serif because it is
+important; importance is expressed in size and position.
+
 **The PNG Rule.** Chart text uses `--chart` — a pure system stack — never a
-webfont. Charts export to PNG, and a webfont that has not loaded at export time
-silently changes the output. This is why the system runs three typefaces on
-screen and a fourth inside the charts.
+webfont, and every `<text>` node carries its font-family as an *attribute*.
+Charts export to PNG by serialising to a standalone SVG where no stylesheet
+applies, so a label without an explicit family rasterises in the renderer's
+default serif.
 
 **The Long Label Rule.** Uppercase with wide tracking is a device for labels of
-two or three words. The stat labels are 40-character sentences, and caps plus
-tracking removes the word shapes a reader navigates by — so they are set in the
-body face, sentence case, at 11.5px. Reach for the mono label style only when
-the label is genuinely a label.
+two or three words. The readout labels are 40-character sentences, and caps
+plus tracking removes the word shapes a reader navigates by — so they are set
+in the body face, sentence case, at 11.5px.
 
-**The 10px Floor.** No text below 10px. 9.5px survives only in tags and segment
-labels where the type sits on a panel with a border already doing the
-de-emphasis; 9px was tested against the card and could not clear AA in either
-theme.
+**The 10px Floor.** No text below 10px. 9.5px survives only in provenance tags
+and segment labels, where the type sits on a bordered element already doing the
+de-emphasis.
 
 ## Layout
 
-A two-column grid — a 330px control rail beside a fluid results column —
-capped at 1340px with 20px gutters. The three grid children (rail, stats,
-results) are placed explicitly rather than flowing, precisely so the single
-column can reorder them.
+A two-column grid — a 322px control rail beside a fluid results column —
+capped at **1240px** with 24px gutters. The cap is deliberate and lower than it
+was: the charts are drawn at their container's true pixel width, and past
+roughly 900px of column the sparse ones (survival, sweep, volume) become mostly
+empty plot area.
 
-The rail is sticky at `top: 14px`, its own scroll container bounded to
-`calc(100vh - 28px)`, with a deliberately visible thin scrollbar: a wheel
-gesture landing on the rail must not read as a dead page.
+The three grid children (rail, stats, results) are placed explicitly rather
+than flowing, precisely so the single column can reorder them.
 
-Three breakpoints, each with a specific job rather than a device name:
+The masthead runs its own two-column grid: the headline and standfirst left,
+and the three measured figures the argument rests on right. That column exists
+because the headline is capped at 16ch and was otherwise leaving half a screen
+of empty paper beside itself.
 
-- **1040px** — grid collapses to one column and the stat row moves *ahead* of
+The rail is sticky at `top: 16px`, its own scroll container bounded to
+`calc(100vh - 32px)`, with a deliberately visible thin scrollbar: a wheel
+gesture landing on the rail must not read as a dead page. When the docked
+readout is up, the rail steps down to `top: 74px` so it does not scroll behind
+it.
+
+Breakpoints, each with a specific job rather than a device name:
+
+- **1040px** — grid collapses to one column and the stat bank moves *ahead* of
   the controls.
-- **940px** — paired chart panels stack.
-- **860px / 780px** — the anchors list goes single-column; the stat grid drops
-  from four columns to two.
+- **940px** — paired chart chapters stack.
+- **900px** — the masthead's measured figures fall below the standfirst.
+- **860px** — the anchors list and the footer notes go single-column.
+- **780px** — the readout bank drops from four columns to two, and its
+  dividing rules re-form as a 2×2.
+- **720px** — the docked readout sheds its interval and estate summary.
 
-Panel headings and their tools share one intrinsic row: the title holds a 260px
-flex basis and the row is allowed to wrap, so the tools drop beneath the heading
-exactly when holding them inline would squeeze it. No breakpoint governs this —
-a panel with one small tool button keeps it inline at every width, while a
-four-button toolbar steps down on a phone.
+Chapter headings and their tools share one intrinsic row: the title holds a
+260px flex basis and the row is allowed to wrap, so the tools drop beneath the
+heading exactly when holding them inline would squeeze it. No breakpoint
+governs this.
 
-Rhythm is tight and consistent: 14px between stacked cards, 22px across the
-column gap, 16px inside cards, 13–14px inside stat tiles. A print stylesheet
-drops the rail, tools, and topbar, and resets the explicit grid placement so the
-first column is not left empty.
+Rhythm: 42px between chapters, 30px across the column gap, 18px inside cards
+and between rail cards, 34px under the readout bank.
 
 ### Named Rules
 
-**The Answer First Rule.** Below 1040px the stat row is ordered before the
+**The Answer First Rule.** Below 1040px the readout bank is ordered before the
 control rail. The page exists to show a number, and burying it under a full
-screen of inputs made every phone visitor pay for the controls before seeing the
-answer. Any future reflow keeps the answer above the instrument.
+screen of inputs made every phone visitor pay for the controls before seeing
+the answer. Any future reflow keeps the answer above the instrument.
+
+**The Answer Stays Rule.** The page is roughly 7,000px tall and the rail is
+sticky, so a reader adjusting a slider two thousand pixels down had no sight of
+the number they were moving. The docked readout carries it — the compromise
+probability, its band and the current estate — and appears only once the real
+bank has scrolled away.
+
+**The Measured Width Rule.** `width(id)` in `js/app.js` measures the SVG's own
+laid-out box, not its parent's border box. Measuring the parent included the
+panel's padding and border, so every chart was drawn ~34px wider than it was
+displayed and then uniformly shrunk by `preserveAspectRatio` — 11px labels
+rendering at 10.4px, with dead letterbox bands top and bottom that were quietly
+saving several charts from clipping their own edge labels. Anything that
+changes a chart's container changes its drawing width exactly, with no slack.
 
 ## Elevation & Depth
 
-Depth is **asymmetric by design, and the asymmetry is the rule rather than an
-oversight**. In light, `--shadow` is a two-layer lift: a 1px contact shadow plus
-a wide, heavily-negative-spread ambient. In dark it is set explicitly to `none`,
-and surfaces separate by tonal step — panel `#0D1817` against ink `#080F0E` —
-plus a 1px `--rule` hairline. On a near-black ground a shadow reads as grime
-rather than lift, so the system stops using them entirely.
+Depth marks **material, not importance**. There are exactly two raised surfaces
+on the page — the two control cards and the readout bank — and they are raised
+because they are the instrument. Everything in the results column sits directly
+on the ground.
 
-This makes the hairline rule, not the shadow, the primary structural device
-across the whole system: card borders, table underlines, list dividers, the
-header rule, the footer rule, and the `::after` rule that runs off the end of
-the eyebrow.
+Within that, depth is **asymmetric by design**. In light, `--shadow` is a
+two-layer lift: a 1px contact shadow plus a wide, heavily-negative-spread
+ambient, tinted with the ink hue rather than neutral black. In dark it is set
+explicitly to `none`, and surfaces separate by tonal step — panel `#101D1B`
+against ink `#07100F` — plus a 1px `--rule` hairline. On a near-black ground a
+shadow reads as grime rather than lift.
 
-### Shadow Vocabulary
-
-- **Surface lift** (`box-shadow: 0 1px 2px rgba(11,22,21,.06), 0 8px 24px -12px rgba(11,22,21,.18)`):
-  light mode only, applied to cards, panels, and stat tiles. Note the shadow is
-  tinted with the ink hue, not neutral black.
-- **Control ring** (`box-shadow: 0 0 0 1px var(--def)`): the range thumb only —
-  a hairline halo that keeps a 15px circle legible against both the track and
-  the panel it overlaps.
+This makes the hairline rule the primary structural device across the whole
+system: chapter rules, card borders, the readout bank's dividers, table
+underlines, list dividers, and the `::after` rule that runs off the end of the
+eyebrow.
 
 ### Named Rules
+
+**The Two Materials Rule.** A surface is raised if and only if it is part of the
+instrument. Do not put a chapter on a card, and do not flatten the rail into the
+page — the distinction is what stops ten sections reading as ten widgets.
 
 **The Asymmetric Depth Rule.** Shadow is a light-mode device. Dark mode carries
 `--shadow: none` and separates surfaces tonally. Never introduce a shadow that
 survives into dark, and never compensate for the missing shadow with a heavier
-border — the tonal step plus one hairline is the whole vocabulary.
+border.
 
-**The State-Is-Not-Elevation Rule.** Depth marks *what a surface is*, never what
-it is doing. No control lifts on hover, nothing rises on focus, and nothing
-casts a shadow to indicate interactivity. State is signalled by colour and
-border alone.
+**The State-Is-Not-Elevation Rule.** No control lifts on hover, nothing rises on
+focus, and nothing casts a shadow to indicate interactivity. State is signalled
+by colour and border alone.
 
 ## Shapes
 
-A radius ladder scaled to element size: the smaller the element, the tighter the
-corner. 2px on the trait chip's checkbox marker, 3px on focus rings and segment
-hints, 4px on provenance tags, legend swatches, and inline code, 5px on the
-rail's scrollbar thumb, 7px on buttons, 8px on the toast, 12px on every card,
-panel, and stat tile. The only full radius in the system is the range thumb
-(`50%`).
+A radius ladder scaled to element size: 2px on the trait chip's checkbox
+marker, 3px on focus rings and segment hints, 4px on provenance tags and legend
+swatches, 5px on the rail's scrollbar thumb, 7px on buttons, 9px on the toast,
+14px on the two card types and the readout bank. The only full radius in the
+system is the range thumb.
+
+**The results column has no radius at all.** Chapters are ruled, not boxed.
 
 Borders are uniformly 1px and never doubled. Two weights only: `--rule` for
-dividers within content, `--rule2` for anything that reads as an edge a user can
-act on — control borders, table head underlines, the chip marker, the scrollbar
-thumb.
+dividers within content, `--rule2` for anything that reads as an edge a reader
+can act on — control borders, chapter rules, table head underlines, the chip
+marker, the scrollbar thumb.
 
 Provenance tags take their border from `currentColor`, so the tag's outline and
 its text are always the same accent and a new provenance class needs one colour
@@ -427,88 +538,126 @@ choosing `--rule` or `--rule2`, never by thickening the stroke.
 
 ### Buttons
 
-- **Shape:** gently rounded (7px), 1px `--rule2` border, 12px type.
+- **Shape:** gently rounded (7px), 1px `--rule2` border, 12.5px type.
 - **Rest:** panel fill, body text colour, no accent whatsoever.
 - **Hover:** border and text both shift to Defender Teal. Background does not
-  change. Transitions are 0.12s on background, border-colour, and colour.
+  change. Transitions are 140ms on background, border-colour and colour.
 - **Selected (`.on`):** teal fill, teal border, ink text, weight 600 — the only
   state that reverses the figure and ground.
+- **Derived (`.near`):** teal text and a *dashed* teal border on a transparent
+  fill. Used for the detection posture the sliders imply rather than one the
+  reader chose, and it reports `aria-pressed="false"`, because it is a match
+  and not a decision.
 - **Ghost:** transparent background, otherwise identical.
-- **Icon button:** mono face, 11px, 0.04em tracking, tighter 5px/8px padding.
-  Used for the theme, share, and reset controls in the eyebrow, and for panel
-  tools.
+- **Icon button:** mono face, 11px, tighter 5px/9px padding. Used for the
+  topbar and chapter tools. All of them are words — there is no glyph button in
+  the system.
 
-### Chips (trait selection)
+### Selector grids
 
-- **Style:** built from the button base, with `padding-left: 20px` and a 9px
-  `::before` square marker at 2px radius, `--rule2` border.
-- **State:** when selected, the marker fills with `currentColor` — so the marker
-  inherits whichever accent the surrounding card is using rather than
-  hardcoding teal.
-- **Why:** traits are multi-select and had to stop reading as one-of-N. The
-  checkbox affordance is doing semantic work, not decoration.
+Three grammars, each legible without a word of explanation:
+
+- **Trait chips (`#sel-profile`, multi-select):** a two-column grid, so eight
+  labels of 8–25 characters sit in four rows of equal width rather than a
+  ragged flex-wrap. Each carries a 9px `::before` marker at 2px radius which
+  fills with `currentColor` when selected — so the marker inherits whichever
+  accent the surrounding card is using.
+- **Maturity ladder (`#sel-maturity`, one-of-4):** three equal columns with the
+  fourth option spanning the full width. BOD 26-04 is a mandated regime rather
+  than a rung on the ladder, and the layout says so.
+- **Detection ladder (`#sel-detection`, one-of-5):** two columns with the fifth
+  spanning, which completes a five-rung ladder without a ragged row.
+
+Every option carries a description slot beneath it. Maturity gained one in this
+redesign — it was the only control on the page whose label could not be guessed
+from the label.
 
 ### Cards / Containers
 
-- **Corner style:** 12px.
-- **Background:** `--panel` on `--ink`.
-- **Shadow strategy:** `--shadow` — light only. See Elevation & Depth.
-- **Border:** 1px `--rule`.
-- **Internal padding:** 16px, with 14px bottom margin between stacked cards.
+- **Corner style:** 14px. **Background:** `--panel` on `--ink`. **Border:** 1px
+  `--rule`. **Shadow:** `--shadow`, light only. **Padding:** 18px.
 - **Heading:** mono, 10.5px, 0.16em, uppercase, weight 600. A `.d` or `.a`
-  modifier tints the heading Defender Teal or Attacker Vermilion, which is how a
-  card declares which side of the model it belongs to — and that choice cascades
-  to the card's slider values and thumbs.
+  modifier tints the heading Defender Teal or Attacker Vermilion, which is how
+  a card declares which side of the model it belongs to — and that choice
+  cascades to the card's slider fills, thumbs and values through `--accent`.
 
-### Stat tiles
+### Chapters
 
-- **Structure:** flex column with the label set to `flex: 1`, so the value is
-  pushed to the bottom of the tile rather than sitting under a guessed
-  `min-height`. Grid stretches tiles to equal height, so values align across the
-  row regardless of how many lines each label wraps to.
-- **Label:** body face, 11.5px, no tracking, `--mut`. See The Long Label Rule.
-- **Value:** display face, 800, 34px, Compromise Crimson by default;
-  `.good` switches it to Defender Teal, `.plain` to body text. Figures are
-  tabular — these four resimulate on every parameter change, and Bricolage's
-  proportional digits varied 41px across four characters, twitching the row
-  sideways on every slider drag.
-- **Unit:** body face, 12px, 500, `--mut`, inline after the numeral.
-- **Interval:** mono, 10.5px, `--mut`, directly beneath.
+- No fill, no border, no radius, no shadow. A 1px `--rule2` top rule, 20px of
+  padding above the ordinal, 42px below the chapter.
+- **Ordinal:** mono, 10px, 0.14em, `--dim`, a *sibling* of the heading and
+  never a child — `js/app.js` reads the `h3`'s `textContent` for the exported
+  PNG title, and a number folded into the heading would appear in every
+  exported image.
+
+### Readout bank
+
+- One plate divided by 1px `--rule` verticals, not four floating tiles. Four
+  separate cards read as a KPI row, which is the register the argument is
+  trying to out-rank.
+- **Structure:** flex column with the label set to `flex: 1`, so values are
+  pushed to the bottom of each cell rather than sitting under a guessed
+  `min-height`.
+- **Label:** body face, 11.5px, sentence case, `--mut`. See The Long Label Rule.
+- **Value:** mono 600, Compromise Crimson by default; `.plain` switches it to
+  body text.
+- **Interval rail (`.band`):** a 3px rail under the two probability readouts,
+  drawn on a full 0–100% scale so a wide interval looks wide. Its `--lo` and
+  `--hi` are written by `js/app.js` only on a pass that ran enough blocks for
+  the interval to mean anything, and it transitions over 300ms so the band
+  visibly settles rather than jumping.
+
+### Docked readout
+
+- Fixed to the top of the viewport, `--panel` on a 1px `--rule` bottom border,
+  translated out of view until the readout bank leaves the viewport.
+- Carries the compromise probability, its band, and the current estate summary.
+  It is `aria-hidden` — the real bank is still in the document — and it slides
+  in over 260ms.
 
 ### Range inputs
 
-- **Track:** 3px, `--track`, 2px radius.
-- **Thumb:** 15px circle, Defender Teal fill, 2px `--panel` border, plus a 1px
-  teal ring. On an Attacker Vermilion card, fill and ring both invert to
-  vermilion.
-- **Cursor:** `grab`, becoming `grabbing` while active.
-- **Hit area:** 24px tall, clearing the AA target minimum. The thumb offset is
-  measured from the track rather than the box, so the box height can change
-  without decentring it.
-
-### Disclosure (`details.more`)
-
-- **Summary:** mono, 12px, uppercase, 0.08em, `--mut`, native marker removed.
-- **Marker:** a teal `+` that becomes `−` when open, generated from
-  `::before` content.
-- **Separation:** a `--rule` top border with 10px of padding above.
+- **Track:** 4px, filled to the thumb with `--accent` via a two-stop gradient
+  whose stop is written to `--fill` by `js/app.js` on every input event. A
+  slider that shows only a thumb makes the reader estimate where in the range
+  they are; filling the groove states it.
+- **Thumb:** 15px circle, accent fill, 2px `--panel` border, plus a 1px accent
+  ring. Scales to 1.18 while active.
+- **Hit area:** 24px tall. The thumb offset is measured from the track rather
+  than the box, so the box height can change without decentring it.
 
 ### Provenance tags
 
-- **Style:** mono, 9.5px, 0.1em, uppercase, 2px/6px padding, 4px radius, border
-  from `currentColor`, transparent fill.
-- **Variants:** `.m` measured (Defender Teal), `.r` reported (Pre-Patch Violet),
+- Mono, 9.5px, 0.1em, uppercase, 2px/6px padding, 4px radius, border from
+  `currentColor`, transparent fill.
+- Variants: `.m` measured (Defender Teal), `.r` reported (Pre-Patch Violet),
   `.a` assumed (Assumed Amber).
-- **Signature:** this is the system's most distinctive component. It is the
-  visual form of the product's central commitment, and it should appear anywhere
-  a number does.
+- This is the system's most distinctive component. It is the visual form of the
+  product's central commitment, and it should appear anywhere a number does —
+  including the masthead clock.
 
-### Toast
+### Selector metadata and trait notes
 
-- **Style:** fixed, bottom-centre, inverted — `--txt` background on `--ink`
-  text — 8px radius, 13px/500.
-- **Motion:** opacity and a 12px translate, 0.18s.
-- **Semantics:** carries `role="status"` and `aria-live`.
+- **`.mtr`:** a mono 10px `--dim` line under each detection posture reporting
+  the dwell time and coverage that posture writes (`10 d · 78%`), read from
+  `M.DETECTION[k].p`. A console that does not show what its presets write is
+  not a console.
+- **`.trait-notes`:** each trait carries a paragraph explaining what it does to
+  the estate, and it used to be reachable only by hovering a mouse over the
+  chip — which is to say, not reachable on a touch screen or by keyboard at
+  all. The descriptions of the traits *actually selected* are now listed in the
+  rail beneath the estate summary, so the reasoning behind the numbers is on
+  the page. The `title` attribute stays as a convenience, not as the only route.
+- **`.seg-d`** carries a `min-height` floor, because these strings change
+  length on every selection and without one the whole rail below them jumps on
+  each click.
+
+### Contents
+
+A numbered list in the rail, below the two control cards, with
+`counter-reset`/`counter-increment` supplying the ordinals so the markup
+carries no numbering of its own. The current chapter is marked `.cur` in
+Defender Teal by an IntersectionObserver.
 
 ### Named Rules
 
@@ -517,9 +666,60 @@ hairline border, body text. Defender Teal arrives only on hover, focus, or
 selection. An interface with no opinion until you touch it is what lets a
 five-colour semantic palette stay readable as signal.
 
-**The Card Declares Its Side Rule.** A control card's `.d` / `.att` modifier
-tints its heading, values, and slider thumbs together. Never mix accents within
-one card — the card belongs to the defender or to the attacker.
+**The Card Declares Its Side Rule.** A control card's `.def` / `.att` modifier
+sets `--accent`, which tints its heading, values, slider fills and thumbs
+together. Never mix accents within one card.
+
+**The Derived State Rule.** A value the interface inferred is never drawn like a
+value the reader chose. Where the page lights a control because the numbers
+resemble it, it says so — visually and to assistive technology.
+
+## Motion
+
+Every animation is one-shot, gated on an `anim` class set before first paint,
+and killed entirely by `prefers-reduced-motion`. The page is fully legible with
+that class absent, so no content depends on an animation having run.
+
+| What | Trigger | Property | Duration |
+|---|---|---|---|
+| Chapter reveal | IntersectionObserver, once per element | opacity + 10px rise | 500ms |
+| Chart interiors | first time a chapter enters view | bars scale from `scaleX(0)`, lines and areas fade, 45ms stagger | 500ms |
+| Readout settle | a discrete change, never a held control | the numeral counts to its new value | 320ms |
+| Interval rail | a pass whose band is reliable | the band's two edges | 300ms |
+| Dock | the readout bank leaves the viewport | `translateY` | 260ms |
+| Rail step-down | the dock arriving | `top`, `max-height` | 260ms |
+| Selection, hover | click or pointer | background, border, colour | 140ms |
+| Slider thumb | pointer down | `transform: scale(1.18)` | 120ms |
+| Disclosure | `details` opening | opacity + rise on the revealed block | 280ms |
+| Toast | `toast()` | opacity + `translateY` | 180ms |
+| Skip link | focus | `top` | 160ms |
+
+### Named Rules
+
+**The Not-While-Working Rule.** Nothing animates while a control is being
+operated. The model re-runs at up to sixty passes a second under a dragged
+slider, and a held arrow key auto-repeats every few tens of milliseconds. A
+tween there would display figures the model never produced and lag the truth by
+its own duration, so `js/app.js` paints live values straight and reserves the
+settle for discrete changes. The same flag drops any chart mid-reveal.
+
+**The Export-Safe Animation Rule.** Chart animation is CSS-only, and every SVG
+attribute always holds the *final* geometry. A PNG export deep-clones the SVG
+and rasterises it where no stylesheet applies, so an animation expressed as an
+attribute (`width="0"`, `opacity="0"`, a dash offset) would export half-drawn.
+No SMIL, for the same reason: it renders at its initial value inside an
+`<img>`. Give elements classes and animate the classes.
+
+**The Reveal Must Be Undoable Rule.** The reveal hides its elements before
+first paint, so the class that arms it is only set when there is an
+`IntersectionObserver` to unset it, and a `window.onerror` handler drops it if
+anything throws. A page that hides content and then fails to show it again is
+worse than a page with no animation.
+
+**The Reduced-Motion Rule.** The kill-switch covers `animation`, `transition`
+*and* `scroll-behavior`, on `*`, `*::before` and `*::after`, and restores the
+opacity the reveal would otherwise have taken away. A rule that kills only
+transitions is not a kill-switch once keyframes exist.
 
 ## Do's and Don'ts
 
@@ -529,20 +729,24 @@ one card — the card belongs to the defender or to the attacker.
   the `prefers-color-scheme` block and the `[data-theme="dark"]` block.
 - **Do** give a new accent a meaning from the model before giving it a hex.
 - **Do** pass chart colours through `palette()` in `js/app.js` so they follow
-  the theme.
-- **Do** set chart text in `--chart`, the system stack, so PNG export is
-  deterministic.
+  the theme, and keep every token a literal, serialisable colour.
+- **Do** set chart text in `--chart`, the system stack, as an attribute, so PNG
+  export is deterministic.
+- **Do** set a number the model produced in the monospace, and a heading in the
+  serif.
 - **Do** set labels longer than three words in the body face, sentence case.
-- **Do** keep the answer above the instrument on narrow viewports.
+- **Do** keep the answer above the instrument on narrow viewports, and on
+  screen while the instrument is operated.
 - **Do** tag every number with its provenance — `measured`, `reported`, or
   `assumed`.
-- **Do** keep prose measures capped (76–78ch) and figures `tabular-nums`,
-  including any display-face number that updates live.
-- **Do** theme the browser's own surfaces from the palette — selection, focus
-  ring, scrollbars, and `color-scheme` — rather than shipping UA defaults.
-- **Do** preserve the accessibility floor already in place: `:focus-visible`
-  rings at 2px Defender Teal, `prefers-reduced-motion` killing transitions,
-  `aria-label` on every chart, and `role="status"` on the toast.
+- **Do** keep prose measures capped (66–74ch) and every live figure tabular.
+- **Do** name a coefficient in prose. `breakoutMedian` is an identifier, not a
+  label, and asking a reader to decode the source to read the provenance panel
+  defeats the point of having one.
+- **Do** preserve the accessibility floor: `:focus-visible` rings at 2px
+  Defender Teal, `prefers-reduced-motion` killing animation *and* transition,
+  `aria-label` on every chart, `aria-pressed` on every selected-state control,
+  `role="status"` on the toast, and the skip link.
 
 ### Don't:
 
@@ -552,15 +756,23 @@ one card — the card belongs to the defender or to the attacker.
   this page argues against, and adopting it would undercut the argument.
 - **Don't** adopt BI-tool chrome: heavy panel framing competing with the data,
   toolbars, chart junk, or a default categorical palette whose colours carry no
-  meaning. Every series colour here is semantic.
+  meaning.
+- **Don't** put a chapter on a card. Raised surfaces are the instrument.
 - **Don't** hardcode a hex anywhere outside the `:root` blocks in
   `css/app.css` — chart code included.
 - **Don't** introduce a shadow that survives into dark mode, and don't thicken a
   border to compensate for its absence.
 - **Don't** use elevation to signal state. Colour and border do that.
+- **Don't** animate anything that fires while a control is held.
+- **Don't** express an animation's start state as an SVG attribute.
+- **Don't** use a glyph or an emoji where a word will fit. The topbar and the
+  chapter tools are words.
 - **Don't** set uppercase tracked type below 9.5px, or any type below 10px
   outside the two bordered exceptions.
 - **Don't** apply caps plus wide tracking to sentence-length labels.
 - **Don't** mix Defender Teal and Attacker Vermilion inside a single card.
-- **Don't** add a decorative accent, gradient, or illustration. If it does not
-  carry a value from the model, it does not belong on the page.
+- **Don't** add a decorative accent, gradient, or illustration. There are
+  exactly two gradients in the stylesheet and both state something the page
+  actually draws: the slider fill, which encodes a parameter's position in its
+  range, and the legend's hatch swatch, which reproduces the 48° hatch the race
+  chart paints rather than approximating it with a solid block.

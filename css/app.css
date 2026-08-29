@@ -14,8 +14,8 @@
   /* Paper rather than white: the ground carries the same green cast as the
    * rest of the system, so a card reads as a raised sheet on a treated
    * surface rather than as white-on-white. */
-  --ink:   #F6F8F7;  --panel: #FFFFFF;  --sunk:  #E7EEEB;
-  --rule:  #DCE6E3;  --rule2: #7F9490;
+  --ink:   #F6F8F7;  --panel: #FFFFFF;  --sunk:  #E9EFED;
+  --rule:  #D3DFDB;  --rule2: #7F9490;
   --txt:   #0A1514;  --mut:   #536B67;  --dim:   #5C726E;
   --att:   #C4400F;  --def:   #0A7A69;  --bad:   #C11834;
   --zero:  #7029CC;  --warn:  #8A6008;
@@ -44,7 +44,7 @@
   :root:not([data-theme="light"]) {
     color-scheme: dark;
     --ink:   #07100F;  --panel: #101D1B;  --sunk:  #0B1615;
-    --rule:  #1E302E;  --rule2: #456B66;
+    --rule:  #253A37;  --rule2: #486E69;
     --txt:   #E4EFEC;  --mut:   #93ABA7;  --dim:   #7B9591;
     --att:   #FF6B4A;  --def:   #4FD5C2;  --bad:   #FF4A67;
     --zero:  #BE6BFF;  --warn:  #FFC24D;
@@ -56,7 +56,7 @@
 :root[data-theme="dark"] {
   color-scheme: dark;
   --ink:   #07100F;  --panel: #101D1B;  --sunk:  #0B1615;
-  --rule:  #1E302E;  --rule2: #456B66;
+  --rule:  #253A37;  --rule2: #486E69;
   --txt:   #E4EFEC;  --mut:   #93ABA7;  --dim:   #7B9591;
   --att:   #FF6B4A;  --def:   #4FD5C2;  --bad:   #FF4A67;
   --zero:  #BE6BFF;  --warn:  #FFC24D;
@@ -483,6 +483,27 @@ details.more[open] > div { animation: rise .28s var(--ease) both; }
   display: flex; gap: 16px; flex-wrap: wrap; font-size: 11.5px;
   color: var(--mut); margin-bottom: 12px;
 }
+/* Each detection posture reports the dwell time and coverage it writes. */
+.presets .mtr {
+  display: block; font-family: var(--mono); font-size: 10px;
+  color: var(--dim); letter-spacing: .04em; margin-top: 3px;
+}
+.presets button.on .mtr { color: var(--ink); opacity: .8; }
+.presets button.near .mtr { color: var(--def); opacity: .8; }
+
+/* The description under each selector group changes length as the reader
+ * picks, and without a floor the whole rail below it jumps on every click. */
+.seg-d { min-height: 3.1em; }
+
+/* Selected traits explain themselves in the rail rather than in a title
+ * attribute no touch or keyboard user can reach. */
+.trait-notes { margin-top: 10px; }
+.trait-notes > div {
+  font-size: 11.5px; line-height: 1.45; color: var(--mut);
+  padding: 8px 0; border-top: 1px solid var(--rule);
+}
+.trait-notes b { color: var(--txt); font-weight: 600; }
+
 /* A posture the sliders imply rather than one the reader picked. Drawn as a
  * match, not as a selection, so a derived value is never mistaken for a
  * decision somebody made. */
@@ -490,7 +511,21 @@ details.more[open] > div { animation: rise .28s var(--ease) both; }
   border-color: var(--def); border-style: dashed; color: var(--def);
   background: transparent; font-weight: 500;
 }
-.legend i { width: 10px; height: 10px; border-radius: 2px; display: inline-block; margin-right: 6px; vertical-align: -1px; }
+.legend i {
+  width: 10px; height: 10px; border-radius: 2px; display: inline-block;
+  margin-right: 6px; vertical-align: -1px;
+}
+.legend .sw-def  { background: var(--def); }
+.legend .sw-att  { background: var(--att); }
+.legend .sw-zero { background: var(--zero); }
+/* The chart draws this region as a 48-degree hatch, not a solid fill. The
+ * swatch states the encoding rather than approximating it, which is the only
+ * reason a gradient is allowed to exist in this stylesheet at all. */
+.legend .sw-hatch {
+  background: repeating-linear-gradient(48deg,
+    var(--bad) 0 1.5px, transparent 1.5px 4px);
+  border: 1px solid var(--bad);
+}
 
 /* ── actions list ───────────────────────────────────────────────────────── */
 ul.acts { list-style: none; margin: 0; padding: 0; }
@@ -623,5 +658,8 @@ footer code {
   /* explicit placement would otherwise leave an empty first column */
   .stats, .results { grid-column: 1; grid-row: auto; }
   .panel, .card, .stat { break-inside: avoid; box-shadow: none; }
+  /* Charts and readouts carry meaning in their fills; a browser dropping
+   * backgrounds for print would print an empty axis and a grey number. */
+  .chart, .stat .v, .band, .legend i { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
   .anim .panel, .anim .stats, .anim .clock, .anim .two { opacity: 1; }
 }

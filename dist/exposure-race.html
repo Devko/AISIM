@@ -29,8 +29,8 @@
   /* Paper rather than white: the ground carries the same green cast as the
    * rest of the system, so a card reads as a raised sheet on a treated
    * surface rather than as white-on-white. */
-  --ink:   #F6F8F7;  --panel: #FFFFFF;  --sunk:  #E7EEEB;
-  --rule:  #DCE6E3;  --rule2: #7F9490;
+  --ink:   #F6F8F7;  --panel: #FFFFFF;  --sunk:  #E9EFED;
+  --rule:  #D3DFDB;  --rule2: #7F9490;
   --txt:   #0A1514;  --mut:   #536B67;  --dim:   #5C726E;
   --att:   #C4400F;  --def:   #0A7A69;  --bad:   #C11834;
   --zero:  #7029CC;  --warn:  #8A6008;
@@ -59,7 +59,7 @@
   :root:not([data-theme="light"]) {
     color-scheme: dark;
     --ink:   #07100F;  --panel: #101D1B;  --sunk:  #0B1615;
-    --rule:  #1E302E;  --rule2: #456B66;
+    --rule:  #253A37;  --rule2: #486E69;
     --txt:   #E4EFEC;  --mut:   #93ABA7;  --dim:   #7B9591;
     --att:   #FF6B4A;  --def:   #4FD5C2;  --bad:   #FF4A67;
     --zero:  #BE6BFF;  --warn:  #FFC24D;
@@ -71,7 +71,7 @@
 :root[data-theme="dark"] {
   color-scheme: dark;
   --ink:   #07100F;  --panel: #101D1B;  --sunk:  #0B1615;
-  --rule:  #1E302E;  --rule2: #456B66;
+  --rule:  #253A37;  --rule2: #486E69;
   --txt:   #E4EFEC;  --mut:   #93ABA7;  --dim:   #7B9591;
   --att:   #FF6B4A;  --def:   #4FD5C2;  --bad:   #FF4A67;
   --zero:  #BE6BFF;  --warn:  #FFC24D;
@@ -498,6 +498,27 @@ details.more[open] > div { animation: rise .28s var(--ease) both; }
   display: flex; gap: 16px; flex-wrap: wrap; font-size: 11.5px;
   color: var(--mut); margin-bottom: 12px;
 }
+/* Each detection posture reports the dwell time and coverage it writes. */
+.presets .mtr {
+  display: block; font-family: var(--mono); font-size: 10px;
+  color: var(--dim); letter-spacing: .04em; margin-top: 3px;
+}
+.presets button.on .mtr { color: var(--ink); opacity: .8; }
+.presets button.near .mtr { color: var(--def); opacity: .8; }
+
+/* The description under each selector group changes length as the reader
+ * picks, and without a floor the whole rail below it jumps on every click. */
+.seg-d { min-height: 3.1em; }
+
+/* Selected traits explain themselves in the rail rather than in a title
+ * attribute no touch or keyboard user can reach. */
+.trait-notes { margin-top: 10px; }
+.trait-notes > div {
+  font-size: 11.5px; line-height: 1.45; color: var(--mut);
+  padding: 8px 0; border-top: 1px solid var(--rule);
+}
+.trait-notes b { color: var(--txt); font-weight: 600; }
+
 /* A posture the sliders imply rather than one the reader picked. Drawn as a
  * match, not as a selection, so a derived value is never mistaken for a
  * decision somebody made. */
@@ -505,7 +526,21 @@ details.more[open] > div { animation: rise .28s var(--ease) both; }
   border-color: var(--def); border-style: dashed; color: var(--def);
   background: transparent; font-weight: 500;
 }
-.legend i { width: 10px; height: 10px; border-radius: 2px; display: inline-block; margin-right: 6px; vertical-align: -1px; }
+.legend i {
+  width: 10px; height: 10px; border-radius: 2px; display: inline-block;
+  margin-right: 6px; vertical-align: -1px;
+}
+.legend .sw-def  { background: var(--def); }
+.legend .sw-att  { background: var(--att); }
+.legend .sw-zero { background: var(--zero); }
+/* The chart draws this region as a 48-degree hatch, not a solid fill. The
+ * swatch states the encoding rather than approximating it, which is the only
+ * reason a gradient is allowed to exist in this stylesheet at all. */
+.legend .sw-hatch {
+  background: repeating-linear-gradient(48deg,
+    var(--bad) 0 1.5px, transparent 1.5px 4px);
+  border: 1px solid var(--bad);
+}
 
 /* ── actions list ───────────────────────────────────────────────────────── */
 ul.acts { list-style: none; margin: 0; padding: 0; }
@@ -638,6 +673,9 @@ footer code {
   /* explicit placement would otherwise leave an empty first column */
   .stats, .results { grid-column: 1; grid-row: auto; }
   .panel, .card, .stat { break-inside: avoid; box-shadow: none; }
+  /* Charts and readouts carry meaning in their fills; a browser dropping
+   * backgrounds for print would print an empty axis and a grey number. */
+  .chart, .stat .v, .band, .legend i { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
   .anim .panel, .anim .stats, .anim .clock, .anim .two { opacity: 1; }
 }
 
@@ -725,6 +763,7 @@ footer code {
         <div class="seg-l">Environment attributes <span class="seg-hint">select any</span></div>
         <div class="presets chips" id="sel-profile"></div>
         <p class="seg-d" id="desc-profile"></p>
+        <div class="trait-notes" id="trait-notes"></div>
       </div>
       <div class="seg">
         <div class="seg-l">Operational maturity</div>
@@ -807,10 +846,10 @@ footer code {
         </div>
       </div>
       <div class="legend">
-        <span><i style="background:var(--def)"></i>remediation complete</span>
-        <span><i style="background:var(--att)"></i>exploit available</span>
-        <span><i style="background:var(--zero)"></i>pre-disclosure</span>
-        <span><i style="background:var(--bad)"></i>unremediated exposure</span>
+        <span><i class="sw-def"></i>remediation complete</span>
+        <span><i class="sw-att"></i>exploit available</span>
+        <span><i class="sw-zero"></i>pre-disclosure</span>
+        <span><i class="sw-hatch"></i>unremediated exposure</span>
       </div>
       <svg id="race" class="chart" role="img" aria-label="Exploit availability against remediation completion"></svg>
       <p class="lead foot" id="race-note"></p>
@@ -2312,7 +2351,11 @@ footer code {
     frame(svg, w, h);
 
     var defs = el('defs');
-    var pat = el('pattern', { id: 'hx', patternUnits: 'userSpaceOnUse', width: 6, height: 6, patternTransform: 'rotate(48)' });
+    /* Namespaced rather than a bare global `hx`: the defs live inside the
+     * chart's own svg so the reference still resolves after toPNG deep-clones
+     * it, and a second chart introducing a paint could not collide with it. */
+    var hatchId = (svg.id || 'er') + '-hatch';
+    var pat = el('pattern', { id: hatchId, patternUnits: 'userSpaceOnUse', width: 6, height: 6, patternTransform: 'rotate(48)' });
     pat.appendChild(el('line', { x1: 0, y1: 0, x2: 0, y2: 6, stroke: pal.bad, 'stroke-width': 2 }));
     defs.appendChild(pat);
     svg.appendChild(defs);
@@ -2353,7 +2396,7 @@ footer code {
     var op = [[L, MID]];
     for (var j = 0; j < d.B; j++) op.push([Xi(j), MID - d.ov[j] * sc]);
     op.push([R, MID]);
-    svg.appendChild(el('path', { d: path(op) + ' Z', fill: 'url(#hx)', 'fill-opacity': 0.55, stroke: 'none' }));
+    svg.appendChild(el('path', { d: path(op) + ' Z', fill: 'url(#' + hatchId + ')', 'fill-opacity': 0.55, stroke: 'none' }));
     svg.appendChild(el('path', { d: path(op.slice(1, -1)), fill: 'none', stroke: pal.bad, 'stroke-width': 1.2, 'stroke-opacity': 0.85 }));
 
     /* Attacker side, drawn downward. The density alone is unreadable here: the
@@ -2458,7 +2501,15 @@ footer code {
    * ROUTES IN
    * ═══════════════════════════════════════════════════════════════════════ */
   function routes(svg, w, r, pal) {
-    var names = [
+    /* SVG text does not wrap, so the full labels run off the drawing below
+     * roughly 430px. The short forms say the same thing in the space there
+     * actually is. */
+    var narrow = w < 440;
+    var names = narrow ? [
+      'Opportunistic exploitation',
+      'Targeted campaign',
+      'Supply chain',
+    ] : [
       'Opportunistic: mass exploitation in the exposure window',
       'Targeted campaign against the exposed estate',
       'Supply chain: remediation cadence does not apply',
@@ -2900,7 +2951,15 @@ footer code {
       setVal(s);
     });
   }
-  function setVal(s) { var e = $('v-' + s.k); if (e) e.textContent = s.f(P[s.k]); }
+  /* The formatted readout ("14 d", "as measured") is the value that means
+   * something; the raw number a screen reader would otherwise announce is not.
+   * On the compression slider in particular, "0" is exactly the wrong thing to
+   * hear when the point of zero is that it is the measured distribution. */
+  function setVal(s) {
+    var e = $('v-' + s.k), i = $('i-' + s.k), t = s.f(P[s.k]);
+    if (e) e.textContent = t;
+    if (i) i.setAttribute('aria-valuetext', t);
+  }
   /* The groove is filled up to the thumb so the reader can see where in the
    * range they are without reading the number back. */
   function setFill(input, s) {
@@ -2946,13 +3005,32 @@ footer code {
     return bits.join(' · ');
   }
 
-  function buildToggles(hostId, table, isOn, onPick) {
+  /* Each trait carries a paragraph explaining what it does to the estate, and
+   * until now the only way to read one was to hover a mouse over the chip —
+   * unreachable on a touch screen and by keyboard. The descriptions of the
+   * traits actually selected are shown instead, so the reasoning behind the
+   * numbers is on the page rather than behind a pointer. */
+  function renderTraitNotes() {
+    var host = $('trait-notes');
+    if (!host) return;
+    empty(host);
+    ON.forEach(function (k) {
+      var t = M.TRAITS[k];
+      if (!t || !t.d) return;
+      var row = E('div');
+      add(row, E('b', null, t.l), document.createTextNode(' ' + t.d));
+      host.appendChild(row);
+    });
+  }
+
+  function buildToggles(hostId, table, isOn, onPick, meta) {
     var host = empty($(hostId));
     Object.keys(table).forEach(function (key) {
       var btn = E('button', null, table[key].l);
       btn.type = 'button';
       btn.dataset.key = key;
       if (table[key].d) btn.title = table[key].d;
+      if (meta) btn.appendChild(E('span', 'mtr', meta(key)));
       btn.setAttribute('aria-pressed', String(!!isOn(key)));
       btn.addEventListener('click', function () { onPick(key); });
       host.appendChild(btn);
@@ -2978,7 +3056,9 @@ footer code {
         b2.setAttribute('aria-pressed', String(on && !derived));
       });
     });
-    $('desc-maturity').textContent = M.MATURITY[MAT] ? M.MATURITY[MAT].d : '';
+    var dm = $('desc-maturity');
+    if (dm) dm.textContent = M.MATURITY[MAT] ? M.MATURITY[MAT].d : '';
+    renderTraitNotes();
     $('desc-profile').textContent = ON.length
       ? estateSummary()
       : 'No attributes selected. Generic mid-size estate: ' + estateSummary();
@@ -3005,9 +3085,16 @@ footer code {
     buildToggles('sel-maturity', M.MATURITY,
       function (k) { return k === MAT; },
       function (k) { MAT = k; applyShape(); syncAll(); refreshSelectors(); schedule(); });
+    /* A console that does not show what its presets write is not a console:
+     * each posture reports the dwell time and coverage it sets. */
     buildToggles('sel-detection', M.DETECTION,
       function (k) { return k === (DET || closestDetection()); },
-      function (k) { DET = k; applyShape(); syncAll(); refreshSelectors(); schedule(); });
+      function (k) { DET = k; applyShape(); syncAll(); refreshSelectors(); schedule(); },
+      function (k) {
+        var d = M.DETECTION[k].p;
+        return (d.detect < 1 ? Math.round(d.detect * 24) + ' h' : d.detect + ' d') +
+          ' · ' + d.edrCoverage + '%';
+      });
     refreshSelectors();
   }
 
@@ -3137,7 +3224,9 @@ footer code {
 
   /* ── docked readout ────────────────────────────────────────────────────── */
   function renderDock(r) {
-    $('dock-v').textContent = pctS(r.p);
+    var v = $('dock-v');
+    if (!v) return;
+    v.textContent = pctS(r.p);
     $('dock-ci').textContent = lastBand.p;
     $('dock-est').textContent = estateSummary();
   }

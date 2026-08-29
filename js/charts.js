@@ -78,7 +78,11 @@
     frame(svg, w, h);
 
     var defs = el('defs');
-    var pat = el('pattern', { id: 'hx', patternUnits: 'userSpaceOnUse', width: 6, height: 6, patternTransform: 'rotate(48)' });
+    /* Namespaced rather than a bare global `hx`: the defs live inside the
+     * chart's own svg so the reference still resolves after toPNG deep-clones
+     * it, and a second chart introducing a paint could not collide with it. */
+    var hatchId = (svg.id || 'er') + '-hatch';
+    var pat = el('pattern', { id: hatchId, patternUnits: 'userSpaceOnUse', width: 6, height: 6, patternTransform: 'rotate(48)' });
     pat.appendChild(el('line', { x1: 0, y1: 0, x2: 0, y2: 6, stroke: pal.bad, 'stroke-width': 2 }));
     defs.appendChild(pat);
     svg.appendChild(defs);
@@ -119,7 +123,7 @@
     var op = [[L, MID]];
     for (var j = 0; j < d.B; j++) op.push([Xi(j), MID - d.ov[j] * sc]);
     op.push([R, MID]);
-    svg.appendChild(el('path', { d: path(op) + ' Z', fill: 'url(#hx)', 'fill-opacity': 0.55, stroke: 'none' }));
+    svg.appendChild(el('path', { d: path(op) + ' Z', fill: 'url(#' + hatchId + ')', 'fill-opacity': 0.55, stroke: 'none' }));
     svg.appendChild(el('path', { d: path(op.slice(1, -1)), fill: 'none', stroke: pal.bad, 'stroke-width': 1.2, 'stroke-opacity': 0.85 }));
 
     /* Attacker side, drawn downward. The density alone is unreadable here: the
@@ -224,7 +228,15 @@
    * ROUTES IN
    * ═══════════════════════════════════════════════════════════════════════ */
   function routes(svg, w, r, pal) {
-    var names = [
+    /* SVG text does not wrap, so the full labels run off the drawing below
+     * roughly 430px. The short forms say the same thing in the space there
+     * actually is. */
+    var narrow = w < 440;
+    var names = narrow ? [
+      'Opportunistic exploitation',
+      'Targeted campaign',
+      'Supply chain',
+    ] : [
       'Opportunistic: mass exploitation in the exposure window',
       'Targeted campaign against the exposed estate',
       'Supply chain: remediation cadence does not apply',
