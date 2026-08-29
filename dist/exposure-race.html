@@ -243,6 +243,15 @@ button.ghost { background: transparent; }
  * has to step down out from under it rather than scroll behind it. */
 .dock.up ~ .grid .rail { top: 74px; max-height: calc(100vh - 90px); }
 @media (max-width: 1040px) { .rail { position: static; max-height: none; overflow: visible; } }
+/* Once the rail stops being a rail it inherits the whole page width, which
+ * gave a 20-character chip 730px to sit in and stretched a slider to 1,470px
+ * — a drag target so long that a 5% change needs a 70px gesture. Between a
+ * tablet and the desktop breakpoint the console splits in two instead: the
+ * environment card down the left, the threat card and the contents stacked
+ * beside it. */
+@media (max-width: 1040px) and (min-width: 700px) {
+  .rail { display: grid; grid-template-columns: 1fr 1fr; gap: 0 22px; align-items: start; }
+}
 /* The rail is its own scroll container, so the scrollbar has to be visible
  * enough that a wheel gesture landing on it is not read as a dead page. */
 .rail { scrollbar-width: thin; scrollbar-color: var(--rule2) transparent; }
@@ -806,6 +815,10 @@ footer code {
       <details class="more"><summary>Additional defender parameters</summary><div id="cd-adv"></div></details>
     </div>
 
+    <!-- Wrapped so the console can become two columns between a tablet and the
+         desktop breakpoint without the grid stretching a short card to match a
+         tall one. See .rail in app.css. -->
+    <div class="rail-side">
     <div class="card att">
       <h2 class="a">Threat environment</h2>
       <p class="note">Parameters outside your control.</p>
@@ -828,6 +841,7 @@ footer code {
         <li><a href="#p-anchors">Model provenance</a></li>
       </ol>
     </nav>
+    </div>
   </div>
 
   <!-- ══════════════════ RESULTS ══════════════════ -->

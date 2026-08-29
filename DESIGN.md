@@ -444,7 +444,14 @@ Breakpoints, each with a specific job rather than a device name:
 
 - **1040px** — grid collapses to one column and the stat bank moves *ahead* of
   the controls.
-- **940px** — paired chart chapters stack.
+- **1040–700px** — the rail stops being a rail and would otherwise inherit the
+  whole page width, so the console splits into two columns: the environment
+  card down the left, the threat card and the contents stacked beside it. Left
+  full-width it gave a 20-character chip 730px to sit in and stretched a slider
+  to 1,470px, where a 5% change needs a 70px gesture.
+- **940px, and again between 1041 and 1180** — paired chart chapters stack.
+  Two ranges rather than one, because the width that matters is the results
+  column: between 1041 and 1180 the rail is still taking 352px of it.
 - **900px** — the masthead's measured figures fall below the standfirst.
 - **860px** — the anchors list and the footer notes go single-column.
 - **1040px** — the readout bank also drops its 1.14/0.86 ranking for four
@@ -668,7 +675,9 @@ from the label.
 
 ### Contents
 
-A numbered list in the rail, below the two control cards, with
+A numbered list in the rail, below the threat card inside `.rail-side` —
+a wrapper that exists so the two-column console between 700px and 1040px does
+not stretch a short card to match a tall one — with
 `counter-reset`/`counter-increment` supplying the ordinals so the markup
 carries no numbering of its own. The current chapter is marked `.cur` in
 Defender Teal by an IntersectionObserver.
