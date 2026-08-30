@@ -2261,6 +2261,18 @@ footer code {
    * exactly that reason. */
   var DEFAULT_EXPOSURE = 'web';
   var DEFAULT_ATTENTION = 'ordinary';
+  /* The scenario dials: what-if travel on the threat side, not estate shape.
+   * No shape table touches them, so `compose` carries them across untouched
+   * rather than recomposing them — which is precisely what it must do, because
+   * a reader picking a maturity rung has said nothing about the exploit clock.
+   *
+   * Named as a SET, not one at a time. `compose` forwarded `ai` alone when `ai`
+   * was the only dial there was, and kept forwarding `ai` alone after the
+   * slider was split into three: every selector click silently reset `weap` and
+   * `tempo` to zero while `ai` survived, so the page's own comparison — the
+   * three clocks against each other — could not be held while shaping an
+   * estate. Anything added to this list is carried by construction. */
+  var SCENARIO = ['ai', 'weap', 'tempo'];
   function clampTo(k, v) {
     var s = SPEC.def.concat(SPEC.att).filter(function (x) { return x.k === k; })[0];
     if (!s) return v;
@@ -2322,7 +2334,14 @@ footer code {
      * all, so a stale shared link cannot silently produce a surface-free
      * estate that the reader never chose. */
     gather(EXPOSURE[owns(EXPOSURE, opts.exposure) ? opts.exposure : DEFAULT_EXPOSURE].m);
-    traits.forEach(function (key) { if (TRAITS[key]) gather(TRAITS[key].m); });
+    /* `owns`, not a truthiness test, for the same reason as the three tables
+     * either side of it — and this is the one that takes a LIST, which is why
+     * it was the one the guard missed. `?traits=constructor` resolved the
+     * Object constructor, whose `.m` is undefined; `gather` tolerated that and
+     * returned, so the damage surfaced later and elsewhere, in the coverage-cap
+     * loop below, as a TypeError out of init(). */
+    traits = traits.filter(function (key) { return owns(TRAITS, key); });
+    traits.forEach(function (key) { gather(TRAITS[key].m); });
     gather(ATTENTION[owns(ATTENTION, opts.attention) ? opts.attention : DEFAULT_ATTENTION].m);
 
     Object.keys(out).forEach(function (prop) {
@@ -2348,15 +2367,21 @@ footer code {
     if (det) {
       var covCap = 1;
       traits.forEach(function (key) {
-        var t = TRAITS[key];
-        if (t && typeof t.m.edrCoverage === 'number' && t.m.edrCoverage < 1) covCap *= t.m.edrCoverage;
+        var m = TRAITS[key].m;
+        if (typeof m.edrCoverage === 'number' && m.edrCoverage < 1) covCap *= m.edrCoverage;
       });
       out.detect = det.p.detect;
       out.edrCoverage = det.p.edrCoverage * covCap;
     }
 
     Object.keys(out).forEach(function (k) { out[k] = clampTo(k, out[k]); });
-    out.ai = opts.ai || 0;
+    /* After the clamp, and read from `opts` rather than composed: these are the
+     * reader's scenario, carried through the shape pass unchanged. An absent
+     * dial falls back to its own default rather than to zero, so compose({})
+     * stays identical to defaults(). */
+    SCENARIO.forEach(function (k) {
+      out[k] = clampTo(k, opts[k] === undefined ? out[k] : +opts[k] || 0);
+    });
     return out;
   }
 
@@ -2927,6 +2952,7 @@ footer code {
     MATURITY: MATURITY, DETECTION: DETECTION, compose: compose,
     DEFAULT_EXPOSURE: DEFAULT_EXPOSURE, DEFAULT_ATTENTION: DEFAULT_ATTENTION,
     defaults: defaults, simulate: simulate, createRun: createRun, densities: densities,
+    SCENARIO: SCENARIO,
     RNG: RNG, inverseNormal: inverseNormal,
     clockScale: clockScale, weapMult: weapMult, preMult: preMult,
     tempoScale: tempoScale, SCOPE: SCOPE,
@@ -3909,9 +3935,16 @@ footer code {
   }
 
   /* ── shape: traits x maturity x detection posture ─────────────────────── */
+  /* Re-derive the estate from the four shape controls, carrying the reader's
+   * scenario dials across untouched. The dials are handed over as a SET rather
+   * than named here: this function passed `ai` alone, so selecting an exposure
+   * rung — or a trait, a maturity level, a detection posture — silently reset
+   * `weap` and `tempo` to zero while leaving `ai` standing. */
   function applyShape() {
-    P = M.compose({ exposure: EXP, traits: ON, attention: ATTN,
-                    maturity: MAT, detection: DET, ai: P.ai });
+    var opts = { exposure: EXP, traits: ON, attention: ATTN,
+                 maturity: MAT, detection: DET };
+    M.SCENARIO.forEach(function (k) { opts[k] = P[k]; });
+    P = M.compose(opts);
   }
   /* Which posture does the current detect/coverage pair most resemble? Used to
    * light the right button when traits set those values rather than a click. */
