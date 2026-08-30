@@ -723,8 +723,10 @@ console.log('\n══ Exposure Race — model tests ═════════�
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
- * 12b. Suspendable runs — js/app.js drives the 60,000-trial settle pass
- *      through createRun() a slice at a time so it does not hold the frame.
+ * 12b. Suspendable runs — js/app.js drives EVERY simulation in the settle
+ *      through createRun() a slice at a time so it does not hold the frame:
+ *      the 60,000-trial main run, and the 76 sensitivity and sweep figures
+ *      that used to be atomic M.simulate calls and were 91% of the work.
  *      That is only legitimate if a sliced run is the SAME run: same trials,
  *      same order, same coefficient draws, same block flushes. Whole-run
  *      equality is therefore the property under test, and it is checked at
@@ -749,6 +751,29 @@ console.log('\n══ Exposure Race — model tests ═════════�
     ok(`a run sliced ${chunk} at a time is identical to one run whole`, same,
       `p=${fmt(sliced.p)} vs ${fmt(whole.p)}`);
   });
+
+  /* The sensitivity and sweep figures run at a different trial count and under
+   * different options from the main run — `spread: 0` pins the coefficients
+   * and `surv: false` skips the survival accumulator — so whole-run equality
+   * has to hold for that shape too. It is the shape 75 of the settle's 76
+   * simulations now use, and the tornado's ordering is a difference of two of
+   * them: a slicing defect here would not look like a crash, it would look
+   * like a bar in the wrong place. 1,000 is the slice js/app.js actually
+   * ships; the others bracket it and refuse to divide 12,000 evenly. */
+  {
+    const sopts = { surv: false, spread: 0 };
+    const whole12k = M.simulate(D(), 12000, 7, sopts);
+    [1000, 997, 12000].forEach((chunk) => {
+      const r2 = M.createRun(D(), 12000, 7, sopts);
+      let guard = 0;
+      while (!r2.advance(chunk)) if (++guard > 100000) throw new Error('advance never completed');
+      const sliced = r2.result();
+      const same = ['p', 'incident', 'events', 'armed', 'wild', 'wildShare', 'trials']
+        .every((k) => sliced[k] === whole12k[k]);
+      ok(`a sensitivity-shaped run sliced ${chunk} at a time is identical whole`, same,
+        `p=${fmt(sliced.p)} vs ${fmt(whole12k.p)}`);
+    });
+  }
 
   const run = M.createRun(D(), 5000, 7, { surv: false, spread: 0 });
   ok('advance() reports incomplete until the last trial', run.advance(4999) === false);

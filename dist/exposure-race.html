@@ -7418,24 +7418,6 @@ footer code {
   function sim(params, n, seed, wantSurv) {
     return M.simulate(params, n, seed, { surv: !!wantSurv, spread: 1 });
   }
-  /* One lever, both ends. Each run reseeds from SEED_SENS, so a row does not
-   * depend on which rows were computed before it — which is what lets the
-   * settle pass compute them one per turn without moving a single figure. */
-  /* `spread: 0` pins every assumption at its central value. A tornado measures
-   * what moving a LEVER does; drawing the assumptions afresh on each endpoint
-   * adds parameter noise to a bar that is supposed to isolate one parameter,
-   * and at these trial counts that noise was reordering the chart. The credible
-   * interval on the headline is where parameter uncertainty belongs, and it is
-   * still drawn there. This MUST match the convention `base` is computed with
-   * below — the two were briefly out of step, and a gain of base-minus-lo
-   * across two different conventions is not a gain, it is a subtraction. */
-  function sensitivityRow(t, base, metric) {
-    var o = { surv: false, spread: 0 };
-    var lo = M.simulate(over(t.k, t.lo, base), N_SENS, SEED_SENS, o)[metric];
-    var hi = M.simulate(over(t.k, t.hi, base), N_SENS, SEED_SENS, o)[metric];
-    return { k: t.k, l: t.l, lo: lo, hi: hi, span: Math.abs(hi - lo) };
-  }
-
   /* ── render ────────────────────────────────────────────────────────────── */
   var lastRun = null, lastSens = null, lastDens = null;
   /* Each drawn curve carries the dial value it belongs to in `cur`, taken from
@@ -7746,6 +7728,34 @@ footer code {
    * already set stayed on three dimmed panels indefinitely, while the button
    * claimed a reading the charts below it were not showing. */
   var metricRaf = 0, metricTimer = null;
+
+  /* The sensitivity bars and the sweep are chapters 03 and 08. Together they
+   * are 75 of the settle's 76 simulations — about 27 of its 28 seconds — and a
+   * reader at the top of the page has not asked for either yet. They are held
+   * back until one of those panels comes within a screen and a half, which is
+   * far enough ahead that a reader scrolling normally arms them before the
+   * panel is on screen.
+   *
+   * Armed once, armed for the session: after a reader has been near either
+   * chapter, every settle computes everything, because from then on they are
+   * operating controls whose effect they expect to see there.
+   *
+   * This is a deferral, not a saving. A reader who scrolls straight to chapter
+   * 03 waits the same time they always did — the work is the work. What it
+   * buys is that the reader who never goes there does not pay for it, and that
+   * the top of the page reaches its final numbers without 75 simulations
+   * queued in front of them. */
+  var sensArmed = false;
+  function armSens() {
+    if (sensArmed) return;
+    sensArmed = true;
+    /* Nothing to continue from before the first settle has produced a run;
+     * that settle will include the tail itself, because it reads sensArmed
+     * when it builds its stages. */
+    if (!lastRun) return;
+    markPending(['torn', 'acts', 'sweep']);
+    heavy({ keepRun: true });
+  }
   function runMetricPass() {
     if (metricRaf) { cancelAnimationFrame(metricRaf); metricRaf = 0; }
     if (metricTimer) { clearTimeout(metricTimer); metricTimer = null; }
@@ -7755,12 +7765,70 @@ footer code {
     heavyGen++;
     if (heavyTimer) { clearTimeout(heavyTimer); heavyTimer = null; }
   }
-  /* 10,000 trials a slice: ~15ms of the 92ms the full run costs, which keeps
-   * every slice inside the budget a main thread needs to stay responsive to
-   * input. The slicing does not approximate anything — see createRun in
-   * js/model.js: the accumulators and the RNG live in the run, so a sliced
-   * run and a whole one visit the same trials in the same order. */
-  var HEAVY_CHUNK = 10000;
+  /* One slice of the settle, in trials. It was 10,000, described as "~15ms of
+   * the 92ms the full run costs" — true when it was written. That run now
+   * costs 1,358ms in a browser, so the slice had quietly become 226ms and the
+   * mechanism built to keep the page responsive was handing it four-frame
+   * stalls instead. A figure sized against a measurement has to be re-measured
+   * when the measurement moves, so this one is stated in trials and the cost
+   * is quoted below rather than embedded in the number.
+   *
+   * Measured in a browser, not in node: the same 6,000-trial pass is 66ms
+   * under node and 148ms in a browser, and sizing a responsiveness budget
+   * against the faster of the two sizes it against a runtime no reader uses.
+   * The test suite's own budget measures node, and can be green while this is
+   * not.
+   *
+   * At 1,000 the whole sensitivity-and-sweep tail costs 3.1s of blocking time
+   * across its 25 seconds, with a worst task of 94ms. Before slicing it was
+   * 27.1s of blocking and a worst task of 1,011ms — a page that could not be
+   * scrolled while it computed. Smaller slices are close to free: 1,000 and
+   * 1,500 finish the tail within 200ms of each other, because what is added is
+   * MessageChannel turns rather than arithmetic.
+   *
+   * The slicing does not approximate anything — see createRun in js/model.js:
+   * the accumulators and the RNG live in the run, so a sliced run and a whole
+   * one visit the same trials in the same order and produce bit-identical
+   * results. That is asserted, not assumed: see the slicing test. */
+  var SLICE_TRIALS = 1000;
+
+  /* Every sensitivity and sweep figure used to be one atomic M.simulate call.
+   * The settle makes 76 of them at 12,000 trials each, so 91% of the work on
+   * the page bypassed the slicing entirely: 57 long tasks, 27 seconds of
+   * blocked main thread, a median task of 544ms — one lever's two endpoints
+   * back to back. The charts were not slow to arrive so much as the page was
+   * unusable while they computed.
+   *
+   * This pushes one simulation as several stages over a run that is advanced a
+   * slice at a time, which is what the main run has always done. `left` is
+   * carried across the closures so a trial count that is not a whole multiple
+   * of the slice cannot overshoot into a second pass over the tail. */
+  function pushSlicedSim(stages, params, n, seed, opts, done) {
+    var run = null, left = n;
+    var slice = function () {
+      var take = Math.min(SLICE_TRIALS, left);
+      if (take > 0) { run.advance(take); left -= take; }
+    };
+    stages.push(function () { run = M.createRun(params, n, seed, opts); slice(); });
+    for (var c = SLICE_TRIALS; c < n; c += SLICE_TRIALS) stages.push(slice);
+    stages.push(function () { done(run.result()); });
+  }
+  /* `spread: 0` pins every assumption at its central value. A tornado measures
+   * what moving a LEVER does; drawing the assumptions afresh on each endpoint
+   * adds parameter noise to a bar that is supposed to isolate one parameter,
+   * and at these trial counts that noise was reordering the chart. The credible
+   * interval on the headline is where parameter uncertainty belongs, and it is
+   * still drawn there.
+   *
+   * Every endpoint, the baseline and every sweep point MUST share this, and
+   * that is why it is one object rather than a literal at each of the 76 call
+   * sites: `base` and the bar ends were briefly out of step, and a gain of
+   * base-minus-lo across two different conventions is not a gain, it is a
+   * subtraction. Each also reseeds from SEED_SENS independently, so a figure
+   * does not depend on which figures were computed before it — which is what
+   * lets the settle compute them a slice at a time without moving any of
+   * them. */
+  var SENS_OPTS = { surv: false, spread: 0 };
 
   function heavy(opts) {
     cancelHeavy();
@@ -7795,8 +7863,8 @@ footer code {
        * reading they were looking at. */
       stages.push(function () { pushURL(); });
     } else {
-      for (var c = 0; c < N_HEAVY; c += HEAVY_CHUNK) {
-        stages.push(function () { run.advance(HEAVY_CHUNK); });
+      for (var c = 0; c < N_HEAVY; c += SLICE_TRIALS) {
+        stages.push(function () { run.advance(SLICE_TRIALS); });
       }
       stages.push(function () {
         var r = run.result();
@@ -7807,11 +7875,31 @@ footer code {
       });
     }
 
+    /* Everything from here is chapters 03 and 08. Built only once a reader is
+     * heading for them — see armSens. The stages already queued above are the
+     * headline figures and the four charts above the fold, which every reader
+     * gets regardless. */
+    if (!sensArmed) { runStages(stages, gen, metric); return; }
+
     /* Baseline computed with EXACTLY the seed and trial count the bars use, so
      * a bar can never be offset against a mismatched base. */
-    stages.push(function () { base = M.simulate(snap, N_SENS, SEED_SENS, { surv: false, spread: 0 })[metric]; });
+    pushSlicedSim(stages, snap, N_SENS, SEED_SENS, SENS_OPTS,
+      function (r) { base = r[metric]; });
+    /* One lever, both ends, as two sliced simulations and a stage that reads
+     * them. This was sensitivityRow(), one stage doing both — which is what
+     * made the median blocking task 544ms rather than 273ms: a lever is the
+     * only place in the settle that ran two full simulations without yielding
+     * between them. Each end reseeds from SEED_SENS independently, exactly as
+     * before, so the pairing that makes the span meaningful is unchanged. */
     LEVERS.forEach(function (t) {
-      stages.push(function () { rows.push(sensitivityRow(t, snap, metric)); });
+      var lo = null, hi = null;
+      pushSlicedSim(stages, over(t.k, t.lo, snap), N_SENS, SEED_SENS, SENS_OPTS,
+        function (r) { lo = r[metric]; });
+      pushSlicedSim(stages, over(t.k, t.hi, snap), N_SENS, SEED_SENS, SENS_OPTS,
+        function (r) { hi = r[metric]; });
+      stages.push(function () {
+        rows.push({ k: t.k, l: t.l, lo: lo, hi: hi, span: Math.abs(hi - lo) });
+      });
     });
     stages.push(function () {
       rows.sort(function (x, y) { return y.span - x.span; });
@@ -7846,7 +7934,10 @@ footer code {
       sweepSeries.push({ k: cl.k, l: cl.l, c: cl.c, cur: snap[cl.k] || 0, pts: pts });
       for (var a = 0; a <= 100; a += 20) {
         (function (v) {
-          stages.push(function () { pts.push([v, M.simulate(over(cl.k, v, snap), N_SENS, SEED_SENS, { surv: false, spread: 0 })[metric]]); });
+          /* Points land in sweep order because the stages run in order, so the
+           * curve does not have to be sorted back into shape afterwards. */
+          pushSlicedSim(stages, over(cl.k, v, snap), N_SENS, SEED_SENS, SENS_OPTS,
+            function (r) { pts.push([v, r[metric]]); });
         })(a);
       }
     });
@@ -7861,6 +7952,14 @@ footer code {
       if (metric === METRIC) clearPending(['sweep']);
     });
 
+    runStages(stages, gen, metric);
+  }
+
+  /* Drains a built stage list one turn at a time. Extracted from heavy() so
+   * the pass can be started from more than one place in it — a settle that
+   * stops after the main run, because chapters 03 and 08 have not been armed
+   * yet, runs the same loop as one that carries the whole tail. */
+  function runStages(stages, gen, metric) {
     var i = 0;
     var step = function () {
       heavyTimer = null;
@@ -8449,6 +8548,38 @@ footer code {
       .forEach(function (el) { io.observe(el); });
   }
 
+  /* Arms chapters 03 and 08 when a reader heads for them. A screen and a half
+   * of margin, so the work starts before the panel is on screen rather than
+   * when it arrives — the reader still waits, but they wait less.
+   *
+   * With no IntersectionObserver there is no way to know where a reader is, so
+   * the deferral is dropped entirely rather than guessed at: the page computes
+   * everything, exactly as it did before, which is the same bargain every
+   * other observer here makes. */
+  function observeSens() {
+    if (!window.IntersectionObserver) { sensArmed = true; return; }
+    var io = new IntersectionObserver(function (entries) {
+      if (!entries.some(function (e) { return e.isIntersecting; })) return;
+      io.disconnect();
+      armSens();
+    }, { rootMargin: '1200px 0px 1200px 0px' });
+    ['p-torn', 'p-sweep'].forEach(function (id) {
+      var el = $(id);
+      if (el) io.observe(el);
+    });
+    /* Two ways to need these figures without having scrolled to them. Printing
+     * lays out the whole document, and the deck quotes the prioritised actions
+     * off lastSens. Neither can be served synchronously — the arithmetic is
+     * twenty seconds long — so arming here does not make an immediate export
+     * complete. It makes the second one complete, and it is the difference
+     * between a figure that is late and a figure that never arrives. */
+    window.addEventListener('beforeprint', armSens);
+    ['deck-carousel', 'deck-internal'].forEach(function (id) {
+      var b = $(id);
+      if (b) b.addEventListener('click', armSens);
+    });
+  }
+
   function observeDock() {
     var stats = document.querySelector('.stats'), dock = $('dock');
     if (!stats || !dock || !window.IntersectionObserver) return;
@@ -8624,6 +8755,7 @@ footer code {
     renderClock();
     bindPrint();
     observeReveal();
+    observeSens();
     observeDock();
     observeToc();
 
