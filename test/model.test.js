@@ -603,6 +603,50 @@ console.log('\n══ Exposure Race — model tests ═════════�
   near('a posture is unrestricted where no trait suppresses coverage',
     P({ detection: 'managed' }).edrCoverage, M.DETECTION.managed.p.edrCoverage, 5);
 
+  /* Shaping an estate must not move the reader's scenario. compose() forwarded
+   * `ai` by name, which was right while `ai` was the only dial and wrong the
+   * moment it was split into three: every selector click — exposure, trait,
+   * maturity, detection posture — silently reset `weap` and `tempo` to zero
+   * and left `ai` standing, so the page's central comparison could not be held
+   * while configuring an estate. Asserted over M.SCENARIO rather than over a
+   * written-out list, so a fourth dial is covered by construction. */
+  {
+    const dialled = {};
+    M.SCENARIO.forEach((k, i) => { dialled[k] = 40 + i * 20; });
+    const shapes = [
+      { exposure: 'others' }, { attention: 'named' }, { traits: ['ot'] },
+      { maturity: 'tight' }, { detection: 'managed' },
+    ];
+    const lost = [];
+    shapes.forEach((shape) => {
+      const c = M.compose(Object.assign({}, shape, dialled));
+      M.SCENARIO.forEach((k) => {
+        if (c[k] !== dialled[k]) lost.push(`${Object.keys(shape)[0]} reset ${k} to ${c[k]}`);
+      });
+    });
+    ok('shaping the estate carries every scenario dial through', lost.length === 0,
+      lost.length ? lost.join('; ') : M.SCENARIO.join(', ') + ' held across ' + shapes.length + ' shapes');
+
+    /* The dials are scenario, so no shape table may claim one as a term. */
+    const tables = { EXPOSURE: M.EXPOSURE, TRAITS: M.TRAITS, ATTENTION: M.ATTENTION };
+    const claimed = [];
+    Object.keys(tables).forEach((name) => {
+      Object.keys(tables[name]).forEach((key) => {
+        M.SCENARIO.forEach((d) => {
+          if (tables[name][key].m && d in tables[name][key].m) claimed.push(`${name}.${key}.${d}`);
+        });
+      });
+    });
+    ok('no shape table drives a scenario dial', claimed.length === 0, claimed.join(','));
+
+    /* An absent dial falls back to its own default, never to zero — which is
+     * what keeps compose({}) identical to defaults(). */
+    const bare = M.compose({ maturity: 'loose' });
+    ok('an unset dial keeps its default rather than collapsing to zero',
+      M.SCENARIO.every((k) => bare[k] === M.defaults()[k]),
+      M.SCENARIO.map((k) => `${k}=${bare[k]}`).join(' '));
+  }
+
   /* The two tables that used to overlap must stay disjoint. 'legacy' set the
    * same four terms in the same direction as MATURITY.loose, so selecting both
    * counted one weakness twice; nothing in TRAITS may touch the maturity axis
