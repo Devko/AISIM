@@ -30,8 +30,19 @@ rate with a credible interval, plus prioritised remediation actions for the
 configured estate.
 
 Success is a reader who leaves with the question reframed — the exploit clock
-was already at zero, and severity is the wrong prioritisation trigger — and who
-can act on that. The page carries four jobs at once, all confirmed:
+was already at zero, severity is the wrong prioritisation trigger, and the
+clocks an autonomous adversary actually moves are not the one being watched —
+and who can act on that.
+
+The reframe is deliberately not a de-escalation. "The clock did not move" is a
+true finding that a reader can mistake for "nothing changed", and the page must
+not leave them there. Three dials replace the single AI slider so the comparison
+is visible rather than asserted, and the weakest of the three is the one the
+word usually means. The urgency the page carries is earned by its own charts —
+post-exploitation tempo erasing three quarters of what a 24/7 SOC buys — never
+by adopting the register of the reports it exists to check.
+
+The page carries four jobs at once, all confirmed:
 
 - **Argument first.** The reframing is the point; the simulator is its evidence.
 - **A tool that must actually work.** Readers configure their estate and read
@@ -110,9 +121,32 @@ so a reader can hand a colleague the exact configuration they were looking at.
   threat card because adversary interest is not something the reader controls.
   A control that only ever raises the number is a ratchet, not an instrument —
   both ladders reach below the baseline as well as above it.
-- **Scope limit:** vulnerability exploitation only. Credential abuse, phishing,
-  and insider routes are absent. Output is a lower bound on intrusion risk, not
-  a picture of it. Never present it as a risk assessment for a named organisation.
+- **Scope is stated where the number is, not in the footer.** Three access
+  routes are simulated: opportunistic exploitation, targeted campaign, supply
+  chain. Phishing, credential abuse and insider action are absent, so output is
+  a lower bound on intrusion risk rather than a picture of it. That statement
+  now sits directly beneath the headline figures and again on the routes chart,
+  drawn in outline so a cited share cannot be mistaken for an output. A caveat
+  a screen and a half from the figure it qualifies is a disclaimer, not a
+  caveat. Never present the output as a risk assessment for a named organisation.
+- **The proxy is disclosed, because it is the largest term.** `agentSkill`
+  carries the absent routes as one residual rate, and on the compromise metric
+  it ranks first in the sensitivity chart. It was omitted from that chart
+  entirely until it was checked. Where a model's biggest lever is its own proxy
+  for what it does not simulate, saying so is not a caveat — it is the finding.
+- **Adversary attention carries capability, not only volume — decided.** Each
+  rung now sets how capable a campaign is with no vulnerability open (0.5% /
+  1% / 2.5% / 4%) alongside how many arrive, with `campaigns` reduced on the
+  upper rungs (4x to 2.5x, 9x to 5x) to pay for it. The claim the ladder makes
+  is about the mix: the targeted route runs 4% of first compromises at the
+  bottom rung and 73% at the top, so rising attention moves risk onto the one
+  route remediation does not reach. Published figures rose with it (45% to 52%
+  at sector, 67% to 83% at named); the previous totals were low *because* the
+  route was closed, so this is a correction rather than an inflation. The
+  coefficients are judgement — no public measurement gives per-adversary
+  success against a patched estate — and 4% at the top is deliberately
+  conservative. Asserted in `test/model.test.js` on the mix, not just the
+  totals, so a later rebalance cannot quietly undo it.
 - **Known tension, undecided:** Google Fonts is loaded from a CDN, which is the
   one runtime external dependency and sits against the offline-reproducibility
   claim made everywhere else. No decision has been made to self-host or drop it.

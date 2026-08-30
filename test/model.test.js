@@ -94,7 +94,9 @@ console.log('\n══ Exposure Race — model tests ═════════�
   mono('more vulns in your stack is worse', 'stackVulns', 4, 120, +1);
   mono('more campaigns is worse', 'campaigns', 0, 50, +1);
   mono('more supply-chain hits is worse', 'supply', 0, 2, +1);
-  mono('exploit-clock compression is worse', 'ai', 0, 100, +1);
+  mono('faster exploit arrival is worse', 'ai', 0, 100, +1);
+  mono('more bugs weaponised is worse', 'weap', 0, 100, +1);
+  mono('a more capable non-vulnerability route is worse', 'agentSkill', 0, 40, +1);
   mono('more scanning pressure is worse', 'scan', 5, 95, +1);
 }
 
@@ -223,10 +225,13 @@ console.log('\n══ Exposure Race — model tests ═════════�
      (1 - M.MEASURED.pPoC) * M.MEASURED.pWildNoPoC) * 100,
     C.exploitation.bands.find(b => b.band === '9.0-10.0').pExploited, 0.05);
 
-  ok('AI slider is identity at zero',
-    M.clockScale(0) === 1 && M.weapMult(0) === 1 && M.preMult(0) === 1);
-  ok('AI slider compresses the clock as it rises', M.clockScale(100) < 0.2,
+  ok('every scenario dial is identity at zero',
+    M.clockScale(0) === 1 && M.weapMult(0) === 1 && M.preMult(0) === 1 &&
+    M.tempoScale(0) === 1);
+  ok('the arrival dial compresses the clock as it rises', M.clockScale(100) < 0.2,
     `x${fmt(M.clockScale(100))}`);
+  ok('the tempo dial compresses the containment clocks as it rises',
+    M.tempoScale(100) < 0.2, `x${fmt(M.tempoScale(100))}`);
 
   /* the funnel's "exploit exists" stage should sit near the measured PoC rate */
   const r = run({}, 40000);
@@ -420,6 +425,38 @@ console.log('\n══ Exposure Race — model tests ═════════�
   walk('exposure', expKeys, (k) => ({ exposure: k }));
   walk('attention', attKeys, (k) => ({ attention: k }));
 
+  /* Monotone totals are not what the attention ladder is FOR. It carries both
+   * how many campaigns arrive and how capable each one is without a
+   * vulnerability to use, and the second was added by trading away some of the
+   * first — so the claim being made is about the MIX, not the height. As
+   * deliberate attention rises, more of the reader's risk has to move onto the
+   * route no remediation cycle touches. A future rebalance that restored the
+   * old totals by putting the volume back would pass the monotonicity test
+   * above and silently undo the point of the change; this is the assertion
+   * that would fail. */
+  {
+    const targeted = attKeys.map(k =>
+      M.simulate(P({ attention: k }), 20000, 1234, { surv: false, spread: 0 }).routes[1]);
+    ok('rising adversary attention moves the mix onto the targeted route',
+      targeted.every((v, i) => i === 0 || v > targeted[i - 1]),
+      targeted.map(x => (x * 100).toFixed(0) + '%').join(' -> '));
+    ok('the top rung carries most of its risk off the remediation path',
+      targeted[targeted.length - 1] > 0.6,
+      `${(targeted[targeted.length - 1] * 100).toFixed(0)}% targeted at the top rung`);
+  }
+
+  /* The ladder has to reach below the baseline on the capability axis too, or
+   * `agentSkill` is a ratchet. This is also the regression test for the slider
+   * step: clampTo() snaps composed values to it, and at step 1 the bottom
+   * rung's 0.5x came back as 1 and the rung silently lost its reduction. */
+  {
+    const skill = attKeys.map(k => M.compose({ attention: k }).agentSkill);
+    ok('non-vulnerability capability is ordered across the attention ladder',
+      skill.every((v, i) => i === 0 || v > skill[i - 1]), skill.join(' -> '));
+    ok('the bottom rung reaches below the baseline capability, step included',
+      skill[0] < M.defaults().agentSkill, `${skill[0]} vs ${M.defaults().agentSkill}`);
+  }
+
   /* The floor the old multi-select could not express: the safest posture the
    * console can describe must sit well below the baseline, or the control is a
    * ratchet rather than an axis. */
@@ -526,10 +563,20 @@ console.log('\n══ Exposure Race — model tests ═════════�
   const PROTO = ['constructor', 'toString', 'valueOf', 'hasOwnProperty', '__proto__', 'isPrototypeOf'];
   const baseline = JSON.stringify(M.compose({}));
   let threw = null, nanned = null, drifted = null;
+  /* `traits` is on this list because it is the one axis that was NOT on it.
+   * The guard was threaded through the four single-select tables and missed
+   * the only one taking a list, so `?traits=constructor` still resolved the
+   * Object constructor and dereferenced its absent `.m` in the coverage-cap
+   * loop — a TypeError out of fromURL(), which runs at the top of init()
+   * outside any try/catch. The check is written over every axis compose reads,
+   * derived from nothing, so a fifth axis is covered the day it is added. */
+  const AXES = ['exposure', 'attention', 'maturity', 'detection', 'traits'];
   PROTO.forEach((k) => {
-    ['exposure', 'attention', 'maturity', 'detection'].forEach((axis) => {
+    AXES.forEach((axis) => {
       const opts = {};
-      opts[axis] = k;
+      /* traits takes a list; every other axis takes a bare key. The point of
+       * the case is that the difference is where the guard went missing. */
+      opts[axis] = axis === 'traits' ? [k] : k;
       try {
         const c = M.compose(opts);
         const bad = Object.keys(c).filter((x) => !isFinite(c[x]));
@@ -538,8 +585,17 @@ console.log('\n══ Exposure Race — model tests ═════════�
       } catch (e) {
         if (!threw) threw = `${axis}=${k} -> ${e.message}`;
       }
+      /* And again with a detection posture selected, which is the combination
+       * that actually threw: the coverage cap is the only place a trait's `.m`
+       * is dereferenced, and it only runs when a posture is set. */
+      try {
+        const opts2 = { detection: 'edr' };
+        opts2[axis] = opts[axis];
+        M.compose(opts2);
+      } catch (e) {
+        if (!threw) threw = `${axis}=${k} with a posture -> ${e.message}`;
+      }
     });
-    if (M.TRAITS[k] === undefined) return;
   });
   ok('an inherited Object.prototype key cannot throw out of compose()', threw === null, threw || '');
   ok('an inherited key cannot compose a non-finite parameter', nanned === null, nanned || '');
@@ -562,6 +618,81 @@ console.log('\n══ Exposure Race — model tests ═════════�
       ['saas', 'corponly', 'hosting', 'legacy', 'regulated'].every(k => !M.TRAITS[k]),
       Object.keys(M.TRAITS).join(','));
   }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+ * 13c. The three scenario clocks, and the scope they sit in.
+ *
+ *      These were one slider named after the weakest of the three effects it
+ *      carried, and a chart that could not show the difference. The tests
+ *      below pin the separation: each dial has to move its own mechanism and
+ *      nothing else, and tempo in particular has to be provably post-
+ *      compromise or the page's second headline claim is unsupported.
+ * ───────────────────────────────────────────────────────────────────────── */
+{
+  const base = run({});
+
+  /* Post-exploitation tempo cannot change whether you were breached — only
+   * whether anyone reached it in time. The containment draw takes the same
+   * number of RNG values in every branch, so the compromise figure is not
+   * merely close under a faster adversary, it is bit-identical. An inequality
+   * here means tempo has leaked into the pre-compromise path. */
+  const fast = run({ tempo: 100 });
+  ok('post-exploitation tempo leaves compromise bit-identical',
+    fast.p === base.p, `${fmt(fast.p)} vs ${fmt(base.p)}`);
+  ok('post-exploitation tempo raises the incident rate',
+    fast.incident > base.incident + 0.005,
+    `${fmt(base.incident)} -> ${fmt(fast.incident)}`);
+
+  /* The finding the sweep chapter now rests on: a faster adversary does not
+   * defeat detection by beating it on any one intrusion, it defeats the
+   * INVESTMENT, by collapsing the distance between the best posture and none
+   * at all. If this ever falls back below half, the chapter is overstating. */
+  const incAt = (det, tempo) => M.simulate(
+    Object.assign(M.compose({ detection: det }), { tempo }),
+    20000, 1234, { surv: false, spread: 0 }).incident;
+  const gapSlow = incAt('none', 0) - incAt('managed', 0);
+  const gapFast = incAt('none', 100) - incAt('managed', 100);
+  ok('detection is worth something against a reported-tempo adversary',
+    gapSlow > 0.05, `${(gapSlow * 100).toFixed(1)}pt`);
+  ok('adversary tempo erodes most of what detection buys',
+    gapFast < gapSlow * 0.5,
+    `${(gapSlow * 100).toFixed(1)}pt -> ${(gapFast * 100).toFixed(1)}pt`);
+
+  /* Named after the right mechanism. The page argues that the clock everyone
+   * means by "AI" is the one with least room left to move; that argument is
+   * only honest if the arithmetic agrees, so it is asserted rather than
+   * asserted-in-prose. */
+  const dSpeed = run({ ai: 100 }).p - base.p;
+  const dWeap = run({ weap: 100 }).p - base.p;
+  ok('the arrival clock is the weaker of the two exploit-side dials',
+    dWeap > dSpeed * 1.5,
+    `speed +${(dSpeed * 100).toFixed(1)}pt vs weaponisation +${(dWeap * 100).toFixed(1)}pt`);
+
+  /* A link shared before the split carried one `ai=N` meaning all three
+   * effects. js/app.js restores the weaponisation term when a URL has `ai`
+   * and no `weap`; the model's own fallback is what that relies on. */
+  const legacy = M.defaults();
+  legacy.ai = 100;
+  delete legacy.weap;
+  const both = Object.assign(M.defaults(), { ai: 100, weap: 100 });
+  ok('a pre-split ai=N resolves to the estate its author published',
+    M.simulate(legacy, 20000, 1234, { surv: false, spread: 0 }).p ===
+    M.simulate(both, 20000, 1234, { surv: false, spread: 0 }).p);
+
+  /* SCOPE is what lets the page state its coverage next to the headline
+   * instead of in a footer. It is load-bearing copy, so it is checked. */
+  const S = M.SCOPE;
+  ok('SCOPE names one modelled route per simulated route',
+    S.modelled.length === M.ROUTES.length,
+    `${S.modelled.length} vs ${M.ROUTES.length}`);
+  ok('SCOPE names the routes that are absent', S.excluded.length >= 3 &&
+    S.excluded.join(' ').toLowerCase().includes('phishing'));
+  ok('SCOPE carries a cited, in-range coverage share',
+    S.vulnShareOfBreaches > 0 && S.vulnShareOfBreaches < 1 && !!S.src,
+    `${(S.vulnShareOfBreaches * 100).toFixed(0)}% per ${S.src}`);
+  ok('SCOPE points at a proxy that is a real slider',
+    M.SPEC.def.concat(M.SPEC.att).some((x) => x.k === S.proxy), S.proxy);
 }
 
 /* ─────────────────────────────────────────────────────────────────────────

@@ -31,7 +31,17 @@
   /* Sliders shown up front. Detection is driven by the posture selector, so the
    * two knobs behind it live in "more" — the reader picks a stack, not a dwell
    * time they have no way to estimate. */
-  var BASIC = { exposed: 1, edge: 1, cadence: 1, stackVulns: 1, ai: 1 };
+  var BASIC = { exposed: 1, edge: 1, cadence: 1, stackVulns: 1, ai: 1, weap: 1, tempo: 1 };
+
+  /* The three scenario dials drawn together in chapter 07, in the order the
+   * chapter argues them: the clock everyone means by "AI", then the two that
+   * turn out to matter more. Colours are the shared palette tokens, so the
+   * curve and its slider are never a guess apart. */
+  var CLOCKS = [
+    { k: 'ai',    l: 'Exploit arrival speed',    c: 'warn' },
+    { k: 'weap',  l: 'Share of bugs weaponised', c: 'att' },
+    { k: 'tempo', l: 'Post-exploitation tempo',  c: 'zero' },
+  ];
 
   /* Motion is opt-in. `ANIM` is what every entry animation in the stylesheet
    * hangs off — it is never set for a reader who has asked for reduced motion,
@@ -175,6 +185,14 @@
       if (s) v = Math.min(s.max, Math.max(s.min, v));
       P[k] = v;
     });
+    /* Links shared before the AI slider was split carry one `ai=N` that meant
+     * all three of its effects at once. Read alone it now means only the
+     * arrival clock, and the estate the author sent would come back materially
+     * safer than the one they saw — 30% where they published 42%. An `ai`
+     * without a `weap` beside it is therefore a pre-split link, and the
+     * weaponisation term is restored to what that link asked for. A link from
+     * this build always carries both, or neither. */
+    if (q.has('ai') && !q.has('weap')) P.weap = P.ai;
     if (q.get('m') === 'incident') METRIC = 'incident';
   }
   function pushURL() {
@@ -252,9 +270,16 @@
   }
 
   /* ── shape: traits x maturity x detection posture ─────────────────────── */
+  /* Re-derive the estate from the four shape controls, carrying the reader's
+   * scenario dials across untouched. The dials are handed over as a SET rather
+   * than named here: this function passed `ai` alone, so selecting an exposure
+   * rung — or a trait, a maturity level, a detection posture — silently reset
+   * `weap` and `tempo` to zero while leaving `ai` standing. */
   function applyShape() {
-    P = M.compose({ exposure: EXP, traits: ON, attention: ATTN,
-                    maturity: MAT, detection: DET, ai: P.ai });
+    var opts = { exposure: EXP, traits: ON, attention: ATTN,
+                 maturity: MAT, detection: DET };
+    M.SCENARIO.forEach(function (k) { opts[k] = P[k]; });
+    P = M.compose(opts);
   }
   /* Which posture does the current detect/coverage pair most resemble? Used to
    * light the right button when traits set those values rather than a click. */
@@ -422,20 +447,36 @@
   }
 
   /* ── sensitivity ───────────────────────────────────────────────────────── */
+  /* `lo` is the good end of each range and `hi` the bad one, which is what lets
+   * renderActions() print the one-sided gain from moving a parameter the right
+   * way. Ranges are plausible operating bounds, not slider extremes.
+   *
+   * Two levers were absent from this list for reasons that did not survive
+   * being checked. `agentSkill` — access that needs no vulnerability — is the
+   * second-largest term in the entire model on the compromise metric, and a
+   * sensitivity chart that omits its own second-largest term is not a
+   * sensitivity chart. `edrCoverage` reads as a flat zero on compromise, which
+   * is exactly why it belongs: it is the clearest case the page has of a
+   * control that is worthless on one metric and decisive on the other, and it
+   * only makes that argument if it is drawn on both. */
   var LEVERS = [
-    { k: 'stackVulns', lo: 8,    hi: 90,  l: 'Criticals in your stack' },
-    { k: 'exposed',    lo: 25,   hi: 400, l: 'Exposed systems' },
-    { k: 'edge',       lo: 0,    hi: 70,  l: 'Edge appliance share' },
-    { k: 'inventory',  lo: 100,  hi: 86,  l: 'Inventory coverage' },
-    { k: 'detect',     lo: 0.25, hi: 45,  l: 'Time to detect' },
-    { k: 'cadence',    lo: 2,    hi: 60,  l: 'Routine remediation cycle' },
-    { k: 'awareH',     lo: 4,    hi: 240, l: 'Triage to applicability' },
-    { k: 'emergH',     lo: 12,   hi: 0,   l: 'Out-of-band remediation' },
-    { k: 'emergHit',   lo: 95,   hi: 25,  l: 'Out-of-band trigger rate' },
-    { k: 'virtual',    lo: 70,   hi: 0,   l: 'WAF / virtual patching' },
-    { k: 'campaigns',  lo: 0,    hi: 30,  l: 'Targeted campaigns' },
-    { k: 'supply',     lo: 0,    hi: 1,   l: 'Supply-chain hits' },
-    { k: 'ai',         lo: 0,    hi: 80,  l: 'Exploit-clock compression' },
+    { k: 'stackVulns',  lo: 8,    hi: 90,  l: 'Criticals in your stack' },
+    { k: 'exposed',     lo: 25,   hi: 400, l: 'Exposed systems' },
+    { k: 'edge',        lo: 0,    hi: 70,  l: 'Edge appliance share' },
+    { k: 'inventory',   lo: 100,  hi: 86,  l: 'Inventory coverage' },
+    { k: 'detect',      lo: 0.25, hi: 45,  l: 'Time to detect' },
+    { k: 'edrCoverage', lo: 100,  hi: 0,   l: 'Endpoint telemetry coverage' },
+    { k: 'cadence',     lo: 2,    hi: 60,  l: 'Routine remediation cycle' },
+    { k: 'awareH',      lo: 4,    hi: 240, l: 'Triage to applicability' },
+    { k: 'emergH',      lo: 12,   hi: 0,   l: 'Out-of-band remediation' },
+    { k: 'emergHit',    lo: 95,   hi: 25,  l: 'Out-of-band trigger rate' },
+    { k: 'virtual',     lo: 70,   hi: 0,   l: 'WAF / virtual patching' },
+    { k: 'campaigns',   lo: 0,    hi: 30,  l: 'Targeted campaigns' },
+    { k: 'agentSkill',  lo: 0.5,  hi: 40,  l: 'Access without a vulnerability' },
+    { k: 'supply',      lo: 0,    hi: 1,   l: 'Supply-chain hits' },
+    { k: 'ai',          lo: 0,    hi: 80,  l: 'Exploit arrival speed' },
+    { k: 'weap',        lo: 0,    hi: 80,  l: 'Share of bugs weaponised' },
+    { k: 'tempo',       lo: 0,    hi: 80,  l: 'Post-exploitation tempo' },
   ];
   var ADVICE = {
     stackVulns: ['Reduce edge software footprint', 'Each exposed product commits you to its vulnerability stream. This is the largest single term in the model.'],
@@ -450,6 +491,13 @@
     virtual:    ['Front exposed services with enforceable rulesets', 'Recovers the exposure window while the permanent fix is tested. Does not cover appliances.'],
     campaigns:  ['Instrument the edge for enumeration', 'Targeted campaigns are distinguishable from background scanning where telemetry exists.'],
     supply:     ['Verify software provenance and integrity', 'Remediation cadence has no effect on this vector.'],
+    edrCoverage: ['Extend telemetry across the estate', 'Worth nothing against being compromised and a great deal against it becoming an incident. Appliances take no agent, so this has a ceiling you do not set.'],
+    /* The one action on this list whose mechanism the model does not simulate.
+     * It moves the residual rate at which a campaign succeeds with no
+     * vulnerability to use, which is where phishing, credential abuse and
+     * misconfiguration live — so the advice names the controls rather than
+     * implying the model has costed them. */
+    agentSkill: ['Close the routes that need no vulnerability', 'Phishing-resistant MFA, least privilege and egress control. The model does not simulate these routes; it carries them as one residual rate, and that rate is its second-largest term.'],
   };
 
   function copyOf(src) { var o = {}; Object.keys(src).forEach(function (x) { o[x] = src[x]; }); return o; }
@@ -468,10 +516,10 @@
 
   /* ── render ────────────────────────────────────────────────────────────── */
   var lastRun = null, lastSens = null, lastDens = null;
-  /* The compression the drawn sweep belongs to. Redrawing it against the live
-   * P.ai would move the "current settings" marker off the curve it was
-   * computed for whenever a redraw lands between passes. */
-  var lastSweepAi = 0;
+  /* Each drawn curve carries the dial value it belongs to in `cur`, taken from
+   * the pass's snapshot. Reading the live P at redraw time would move a marker
+   * off the curve it was computed for whenever a redraw lands between passes —
+   * a theme toggle, the resize debounce, beforeprint. */
 
   /* The SVG's own laid-out width, not its parent's border box. Measuring the
    * parent included the panel's padding and border, so every chart was drawn
@@ -623,7 +671,7 @@
     var pal = palette();
     drawRace();
     CH.funnel($('funnel'), width('funnel'), r, M.FUNNEL, pal);
-    CH.routes($('routes'), width('routes'), r, pal);
+    CH.routes($('routes'), width('routes'), r, pal, M.SCOPE);
     CH.survival($('surv'), width('surv'), r, pal);
     updateWild(r);
   }
@@ -644,9 +692,7 @@
     if (lastSens) {
       CH.tornado($('torn'), width('torn'), lastSens.rows, lastSens.base, pal);
       /* Only once the sweep points belong to the same pass as the bars. */
-      if (lastSens.sweep) {
-        CH.sweep($('sweep'), width('sweep'), lastSens.sweep, lastSweepAi, lastSens.sweepCur, pal);
-      }
+      if (lastSens.sweep) CH.sweep($('sweep'), width('sweep'), lastSens.sweep, pal);
     }
   }
 
@@ -723,7 +769,7 @@
     var snap = copyOf(P);
     var run = M.createRun(snap, N_HEAVY, SEED, { surv: true, spread: 1 });
 
-    var base = null, rows = [], sweepPts = [];
+    var base = null, rows = [], sweepSeries = [];
     var stages = [];
     for (var c = 0; c < N_HEAVY; c += HEAVY_CHUNK) {
       stages.push(function () { run.advance(HEAVY_CHUNK); });
@@ -754,19 +800,28 @@
        * chart alone rather than drawing it from a half-filled array. */
       lastSens = { base: base, rows: rows, sweep: null, sweepCur: base };
     });
-    for (var a = 0; a <= 100; a += 10) {
-      (function (ai) {
-        stages.push(function () { sweepPts.push([ai, sim(over('ai', ai, snap), N_SENS, SEED_SENS)[METRIC]]); });
-      })(a);
-    }
+    /* Three curves at six points each rather than one at eleven. Each dial is
+     * swept over its own travel with the other two held where the reader left
+     * them, so what the chart compares is three mechanisms against one estate.
+     * Six points is enough: every one of these curves is smooth and monotone,
+     * and the shape being compared is which of them is steepest. */
+    CLOCKS.forEach(function (cl) {
+      var pts = [];
+      sweepSeries.push({ k: cl.k, l: cl.l, c: cl.c, cur: snap[cl.k] || 0, pts: pts });
+      for (var a = 0; a <= 100; a += 20) {
+        (function (v) {
+          stages.push(function () { pts.push([v, sim(over(cl.k, v, snap), N_SENS, SEED_SENS)[METRIC]]); });
+        })(a);
+      }
+    });
     stages.push(function () {
-      /* `over('ai', snap.ai)` is the snapshot itself, run at the same seed and
-       * trial count as the baseline — so the "current settings" marker IS the
-       * baseline. It was a further 5,000-trial simulation of a number already
-       * in hand. */
-      lastSens = { base: base, rows: rows, sweep: sweepPts, sweepCur: base };
-      CH.sweep($('sweep'), width('sweep'), sweepPts, snap.ai, base, palette());
-      lastSweepAi = snap.ai;
+      /* Every curve's marker sits at the baseline height, because each dial is
+       * swept from the snapshot the baseline was computed from — so at its
+       * current value each curve passes through exactly that number. It was a
+       * further simulation of a figure already in hand. */
+      sweepSeries.forEach(function (s2) { s2.curY = base; });
+      lastSens = { base: base, rows: rows, sweep: sweepSeries, sweepCur: base };
+      CH.sweep($('sweep'), width('sweep'), sweepSeries, palette());
     });
 
     var i = 0;
@@ -1174,6 +1229,20 @@
     });
     document.querySelectorAll('[data-curyear]').forEach(function (e) {
       e.textContent = String(C.currentYear);
+    });
+    /* The coverage claim is stated in three places — beside the headline, on
+     * the routes chart and in the footer — and is written in none of them.
+     * A share that is typed into copy drifts from the model that reports it
+     * the first time either moves. */
+    document.querySelectorAll('[data-scope-share]').forEach(function (e) {
+      e.textContent = pctS(M.SCOPE.vulnShareOfBreaches);
+    });
+    document.querySelectorAll('[data-scope-src]').forEach(function (e) {
+      e.textContent = M.SCOPE.src;
+    });
+    document.querySelectorAll('[data-scope-excluded]').forEach(function (e) {
+      e.textContent = M.SCOPE.excludedShort.charAt(0).toLowerCase() +
+        M.SCOPE.excludedShort.slice(1);
     });
 
     renderAnchors();

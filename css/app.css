@@ -127,7 +127,7 @@ header { border-bottom: 1px solid var(--rule); padding: 30px 0 30px; margin-bott
 h1 {
   font-family: var(--disp); font-weight: 500;
   font-size: clamp(33px, 5.1vw, 60px); line-height: 1.02; letter-spacing: -.016em;
-  margin: 0; max-width: 16ch; text-wrap: balance;
+  margin: 0; max-width: 17ch; text-wrap: balance;
 }
 /* The clause where the argument turns. Italic does the work a colour cannot:
  * it survives greyscale, print and colour-blindness. */
@@ -243,13 +243,19 @@ button.ghost { background: transparent; }
  * before the number. Source order carries it now, so `order` is gone. The
  * stat bank holds nothing focusable, so leading costs the keyboard nothing. */
 .grid { display: grid; grid-template-columns: 322px 1fr; gap: 18px 30px; align-items: start; }
-.stats   { grid-column: 2; grid-row: 1; }
-.rail    { grid-column: 1; grid-row: 1 / span 2; }
-.results { grid-column: 2; grid-row: 2; min-width: 0; container-type: inline-size; }
+.stats      { grid-column: 2; grid-row: 1; }
+/* The scope statement takes a row of its own between the figures and the
+ * document, because it qualifies the figures and is read before the document.
+ * Placed explicitly for the same reason everything else in this grid is: the
+ * rail spans the full height, so an auto-placed item lands in the one column
+ * that is already occupied. */
+.scope-note { grid-column: 2; grid-row: 2; }
+.rail       { grid-column: 1; grid-row: 1 / span 3; }
+.results    { grid-column: 2; grid-row: 3; min-width: 0; container-type: inline-size; }
 
 @media (max-width: 1040px) {
   .grid { grid-template-columns: 1fr; }
-  .stats, .rail, .results { grid-column: 1; grid-row: auto; }
+  .stats, .scope-note, .rail, .results { grid-column: 1; grid-row: auto; }
 }
 
 /* Ranked by how often each part is used, not by topic. The threat card comes
@@ -589,8 +595,21 @@ details.more[open] > div { animation: rise .28s var(--ease) both; }
   display: grid; grid-template-columns: 1.14fr 1.14fr .86fr .86fr;
   background: var(--panel); border: 1px solid var(--rule);
   border-radius: 14px; box-shadow: var(--shadow); overflow: hidden;
-  margin-bottom: 34px;
+  margin-bottom: 12px;
 }
+
+/* Set as document type, not as a warning: no panel, no fill, no icon. The
+ * claim it carries is that the figures above are a lower bound, and a reader
+ * who has been trained by every other page to skip a coloured callout has to
+ * read this one. It earns attention from position — directly under the number
+ * it qualifies — rather than from decoration. The rule above it is the same
+ * weight the footer notes use, which is the register it belongs to. */
+.scope-note {
+  margin: 0 0 34px; padding: 11px 0 0; max-width: 78ch;
+  border-top: 1px solid var(--rule2);
+  color: var(--mut); font-size: 12.5px; line-height: 1.55;
+}
+.scope-note b { color: var(--txt); font-weight: 600; }
 /* The divider between the pair and the counts is the one that means
  * something, so it is the only one drawn at control weight. */
 .stat:nth-child(3) { border-left-color: var(--rule2); }
@@ -898,7 +917,7 @@ footer code {
   .rail, .tools, .topbar, .dock, .skip, .toc { display: none; }
   .grid { grid-template-columns: 1fr; }
   /* explicit placement would otherwise leave an empty first column */
-  .stats, .results { grid-column: 1; grid-row: auto; }
+  .stats, .scope-note, .results { grid-column: 1; grid-row: auto; }
   .panel, .card, .stat { break-inside: avoid; box-shadow: none; }
   /* Charts and readouts carry meaning in their fills; a browser dropping
    * backgrounds for print would print an empty axis and a grey number. */

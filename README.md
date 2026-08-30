@@ -3,11 +3,30 @@
 An interactive Monte Carlo model of one question: **when a vulnerability lands in
 something you expose, does a working exploit exist before you have closed it?**
 
-The AI framing of that question turns out to be the wrong one. The exploit clock
-everyone expects AI to have collapsed was already at zero: measured median time
-from CVE publication to public exploit code has **not exceeded one day in any
-settled year since 2015**. Compression is available here as an explicit scenario
-slider, not as a baseline assumption.
+The AI framing of that question turns out to be aimed at the wrong clock. The
+one everyone expects AI to have collapsed was already at zero: measured median
+time from CVE publication to public exploit code has **not exceeded one day in
+any settled year since 2015**. Compression is available here as an explicit
+scenario dial, not as a baseline assumption.
+
+That is not the same as saying an autonomous adversary changes nothing. "AI" is
+several separate claims, they carry different evidence, and the page now gives
+each its own dial rather than bundling them under one word:
+
+| dial | mechanism | worth at full travel |
+|---|---|---:|
+| Exploit arrival speed | the publication-to-exploit clock | **+2.8pt** compromise |
+| Share of bugs weaponised | how many bugs get working exploit code at all | **+8.9pt** compromise |
+| Post-exploitation tempo | foothold to lateral movement to objective | **+1.7pt** incidents, +0.0 compromise |
+
+The dial the phrase usually means is the weakest of the three, which is the
+argument this page was already making in prose and can now make on one axis.
+
+The tempo dial is the one worth sitting with. It cannot change whether you were
+compromised — only whether anyone reached it in time. Against a reported-tempo
+adversary a 24/7 SOC is worth 9.3 points of incident rate over no detection at
+all; at full tempo that margin is **2.2 points**. A faster adversary does not
+beat detection on any one intrusion. It devalues the investment.
 
 It is calibrated against a dated, public corpus rather than against vendor
 narrative — and the first thing that corpus says is that the obvious way to
@@ -180,10 +199,17 @@ Three results that hold across most settings:
 
 1. **No single lever you control moves the compromise rate more than a few
    points.** Reducing what you expose is the only large one. Patch cadence has a
-   floor because a fifth of exploitation predates the patch.
+   floor because a fifth of exploitation predates the patch. Read this alongside
+   the scope limits below: the finding holds *within the routes that are
+   modelled*, and it holds partly because the two routes no defender control
+   touches — supply chain, and campaigns that need no vulnerability — are a
+   majority of first compromises at the baseline estate.
 2. **Detection changes nothing about being compromised and everything about
-   whether it matters.** It is flat on one metric and the largest term on the
-   other. The page has a toggle for exactly this.
+   whether it matters.** It is flat on one metric and among the largest terms on
+   the other. The page has a toggle for exactly this. The finding is also the
+   most fragile one here: it assumes the adversary still needs days to reach its
+   objective. Put the tempo dial at full travel and most of what detection buys
+   is gone.
 3. **Telemetry coverage without speed buys almost nothing.** Appliances take no
    agent at all, and a compromise you cannot see is not found on your median
    dwell time — it is found by somebody else, roughly 2.6× later.
@@ -224,6 +250,9 @@ M.simulate(M.compose({
   attention: 'sector',      // one of four — who is aiming at you
   detection: 'tuned',
 }), 40000, 1234);
+
+// the three scenario dials are ordinary parameters, 0 = the measured record
+M.simulate(Object.assign(M.defaults(), { ai: 0, weap: 60, tempo: 80 }), 40000, 1234);
 ```
 
 A run can also be advanced in pieces, which is how the page keeps a 60,000-trial
@@ -279,9 +308,37 @@ one weakness twice. The maturity ladder owns that axis alone.
 
 ## Scope and honest limits
 
-- **Vulnerability exploitation only.** Credential abuse, phishing and insider
-  routes are absent. Treat the output as a lower bound on intrusion risk, not a
-  picture of it.
+- **Three access routes, not all of them.** Opportunistic exploitation, targeted
+  campaign and supply chain are simulated. Phishing, credential abuse and
+  insider action are not, so every figure is a lower bound on intrusion risk
+  rather than a picture of it. The page states this beside the headline and on
+  the routes chart, not only here — a caveat a screen and a half from the number
+  it qualifies is not a caveat.
+- **The proxy for those routes is load-bearing.** `agentSkill` — the chance a
+  targeted campaign succeeds with no remediation window open — is the only place
+  the absent routes appear, and on the compromise metric it is the **largest**
+  term in the sensitivity chart. It was missing from that chart entirely until
+  it was checked. A model whose biggest lever is its own proxy for what it does
+  not simulate should say so, which is what this bullet is for.
+- **Adversary attention now carries capability, not just volume**, and the
+  published figures moved because of it. Each rung sets how capable a campaign
+  is with no vulnerability to use, alongside how many arrive:
+
+  | rung | campaigns/yr | success without a vuln | compromise | via targeted route |
+  |---|---:|---:|---:|---:|
+  | Opportunistic only | 1 | 0.5% | 15.0% | 4% |
+  | Ordinary interest | 6 | 1% | 24.1% | 26% |
+  | Sector under pressure | 15 | 2.5% | 51.8% | 56% |
+  | A named target | 30 | 4% | 82.5% | 73% |
+
+  `campaigns` came *down* on the upper rungs (4x to 2.5x, 9x to 5x) to pay for
+  it, because those multipliers were calibrated with the non-vulnerability route
+  nearly closed and compound with it otherwise — at 12x the top rung reached
+  99.9%, which is arithmetic rather than an instrument. What the rebalance
+  changes is the **mix**: the more deliberate the attention, the more of the
+  risk sits on the one route no remediation cycle touches. The totals rose too
+  (45% to 52%, 67% to 83%), and that is the finding rather than a side effect —
+  the old figures were low *because* the route was closed.
 - **The widest assumption is the campaign arrival rate**, and the answer is
   sensitive to it. The tornado will usually rank the things it is least sure
   about near the top. That is the honest failure mode, stated rather than hidden.

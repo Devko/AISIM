@@ -37,6 +37,44 @@
   };
 
   /* ═══════════════════════════════════════════════════════════════════════
+   * SCOPE — what this model counts, and what it does not.
+   *
+   * Declared here rather than written into the page copy, because it is a
+   * property of the model and the page has to be able to state it next to the
+   * headline instead of in a footnote. Three routes are simulated. The routes
+   * that are not simulated are not small: vulnerability exploitation is the
+   * largest single initial-access category in the DBIR series and still a
+   * minority of breaches, so every probability this model reports is a lower
+   * bound on intrusion risk and has to be read as one.
+   *
+   * `agentSkill` is the one place the excluded routes are represented at all,
+   * as the residual success of a targeted campaign that finds no open
+   * remediation window. It is a proxy, not a simulation of them.
+   * ═══════════════════════════════════════════════════════════════════════ */
+  var SCOPE = {
+    modelled: [
+      'Opportunistic exploitation of a published vulnerability',
+      'Targeted campaign against the exposed estate',
+      'Supply-chain compromise reaching your estate',
+    ],
+    excluded: [
+      'Phishing and social engineering as a primary route',
+      'Credential abuse and session theft',
+      'Insider action',
+    ],
+    /* The same list as a noun phrase. The enumerated form is right for a
+     * methodology note and unreadable inside a sentence, and the page needs it
+     * inside a sentence — beside the headline, where it is actually read. */
+    excludedShort: 'Phishing, credential abuse and insider action',
+    /* Share of breaches attributed to vulnerability exploitation as the initial
+     * access vector. `reported`, not `measured`: somebody else's population and
+     * methodology, cited so the page's coverage claim has one source. */
+    vulnShareOfBreaches: 0.31,
+    src: 'Verizon DBIR 2026',
+    proxy: 'agentSkill',
+  };
+
+  /* ═══════════════════════════════════════════════════════════════════════
    * NON-CORPUS COEFFICIENTS — everything the vendored snapshot cannot answer.
    * Each is drawn from [lo,hi] on every block of trials, which is where the
    * credible interval on the headline comes from.
@@ -128,18 +166,44 @@
       { k: 'stackVulns', l: 'Criticals in your stack, per year', min: 0, max: 200, step: 1, v: 34,
         f: function (v) { return fmtN(v); },
         h: 'Published criticals in software you operate. Worldwide run-rate is ' + C.volume.curYearRunRate.critical.toLocaleString('en-US') + '.' },
-      { k: 'ai',        l: 'Exploit-clock compression',   min: 0,   max: 100,  step: 1,   v: 0,
-        f: function (v) { return v === 0 ? 'as measured' : '+' + v; },
-        h: 'Zero is the measured ' + C.pocTiming.latest.year + ' distribution. Above zero models faster exploit development, greater volume, and more pre-disclosure availability.' },
+      /* The three attacker clocks an autonomous capability could plausibly move,
+       * separated because they are not the same claim and do not carry the same
+       * evidence. Bundled into one 'AI' slider they were indistinguishable, and
+       * the bundle was named after the weakest of the three. At full travel,
+       * against the baseline estate: arrival speed +2.8pt of compromise,
+       * weaponisation +8.9pt, tempo +0.0pt (and +1.7pt of incidents, which is
+       * the whole of what it does). The page's own thesis — that the clock
+       * everyone watches was already at the floor — is only visible once the
+       * three move independently. */
+      { k: 'ai',        l: 'Exploit arrival speed',      min: 0,   max: 100,  step: 1,   v: 0,
+        f: function (v) { return v === 0 ? 'as measured' : 'x' + (1 / clockScale(v)).toFixed(1) + ' sooner'; },
+        h: 'Compresses the publication-to-exploit clock. Zero is the measured ' + C.pocTiming.latest.year + ' distribution, whose median is already ' + C.pocTiming.latest.medianDays + ' days, the clock with the least room left to compress.' },
+      { k: 'weap',      l: 'Share of bugs weaponised',   min: 0,   max: 100,  step: 1,   v: 0,
+        f: function (v) { return v === 0 ? 'as measured' : 'x' + weapMult(v).toFixed(1) + ' armed'; },
+        h: 'How many published vulnerabilities acquire working exploit code at all, and how many arrive before disclosure. Measured today at ' + C.armed.pPoCCritical.toFixed(1) + '% of criticals. Breadth, not speed.' },
+      { k: 'tempo',     l: 'Post-exploitation tempo',    min: 0,   max: 100,  step: 1,   v: 0,
+        f: function (v) { return v === 0 ? 'as reported' : 'x' + (1 / tempoScale(v)).toFixed(1) + ' faster'; },
+        h: 'Speed from foothold to lateral movement to objective, once inside. Does not change whether you are compromised, only whether detection arrives in time to matter.' },
       { k: 'scan',      l: 'Mass-exploitation pressure',  min: 0,   max: 100,  step: 1,   v: 50,
         f: function (v) { return String(v); },
         h: 'Rate at which opportunistic exploitation reaches you once exploit code is public.' },
       { k: 'campaigns', l: 'Targeted campaigns per year', min: 0,   max: 100,  step: 1,   v: 6,
         f: function (v) { return fmtN(v); },
         h: 'Operations that enumerate your estate specifically rather than scanning indiscriminately.' },
-      { k: 'agentSkill', l: 'Campaign success vs a patched surface', min: 0, max: 10, step: 0.5, v: 1,
+      /* The model's only non-vulnerability access path, and the widest range in
+       * it. Capped at 10% this slider could not express an adversary who does
+       * not need a vulnerability — which is most of them, and is what an
+       * autonomous phishing or credential-abuse capability buys. It is the
+       * second-largest term in the whole model on the compromise metric. */
+      /* Step stays at 0.5 despite the range now reaching 60. clampTo() snaps a
+       * composed value to the slider's own step, so a coarser step silently
+       * rounds the ATTENTION ladder's coefficients: at step 1 the opportunistic
+       * rung's 0.5x came back as 1 and could not reach below the baseline at
+       * all, which is the property that makes this a ladder rather than a
+       * ratchet. Precision is wanted at the bottom of this range, not the top. */
+      { k: 'agentSkill', l: 'Campaign success without a vulnerability', min: 0, max: 60, step: 0.5, v: 1,
         f: function (v) { return v + '%'; },
-        h: 'Per campaign, via misconfiguration, chained logic flaws or credential abuse.' },
+        h: 'Per targeted campaign, when no remediation window is open: phishing, credential abuse, misconfiguration or chained logic flaws. This is the model\'s proxy for the routes it does not simulate directly.' },
       { k: 'supply',    l: 'Supply-chain compromises per year', min: 0, max: 3, step: 0.01, v: 0.12,
         f: function (v) { return v.toFixed(2); },
         h: 'Compromised dependency or signed update that reaches your estate. Remediation cadence does not apply to this vector.' },
@@ -271,16 +335,43 @@
    * reader picked a chip that read as competence and watched the number rise
    * by nineteen points. The effect was defensible; its placement was not.
    *
-   * Ordered, single-select, and monotone in adversary interest. Drives the two
-   * terms that carry deliberate attention rather than opportunism: campaigns
-   * that enumerate you specifically, and supply-chain compromises aimed at
-   * whoever is downstream of you.
+   * Ordered, single-select, and monotone in adversary interest. Drives the
+   * three terms that carry deliberate attention rather than opportunism:
+   * campaigns that enumerate you specifically, supply-chain compromises aimed
+   * at whoever is downstream of you, and how far a campaign gets with no
+   * vulnerability to use.
+   *
+   * That third term is recent, and its absence had a shape: a named state-nexus
+   * actor and a bystander were given identical odds of being let in by
+   * phishing, stolen credentials or a service-desk call, which is the opposite
+   * of what distinguishes them. `agentSkill` is the model's only proxy for
+   * those routes, so adversary capability on them belongs to the axis that
+   * already owns adversary interest.
+   *
+   * `campaigns` came down on the upper rungs at the same time, and had to. It
+   * was calibrated with the non-vulnerability route nearly closed, so coupling
+   * the two without rebalancing compounds them: at 12x on the top rung the
+   * ladder reached 99.9%, which is arithmetic rather than an instrument. The
+   * rebalanced ladder trades campaign VOLUME for campaign CAPABILITY —
+   * sector 4x->2.5x and named 9x->5x on `campaigns`, against 2.5x and 4x on
+   * `agentSkill` — and what moves is the mix, not just the total. The targeted
+   * route goes from 4% of first compromises at the bottom rung to 73% at the
+   * top, which is the claim: the more deliberate the attention, the more of
+   * your risk sits on routes no remediation cycle touches.
+   *
+   * The totals rise too, and that is the finding rather than a side effect.
+   * 45% -> 52% at `sector` and 67% -> 83% at `named`. The old figures were low
+   * BECAUSE the route was closed; opening it should raise them.
+   *
+   * Coefficients are judgement and nothing else — no public measurement gives
+   * per-adversary success against a patched estate. 4% on the top rung is
+   * conservative against any published account of how such intrusions begin.
    * ====================================================================== */
   var ATTENTION = {
     ambient: {
       l: 'Opportunistic only',
-      d: 'Nobody is looking for you by name. What arrives is what arrives at every reachable address: mass scanning behind public exploit code.',
-      m: { campaigns: 0.15, supply: 0.6 },
+      d: 'Nobody is looking for you by name. What arrives is what arrives at every reachable address: mass scanning behind public exploit code. What little deliberate attention there is arrives with commodity tradecraft behind it.',
+      m: { campaigns: 0.15, supply: 0.6, agentSkill: 0.5 },
     },
     ordinary: {
       l: 'Ordinary interest',
@@ -289,13 +380,13 @@
     },
     sector: {
       l: 'Sector under pressure',
-      d: 'Finance, healthcare, government supply and defence industrial base. Targeted well above what headcount would suggest, and the third-party estate is large enough to constitute its own exposure.',
-      m: { campaigns: 4, supply: 2 },
+      d: 'Finance, healthcare, government supply and defence industrial base. Targeted well above what headcount would suggest, and the third-party estate is large enough to constitute its own exposure. Fewer campaigns than a named target draws, but each one arrives with a credential-phishing capability behind it rather than only a scanner.',
+      m: { campaigns: 2.5, supply: 2, agentSkill: 2.5 },
     },
     named: {
       l: 'A named target',
-      d: 'Specific, persistent adversary interest in you rather than in your sector. State-nexus or a determined criminal group with a reason to keep coming back after a failure.',
-      m: { campaigns: 9, supply: 3, scan: '+15' },
+      d: 'Specific, persistent adversary interest in you rather than in your sector. State-nexus or a determined criminal group with a reason to keep coming back after a failure. Not waiting for a vulnerability to be available: this is the rung that phishes, buys credentials and calls the service desk.',
+      m: { campaigns: 5, supply: 3, scan: '+15', agentSkill: 4 },
     },
   };
   /* MATURITY - how well the estate is run. Orthogonal to what you are, so it
@@ -330,6 +421,18 @@
    * exactly that reason. */
   var DEFAULT_EXPOSURE = 'web';
   var DEFAULT_ATTENTION = 'ordinary';
+  /* The scenario dials: what-if travel on the threat side, not estate shape.
+   * No shape table touches them, so `compose` carries them across untouched
+   * rather than recomposing them — which is precisely what it must do, because
+   * a reader picking a maturity rung has said nothing about the exploit clock.
+   *
+   * Named as a SET, not one at a time. `compose` forwarded `ai` alone when `ai`
+   * was the only dial there was, and kept forwarding `ai` alone after the
+   * slider was split into three: every selector click silently reset `weap` and
+   * `tempo` to zero while `ai` survived, so the page's own comparison — the
+   * three clocks against each other — could not be held while shaping an
+   * estate. Anything added to this list is carried by construction. */
+  var SCENARIO = ['ai', 'weap', 'tempo'];
   function clampTo(k, v) {
     var s = SPEC.def.concat(SPEC.att).filter(function (x) { return x.k === k; })[0];
     if (!s) return v;
@@ -391,7 +494,14 @@
      * all, so a stale shared link cannot silently produce a surface-free
      * estate that the reader never chose. */
     gather(EXPOSURE[owns(EXPOSURE, opts.exposure) ? opts.exposure : DEFAULT_EXPOSURE].m);
-    traits.forEach(function (key) { if (TRAITS[key]) gather(TRAITS[key].m); });
+    /* `owns`, not a truthiness test, for the same reason as the three tables
+     * either side of it — and this is the one that takes a LIST, which is why
+     * it was the one the guard missed. `?traits=constructor` resolved the
+     * Object constructor, whose `.m` is undefined; `gather` tolerated that and
+     * returned, so the damage surfaced later and elsewhere, in the coverage-cap
+     * loop below, as a TypeError out of init(). */
+    traits = traits.filter(function (key) { return owns(TRAITS, key); });
+    traits.forEach(function (key) { gather(TRAITS[key].m); });
     gather(ATTENTION[owns(ATTENTION, opts.attention) ? opts.attention : DEFAULT_ATTENTION].m);
 
     Object.keys(out).forEach(function (prop) {
@@ -417,15 +527,21 @@
     if (det) {
       var covCap = 1;
       traits.forEach(function (key) {
-        var t = TRAITS[key];
-        if (t && typeof t.m.edrCoverage === 'number' && t.m.edrCoverage < 1) covCap *= t.m.edrCoverage;
+        var m = TRAITS[key].m;
+        if (typeof m.edrCoverage === 'number' && m.edrCoverage < 1) covCap *= m.edrCoverage;
       });
       out.detect = det.p.detect;
       out.edrCoverage = det.p.edrCoverage * covCap;
     }
 
     Object.keys(out).forEach(function (k) { out[k] = clampTo(k, out[k]); });
-    out.ai = opts.ai || 0;
+    /* After the clamp, and read from `opts` rather than composed: these are the
+     * reader's scenario, carried through the shape pass unchanged. An absent
+     * dial falls back to its own default rather than to zero, so compose({})
+     * stays identical to defaults(). */
+    SCENARIO.forEach(function (k) {
+      out[k] = clampTo(k, opts[k] === undefined ? out[k] : +opts[k] || 0);
+    });
     return out;
   }
 
@@ -445,9 +561,22 @@
   /* ═══════════════════════════════════════════════════════════════════════
    * AI COUPLINGS — identity at ai=0 (the measured clock).
    * ═══════════════════════════════════════════════════════════════════════ */
-  function clockScale(ai) { return Math.exp(-0.023 * ai); }        /* ai=100 -> x0.10 */
-  function weapMult(ai)   { return 1 + 0.010 * ai; }               /* ai=100 -> x2.0  */
-  function preMult(ai)    { return 1 + 0.012 * ai; }               /* ai=100 -> x2.2  */
+  /* Three independent scenario dials, each named for the mechanism it drives.
+   * They were one slider called 'AI' until measuring them apart showed that the
+   * one the slider was named after does the least work. Isolated, at full
+   * travel: the clock is worth +2.8pt of compromise, weaponised share +7.2pt,
+   * pre-disclosure share +0.6pt. `weap` carries the last two together, because
+   * both are the same claim — that more bugs acquire working exploit code, and
+   * sooner relative to disclosure — and no evidence separates them. A reader
+   * watching one curve attributed the whole 15pt to speed. */
+  function clockScale(ai)  { return Math.exp(-0.023 * ai); }       /* ai=100    -> x0.10 */
+  function weapMult(weap)  { return 1 + 0.010 * weap; }            /* weap=100  -> x2.0  */
+  function preMult(weap)   { return 1 + 0.012 * weap; }            /* weap=100  -> x2.2  */
+  /* Post-exploitation tempo. Scales BOTH containment clocks together, because
+   * an adversary that reaches lateral movement faster reaches the objective
+   * faster by the same capability — decoupling them would let a reader build an
+   * adversary that breaks out in seconds and then waits a week. */
+  function tempoScale(t)   { return Math.exp(-0.023 * t); }        /* tempo=100 -> x0.10 */
 
   /* ═══════════════════════════════════════════════════════════════════════
    * RNG — mulberry32. Deterministic, seedable, fast.
@@ -556,12 +685,15 @@
       k[key] = spread <= 0 ? a.v
         : rnd.range(a.v + (a.lo - a.v) * spread, a.v + (a.hi - a.v) * spread);
     });
-    var ai = P.ai;
+    /* `weap` defaults to whatever `ai` is when it has not been set at all, so a
+     * link shared before the split — which carried one `ai=N` meaning all three
+     * effects at once — still resolves to the estate its author saw. */
+    var ai = P.ai, weap = P.weap === undefined ? P.ai : P.weap;
     k.scale       = clockScale(ai);
-    k.pPoC        = Math.min(0.9, MEASURED.pPoC * weapMult(ai));
+    k.pPoC        = Math.min(0.9, MEASURED.pPoC * weapMult(weap));
     k.pWildGivenPoC = MEASURED.pWildGivenPoC;
     k.pWildNoPoC  = MEASURED.pWildNoPoC;
-    k.pBefore     = Math.min(0.75, MEASURED.pocBefore * preMult(ai));
+    k.pBefore     = Math.min(0.75, MEASURED.pocBefore * preMult(weap));
     k.median      = MEASURED.pocMedian;
     k.pWithinWeek = MEASURED.pocWithinWeek;
     k.p75         = k.pocP75;
@@ -579,6 +711,12 @@
     k.pBefore     = Math.min(k.pBefore, k.pMedian);
     k.pWithinWeek = Math.min(Math.max(k.pWithinWeek, k.pMedian), 0.75);
     k.scanHaz     = k.scanHazBase * Math.exp(0.030 * (P.scan - 50));
+    /* Post-exploitation tempo compresses both containment clocks after they are
+     * drawn, so the scenario scales the uncertainty band rather than replacing
+     * it: a faster adversary is still an adversary with a spread of speeds. */
+    var tScale    = tempoScale(P.tempo || 0);
+    k.breakoutMedian  *= tScale;
+    k.objectiveMedian *= tScale;
     return k;
   }
 
@@ -974,8 +1112,10 @@
     MATURITY: MATURITY, DETECTION: DETECTION, compose: compose,
     DEFAULT_EXPOSURE: DEFAULT_EXPOSURE, DEFAULT_ATTENTION: DEFAULT_ATTENTION,
     defaults: defaults, simulate: simulate, createRun: createRun, densities: densities,
+    SCENARIO: SCENARIO,
     RNG: RNG, inverseNormal: inverseNormal,
     clockScale: clockScale, weapMult: weapMult, preMult: preMult,
+    tempoScale: tempoScale, SCOPE: SCOPE,
     fmtN: fmtN, fmtH: fmtH,
   };
 });

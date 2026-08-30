@@ -265,7 +265,24 @@
   /* ═══════════════════════════════════════════════════════════════════════
    * ROUTES IN
    * ═══════════════════════════════════════════════════════════════════════ */
-  function routes(svg, w, r, pal) {
+  /* ═══════════════════════════════════════════════════════════════════════
+   * ACCESS ROUTES — the three this model simulates, then the picture they sit in.
+   *
+   * The upper block is simulation output and sums to 100% of MODELLED first
+   * compromises. The lower strip is not simulation output at all: it is one
+   * cited external share, drawn so the reader cannot take the upper block for
+   * a statement about intrusion in general.
+   *
+   * This panel was titled "Initial access vector" and showed only the upper
+   * block. That is a term of art whose published breakdown is led by phishing
+   * and stolen credentials, so a three-way split containing neither read as a
+   * claim about the world rather than about the model. The scope note existed,
+   * a screen and a half below, in a footer. A caveat that far from the number
+   * it qualifies is not a caveat. Now the coverage IS part of the chart, and
+   * the two blocks are drawn in different registers — filled bars against a
+   * dashed outline — so no reader can mistake the reference for the output.
+   * ═══════════════════════════════════════════════════════════════════════ */
+  function routes(svg, w, r, pal, scope) {
     /* SVG text does not wrap, so the full labels run off the drawing below
      * roughly 430px. The short forms say the same thing in the space there
      * actually is. */
@@ -280,7 +297,8 @@
       'Supply chain: remediation cadence does not apply',
     ];
     var cols = [pal.att, pal.warn, pal.zero];
-    var rh = 56, h = names.length * rh + 6;
+    var rh = 56, top = names.length * rh + 6;
+    var h = top + 84;
     frame(svg, w, h);
     var L = 2, R = w - 4;
     r.routes.forEach(function (v, i) {
@@ -290,12 +308,30 @@
       svg.appendChild(el('rect', { 'class': 'ch-bar', style: '--i:' + i, x: L, y: y, width: Math.max(0, (R - L) * v), height: 12, rx: 3, fill: cols[i] }));
       txt(svg, L, y + 30, pctS(v), { c: cols[i], fs: 14, w: 700, mono: true });
     });
+
+    /* ── the picture those three sit inside ───────────────────────────────── */
+    if (!scope) return svg;
+    var share = scope.vulnShareOfBreaches;
+    var sy = top + 26;
+    svg.appendChild(el('line', { x1: L, y1: top + 2, x2: R, y2: top + 2, stroke: pal.rule2 }));
+    txt(svg, L, top + 20, 'Against all intrusion, by external reference', { c: pal.mut, fs: 10.5 });
+
+    var cut = L + (R - L) * share;
+    svg.appendChild(el('rect', { x: L, y: sy, width: cut - L, height: 12, rx: 3, fill: pal.att, 'fill-opacity': 0.55 }));
+    /* Dashed outline, not a fill: this half is the part the model cannot speak
+     * to, and it must not look like a measured quantity. */
+    svg.appendChild(el('rect', {
+      x: cut, y: sy, width: R - cut, height: 12, rx: 3,
+      fill: pal.sunk, stroke: pal.dim, 'stroke-dasharray': '3 3',
+    }));
+    txt(svg, L, sy + 28, pctS(share) + ' vulnerability exploitation', { c: pal.att, fs: 11, w: 600 });
+    txt(svg, R, sy + 28, narrow ? 'the rest: not modelled'
+      : 'phishing, credential abuse, insider: not modelled', { a: 'end', c: pal.dim, fs: 11 });
+    txt(svg, L, sy + 45, 'Reported share, ' + scope.src + '. Not an output of this model.',
+      { c: pal.dim, fs: 10 });
     return svg;
   }
 
-  /* ═══════════════════════════════════════════════════════════════════════
-   * SURVIVAL
-   * ═══════════════════════════════════════════════════════════════════════ */
   function survival(svg, w, r, pal) {
     var h = 236;
     frame(svg, w, h);
@@ -376,36 +412,89 @@
   /* ═══════════════════════════════════════════════════════════════════════
    * COMPRESSION SWEEP
    * ═══════════════════════════════════════════════════════════════════════ */
-  function sweep(svg, w, pts, curX, curY, pal) {
-    var h = 236;
+  /* ═══════════════════════════════════════════════════════════════════════
+   * THE THREE CLOCKS — one axis, three scenario dials that all get called "AI".
+   *
+   * This was a single curve against a single slider named "exploit-clock
+   * compression", and it could not make the page's own argument: the reader
+   * saw one line rise and attributed the whole of it to the clock. Measured
+   * apart, the clock is the flattest of the three. Drawing them together is
+   * the argument — the shape of the comparison IS the finding, so the three
+   * have to share an axis rather than take turns on it.
+   *
+   * Which curve is steepest depends on the metric, and that is not a defect to
+   * design around. Tempo is flat on compromise and steep on incidents, because
+   * post-exploitation speed cannot change whether you were breached, only
+   * whether anyone reached it in time. The metric toggle makes the curves
+   * trade places, which is the same finding the detection chapter reports.
+   * ═══════════════════════════════════════════════════════════════════════ */
+  function sweep(svg, w, series, pal) {
+    var h = 268;
     frame(svg, w, h);
-    var L = 40, R = w - 10, T = 12, B = h - 40;
-    var max = Math.max.apply(null, [0.05].concat(pts.map(function (p) { return p[1]; }))) * 1.14;
+    var L = 40, R = w - 10, B = h - 44;
+
+    /* The legend is packed before anything is drawn, because how many rows it
+     * needs decides where the plot can start. Three slider names fit on one row
+     * at full width and take three in the narrow column, and with a fixed plot
+     * top the third row was drawn straight through the top gridline. */
+    var lay = [], lgx = L, lgRows = 1;
+    series.forEach(function (s2) {
+      var wide = 14 + s2.l.length * 5.5;
+      if (lgx > L && lgx + wide > R) { lgx = L; lgRows++; }
+      lay.push({ s: s2, x: lgx, y: 12 + (lgRows - 1) * 14 });
+      lgx += wide + 12;
+    });
+    var T = 12 + lgRows * 14 + 4;
+
+    /* One scale across every curve: three curves on independent scales would
+     * compare nothing, which is the entire reason they share a chart. */
+    var all = [0.05];
+    series.forEach(function (s2) { s2.pts.forEach(function (p) { all.push(p[1]); }); });
+    var max = Math.max.apply(null, all) * 1.14;
+
     for (var i = 0; i <= 4; i++) {
       var y = T + (B - T) * i / 4;
       svg.appendChild(el('line', { x1: L, y1: y, x2: R, y2: y, stroke: pal.rule }));
       txt(svg, L - 7, y + 4, pctS(max * (1 - i / 4)), { a: 'end', c: pal.mut, fs: 10 });
     }
     [0, 25, 50, 75, 100].forEach(function (a) {
-      txt(svg, L + (R - L) * a / 100, B + 17, a === 0 ? 'measured' : '+' + a,
-        { a: a === 100 ? 'end' : 'middle', c: pal.mut, fs: 10 });
+      txt(svg, L + (R - L) * a / 100, B + 17, a === 0 ? 'as measured' : '+' + a,
+        { a: a === 0 ? 'start' : a === 100 ? 'end' : 'middle', c: pal.mut, fs: 10 });
     });
+
+    /* Labels are the slider names verbatim: shortening them to fit would break
+     * the one link the reader has between a curve and the control that moves
+     * it, so the layout gives way and takes another row instead. */
+    /* A series carries the palette TOKEN NAME, not a colour, and the colour is
+     * resolved here against the palette this draw was handed. Storing the
+     * resolved hex on the series instead would freeze it: redrawAll() replays
+     * the stored series on a theme toggle, and every curve would keep painting
+     * in the colours of the theme it was computed under. */
+    var col = function (s2) { return pal[s2.c] || s2.c; };
+
+    lay.forEach(function (it) {
+      svg.appendChild(el('line', { x1: it.x, y1: it.y - 4, x2: it.x + 10, y2: it.y - 4, stroke: col(it.s), 'stroke-width': 2.4 }));
+      txt(svg, it.x + 14, it.y, it.s.l, { c: pal.mut, fs: 10.5 });
+    });
+
     var XY = function (p) { return [L + (R - L) * p[0] / 100, T + (B - T) * (1 - p[1] / max)]; };
-    var P2 = pts.map(XY);
-    svg.appendChild(el('path', { 'class': 'ch-area', d: path(P2) + ' L ' + R + ' ' + B + ' L ' + L + ' ' + B + ' Z', fill: pal.att, 'fill-opacity': 0.10 }));
-    svg.appendChild(el('path', { 'class': 'ch-line', d: path(P2), fill: 'none', stroke: pal.att, 'stroke-width': 2.2 }));
-    var c = XY([curX, curY]);
-    svg.appendChild(el('line', { x1: c[0], y1: T, x2: c[0], y2: B, stroke: pal.txt, 'stroke-dasharray': '3 3', 'stroke-opacity': 0.6 }));
-    svg.appendChild(el('circle', { 'class': 'ch-mark', cx: c[0], cy: c[1], r: 4.5, fill: pal.txt }));
-    txt(svg, Math.min(c[0] + 8, R - 60), Math.max(T + 12, c[1] - 9), 'current settings', { c: pal.txt, fs: 10.5 });
-    txt(svg, L, B + 34, 'modelled exploit-clock compression →', { c: pal.dim, fs: 10 });
+    series.forEach(function (s2, i2) {
+      var P2 = s2.pts.map(XY);
+      svg.appendChild(el('path', {
+        'class': 'ch-line', style: '--i:' + i2, d: path(P2),
+        fill: 'none', stroke: col(s2), 'stroke-width': 2.2,
+        'stroke-linecap': 'round', 'stroke-linejoin': 'round',
+      }));
+      /* Where this dial actually sits. Three dials at zero stack one marker on
+       * top of another at the origin, which reads correctly as "you are here". */
+      var c = XY([s2.cur, s2.curY]);
+      svg.appendChild(el('circle', { 'class': 'ch-mark', cx: c[0], cy: c[1], r: 4, fill: col(s2) }));
+    });
+
+    txt(svg, L, B + 34, 'scenario travel, 0 = the measured record →', { c: pal.dim, fs: 10 });
     return svg;
   }
 
-  /* ═══════════════════════════════════════════════════════════════════════
-   * SEVERITY EVIDENCE — exploitation rate by CVSS band. The chart that
-   * justifies not using CVSS severity as the model's primitive.
-   * ═══════════════════════════════════════════════════════════════════════ */
   function severity(svg, w, cal, pal) {
     var bands = cal.exploitation.bands;
     var narrow = w < 560;

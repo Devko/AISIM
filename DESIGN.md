@@ -392,7 +392,7 @@ document rather than a broken one.
 ### Hierarchy
 
 - **Display** (Newsreader 500, `clamp(33px, 5.1vw, 60px)`, 1.02, −0.016em): the
-  page headline only, capped at 16ch with `text-wrap: balance` so it breaks as
+  page headline only, capped at 17ch with `text-wrap: balance` so it breaks as
   a masthead rather than a paragraph.
 - **Display em** (Newsreader italic): the clause where the argument turns. It
   keeps Attacker Vermilion, but the italic is what carries it — a colour-only
@@ -484,9 +484,12 @@ Inside that bound it is **ranked by use frequency, not by subject** — two
 zones, `.rail-fixed` and `.rail-scroll`:
 
 - **`.rail-fixed`** holds the threat card. It is the half operated *while
-  reading*: chapter 07 hands the reader the exploit-clock compression slider by
-  name, so the chapter that makes the page's title claim and the control that
-  tests it have to be able to occupy the screen together.
+  reading*: chapter 07 hands the reader three scenario dials by name — arrival
+  speed, weaponised share, post-exploitation tempo — so the chapter that makes
+  the page's title claim and the controls that test it have to be able to
+  occupy the screen together. The card grew by two sliders when the single AI
+  control was split; it is still the shorter of the two cards, so the ranking
+  holds unchanged.
 - **`.rail-scroll`** holds the estate card. It is set once, at the start, so it
   takes whatever height is left and scrolls inside it. Its own growth — the
   trait notes run to 683px with everything selected — now moves nothing but
@@ -497,8 +500,8 @@ an ~868px box: one slider of twelve visible at rest, the compression control
 536px below the fold, and selecting traits pushing it a further 677px away.
 
 **Ranking is unconditional; pinning is not.** Ranking is free — the threat card
-comes first, so compression sits 347–458px into the rail and is on screen at
-rest at every viewport. Pinning it there permanently costs the estate card
+comes first, so the scenario dials sit 347–458px into the rail and are on screen
+at rest at every viewport. Pinning it there permanently costs the estate card
 whatever the threat card occupies, and that card is 550px against 1,331px of
 estate content. Measured, with a reload at each height:
 
@@ -814,6 +817,28 @@ rule moved onto `.estate` itself and `.estate + #cd` zeroes the doubled padding.
   `--hi` are written by `js/app.js` only on a pass that ran enough blocks for
   the interval to mean anything, and it transitions over 300ms so the band
   visibly settles rather than jumping.
+
+### Scope note
+
+- A single paragraph directly beneath the readout bank, stating which access
+  routes the model simulates and which it does not. Set as **document type, not
+  as a warning**: no panel, no fill, no icon, no accent border. 12.5px `--mut`
+  on a 1px `--rule2` top rule, `78ch` measure, the same register the footer
+  notes use.
+- **It earns attention from position, not decoration.** The claim it carries is
+  that every figure above it is a lower bound, and a reader trained by every
+  other page on the web to skip a coloured callout has to actually read this
+  one. A yellow box would be skipped; a rule and a paragraph under the number
+  are read as part of the number.
+- **Its position is the whole point.** This text spent the page's life in the
+  footer, roughly a screen and a half below the figure it qualifies, which
+  makes it a disclaimer rather than a caveat. It takes a grid row of its own
+  between `.stats` and `.results` — placed explicitly, because the rail spans
+  the full column height and an auto-placed item lands in the occupied column.
+- **Nothing in it is typed.** The excluded-route list, the cited share and the
+  source are written by `js/app.js` from `MODEL.SCOPE`, which is also what the
+  routes chart and the footer read. A coverage claim that is typed into copy
+  drifts from the model that makes it the first time either moves.
 
 ### Docked readout
 

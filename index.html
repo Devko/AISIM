@@ -3,11 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Exposure Race: has AI collapsed the exploit clock?</title>
+<title>Exposure Race: which clock does an autonomous adversary move?</title>
 <meta name="description" content="A Monte Carlo model of exploit availability against remediation, calibrated to measured CVE, exploit-catalogue and KEV data. Exploit-clock compression is modelled as an explicit scenario rather than baked into the baseline.">
 <meta name="color-scheme" content="dark light">
-<meta property="og:title" content="Exposure Race: has AI collapsed the exploit clock?">
-<meta property="og:description" content="The clock AI is supposed to have collapsed was already at zero: median time from CVE publication to public exploit code has not exceeded one day in any settled year since 2015.">
+<meta property="og:title" content="Exposure Race: which clock does an autonomous adversary move?">
+<meta property="og:description" content="The clock AI is supposed to have collapsed was already at zero: median time from CVE publication to public exploit code has not exceeded one day in any settled year since 2015. Three other clocks are not at the floor, and the largest routes of all are not in this model at all.">
 <meta property="og:type" content="article">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -52,7 +52,7 @@
 <!-- ══════════════════ MASTHEAD ══════════════════ -->
 <header><div class="wrap">
   <div class="eyebrow">
-    <span>exposure race</span><span>monte carlo</span><span>v3</span>
+    <span>exposure race</span><span>monte carlo</span>
     <span>calibrated <span data-snapshot>…</span></span>
     <span class="topbar">
       <button id="theme-btn" class="icon-btn ghost" type="button">Light</button>
@@ -63,11 +63,11 @@
 
   <div class="mast">
     <div class="mast-copy">
-      <h1>Does the exploit arrive <em>before</em> your patch?</h1>
-      <p class="sub">A Monte Carlo model of exploit availability against remediation completion,
-      resimulated on every parameter change. The adversary timeline is <b>not assumed</b>: it is the
-      measured distribution of days from CVE publication to public exploit code, taken from the
-      CyberMon corpus. Around a fifth of those exploits appear before disclosure.</p>
+      <h1>Which clock does an autonomous adversary <em>actually</em> move?</h1>
+      <p class="sub">A Monte Carlo model of exploit availability against remediation, resimulated
+      on every change. The adversary timeline is <b>measured, not assumed</b>: days from CVE
+      publication to public exploit code. That clock has sat at the floor since 2015.
+      <b>Three slower clocks have not.</b></p>
     </div>
 
     <!-- The thesis in three measured figures, read off the vendored snapshot at
@@ -119,6 +119,20 @@
       <div class="v" id="s-t">…</div><div class="ci" id="s-t-ci"></div>
     </div>
   </div>
+
+  <!-- The scope statement belongs here, against the figure it qualifies. It
+       spent this page's whole life in the footer, a screen and a half below
+       the number a reader takes away, which is not a caveat but a disclaimer.
+       The share and the source are written by js/app.js out of M.SCOPE, so the
+       claim cannot drift from the model that makes it. -->
+  <p class="scope-note" id="scope-note">
+    <b>Three routes are simulated:</b> opportunistic exploitation, targeted campaign and supply
+    chain. Not simulated: <span data-scope-excluded>phishing; credential abuse; insider
+    action</span>. Every figure above is therefore a <b>lower bound on intrusion</b> rather than a
+    picture of it. Vulnerability exploitation is the largest single initial-access category in the
+    <span data-scope-src>DBIR</span> series, at <span data-scope-share>31%</span> of breaches, and
+    still a minority of them.
+  </p>
 
   <!-- ══════════════════ CONTROLS ══════════════════ -->
   <!-- The rail is ranked by how often each part is needed, not by topic.
@@ -200,9 +214,9 @@
         <li><a href="#p-funnel">Attrition to compromise</a></li>
         <li><a href="#p-torn">Sensitivity analysis</a></li>
         <li><a href="#p-acts">Prioritised actions</a></li>
-        <li><a href="#p-routes">Initial access vector</a></li>
+        <li><a href="#p-routes">Access routes, and what is missing</a></li>
         <li><a href="#p-surv">Time to first compromise</a></li>
-        <li><a href="#p-sweep">Has AI compressed the clock?</a></li>
+        <li><a href="#p-sweep">Three clocks an autonomous adversary could move</a></li>
         <li><a href="#p-severity">Why not severity</a></li>
         <li><a href="#p-volume">Severity-label inflation</a></li>
         <li><a href="#p-anchors">Model provenance</a></li>
@@ -295,15 +309,20 @@
         <div class="panel-head">
           <div class="ph-copy">
             <span class="ord">05</span>
-            <h3>Initial access vector</h3>
-            <p class="lead">Vector of the <em>first</em> compromise, counted once per simulated year.</p>
+            <h3>Access routes, and what is missing</h3>
+            <p class="lead">Vector of the <em>first</em> compromise, counted once per simulated
+            year. The outlined bar beneath is a cited figure rather than a model output: the share
+            of real intrusions these three routes can speak to at all. Phishing and credential abuse
+            have no route here. The <em>campaign success without a vulnerability</em> parameter
+            carries both as one residual rate, ranked second of seventeen in the sensitivity
+            chart.</p>
           </div>
           <div class="tools">
             <button class="icon-btn" data-copy="routes" type="button">Copy</button>
             <button class="icon-btn" data-dl="routes" type="button">PNG</button>
           </div>
         </div>
-        <svg id="routes" class="chart" height="174" role="img" aria-label="Initial access vector of first compromise"></svg>
+        <svg id="routes" class="chart" height="258" role="img" aria-label="Access route of first compromise across the three modelled routes, against the share of real intrusions those routes cover"></svg>
       </section>
       <section class="panel" id="p-surv">
         <div class="panel-head">
@@ -326,20 +345,28 @@
       <div class="panel-head">
         <div class="ph-copy">
           <span class="ord">07</span>
-          <h3>Has AI compressed the exploit clock?</h3>
+          <h3>Three clocks an autonomous adversary could move</h3>
           <p class="lead">BOD 26-04 names adversary use of AI as a reason the window between patch
-          release and exploitation may narrow. This curve models that scenario: exploit code
-          arriving sooner, in greater volume, and more often ahead of disclosure. The measured
-          record does not yet show it. The median has <b>not exceeded one day in any settled year
-          since 2015</b>, and the pre-disclosure share has fallen rather than risen, so the page
-          defaults to the measured distribution and puts compression behind this slider.</p>
+          release and exploitation may narrow. That is three separate claims carrying different
+          evidence and different consequences, so each takes its own dial on one axis.
+          <b>Arrival speed</b> is the one the phrase usually means, and the flattest curve here: the
+          measured median has <b>not exceeded one day in any settled year since 2015</b>, and the
+          pre-disclosure share has fallen rather than risen. <b>Weaponised share</b> is worth
+          roughly three times as much, because breadth has room left where speed does not.
+          <b>Post-exploitation tempo</b> is flat on this metric, exactly flat, because speed from
+          foothold to objective cannot change whether you were breached, only whether anyone reached
+          it in time. Switch the readout to incidents and it lifts off the floor. Even there the
+          curve understates where it bites: against a 24/7 SOC, full tempo removes roughly
+          <b>three quarters</b> of the margin detection buys over having none, taking it from 9.3
+          points of incident rate to 2.2. A faster adversary does not beat detection on any single
+          intrusion; it devalues the investment. All three dials default to the measured record.</p>
         </div>
         <div class="tools">
           <button class="icon-btn" data-copy="sweep" type="button">Copy</button>
           <button class="icon-btn" data-dl="sweep" type="button">PNG</button>
         </div>
       </div>
-      <svg id="sweep" class="chart" height="236" role="img" aria-label="Outcome against modelled exploit-clock compression"></svg>
+      <svg id="sweep" class="chart" height="268" role="img" aria-label="Outcome against three scenario dials: exploit arrival speed, share of bugs weaponised, and post-exploitation tempo"></svg>
     </section>
 
     <!-- ── evidence ── -->
@@ -439,11 +466,18 @@
       </div>
       <div class="fnote">
         <div class="seg-l">Scope</div>
-        <p>Vulnerability exploitation only. Credential abuse, phishing and insider
-        vectors are out of scope, so the output is a lower bound on intrusion risk rather than a
-        complete picture of it. The <span data-curyear>2026</span> DBIR attributes 31% of breaches to vulnerability
-        exploitation, ahead of credential abuse but well short of the total. Run-rate figures are
-        linear extrapolation from a partial year.</p>
+        <p>Three access routes are simulated: opportunistic exploitation, targeted
+        campaign and supply chain. Not simulated: <span data-scope-excluded>phishing; credential
+        abuse; insider action</span>. Every probability here is therefore a lower bound on intrusion
+        risk rather than a complete picture of it, which is why the coverage statement sits beside
+        the headline and on the routes chart rather than only here. The <span data-curyear>2026</span>
+        DBIR attributes <span data-scope-share>31%</span> of breaches to vulnerability exploitation,
+        the largest single initial-access category and still a minority of the total. The one place
+        the absent routes appear at all is <em>campaign success without a vulnerability</em>, a
+        residual rate rather than a simulation of them; the sensitivity chart ranks it first of
+        seventeen on the compromise metric, which is the honest way to report a proxy that
+        load-bearing. Run-rate figures
+        are linear extrapolation from a partial year.</p>
       </div>
       <div class="fnote">
         <div class="seg-l">Sources for the reported tier</div>
