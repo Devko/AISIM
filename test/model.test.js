@@ -1754,6 +1754,42 @@ console.log('\n══ Exposure Race — model tests ═════════�
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
+ * 14b. The maturity ladder owns the configuration axis
+ *
+ * Until it did, a reader who picked every top rung on every selector still
+ * ran `configAssurance` at the slider default, and misconfiguration became
+ * the largest residual route of their fully hardened estate — a gap no
+ * selector could close. Config assurance is estate-running maturity, not the
+ * people programme, so it lives on this ladder and no other.
+ * ───────────────────────────────────────────────────────────────────────── */
+{
+  const cfg = ['loose', 'typical', 'tight'].map(m => M.compose({ maturity: m }).configAssurance);
+  ok('maturity carries configuration assurance, ordered',
+    cfg[0] < cfg[1] && cfg[1] < cfg[2], cfg.join(' < '));
+  ok('the typical rung leaves configuration at the slider default',
+    M.compose({ maturity: 'typical' }).configAssurance === M.defaults().configAssurance,
+    `${M.compose({ maturity: 'typical' }).configAssurance}`);
+  ok('no posture ladder other than maturity sets configuration assurance',
+    ![M.IDENTITY, M.PEOPLE, M.DETECTION].some((t) =>
+      Object.keys(t).some((k) => 'configAssurance' in t[k].p)));
+
+  /* The appliance exception to the pre-publication discount: an edge zero-day
+   * draws mass exploitation, so its discount is scaled back toward full
+   * hazard — but at the central values it must remain a discount, or the
+   * zero-day/record-lag split loses its meaning on the edge tier. */
+  ok('appliance zero-days are discounted less, but still discounted',
+    M.SHAPE.edgePreHaz > 1 && M.ASSUMED.preHazard.v * M.SHAPE.edgePreHaz < 1,
+    `${M.ASSUMED.preHazard.v} x ${M.SHAPE.edgePreHaz} = ${(M.ASSUMED.preHazard.v * M.SHAPE.edgePreHaz).toFixed(2)}`);
+
+  /* The redraw count the page and the deck print. blocksFor() understates it
+   * by the partial block at the end of the run, which is exactly the drift
+   * this export exists to prevent. */
+  ok('the printed redraw count is not the block count',
+    M.coeffDrawsFor(60000) > M.blocksFor(60000),
+    `${M.coeffDrawsFor(60000)} draws over ${M.blocksFor(60000)} blocks`);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
  * 15. Performance budget — the UI redraws on every slider move
  * ───────────────────────────────────────────────────────────────────────── */
 {

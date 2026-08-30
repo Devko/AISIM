@@ -662,11 +662,21 @@
   function pct(n, dp) { return n.toFixed(dp === undefined ? 1 : dp) + '%'; }
   function num(n, dp) { return Number(n).toFixed(dp === undefined ? 1 : dp); }
   function thou(n) { return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
-  function pts(n) { return (n >= 0 ? '+' : '−') + Math.abs(n * 100).toFixed(1) + 'pt'; }
+  /* " pts", with the space, because that is how the page prints the same
+   * quantity — a deck that abbreviates differently reads as a second source. */
+  function pts(n) { return (n >= 0 ? '+' : '−') + Math.abs(n * 100).toFixed(1) + ' pts'; }
   /* A margin a control BUYS, stated as the reduction it is. Signed pts() reads
-   * backwards here: "−9.3pt of incidents" is a gain, and a slide that has to
+   * backwards here: "−9.3 pts of incidents" is a gain, and a slide that has to
    * be reasoned about before it can be read is a slide that gets misquoted. */
-  function gain(n) { return (n * 100).toFixed(1) + 'pt'; }
+  function gain(n) { return (n * 100).toFixed(1) + ' pts'; }
+  /* Counts read from the model land in running prose, and the page's style
+   * writes small counts as words. */
+  var NUM_WORDS = ['zero', 'one', 'two', 'three', 'four', 'five', 'six',
+    'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve'];
+  function countWord(n, capital) {
+    var s = NUM_WORDS[n] || String(n);
+    return capital ? s.charAt(0).toUpperCase() + s.slice(1) : s;
+  }
 
   function band(cal, name) {
     var found = cal.exploitation.bands.filter(function (b) { return b.band === name; })[0];
@@ -684,8 +694,8 @@
     var lo = isP ? run.pLo : run.incLo;
     var hi = isP ? run.pHi : run.incHi;
     var bandLine = run.bandReliable
-      ? '90% credible band ' + pct(100 * lo) + ' to ' + pct(100 * hi)
-      : 'point estimate; the credible band has not settled';
+      ? '90% band ' + pct(100 * lo) + ' to ' + pct(100 * hi)
+      : 'headline figure; the uncertainty band has not settled';
     var excluded = scope.excludedShort || 'Denial of service, fraud without intrusion, and physical premises access';
     var trialsN = (ctx.trials || 0).toLocaleString('en-GB');
     var blocksN = String(ctx.blocks || 0);
@@ -703,7 +713,8 @@
         ? 'How likely is this estate to be compromised in the next 12 months?'
         : 'How likely is this estate to suffer an incident in the next 12 months?',
       short: ctx.estate,
-      long: 'A Monte Carlo simulation of exploit availability against this estate’s remediation, run over 60,000 simulated years and calibrated to a dated public corpus. What follows is the configuration, the result, what drives it, and what moves it most.',
+      long: 'A Monte Carlo simulation of exploit availability against this estate\'s remediation, run over ' +
+        trialsN + ' simulated years and calibrated to a dated public dataset. What follows is the configuration, the result, and what moves it most.',
       estate: ctx.estate,
       note: 'Calibrated to CyberMon ' + cal.snapshot.cvelist + '. Reproducible offline.',
     });
@@ -713,8 +724,8 @@
       id: 'estate',
       eyebrow: 'what was configured',
       title: 'The estate this reports on',
-      short: (ctx.config || []).length + ' questions, answered on the page. Everything that follows is derived from these.',
-      long: 'The shape controls, as they were set. These are editorial judgement about the estate rather than measurement of it, which is why every figure downstream is tagged assumed.',
+      short: 'The estate as configured on the page. Everything that follows is derived from these answers.',
+      long: 'The shape controls, as they were set. These describe your estate rather than measure it, which is why every figure downstream is tagged assumed.',
       rows: ctx.config || [],
       tag: 'assumed',
     });
@@ -724,8 +735,8 @@
       id: 'inputs',
       only: 'internal',
       eyebrow: 'the resulting parameters',
-      title: 'What those answers compose to',
-      long: 'The controls above compose by summing excess over one, so stacking is order-independent with diminishing returns. These are the values the simulation actually ran on, and every one of them stays editable on the page. The identity half gates the five access classes where no vulnerability is involved.',
+      title: 'What those answers produce',
+      long: 'The controls above stack with diminishing returns, and the order they are set in makes no difference. These are the values the simulation actually ran on, and every one of them stays editable on the page. The identity controls gate the five access classes where no vulnerability is involved.',
       rows: ctx.params || [],
       tag: 'assumed',
     });
@@ -744,11 +755,11 @@
        * BEING the routes and states the reverse of what the model does. It
        * then went stale a second time when three classes became eight. Naming
        * them from SCOPE fixes both failure modes at once. */
-      short: modelled.length + ' access classes, simulated for this estate. ' +
+      short: countWord(modelled.length, true) + ' access classes, simulated for this estate. ' +
         excluded + ' are not counted, so real risk is higher than this.',
-      long: 'Across ' + trialsN + ' simulated years for this estate, in ' + blocksN +
-        ' coefficient blocks. The point estimate settles long before that; the credible band does not. ' +
-        modelled.length + ' access classes are simulated: ' + classList + '. ' +
+      long: 'Across ' + trialsN + ' simulated years for this estate, with the uncertain inputs redrawn ' +
+        blocksN + ' times. The headline figure settles long before that; the uncertainty band does not. ' +
+        countWord(modelled.length, true) + ' access classes are simulated: ' + classList + '. ' +
         excluded + ' are not counted, so this remains a lower bound rather than a complete picture.',
       note: 'Not a risk assessment for a named organisation. The inputs are judgement, not measurement.',
       chart: 'surv',
@@ -765,19 +776,19 @@
        * compromise and incident is the argument detection rests on. Splitting
        * them across slides loses exactly the comparison they exist to make. */
       tiles: [
-        { l: 'Probability of compromise, 12 months', v: pct(100 * run.p),
+        { l: 'Probability of compromise, 12-month window', v: pct(100 * run.p),
           sub: run.bandReliable ? pct(100 * run.pLo) + ' to ' + pct(100 * run.pHi) : 'point estimate',
           lead: isP },
-        { l: 'Probability of an incident, 12 months', v: pct(100 * run.incident),
+        { l: 'Probability of an incident, 12-month window', v: pct(100 * run.incident),
           sub: run.bandReliable ? pct(100 * run.incLo) + ' to ' + pct(100 * run.incHi) : 'point estimate',
           lead: !isP },
         { l: 'Expected intrusions per year', v: num(run.events, 2),
-          sub: 'systems when mass-exploited, one per campaign' },
+          sub: 'one per campaign, however many systems it reaches' },
         { l: 'Median time to first compromise',
-          v: run.med == null ? '> 12' : String(Math.round(run.med)),
-          sub: run.med == null ? 'months — no compromise in most years' : 'days, across simulated years' },
+          v: run.med == null ? '>12' : String(Math.round(run.med)),
+          sub: run.med == null ? 'months, no compromise in most years' : 'days, across simulated years' },
       ],
-      short: 'Compromise and incident are different questions. Detection moves the second and, by construction, cannot move the first.',
+      short: 'Compromise and incident are different questions. Detection moves the second and cannot move the first.',
       long: 'Compromise and incident are different questions: detection cannot change whether you were compromised, only whether anyone reached it in time. That is why both are reported, and why the gap between them is where the detection argument later in this deck lives.',
       tag: 'assumed',
     });
@@ -787,10 +798,10 @@
       list.push({
         id: 'funnel',
         eyebrow: 'how the number is arrived at',
-        title: 'From published criticals to compromises',
-        short: ctx.funnel[0].v + ' criticals a year in this stack become ' +
+        title: 'From published vulnerabilities to compromises',
+        short: ctx.funnel[0].v + ' published vulnerabilities a year in this stack become ' +
           ctx.funnel[ctx.funnel.length - 1].v + ' compromises.',
-        long: 'Each stage is a filter on the one above it. The middle stages are measured against the corpus — how many criticals ever get public exploit code, and how many are confirmed exploited — and the outer ones are properties of this estate.',
+        long: 'Each stage is a filter on the one above it. The stream is every severity band, scaled from the critical count set on the page. The middle stages are measured against the published record: how many ever get public exploit code, and how many are confirmed exploited. The outer stages are properties of this estate.',
         rows: ctx.funnel,
         chart: 'funnel',
       });
@@ -803,7 +814,7 @@
         eyebrow: 'where the compromise comes from',
         title: 'First compromise of the year, by access class',
         short: 'One of these classes turns fully on patching faster. Seven do not.',
-        long: 'Only opportunistic exploitation turns fully on your change window. A targeted campaign turns partly on it. A supplier, a phishing lure, a stolen credential, a misconfiguration, an insider and a lost laptop are indifferent to it. That is why the ranking on the next slide is not simply "patch faster".',
+        long: 'Only opportunistic exploitation turns fully on your change window. A targeted campaign turns partly on it. A supplier, a phishing lure, a stolen credential, a misconfiguration, an insider and a lost laptop are indifferent to it. That is why the ranking of drivers in this deck is not simply "patch faster".',
         rows: ctx.routeRows,
         note: 'Not counted at all: ' + excluded.toLowerCase() +
           '. The ' + cal.currentYear + ' DBIR attributes ' + pct(100 * (scope.vulnShareOfBreaches || 0), 0) +
@@ -819,7 +830,7 @@
         eyebrow: 'what moves this number',
         title: 'Ranked by effect on this estate',
         short: 'Each parameter swept across its full range, against this configuration.',
-        long: 'Each parameter swept alone across its full declared range, against this configuration, with everything else held. The bar is the span; the recommendations that follow report the one-sided gain from moving each the good way.',
+        long: 'Each parameter varied on its own across its full stated range, against this configuration, with everything else held fixed. The bar is the whole span. The recommended actions in this deck report only what is gained by moving each parameter in the direction that helps.',
         chart: 'torn',
         needs: 'torn',
         /* The fallback the two-pass compose reaches for when the chart cannot
@@ -848,8 +859,8 @@
         ? 'Ranked by the reduction each buys on this estate, not by general advice.'
         : 'At these settings the outcome is driven by routes remediation does not reach.',
       long: acts.length
-        ? 'Ranked by the reduction each buys on this estate. This is the one-sided gain from moving the parameter the good way, holding everything else, so the figures are what that change is worth here rather than what it is worth in general.'
-        : 'At these settings the outcome is driven by routes the remediation process does not reach. See the route split above: the levers that remain are the ones that close routes needing no vulnerability at all.',
+        ? 'Ranked by the reduction each buys on this estate. Each figure is what is gained by moving that parameter in the direction that helps, holding everything else fixed, so it is what the change is worth here rather than in general.'
+        : 'At these settings the outcome is driven by routes the remediation process does not reach. See the route split in this deck: the levers that remain are the ones that close routes needing no vulnerability at all.',
       acts: acts,
       note: acts.length ? 'Each figure is the reduction in the annual probability of ' +
         (isP ? 'compromise' : 'an incident') + ' for this estate, from moving that one parameter alone.' : null,
@@ -870,7 +881,7 @@
           gain(ctx.soc.full) + '.',
         long: 'Moving this estate from no detection to a 24/7 SOC is worth ' + gain(ctx.soc.reported) +
           ' of incident rate against a reported-tempo adversary, and ' + gain(ctx.soc.full) +
-          ' against one at full tempo. A faster adversary does not beat detection on any one intrusion — it devalues the investment. This is the figure most sensitive to an assumption, and the assumption is adversary speed.',
+          ' against one at full tempo. A faster adversary does not beat detection on any single intrusion. It devalues the investment. This is the figure most sensitive to an assumption, and the assumption is adversary speed.',
       });
     }
 
@@ -884,9 +895,9 @@
       list.push({
         id: 'scenario',
         eyebrow: 'what would change it',
-        title: 'Three adversary scenarios, against this same estate',
+        title: countWord(dial.length, true) + ' adversary scenarios, against this same estate',
         short: 'Worst case here is ' + worst.l.toLowerCase() + ', at ' + pts(worst.worth) + '.',
-        long: 'Each dial swept alone from the measured record to full travel, against this configuration. These are scenarios, not forecasts: the measured exploit clock has not accelerated, which is why compression sits behind a dial rather than in the baseline.',
+        long: 'Each dial moved on its own from the measured record to its full range, against this configuration. These are scenarios, not forecasts: the measured exploit clock has not accelerated, which is why compression sits behind a dial rather than in the baseline.',
         rows: dial.map(function (d) {
           return { l: d.l, v: pts(d.worth), strong: d.k === worst.k };
         }),
@@ -902,12 +913,12 @@
       only: 'internal',
       eyebrow: 'method and scope',
       title: 'What this is, and what it is not',
-      long: 'Every figure in this deck is tagged by epistemic status. The estate is judgement; the exploit and exploitation rates are measured against a vendored corpus; adversary timings are reported by named third parties. The coefficients behind the access classes that need no vulnerability are judgement throughout, because no public corpus answers them the way the CVE corpus answers the exploit clock.',
+      long: 'Every figure in this deck is tagged by how well it is evidenced. The estate is judgement. The exploit and exploitation rates are measured against the vulnerability data shipped with the page. Adversary timings are reported by named third parties. The inputs behind the access classes that need no vulnerability are judgement throughout, because no public data answers them the way the CVE record answers the exploit clock.',
       rows: [
         { l: 'Simulated access classes', v: String(modelled.length), strong: true },
         { l: 'Not counted', v: excluded.toLowerCase(), strong: true },
-        { l: 'Trials', v: trialsN + ' years across ' + blocksN + ' blocks' },
-        { l: 'Corpus snapshot', v: cal.snapshot.cvelist },
+        { l: 'Simulated years', v: trialsN + ' years, inputs redrawn ' + blocksN + ' times' },
+        { l: 'Data snapshot', v: cal.snapshot.cvelist },
         { l: 'KEV catalogue', v: thou(cal.snapshot.kevCount) + ' · ' + cal.snapshot.kev },
         { l: 'Criticals confirmed exploited', v: pct(band(cal, '9.0-10.0').pExploited, 2) + ' (measured)' },
       ],
@@ -920,10 +931,10 @@
       eyebrow: 'check it yourself',
       title: 'This configuration is a link',
       short: 'Open it, change an assumption you disagree with, and watch the number move.',
-      long: 'The link below carries the exact configuration this deck reports. Open it, change any assumption you disagree with, and the model reruns. The corpus is vendored and the calibration is generated from it, so every measured figure here is reproducible offline.',
+      long: 'The link below carries the exact configuration this deck reports. Open it, change any assumption you disagree with, and the model reruns. The vulnerability data ships with the page and the calibration is generated from it, so every measured figure here can be reproduced offline.',
       link: ctx.url,
       rows: [
-        { l: 'Corpus', v: cal.source.replace(/^https?:\/\//, '') },
+        { l: 'Data source', v: cal.source.replace(/^https?:\/\//, '') },
         { l: 'Snapshot', v: cal.snapshot.cvelist },
       ],
     });
@@ -996,13 +1007,13 @@
      * not travel with page 3 — and page 3 is the one with the percentage on
      * it. Slides are pulled out of decks; footers come with them. */
     var excluded = (ctx.scope && ctx.scope.excludedShort) ||
-      'Phishing, credential abuse and insider action';
+      'Denial of service, fraud without intrusion, and physical premises access';
     var source = 'Lower bound · ' + excluded.toLowerCase() + ' not counted';
     var pdf = PDF(fmt.w, fmt.h, {
       /* Named for what it reports, not for the tool that made it. This is the
        * string a colleague sees in a mail attachment and a tab title, and
        * "briefing deck" tells them nothing about which run it is. */
-      title: 'Exposure Race — simulated result for a configured estate',
+      title: 'Exposure Race: simulated result for a configured estate',
       author: 'Exposure Race',
       subject: 'Monte Carlo simulation of exploit availability against remediation for one configured estate. ' +
         'Lower bound: ' + excluded.toLowerCase() + ' are not counted. Not a risk assessment for a named ' +

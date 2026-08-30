@@ -40,7 +40,7 @@ not leave them there. Four dials replace the single AI slider so the comparison
 is visible rather than asserted: the weakest of them is the one the word usually
 means, and the strongest is vulnerability discovery rate, which the page had no
 way to express at all until a verification pass found it missing. The urgency the page carries is earned by its own charts —
-post-exploitation tempo erasing three quarters of what a 24/7 SOC buys — never
+post-exploitation tempo erasing roughly half of what a 24/7 SOC buys — never
 by adopting the register of the reports it exists to check.
 
 The page carries four jobs at once, all confirmed:
@@ -111,7 +111,7 @@ so a reader can hand a colleague the exact configuration they were looking at.
   the page is quoting numbers no longer in the corpus, drawing a chart into a
   box the wrong size, or asserting an accessibility floor it no longer meets,
   and fails the build.
-- 60,000 interactive trials across 150 blocks. The point estimate settles long
+- 60,000 interactive trials across 650 blocks. The point estimate settles long
   before that; the credible interval does not, and block count is what makes the
   reported width stable across seeds and trial counts.
 - Every number is tagged by epistemic status — `measured`, `reported`, or
@@ -145,7 +145,7 @@ so a reader can hand a colleague the exact configuration they were looking at.
     points, asserted in CI. That is the discipline that makes the addition
     falsifiable rather than decorative, and it is the assertion to re-run after
     touching any rate in the ACCESS block.
-  - **The addition raised the headline from roughly 42% to roughly 64%,** and
+  - **The addition raised the headline from roughly 42% to the high sixties,** and
     reordered the recommendations: phishing-resistant authentication now ranks
     above patch cadence on most estates. The previous figure was incomplete
     rather than conservative, and saying so is part of shipping this.
@@ -180,20 +180,26 @@ so a reader can hand a colleague the exact configuration they were looking at.
   - The band is quoted only once it has settled; below that the slide says so
     rather than printing an interval the run did not earn. The interval is the
     part a reader will quote as *the range*.
-- **The proxy is disclosed, because it is the largest term.** `agentSkill`
-  carries the absent routes as one residual rate, and on the compromise metric
-  it ranks first in the sensitivity chart. It was omitted from that chart
-  entirely until it was checked. Where a model's biggest lever is its own proxy
-  for what it does not simulate, saying so is not a caveat — it is the finding.
+- **The former proxy is now a premium, and it answers to controls.**
+  `agentSkill` no longer stands in for phishing, credential abuse and insider
+  action — those are simulated as classes of their own. What it still carries
+  is the premium a *targeted* adversary adds when no remediation window is
+  open, gated by the same identity, awareness, privilege and configuration
+  controls as the commodity routes at a deliberately lower ceiling. While it
+  was a proxy it was also immune to every control its own description named,
+  which inverted the priority on authentication;
+  `SCOPE.targetedRouteAnswersToControls` declares the fix so the claim cannot
+  drift from the model.
 - **Adversary attention carries capability, not only volume — decided.** Each
   rung now sets how capable a campaign is with no vulnerability open (0.5% /
   1% / 2.5% / 4%) alongside how many arrive, with `campaigns` reduced on the
   upper rungs (4x to 2.5x, 9x to 5x) to pay for it. The claim the ladder makes
-  is about the mix: the targeted route runs 4% of first compromises at the
-  bottom rung and 73% at the top, so rising attention moves risk onto the one
-  route remediation does not reach. Published figures rose with it (45% to 52%
-  at sector, 67% to 83% at named); the previous totals were low *because* the
-  route was closed, so this is a correction rather than an inflation. The
+  is about the mix: the targeted route runs 2% of first compromises at the
+  bottom rung and 52% at the top, so rising attention moves risk onto the one
+  route remediation does not reach. Published headline figures rose with the
+  rebalance (to 79% at sector, 92% at named); the previous totals were low
+  *because* the route was closed, so this is a correction rather than an
+  inflation. The
   coefficients are judgement — no public measurement gives per-adversary
   success against a patched estate — and 4% at the top is deliberately
   conservative. Asserted in `test/model.test.js` on the mix, not just the

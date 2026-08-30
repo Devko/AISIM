@@ -108,7 +108,7 @@ a { color: inherit; text-underline-offset: .18em; text-decoration-thickness: 1px
 /* ── masthead ───────────────────────────────────────────────────────────── */
 header { border-bottom: 1px solid var(--rule); padding: 30px 0 30px; margin-bottom: 26px; }
 .eyebrow {
-  font-family: var(--mono); font-size: 10.5px; letter-spacing: .18em;
+  font-family: var(--mono); font-size: 11.5px; letter-spacing: .18em;
   text-transform: uppercase; color: var(--mut);
   display: flex; gap: 12px; align-items: center; flex-wrap: wrap;
 }
@@ -141,7 +141,7 @@ h1 em { font-style: italic; color: var(--att); }
 /* ── the measured clock ─────────────────────────────────────────────────── */
 .clock { border-top: 1px solid var(--rule2); padding-top: 12px; }
 .clock-h {
-  font-family: var(--mono); font-size: 10px; letter-spacing: .14em;
+  font-family: var(--mono); font-size: 11px; letter-spacing: .14em;
   text-transform: uppercase; color: var(--mut);
   display: flex; align-items: center; gap: 8px; margin-bottom: 4px;
 }
@@ -280,7 +280,7 @@ button.ghost { background: transparent; }
 .rail {
   position: sticky; top: 16px; max-height: calc(100vh - 32px);
   overflow-y: auto; padding-right: 6px;
-  transition: top .26s var(--ease), max-height .26s var(--ease);
+  transition: top .26s var(--ease);
   /* Deliberately NOT scroll-behavior: smooth, and the jump links do not pass
    * behavior:"smooth" either. Measured: where the engine is not ticking a
    * scroll animation — a throttled renderer, a background tab, a headless
@@ -378,7 +378,7 @@ button.ghost { background: transparent; }
   border-radius: 14px; padding: 18px; margin-bottom: 18px; box-shadow: var(--shadow);
 }
 .card h2 {
-  font-family: var(--mono); font-size: 10.5px; letter-spacing: .16em;
+  font-family: var(--mono); font-size: 11.5px; letter-spacing: .16em;
   text-transform: uppercase; margin: 0; font-weight: 600;
 }
 .card h2.d { color: var(--def); }
@@ -431,7 +431,7 @@ button.ghost { background: transparent; }
  * h3's textContent for the exported PNG title, and a number folded into the
  * heading would end up in every exported image. */
 .ord {
-  font-family: var(--mono); font-size: 10px; font-weight: 600; letter-spacing: .14em;
+  font-family: var(--mono); font-size: 11px; font-weight: 600; letter-spacing: .14em;
   color: var(--dim); display: block; margin-bottom: 7px;
 }
 /* The title keeps a 260px basis and the row is allowed to wrap, so the tools
@@ -460,7 +460,7 @@ button.ghost { background: transparent; }
 .ladder-4 { grid-template-columns: repeat(3, 1fr); }
 .ladder-5 { grid-template-columns: 1fr 1fr; }
 .presets button {
-  padding: 7px 9px; font-size: 11.5px; text-align: left; min-width: 0;
+  padding: 7px 9px; font-size: 12px; text-align: left; min-width: 0;
   overflow: hidden; text-overflow: ellipsis;
 }
 /* BOD 26-04 is a mandated regime rather than a rung on the maturity ladder,
@@ -485,10 +485,10 @@ button.ghost { background: transparent; }
 
 .seg { margin-bottom: 16px; }
 .seg-l {
-  font-family: var(--mono); font-size: 9.5px; letter-spacing: .14em;
+  font-family: var(--mono); font-size: 11px; letter-spacing: .14em;
   text-transform: uppercase; color: var(--mut); margin-bottom: 7px;
 }
-.seg-d { color: var(--mut); font-size: 11.5px; line-height: 1.45; margin: 8px 0 0; }
+.seg-d { color: var(--mut); font-size: 12px; line-height: 1.45; margin: 8px 0 0; }
 /* The composed estate, reporting what all four controls above have produced.
  * Ruled off and set in the mono face because it is a readout rather than
  * another description — the one line on the card that is an answer. */
@@ -500,7 +500,7 @@ button.ghost { background: transparent; }
 /* 9px could not clear AA against the card in either theme; the border already
  * does the de-emphasis, so the type does not have to. */
 .seg-hint {
-  font-size: 10px; letter-spacing: .08em; color: var(--mut);
+  font-size: 11px; letter-spacing: .08em; color: var(--mut);
   border: 1px solid var(--rule2); border-radius: 3px; padding: 1px 4px; margin-left: 5px;
 }
 /* multi-select traits read as checkable chips, not as one-of-N */
@@ -530,7 +530,7 @@ button.ghost { background: transparent; }
   color: var(--accent, var(--def)); white-space: nowrap;
   font-variant-numeric: tabular-nums;
 }
-.hint { color: var(--mut); font-size: 11.5px; margin-top: 4px; line-height: 1.45; }
+.hint { color: var(--mut); font-size: 12px; margin-top: 4px; line-height: 1.45; }
 
 /* Chapter 07 argues three dials by name, and the dials are several thousand
  * pixels up the page in the rail. Naming a control in prose and then leaving
@@ -641,7 +641,7 @@ details.more[open] > div { animation: rise .28s var(--ease) both; }
 }
 .toc a::before {
   content: counter(toc, decimal-leading-zero);
-  font-family: var(--mono); font-size: 10px; color: var(--dim);
+  font-family: var(--mono); font-size: 11px; color: var(--dim);
   letter-spacing: .06em; flex: none;
 }
 .toc a:hover { color: var(--txt); }
@@ -735,7 +735,7 @@ details.more[open] > div { animation: rise .28s var(--ease) both; }
  * device for two-word labels; at this length it removes the word shapes you
  * read by, and wrapped to three lines on a phone. Sentence case, body face. */
 .stat .k {
-  font-family: var(--body); font-size: 11.5px; letter-spacing: 0;
+  font-family: var(--body); font-size: 12px; letter-spacing: 0;
   color: var(--mut); line-height: 1.35;
   /* No flex:1 here any more. Growing the label to push the figure down only
    * ever bottom-aligned the label; what sits under the figure differs cell to
@@ -760,7 +760,7 @@ details.more[open] > div { animation: rise .28s var(--ease) both; }
   color: var(--mut); letter-spacing: 0; margin-left: 5px;
 }
 .stat .ci {
-  font-family: var(--mono); font-size: 10.5px; color: var(--mut); margin-top: 4px;
+  font-family: var(--mono); font-size: 11px; color: var(--mut); margin-top: 4px;
 }
 
 /* ── chart frames ───────────────────────────────────────────────────────── */
@@ -793,7 +793,7 @@ details.more[open] > div { animation: rise .28s var(--ease) both; }
 .panel.pending .chart, .panel.pending .acts { opacity: .38; }
 .panel.pending .tools::after {
   content: 'recomputing';
-  font-family: var(--mono); font-size: 10px; letter-spacing: .14em;
+  font-family: var(--mono); font-size: 11px; letter-spacing: .14em;
   text-transform: uppercase; color: var(--mut);
   align-self: center; margin-left: 2px; white-space: nowrap;
 }
@@ -820,12 +820,12 @@ details.more[open] > div { animation: rise .28s var(--ease) both; }
 .two .panel { margin-bottom: 0; }
 
 .legend {
-  display: flex; gap: 16px; flex-wrap: wrap; font-size: 11.5px;
+  display: flex; gap: 16px; flex-wrap: wrap; font-size: 12px;
   color: var(--mut); margin-bottom: 8px;
 }
 /* Each detection posture reports the dwell time and coverage it writes. */
 .presets .mtr {
-  display: block; font-family: var(--mono); font-size: 10px;
+  display: block; font-family: var(--mono); font-size: 11px;
   color: var(--dim); letter-spacing: .04em; margin-top: 3px;
 }
 .presets button.on .mtr { color: var(--ink); }
@@ -839,7 +839,7 @@ details.more[open] > div { animation: rise .28s var(--ease) both; }
  * attribute no touch or keyboard user can reach. */
 .trait-notes { margin-top: 10px; }
 .trait-notes > div {
-  font-size: 11.5px; line-height: 1.45; color: var(--mut);
+  font-size: 12px; line-height: 1.45; color: var(--mut);
   padding: 8px 0; border-top: 1px solid var(--rule);
 }
 .trait-notes b { color: var(--txt); font-weight: 600; }
@@ -886,7 +886,7 @@ ul.acts li:last-child { border-bottom: 0; padding-bottom: 0; }
 /* ── evidence table ─────────────────────────────────────────────────────── */
 .tbl { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 18px; }
 .tbl th {
-  text-align: right; font-family: var(--mono); font-size: 10px; letter-spacing: .1em;
+  text-align: right; font-family: var(--mono); font-size: 11px; letter-spacing: .1em;
   text-transform: uppercase; color: var(--mut); font-weight: 600;
   padding: 0 0 9px; border-bottom: 1px solid var(--rule2);
 }
@@ -904,14 +904,14 @@ ul.acts li:last-child { border-bottom: 0; padding-bottom: 0; }
 .anchors > div { padding: 12px 0; border-bottom: 1px solid var(--rule); }
 .anchors dt { font-size: 13px; font-weight: 500; margin-bottom: 4px; }
 .anchors dt b { font-weight: 700; }
-.anchors dd { margin: 0; font-size: 11.5px; color: var(--mut); font-family: var(--mono); }
+.anchors dd { margin: 0; font-size: 12px; color: var(--mut); font-family: var(--mono); }
 .anchors .measured { color: var(--def); }
 .anchors .reported { color: var(--zero); }
 .anchors .assumed  { color: var(--warn); }
 .anchor-note { display: block; font-size: 11px; color: var(--dim); font-family: var(--body); margin-top: 3px; }
 
 .tag {
-  font-family: var(--mono); font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase;
+  font-family: var(--mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase;
   padding: 2px 6px; border-radius: 4px; border: 1px solid currentColor; white-space: nowrap;
 }
 .tag.m { color: var(--def); }

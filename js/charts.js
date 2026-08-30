@@ -61,10 +61,40 @@
     for (var v = Math.ceil(a / s) * s; v <= b + 1e-9; v += s) out.push(+v.toFixed(4));
     return out;
   }
-  var pctS = function (v) { return (v * 100).toFixed(0) + '%'; };
+  /* Never lets rounding contradict the number: mass that exists is not shown
+   * as 0%, and a share short of everything is not shown as 100%. */
+  var pctS = function (v) {
+    var p = v * 100;
+    if (p > 0 && p < 0.5) return '<1%';
+    if (p >= 99.5 && p < 100) return '>99%';
+    return p.toFixed(0) + '%';
+  };
   function fmtDays(d) {
     var x = Math.abs(d);
     return x < 1 ? Math.round(x * 24) + 'h' : x < 10 ? x.toFixed(1) + 'd' : Math.round(x) + 'd';
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════
+   * DRAWN HEIGHTS — one source of truth, shared with the page's reservations.
+   *
+   * The markup reserves each chart's WIDE height before any script runs, and
+   * the narrow draws differ for four of the eight charts, so a phone's first
+   * paint reserved the wrong box and the document shifted when the draw
+   * landed. js/app.js corrects every reservation at boot through this
+   * function — the same arithmetic the draw itself uses, so the two cannot
+   * drift. `n` is the chart's row count where the height depends on one.
+   * ═══════════════════════════════════════════════════════════════════════ */
+  function chartHeight(kind, w, n) {
+    switch (kind) {
+      case 'race':     return w < 620 ? 362 : 396;
+      case 'funnel':   return n * (w < 640 ? 52 : 40) + (w < 640 ? 48 : 34);
+      case 'routes':   return n * (w < 400 ? 40 : 34) + 6 + 84;
+      case 'surv':     return 236;
+      case 'torn':     return n * (w < 560 ? 34 : 25) + 54;
+      case 'sweep':    return 268;
+      case 'severity': return n * 46 + (w < 620 ? 68 : 52);
+      case 'volume':   return 190;
+    }
   }
 
   /* ═══════════════════════════════════════════════════════════════════════
@@ -79,7 +109,7 @@
     /* The narrow gutter carries one more row than the wide one: the
      * pre-disclosure readout cannot share a line with the band name at phone
      * width, so it drops beneath the cumulative caption. */
-    var h = narrow ? 362 : 396;
+    var h = chartHeight('race', w);
     /* BOT is measured back from the bottom, so a fourth caption row has to
      * come out of the gutter rather than be added past the edge. */
     var L = 46, R = w - 14, T = narrow ? 44 : 38;
@@ -155,8 +185,19 @@
     svg.appendChild(el('path', { 'class': 'ch-area', d: path(ap) + ' Z', fill: pal.att, 'fill-opacity': 0.13, stroke: pal.att, 'stroke-width': 1, 'stroke-opacity': 0.45, 'stroke-linejoin': 'round' }));
 
     if (d.cum) {
-      var cp = [];
-      for (var q = 0; q < d.B; q++) cp.push([Xi(q), MID + d.cum[q] * hDn]);
+      /* The CDF is known at bin EDGES — cum[q] is the mass through bin q — so
+       * the curve is drawn edge-aligned rather than at bin centres, which
+       * displaced it half a bin to the left and left the day-zero marker
+       * visibly off the curve it annotates. The exact day-zero value is
+       * inserted as a point of its own, so the marker sits on the drawn line
+       * rather than on an interpolation near it. */
+      var of0 = (d.overflow && d.overflow.aBelow) || 0;
+      var cp = [[X(d.x0), MID + of0 * hDn]];
+      for (var q = 0; q < d.B; q++) {
+        var xe = d.x0 + (q + 1) * d.dx;
+        if (d.x0 + q * d.dx <= 0 && xe > 0) cp.push([x0px, MID + d.beforeFrac * hDn]);
+        cp.push([X(xe), MID + d.cum[q] * hDn]);
+      }
       /* `pathLength` normalises the dash unit to 1 so the stylesheet can draw
        * this curve without knowing its length. The dash itself is CSS-only:
        * a dasharray attribute here would export a half-drawn line. */
@@ -195,7 +236,10 @@
     if (of.aAbove > 0.004) chip(R - 2, BOT - 4, 'end', pal.att, pctS(of.aAbove) + ' later ▸');
     /* Clear of the headline badge, which is opaque, drawn later, and occupies
      * T+4 to T+64 against the right edge. */
-    if (of.dAbove > 0.004) chip(R - 2, T + 80, 'end', pal.def, pctS(of.dAbove) + ' unremediated ▸');
+    /* "unremediated" overstated this chip: it counts remediation that lands
+     * PAST the drawn window, nearly all of it after exploit code exists, not
+     * remediation that never happens. */
+    if (of.dAbove > 0.004) chip(R - 2, T + 80, 'end', pal.def, pctS(of.dAbove) + ' complete later ▸');
 
     /* Narrow shortens both band names: the full strings run under the headline
      * badge and the day-zero readout at phone widths. */
@@ -224,7 +268,7 @@
      * support — it is mostly a late CVE record in front of exploit code that is
      * already public. See MODEL.MEASURED.preIsRecordLag. */
     txt(svg, narrow ? L : R, BOT + (narrow ? 64 : 36),
-      pctS(d.beforeFrac) + (narrow ? ' beat the record' : ' public before the CVE record'),
+      pctS(d.beforeFrac) + (narrow ? ' before the CVE record' : ' public before the CVE record'),
       { a: narrow ? 'start' : 'end', c: pal.mut, fs: 10.5 });
     return svg;
   }
@@ -238,7 +282,7 @@
     /* The narrow branch puts the label above its bar, which pushes the whole
      * stack down by one row's worth; the caption underneath then needs the
      * extra gutter or it is drawn past the bottom edge. */
-    var h = labels.length * rh + (narrow ? 48 : 34);
+    var h = chartHeight('funnel', w, labels.length);
     frame(svg, w, h);
     var L = narrow ? 8 : 300, R = w - 58, T = 10;
     var max = Math.max.apply(null, r.fn.concat([1e-3]));
@@ -254,8 +298,8 @@
       var col = i === 0 ? pal.dim : i < 2 ? pal.def : i < 4 ? pal.warn : pal.bad;
       var barY = narrow ? y + 2 : y;
 
-      if (narrow) txt(svg, L, y - 4, labels[i], { c: i === last ? pal.txt : pal.mut, fs: 11.5 });
-      else txt(svg, L - 12, y + 15, labels[i], { a: 'end', c: i === last ? pal.txt : pal.mut, fs: 11.5 });
+      if (narrow) txt(svg, L, y - 4, labels[i], { c: i === last ? pal.txt : pal.mut, fs: 12 });
+      else txt(svg, L - 12, y + 15, labels[i], { a: 'end', c: i === last ? pal.txt : pal.mut, fs: 12 });
 
       svg.appendChild(el('rect', { 'class': 'ch-track', x: L, y: barY, width: Math.max(0, R - L), height: 19, rx: 3, fill: pal.sunk }));
       svg.appendChild(el('rect', { 'class': 'ch-bar', style: '--i:' + i, x: L, y: barY, width: bw, height: 19, rx: 3, fill: col, 'fill-opacity': i === last ? 1 : 0.8 }));
@@ -265,9 +309,12 @@
         var drop = r.fn[i - 1] > 0 ? (1 - v / r.fn[i - 1]) * 100 : 0;
         /* Narrow puts the label above the bar, so the delta goes below it
          * rather than sharing the label's line — six of these labels are long
-         * enough to reach the right edge at phone width. */
+         * enough to reach the right edge at phone width. Signed explicitly: a
+         * stage wider than its parent is a model defect this chart must not
+         * hide, and the old hand-built minus printed it as "−-12%". */
         txt(svg, narrow ? R : L - 12, narrow ? barY + 32 : y + 1,
-          '−' + drop.toFixed(0) + '%', { a: 'end', c: pal.dim, fs: 10, mono: true });
+          (drop < 0 ? '+' : '−') + Math.abs(drop).toFixed(0) + '%',
+          { a: 'end', c: pal.dim, fs: 10, mono: true });
       }
     });
     txt(svg, L, T + labels.length * rh + (narrow ? 26 : 16), 'per simulated year, bar width square-root scaled', { c: pal.dim, fs: 10 });
@@ -308,7 +355,7 @@
     var list = classes || [];
     var cols = [pal.att, pal.warn, pal.zero, pal.bad, pal.def, pal.mut, pal.txt, pal.dim];
     var rh = narrow ? 40 : 34, top = list.length * rh + 6;
-    var h = top + 84;
+    var h = chartHeight('routes', w, list.length);
     frame(svg, w, h);
     var L = 2, R = w - 4;
 
@@ -322,7 +369,7 @@
       var barY = y + (narrow ? 17 : 4);
       var barR = R - valW;
       txt(svg, L, y + (narrow ? 10 : 11), narrow ? c.short : c.label,
-        { c: pal.txt, fs: 11.5 });
+        { c: pal.txt, fs: 12 });
       svg.appendChild(el('rect', {
         'class': 'ch-track', x: narrow ? L : L + 168, y: barY,
         width: Math.max(4, barR - (narrow ? L : L + 168)), height: 10, rx: 3, fill: pal.sunk,
@@ -373,7 +420,7 @@
   }
 
   function survival(svg, w, r, pal) {
-    var h = 236;
+    var h = chartHeight('surv', w);
     frame(svg, w, h);
     var L = 40, R = w - 10, T = 12, B = h - 34;
     /* The horizon is read off the series rather than written as 365 in six
@@ -402,7 +449,12 @@
     if (half > 0) {
       var x = L + (R - L) * half / H;
       svg.appendChild(el('line', { x1: x, y1: T, x2: x, y2: B, stroke: pal.bad, 'stroke-dasharray': '3 3' }));
-      txt(svg, x + 5, T + 11, 'day ' + half, { c: pal.bad, fs: 10.5, mono: true });
+      /* Anchored away from the right edge once the median sits in the later
+       * half of the year — left-anchored it ran into the years-clean label
+       * that shares this row, and the two read as one garbled string. */
+      var flip = x > L + (R - L) * 0.55;
+      txt(svg, flip ? x - 5 : x + 5, T + 11, 'day ' + half,
+        { a: flip ? 'end' : undefined, c: pal.bad, fs: 10.5, mono: true });
     }
     txt(svg, R, T + 11, pctS(r.surv[H]) + ' of years clean', { a: 'end', c: pal.mut, fs: 10.5 });
     return svg;
@@ -419,7 +471,7 @@
      * row, and the bottom one the better/worse legend. Both were previously
      * saved by the letterboxing that came from measuring the chart too wide;
      * drawn at true width there is nothing to hide a label in. */
-    var h = rows.length * rh + 54;
+    var h = chartHeight('torn', w, rows.length);
     frame(svg, w, h);
     /* The gutter is sized for the longest parameter name, not for the average
      * one: right-anchored labels that outgrow it run off the left edge of the
@@ -441,15 +493,28 @@
       var y = T + i * rh;
       if (narrow) txt(svg, 2, y - 5, r.l, { c: pal.txt, fs: 11 });
       else txt(svg, labelW - 10, y + 12, r.l, { a: 'end', c: pal.txt, fs: 11 });
-      [[(r.lo - base) / span * half, pal.def], [(r.hi - base) / span * half, pal.att]].forEach(function (pair) {
-        var dxv = pair[0], col = pair[1], bw = Math.abs(dxv);
+      [(r.lo - base) / span * half, (r.hi - base) / span * half].forEach(function (dxv) {
+        var bw = Math.abs(dxv);
         if (bw < 0.7) return;
+        /* Coloured by DIRECTION, not by which end of the lever produced it.
+         * The legend below promises left = better and right = worse, and a
+         * slider set outside a lever's swept range puts the favourable end on
+         * the far side of the baseline — where a fixed end-to-colour mapping
+         * painted a "better" bar onto the worse side. */
+        var col = dxv < 0 ? pal.def : pal.att;
         svg.appendChild(el('rect', {
           'class': dxv < 0 ? 'ch-bar ch-bar-r' : 'ch-bar', style: '--i:' + i,
           x: dxv < 0 ? CX - bw : CX, y: y + (narrow ? 1 : 3), width: bw, height: 13, rx: 2, fill: col, 'fill-opacity': 0.9,
         }));
       });
-      txt(svg, w - 2, y + (narrow ? 12 : 13), pctS(r.lo) + '→' + pctS(r.hi), { a: 'end', c: pal.mut, fs: 10, mono: true });
+      /* A range whose ends round to the same integer is shown at one decimal,
+       * so a visible bar never carries a "13%→13%" readout. */
+      var rlo = pctS(r.lo), rhi = pctS(r.hi);
+      if (rlo === rhi && r.lo !== r.hi) {
+        rlo = (r.lo * 100).toFixed(1) + '%';
+        rhi = (r.hi * 100).toFixed(1) + '%';
+      }
+      txt(svg, w - 2, y + (narrow ? 12 : 13), rlo + '→' + rhi, { a: 'end', c: pal.mut, fs: 10, mono: true });
     });
     var fy = T + rows.length * rh + 16;
     txt(svg, CX - 8, fy, '← better', { a: 'end', c: pal.def, fs: 10 });
@@ -481,7 +546,7 @@
    * trade places, which is the same finding the detection chapter reports.
    * ═══════════════════════════════════════════════════════════════════════ */
   function sweep(svg, w, series, pal) {
-    var h = 268;
+    var h = chartHeight('sweep', w);
     frame(svg, w, h);
     var L = 40, R = w - 10, B = h - 44;
 
@@ -551,7 +616,7 @@
   function severity(svg, w, cal, pal) {
     var bands = cal.exploitation.bands;
     var narrow = w < 560;
-    var rh = 46, h = bands.length * rh + (w < 620 ? 68 : 52);
+    var rh = 46, h = chartHeight('severity', w, bands.length);
     frame(svg, w, h);
     var L = narrow ? 66 : 96, R = w - 92, T = 20;
     /* Floored, like the funnel's and the sweep's. Every bar is a fraction of
@@ -591,10 +656,10 @@
       cal.exploitation.kevBelowCritical.toFixed(0) + '% of confirmed-exploited';
     var b2 = 'vulnerabilities are rated below Critical.';
     if (w < 620) {
-      txt(svg, 0, fy, a, { c: pal.txt, fs: 11.5 });
-      txt(svg, 0, fy + 16, b2, { c: pal.txt, fs: 11.5 });
+      txt(svg, 0, fy, a, { c: pal.txt, fs: 12 });
+      txt(svg, 0, fy + 16, b2, { c: pal.txt, fs: 12 });
     } else {
-      txt(svg, 0, fy, a + ' ' + b2, { c: pal.txt, fs: 11.5 });
+      txt(svg, 0, fy, a + ' ' + b2, { c: pal.txt, fs: 12 });
     }
     return svg;
   }
@@ -609,7 +674,7 @@
       { label: String(v.prevYear.year), pub: v.prevYear.published, crit: v.prevYear.critical, share: v.prevYear.criticalShare, partial: false },
       { label: v.curYearRunRate.year + ' run-rate', pub: v.curYearRunRate.published, crit: v.curYearRunRate.critical, share: v.curYearToDate.criticalShare, partial: true },
     ];
-    var h = 190;
+    var h = chartHeight('volume', w);
     frame(svg, w, h);
     var L = 4, R = w - 4, T = 26;
     var max = Math.max.apply(null, rows.map(function (r) { return r.pub; }).concat([1e-3]));
@@ -634,11 +699,11 @@
       svg.appendChild(el('rect', { 'class': 'ch-bar', style: '--i:' + (i * 2 + 1), x: L, y: y + 20, width: Math.max(2, cw), height: 22, rx: 3, fill: pal.bad, 'fill-opacity': r.partial ? 0.75 : 1 }));
       txt(svg, L + Math.max(2, cw) + 8, y + 35,
         r.crit.toLocaleString('en-US') + ' critical · ' + r.share.toFixed(1) + '% of scored',
-        { c: pal.bad, fs: 11.5, w: 600, mono: true });
+        { c: pal.bad, fs: 12, w: 600, mono: true });
       if (r.partial) txt(svg, L, y + 56, 'linear run-rate of a partial year, not a forecast', { c: pal.dim, fs: 10 });
     });
     txt(svg, L, h - 6, 'Criticals grew ' + cal.volume.growth.critical + '× against ' + cal.volume.growth.published + '× total volume.',
-      { c: pal.txt, fs: 11.5 });
+      { c: pal.txt, fs: 12 });
     return svg;
   }
 
@@ -743,8 +808,9 @@
     });
   }
 
-  /* Eight chart renderers, the PNG exporter, and the one formatter js/app.js
-   * shares with them. `el` and `clear` used to be on this list too: they are
+  /* Eight chart renderers, the PNG exporter, and the two helpers js/app.js
+   * shares with them: the day formatter, and the height arithmetic behind the
+   * page's pre-draw reservations. `el` and `clear` used to be on this list too: they are
    * the internal SVG-node and container helpers, exported at some point for a
    * caller that never arrived. Nothing outside this file has ever referenced
    * either, and an exported helper is a shape somebody else can come to depend
@@ -753,6 +819,6 @@
   return {
     race: race, funnel: funnel, routes: routes, survival: survival,
     tornado: tornado, sweep: sweep, severity: severity, volume: volume,
-    toPNG: toPNG, fmtDays: fmtDays,
+    toPNG: toPNG, fmtDays: fmtDays, chartHeight: chartHeight,
   };
 });

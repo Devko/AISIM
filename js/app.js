@@ -102,7 +102,14 @@
   var CAN_ANIMATE = typeof Element !== 'undefined' && !!Element.prototype.animate;
 
   var $ = function (id) { return document.getElementById(id); };
-  var pctS = function (v) { return (v * 100).toFixed(0) + '%'; };
+  /* Never lets rounding contradict the number: a probability that exists is
+   * not shown as 0%, and one short of certainty is not shown as 100%. */
+  var pctS = function (v) {
+    var p = v * 100;
+    if (p > 0 && p < 0.5) return '<1%';
+    if (p >= 99.5 && p < 100) return '>99%';
+    return p.toFixed(0) + '%';
+  };
   var num = function (v, d) { return Number(v).toFixed(d === undefined ? 0 : d); };
   var thou = function (v) { return Number(v).toLocaleString('en-US'); };
 
@@ -432,7 +439,7 @@
        * two largest of those, so a summary omitting both would describe an
        * estate the model is not simulating. */
       M.fmtN(P.staff) + ' people with access',
-      P.mfa + '% phishing-resistant auth',
+      P.mfa + '% authentication strength',
     ];
     if (P.supply >= 0.3) bits.push(P.supply.toFixed(2) + ' supply-chain hits a year');
     return bits.join(' · ');
@@ -660,8 +667,8 @@
     { k: 'discovery',   lo: 0,    hi: 80,  l: 'Vulnerability discovery rate' },
   ];
   var ADVICE = {
-    stackVulns: ['Reduce edge software footprint', 'Each exposed product commits you to its vulnerability stream, and it is the one term here that scales with how much software you chose to run rather than with how well you run it.'],
-    exposed:    ['Reduce the exposed attack surface', 'Fewer reachable systems reduces every other term simultaneously.'],
+    stackVulns: ['Reduce edge software footprint', 'Each exposed product commits you to its vulnerability stream, and it is the one input here that scales with how much software you chose to run rather than with how well you run it.'],
+    exposed:    ['Reduce the exposed attack surface', 'Fewer reachable systems reduces every other factor at the same time.'],
     edge:       ['Reduce or segment edge appliances', 'They remediate slower, support no endpoint agent, and are the asset class where mass exploitation begins at day zero.'],
     inventory:  ['Close the asset inventory gap', 'A system in no remediation cycle stays exposed for months rather than days.'],
     detect:     ['Reduce time to detect', 'This does not prevent compromise. It determines whether a compromise escalates to an incident, and no other parameter comes close on that metric.'],
@@ -671,7 +678,7 @@
     emergHit:   ['Fix the trigger, not the speed', 'Remediating in hours has no effect if applicability is never established.'],
     virtual:    ['Front exposed services with enforceable rulesets', 'Recovers the exposure window while the permanent fix is tested. Does not cover appliances.'],
     campaigns:  ['Instrument the edge for enumeration', 'Targeted campaigns are distinguishable from background scanning where telemetry exists.'],
-    supply:     ['Verify software provenance and integrity', 'Remediation cadence has no effect on this vector.'],
+    supply:     ['Verify software provenance and integrity', 'Remediation cadence has no effect on this route.'],
     edrCoverage: ['Extend telemetry across the estate', 'Worth nothing against being compromised and a great deal against it becoming an incident. Appliances take no agent, so this has a ceiling you do not set.'],
     /* The one action on this list whose mechanism the model does not simulate.
      * It moves the residual rate at which a campaign succeeds with no
@@ -687,8 +694,8 @@
     mfa: ['Move to phishing-resistant authentication', 'Origin-bound credentials with no fallback path, including for the service desk, which is where this control is usually undone. It gates the two largest non-vulnerability routes at once.'],
     awareness: ['Improve filtering and shorten reporting time', 'Fewer credible lures reaching somebody who acts, and faster escalation when one does. This acts on arrival rather than on what happens afterwards, so it composes with authentication rather than overlapping it.'],
     pam: ['Reduce what a valid account reaches', 'Just-in-time privilege, vaulting and session brokering. The only control here that acts after an adversary already holds working credentials.'],
-    configAssurance: ['Close reachable misconfiguration', 'Baselines, drift detection and external attack-surface monitoring. The one route in the model that no patch cycle can close, because there is nothing to patch.'],
-    insiderCtl: ['Tighten personnel and least privilege', 'Joiner-mover-leaver rigour, least privilege and egress monitoring. Deliberately the weakest control effect in the model: an authorised person acting within their access is the hardest case here.'],
+    configAssurance: ['Close reachable misconfiguration', 'Baselines, drift detection and external attack-surface monitoring. The one route here that no patch cycle can close, because there is nothing to patch.'],
+    insiderCtl: ['Tighten personnel and least privilege', 'Joiner-mover-leaver rigour, least privilege and egress monitoring. Deliberately the weakest control effect here: an authorised person acting within their access is the hardest case in this model.'],
     deviceCtl: ['Complete device encryption and enrolment', 'Full-disk encryption, MDM and remote wipe. Small in absolute terms, and close to solved wherever it is done at all.'],
     staff: ['Reduce standing access', 'Four of the eight routes scale with how many people can authenticate. This is a denominator, not a headcount recommendation: fewer standing accounts and narrower access reduce it without anyone leaving.'],
   };
@@ -713,6 +720,24 @@
    * element itself already reports the exact drawing width. */
   function width(id) {
     return Math.max(280, Math.floor($(id).getBoundingClientRect().width));
+  }
+  /* Corrects each chart's pre-draw reservation for the CURRENT width. The
+   * markup can only carry one height per chart and carries the wide one, so
+   * on a narrow layout the box reserved before any script ran is wrong for
+   * four of the eight charts, and the document shifted by the difference when
+   * the settle pass finally drew them. Setting the drawn height here, at
+   * boot, moves that correction from seconds in to script load. The
+   * arithmetic is js/charts.js's own, so the two cannot drift. */
+  function reserveHeights() {
+    [['race'], ['funnel', M.FUNNEL.length], ['routes', ACCESS_ROWS.length],
+     ['surv'], ['torn', LEVERS.length], ['sweep'],
+     ['severity', C.exploitation.bands.length], ['volume'],
+    ].forEach(function (p) {
+      var svg = $(p[0]);
+      if (!svg) return;
+      var h = CH.chartHeight(p[0], width(p[0]), p[1]);
+      if (h) svg.setAttribute('height', h);
+    });
   }
   /* Stat values are counted to their new figure rather than swapped, so a
    * change reads as the instrument settling on a reading. Two cases skip the
@@ -868,15 +893,15 @@
     /* The clock the MODEL runs on: the pooled settled years, not the most
      * recent row. Naming `latest` here while simulating something else put two
      * different clocks in one sentence. */
-    add(n, 'Measured clock, ' + C.pocTiming.settled.years[0] + '–' +
+    add(n, 'Measured clock, ' + C.pocTiming.settled.years[0] + '-' +
       C.pocTiming.settled.years[C.pocTiming.settled.years.length - 1] + ': median ',
       b(CH.fmtDays(d.median)), ' from publication to public exploit code.');
     if (P.ai > 0) {
       add(n, ' Modelled at ', b('+' + P.ai), ' compression, scaling that clock by ×' +
         d.scale.toFixed(2) + ': ', b(pctS(d.beforeFrac)),
-        ' of exploits arrive ahead of patch availability.');
+        ' of exploits are already public when the CVE record lands.');
     } else {
-      add(n, ' ', b(pctS(d.beforeFrac)), ' of exploits arrive ahead of patch availability.');
+      add(n, ' ', b(pctS(d.beforeFrac)), ' of exploits are already public when the CVE record lands.');
     }
   }
 
@@ -917,7 +942,7 @@
   }
 
   /* The settle pass is the heaviest arithmetic on the page: a 60,000-trial run,
-   * then two 5,000-trial runs for each of the LEVERS rows, then one for each
+   * then two N_SENS-trial runs for each of the LEVERS rows, then one for each
    * point of each curve in CLOCKS. Run as one block it holds the main thread
    * for all of it — scrolling stops, hover states stick, and the theme button
    * does not answer until it ends.
@@ -1009,7 +1034,7 @@
    * claimed a reading the charts below it were not showing. */
   var metricRaf = 0, metricTimer = null;
 
-  /* The sensitivity bars and the sweep are chapters 03 and 08. Together they
+  /* The sensitivity bars and the sweep are chapters 03 and 07. Together they
    * are 75 of the settle's 76 simulations — about 27 of its 28 seconds — and a
    * reader at the top of the page has not asked for either yet. They are held
    * back until one of those panels comes within a screen and a half, which is
@@ -1155,7 +1180,7 @@
       });
     }
 
-    /* Everything from here is chapters 03 and 08. Built only once a reader is
+    /* Everything from here is chapters 03 and 07. Built only once a reader is
      * heading for them — see armSens. The stages already queued above are the
      * headline figures and the four charts above the fold, which every reader
      * gets regardless. */
@@ -1204,22 +1229,28 @@
        * chart alone rather than drawing it from a half-filled array. */
       lastSens = { base: base, rows: rows, sweep: null };
     });
-    /* One curve per dial at six points each, rather than one curve at eleven.
-     * Each is swept over its own travel with the others held where the reader
-     * left them, so what the chart compares is four mechanisms against one
-     * estate. Six points is enough: every one of these curves is smooth and
+    /* One curve per dial at six grid points each, rather than one curve at
+     * eleven. Each is swept over its own travel with the others held where the
+     * reader left them, so what the chart compares is four mechanisms against
+     * one estate. Six points is enough: every one of these curves is smooth and
      * monotone, and the shape being compared is which of them is steepest. */
     CLOCKS.forEach(function (cl) {
       var pts = [];
-      sweepSeries.push({ k: cl.k, l: cl.l, c: cl.c, cur: snap[cl.k] || 0, pts: pts });
-      for (var a = 0; a <= 100; a += 20) {
-        (function (v) {
-          /* Points land in sweep order because the stages run in order, so the
-           * curve does not have to be sorted back into shape afterwards. */
-          pushSlicedSim(stages, over(cl.k, v, snap), N_SENS, SEED_SENS, SENS_OPTS,
-            function (r) { pts.push([v, r[metric]]); });
-        })(a);
-      }
+      var cur = snap[cl.k] || 0;
+      sweepSeries.push({ k: cl.k, l: cl.l, c: cl.c, cur: cur, pts: pts });
+      /* The grid, plus the dial's exact current value when it sits between
+       * grid points: the "you are here" marker is placed at that value, and on
+       * a convex curve a marker between two sampled points would hang off the
+       * drawn chord. */
+      var samples = [0, 20, 40, 60, 80, 100];
+      if (samples.indexOf(cur) < 0) samples.push(cur);
+      samples.sort(function (x, y) { return x - y; });
+      samples.forEach(function (v) {
+        /* Points land in sweep order because the stages run in order, so the
+         * curve does not have to be sorted back into shape afterwards. */
+        pushSlicedSim(stages, over(cl.k, v, snap), N_SENS, SEED_SENS, SENS_OPTS,
+          function (r) { pts.push([v, r[metric]]); });
+      });
     });
     stages.push(function () {
       /* Every curve's marker sits at the baseline height, because each dial is
@@ -1237,7 +1268,7 @@
 
   /* Drains a built stage list one turn at a time. Extracted from heavy() so
    * the pass can be started from more than one place in it — a settle that
-   * stops after the main run, because chapters 03 and 08 have not been armed
+   * stops after the main run, because chapters 03 and 07 have not been armed
    * yet, runs the same loop as one that carries the whole tail. */
   function runStages(stages, gen, metric) {
     var i = 0;
@@ -1274,9 +1305,8 @@
     var n = empty($('wild-note'));
     add(n, 'Of the ', b(num(r.fn[2], 2)), ' vulnerabilities a year in your stack that acquire a working exploit, ',
       b(num(r.wild, 2)), ' (' + pctS(r.wildShare) + ') are confirmed exploited against live targets. ',
-      b(num(r.critWild, 2)), ' of those are Critical-rated — the band this page cites its arming and ' +
-      'exploitation rates for, and roughly a third of what is actually exploited. The remainder still attract ' +
-      'opportunistic traffic at a fraction of the hazard rate.');
+      b(num(r.critWild, 2)), ' of those are Critical-rated, roughly a third of what is actually ' +
+      'exploited. The rest still draw opportunistic attack traffic, at a lower rate.');
   }
 
   /* The five actions are ranked by their effect at the current settings, so
@@ -1338,7 +1368,7 @@
       var li0 = E('li');
       var t0 = E('div', 'a-t');
       add(t0, b('No defender parameter moves this materially.'),
-        E('span', null, 'At these settings the outcome is driven by vectors the remediation process does not reach. See the initial access vector split.'));
+        E('span', null, 'At these settings the outcome is driven by routes the remediation process does not reach. See how the first compromise arrives, below.'));
       add(li0, t0, E('div', 'a-d', 'n/a'));
       host.appendChild(li0);
     } else {
@@ -1464,14 +1494,30 @@
         .catch(function () { toast('Could not render PNG'); });
     });
     if (cp) cp.addEventListener('click', function () {
-      render().then(function (bl) {
-        if (window.ClipboardItem && navigator.clipboard && navigator.clipboard.write) {
-          return navigator.clipboard.write([new ClipboardItem({ 'image/png': bl })])
-            .then(function () { toast('Chart copied to clipboard'); });
-        }
-        download(bl, 'exposure-race-' + id + '.png');
-        toast('Clipboard unavailable. PNG saved instead');
-      }).catch(function () { toast('Could not render PNG'); });
+      var blobP = render();
+      var saveInstead = function (msg) {
+        blobP.then(function (bl) { download(bl, 'exposure-race-' + id + '.png'); toast(msg); })
+          .catch(function () { toast('Could not render PNG'); });
+      };
+      if (!(window.ClipboardItem && navigator.clipboard && navigator.clipboard.write)) {
+        saveInstead('Clipboard unavailable. PNG saved instead');
+        return;
+      }
+      /* The ClipboardItem is constructed inside the click, with the PNG
+       * supplied as a promise: Safari rejects a write whose payload resolved
+       * after the user gesture ended, and that failure used to land in the
+       * render catch and report "Could not render PNG" for a render that had
+       * succeeded. A clipboard refusal now falls back to the download. */
+      var write;
+      try {
+        write = navigator.clipboard.write([new ClipboardItem({ 'image/png': blobP })]);
+      } catch (e) {
+        write = blobP.then(function (bl) {
+          return navigator.clipboard.write([new ClipboardItem({ 'image/png': bl })]);
+        });
+      }
+      write.then(function () { toast('Chart copied to clipboard'); })
+        .catch(function () { saveInstead('Clipboard refused the image. PNG saved instead'); });
     });
   }
 
@@ -1533,12 +1579,12 @@
     var det = DET || closestDetection();
     var idn = IDN || closestIdentity(), ppl = PPL || closestPeople();
     var rows = [
-      { l: 'What strangers can reach', v: M.EXPOSURE[EXP] ? M.EXPOSURE[EXP].l : '—' },
-      { l: 'Adversary attention', v: M.ATTENTION[ATTN] ? M.ATTENTION[ATTN].l : '—' },
-      { l: 'Remediation maturity', v: M.MATURITY[MAT] ? M.MATURITY[MAT].l : '—' },
-      { l: 'Detection posture', v: M.DETECTION[det] ? M.DETECTION[det].l : '—' },
-      { l: 'Authentication', v: M.IDENTITY[idn] ? M.IDENTITY[idn].l : '—' },
-      { l: 'People and process', v: M.PEOPLE[ppl] ? M.PEOPLE[ppl].l : '—' },
+      { l: 'What strangers can reach', v: M.EXPOSURE[EXP] ? M.EXPOSURE[EXP].l : 'not set' },
+      { l: 'Adversary attention', v: M.ATTENTION[ATTN] ? M.ATTENTION[ATTN].l : 'not set' },
+      { l: 'Remediation maturity', v: M.MATURITY[MAT] ? M.MATURITY[MAT].l : 'not set' },
+      { l: 'Detection posture', v: M.DETECTION[det] ? M.DETECTION[det].l : 'not set' },
+      { l: 'Authentication', v: M.IDENTITY[idn] ? M.IDENTITY[idn].l : 'not set' },
+      { l: 'People and process', v: M.PEOPLE[ppl] ? M.PEOPLE[ppl].l : 'not set' },
     ];
     if (ON.length) {
       rows.splice(1, 0, { l: 'Also true of this estate',
@@ -1613,7 +1659,7 @@
       /* The trial and block counts the deck's method slides state. Passed
        * rather than retyped there, for the reason in that file's header:
        * nothing in the deck states a number of its own. */
-      trials: N_HEAVY, blocks: M.blocksFor(N_HEAVY),
+      trials: N_HEAVY, blocks: M.coeffDrawsFor(N_HEAVY),
       /* Straight from the model's own scope declaration, so the caveat the
        * deck carries on every slide is the same string the page shows and
        * cannot be edited into something softer here. */
@@ -1689,18 +1735,19 @@
     var sw = C.pocTiming.settled;
     anchorRow(host, 'Days from publication to a public exploit (median)', 'measured',
       num(sw.medianDays, 1) + ' d',
-      'CyberMon · ' + sw.years[0] + '–' + sw.years[sw.years.length - 1] +
-      ' settled years pooled, n=' + thou(sw.n) + ', 90-day horizon');
+      'CyberMon · ' + sw.years[0] + '-' + sw.years[sw.years.length - 1] +
+      ' complete years pooled, ' + thou(sw.n) + ' records, 90-day window');
     anchorRow(host, 'Exploits already public when the CVE record lands', 'measured',
       num(sw.pctBefore, 1) + '%',
-      'CyberMon · same pooled window · mostly NVD publication lag, not pre-disclosure: the same series reads ' +
+      'CyberMon · same pooled window. Mostly NVD publication lag rather than pre-disclosure exploitation: the same series reads ' +
       C.pocTiming.recordLag.firstPctBefore + '% in ' + C.pocTiming.recordLag.firstYear +
-      ' at a median of ' + Math.abs(C.pocTiming.recordLag.worstMedianDays) + ' days before publication');
+      ', with a median as deep as ' + Math.abs(C.pocTiming.recordLag.worstMedianDays) +
+      ' days before publication in ' + C.pocTiming.recordLag.worstYear);
     anchorRow(host, 'Most recent year, still collecting exploits', 'measured',
       C.pocTiming.latest.medianDays + ' d median · ' + C.pocTiming.latest.pctBefore + '% before',
-      'CyberMon · ' + C.pocTiming.latest.year + ', n=' +
-      C.pocTiming.series[C.pocTiming.series.length - 1].n +
-      (C.pocTiming.latest.provisional ? '. Provisional, right-censored, not used to calibrate' : ''));
+      'CyberMon · ' + C.pocTiming.latest.year + ', ' +
+      C.pocTiming.series[C.pocTiming.series.length - 1].n + ' records' +
+      (C.pocTiming.latest.provisional ? '. Incomplete year, still collecting, not used to calibrate' : ''));
     /* The instrument's own coverage, stated beside what it measured. Every
      * row above this one is read off a catalogue whose sample per year has
      * fallen by roughly six sevenths since 2017 while CVE publication tripled,
@@ -1710,7 +1757,7 @@
     var trend = C.pocTiming.sampleTrend || [];
     var tPeak = trend.reduce(function (a, b) { return b.n > a.n ? b : a; }, trend[0] || { n: 0, year: 0 });
     var tLast = trend.filter(function (y) { return y.year <= 2024; }).pop() || tPeak;
-    anchorRow(host, 'Exploit-catalogue coverage, peak year against latest settled', 'measured',
+    anchorRow(host, 'Exploit-catalogue coverage, peak year against latest complete year', 'measured',
       thou(tPeak.n) + ' → ' + thou(tLast.n) + ' CVEs a year',
       'CyberMon · ' + tPeak.year + ' vs ' + tLast.year +
       '. The sample shrank as CVE volume grew, so the weaponised share above is a floor');
@@ -1757,7 +1804,7 @@
     add(f, b(num(C.exploitation.kevBelowCritical) + '%'),
       ' of confirmed-exploited vulnerabilities are rated below Critical, and ',
       b(C.exploitation.criticalEpssBelow1pct + '%'),
-      ' of Critical-rated CVEs carry an EPSS score below 1% — that is a probability of exploitation ' +
+      ' of Critical-rated CVEs carry an EPSS score below 1%. That is a probability of exploitation ' +
       'activity in the next 30 days, not over the life of the vulnerability. Critical is only ',
       b(C.exploitation.criticalVsHigh + '×'),
       ' High. That is a weak signal, not a filter, which is why this model is driven by exploit availability rather than by severity band.');
@@ -1780,7 +1827,7 @@
     var host = empty($('clock'));
     var sw = C.pocTiming.settled;
     clockRow(host, 'Median days from publication to public exploit code, ' +
-      sw.years[0] + '–' + sw.years[sw.years.length - 1],
+      sw.years[0] + '-' + sw.years[sw.years.length - 1],
       num(sw.medianDays, 1) + ' d');
     /* NOT "before the patch does". This is the share of the arming series with
      * a negative publication-to-exploit interval, and most of it is a late CVE
@@ -1828,7 +1875,7 @@
       .forEach(function (el) { io.observe(el); });
   }
 
-  /* Arms chapters 03 and 08 when a reader heads for them. A screen and a half
+  /* Arms chapters 03 and 07 when a reader heads for them. A screen and a half
    * of margin, so the work starts before the panel is on screen rather than
    * when it arrives — the reader still waits, but they wait less.
    *
@@ -1902,6 +1949,7 @@
     } catch (e) { /* ignore */ }
     $('theme-btn').textContent = currentTheme() === 'dark' ? 'Light' : 'Dark';
 
+    reserveHeights();
     fromURL();
     buildControls(M.SPEC.def, $('cd'), $('cd-adv'));
     buildControls(M.SPEC.att, $('ca'), $('ca-adv'));
@@ -2018,8 +2066,9 @@
       var word = COUNT_WORD[n] || String(n);
       e.textContent = word.charAt(0).toUpperCase() + word.slice(1);
     });
-    /* Trial and block counts for the method note, from the constants that set
-     * them. See MODEL.blocksFor. */
+    /* Trial and redraw counts for the method note, from the constants that
+     * set them. See MODEL.coeffDrawsFor — not blocksFor, which understates
+     * the redraw count by the partial block at the end of the run. */
     document.querySelectorAll('[data-n-heavy]').forEach(function (e) {
       e.textContent = N_HEAVY.toLocaleString('en-GB');
     });
@@ -2027,7 +2076,7 @@
       e.textContent = N_FAST.toLocaleString('en-GB');
     });
     document.querySelectorAll('[data-blocks]').forEach(function (e) {
-      e.textContent = String(M.blocksFor(N_HEAVY));
+      e.textContent = String(M.coeffDrawsFor(N_HEAVY));
     });
 
     renderAnchors();

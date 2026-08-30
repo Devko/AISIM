@@ -140,7 +140,17 @@
      *
      * `latest` is still exported and the page still shows it — a reader should
      * see the most recent row and see it marked provisional. It just does not
-     * calibrate anything. */
+     * calibrate anything.
+     *
+     * One conditioning is carried rather than corrected. The quantile
+     * positions below are shares of the 90-day arming series, and the model
+     * applies them to the whole armed population — whose arming rate is
+     * measured on a one-year cohort and raised further by ASSUMED.pocCoverage.
+     * Exploit code that arrives past the series horizon is therefore drawn
+     * earlier than it arrived; the tail past the p75 knot reaches to a year,
+     * which recovers some of that mass but not its timing. The residual
+     * front-loads arrival, the same direction as every other timing choice
+     * here, and is declared in SCOPE.wildTimingNote. */
     pocBefore: C.pocTiming.settled.pctBefore / 100,
     pocMedian: C.pocTiming.settled.medianDays,
     pocWithinWeek: C.pocTiming.settled.pctWithinWeek / 100,
@@ -281,7 +291,7 @@
      * is to narrow the tails — the middle of the distribution is roughly
      * right, the best and worst estates are both understated. */
     routeIndependence: true,
-    routeIndependenceNote: 'Access classes are drawn independently. Real control weaknesses correlate, since an estate weak on authentication is usually also weak on patching, so this understates how concentrated risk is at both ends of the range.',
+    routeIndependenceNote: 'The access classes are simulated independently of each other. In reality control weaknesses correlate, since an estate weak on authentication is usually also weak on patching, so this understates how concentrated risk is at both ends of the range.',
     /* Detection enters this model in exactly one place — contained() — and
      * never touches a hazard, a remediation clock or an exploit-success roll.
      * A perfectly flat compromise line against detection posture is therefore
@@ -313,27 +323,35 @@
      * in-the-wild pressure. Every window here should be read as the earliest
      * one the evidence supports, not the expected one.
      *
-     * TWO. The floor is not a finding. A perfectly run estate — everything in
-     * inventory, applicability in an hour, a daily change window, full
-     * telemetry, and no criticals at all — still reports a compromise rate in
-     * the mid teens, entirely from supply-chain arrivals and from targeted
-     * campaigns succeeding with no vulnerability to use. Both of those sit on
-     * the threat side of the page, where the reader has no lever, because this
-     * model does not simulate the controls that actually move them:
-     * segmentation, egress control, phishing-resistant MFA, privileged access
-     * management, provenance verification. That floor is the model's ignorance,
-     * not an irreducible property of the world, and a reader who takes it as
-     * "nothing more can be done here" has been misled by an absence. */
+     * TWO. The floor is not a finding. An estate run to the recipe in
+     * `floorRecipe` — remediation perfected, no criticals at all — still
+     * carries most of a typical estate's compromise rate, because the recipe
+     * perfects the patch clock and most of the rate never raced it: at
+     * default control settings the remainder is mostly phishing and
+     * credential abuse. Drive every control in this model to its ceiling as
+     * well and what is left is mostly supply-chain arrivals, plus the
+     * residual each ceiling deliberately stops short of. That last remainder
+     * sits where the reader has no lever because this model does not simulate
+     * the controls that would move it — provenance verification, segmentation,
+     * egress control. The floor is the model's ignorance, not an irreducible
+     * property of the world, and a reader who takes it as "nothing more can
+     * be done here" has been misled by an absence. */
     wildTimingUsesPoCClock: true,
-    wildTimingNote: 'In-the-wild exposure is timed from when exploit code exists, which is the earliest onset the evidence supports rather than the expected one. The KEV-latency series in the same snapshot is far slower, but it measures cataloguing rather than exploitation.',
+    wildTimingNote: 'In-the-wild exposure is timed from when exploit code exists, which is the earliest onset the evidence supports rather than the expected one. The KEV-latency series in the same snapshot is far slower, but it measures cataloguing rather than exploitation. Two smaller choices lean the same way: exploitation with no public code is timed from before the CVE record lands, though in reality much of it begins after disclosure with privately built exploits, and the quantile positions of the clock come from a 90-day-window series applied to the whole armed stream.',
     floorIsUnmodelledNotIrreducible: true,
     /* This note used to say the floor came from routes the model did not
      * simulate, and named phishing-resistant MFA and egress control as the
      * missing controls. Four of the five routes it meant are now simulated
      * and two of those controls are now sliders, so the floor has moved and
-     * the reason has changed with it: what is left is supply chain, which
-     * this model still carries as one reduced-form rate. */
-    floorNote: 'The compromise rate a perfectly run estate still carries comes mostly from the supply-chain route, which is a single reduced-form rate rather than a simulation of what happens inside a supplier compromise. Provenance verification, segmentation and blast-radius control are not modelled, so that remainder measures what this model still omits rather than what cannot be fixed.',
+     * the reason has changed with it. It also used to attribute the whole
+     * floor to supply chain, which is true only of an estate with every
+     * control at its ceiling; the floorRecipe estate leaves the controls
+     * where the reader has them, and at the defaults its remainder is mostly
+     * phishing and credential abuse. Supply chain is singled out because it
+     * is the one term no control on this page moves at all — and because it
+     * is one judgement rate doing that much work, the note says plainly that
+     * the floor tracks its slider. */
+    floorNote: 'With every control here at its ceiling, the compromise rate that remains comes mostly from the supply-chain route — a single reduced-form judgement rate, not a simulation of what happens inside a supplier compromise, and the floor tracks that slider almost linearly. Provenance verification, segmentation and blast-radius control are not modelled, so that remainder measures what this model still omits rather than what cannot be fixed.',
     /* The figure the note above used to quote — a floor in the mid teens — was
      * measured on an estate with no people and nothing exposed, not on the one
      * the sentence goes on to describe, which reads three times that. Stated as
@@ -343,7 +361,7 @@
     /* Share of breaches attributed to vulnerability exploitation as the initial
      * access vector. `reported`, not `measured`: somebody else's population and
      * methodology, cited so the page's coverage claim has one source. */
-    vulnShareOfBreaches: 0.31,
+    vulnShareOfBreaches: 0.20,
     src: 'Verizon DBIR 2026',
     /* `agentSkill` is no longer the model's stand-in for phishing, credential
      * abuse and insider action — those are simulated. What it still carries is
@@ -388,9 +406,11 @@
      * racing a 19-minute breakout it therefore usually lost. Most of what the
      * reported figure counts is an endpoint agent killing an encryptor on
      * machine time, which is exactly that branch, and it fires in seconds to
-     * minutes rather than in half an hour. Retuned, the ladder reads
-     * 17/31/45/57/66 and the rung carrying the anchor's own population — EDR
-     * deployed — lands on it. */
+     * minutes rather than in half an hour. Retuned, the ladder brackets the
+     * anchor and the rung carrying the anchor's own population — EDR deployed
+     * — lands on it; the suite asserts both. The measured column is not
+     * quoted here any more: the one this comment used to carry had drifted
+     * two points by the time anyone re-read it. */
     containmentReported: 0.44,
     containmentSrc: 'Sophos State of Ransomware 2026',
     containmentNote: 'Reported containment is an unconditional rate across all ransomware attacks, measured per attack. It bounds the containment block as a whole rather than any single regime coefficient, and the quantity to read it against is containment per intrusion rather than the chance that every intrusion in a year was contained.',
@@ -437,7 +457,7 @@
    * ═══════════════════════════════════════════════════════════════════════ */
   var ASSUMED = {
     /* days before publication that a pre-disclosure exploit appears (median) */
-    preMedian:      { l: 'Days a pre-disclosure exploit precedes publication (median)', v: 7,    lo: 3,    hi: 21,   why: 'No public measurement of pre-disclosure exploit age. Shape assumed lognormal.' },
+    preMedian:      { l: 'Days a pre-disclosure exploit precedes publication (median)', v: 7,    lo: 3,    hi: 21,   why: 'No public measurement of how long a pre-disclosure exploit exists before the CVE record. The spread around the median is assumed rather than measured.' },
     /* 75th percentile of the PoC clock, days (anchors the slow tail) */
     /* The fourth knot of the attacker clock, and the only one with no measured
      * value. The three below it come from CyberMon's `arming` series, which is
@@ -448,7 +468,7 @@
      * between knots from two distributions, so the number stays but the claim
      * does not: it is judgement, bounded above by the horizon of the series it
      * is a knot in. */
-    pocP75:         { l: 'Days from publication to public exploit code (75th percentile)', v: 40,   lo: 20,   hi: 90,   why: 'No published p75 for the 90-day arming series the other three knots come from. Bounded above by that horizon.' },
+    pocP75:         { l: 'Days from publication to public exploit code (75th percentile)', v: 40,   lo: 20,   hi: 90,   why: 'No published 75th-percentile figure for the 90-day series the other three points come from, so it is capped by that 90-day window.' },
     /* Daily hazard that a mass-exploitation campaign reaches one exposed system.
      *
      * The value was 0.010 against a per-vulnerability lognormal spread of
@@ -481,13 +501,13 @@
      * and the per-vulnerability arrival rate that reproduces the SAME anchored
      * mix falls by roughly the product. The aggregate this is held to has not
      * moved; what moved is how much of it this one number was doing. */
-    scanHazBase:    { l: 'Daily chance a mass-exploitation campaign reaches one exposed system', v: 0.0007, lo: 0.00028, hi: 0.00154, why: 'No public per-asset campaign-arrival rate; fitted so the initial-access mix reproduces SCOPE.accessMix. Stated as a mean, with the per-vulnerability spread around it mean-normalised.' },
+    scanHazBase:    { l: 'Daily chance a mass-exploitation campaign reaches one exposed system', v: 0.0007, lo: 0.00028, hi: 0.00154, why: 'No public per-asset campaign-arrival rate. Fitted so that the simulated mix of access routes matches the reported breach population. Stated as an average, with variation between vulnerabilities around it that leaves that average unchanged.' },
     /* hazard multiplier when an exploit exists publicly but is not known to be used */
-    pocOnlyHazard:  { l: 'Hazard multiplier when exploit code is public but not known to be used', v: 0.08, lo: 0.02, hi: 0.20, why: 'Public PoC without confirmed in-the-wild use still draws opportunistic traffic.' },
+    pocOnlyHazard:  { l: 'Attack-rate multiplier when exploit code is public but not known to be used', v: 0.08, lo: 0.02, hi: 0.20, why: 'Public PoC without confirmed in-the-wild use still draws opportunistic traffic.' },
     /* hazard multiplier for edge appliances vs ordinary web systems */
-    edgeHazard:     { l: 'Hazard multiplier for edge appliances against ordinary systems', v: 2.2,  lo: 1.4,  hi: 3.6,  why: 'Edge appliances are hit harder and carry no endpoint telemetry.' },
+    edgeHazard:     { l: 'Attack-rate multiplier for edge appliances against ordinary systems', v: 2.2,  lo: 1.4,  hi: 3.6,  why: 'Edge appliances are hit harder and carry no endpoint telemetry.' },
     /* hazard multiplier applied to the pre-publication window (targeted, not mass) */
-    preHazard:      { l: 'Hazard multiplier before publication, where activity is targeted', v: 0.25, lo: 0.08, hi: 0.60, why: 'Zero-day activity is targeted; mass scanning follows public code.' },
+    preHazard:      { l: 'Attack-rate multiplier before publication, where activity is targeted', v: 0.25, lo: 0.08, hi: 0.60, why: 'Zero-day activity against ordinary software is targeted; mass scanning follows public code. Appliances are the exception — their zero-days draw mass exploitation — and carry SHAPE.edgePreHaz on top of this.' },
     /* P(you actually run the affected product at all) */
     /* These two used to ask "do you run the affected product at all?", which is
      * the question `stackVulns` has ALREADY answered — its own label is
@@ -510,7 +530,7 @@
     runsWeb:        { l: 'Chance an affected ordinary product is in a vulnerable version and configuration', v: 0.85, lo: 0.65, hi: 1.00, why: 'Version spread and optional features are wider in ordinary software, so more advisories land on a build or configuration that is not exposed to them.' },
     /* containment: breakout and objective timings, days */
     breakoutMedian: { l: 'Days from foothold to lateral movement (median)', v: 0.0134, lo: 0.009, hi: 0.033,
-      why: 'Median that reproduces the reported 29-minute average eCrime breakout under this model\'s lognormal spread. Upper bound is the 2024 figure (~48 min average).',
+      why: 'Median that reproduces the reported 29-minute average eCrime breakout under this model\'s spread of timings. Upper bound is the 2024 figure (~48 min average).',
       src: 'CrowdStrike Global Threat Report 2026' },
     objectiveMedian:{ l: 'Days from foothold to the adversary objective (median)', v: 5,    lo: 2,    hi: 12,
       why: 'Median dwell when the adversary announces itself, usually via a ransomware note, giving a direct read on time from foothold to objective.',
@@ -529,7 +549,7 @@
        * right order-of-magnitude sanity check on the containment block AS A
        * WHOLE, which is where it now sits — in SCOPE, against the aggregate the
        * model actually produces. */
-      why: 'Detected after breakout but before the objective. Judgement: no published figure conditions containment on this window.' },
+      why: 'Detected after breakout but before the objective. Judgement: no published figure measures containment inside this window.' },
     containLate:    { l: 'Containment when detected after the objective', v: 0.15, lo: 0.03, hi: 0.38, why: 'Detected after the objective is reached. Not zero: ransomware is regularly stopped part-way through encryption, and exfiltration is regularly cut off part-way through a transfer.' },
     /* fraction of your estate an affected product covers */
     afEdgeMin:      { l: 'Share of the appliance tier one affected product covers', v: 0.30, lo: 0.15, hi: 0.45, why: 'Appliance fleets are homogeneous: one vendor covers much of the tier.' },
@@ -546,14 +566,14 @@
      * the compromise probability of a 2,000-system estate moves from 40% to
      * 58%. A number that load-bearing does not get to sit outside the interval
      * that is supposed to describe the model's uncertainty. */
-    crowdExp:       { l: 'How campaign pressure scales with affected system count (exponent)', v: 0.4, lo: 0.25, hi: 0.70,
+    crowdExp:       { l: 'How campaign pressure scales with the number of affected systems', v: 0.4, lo: 0.25, hi: 0.70,
       why: 'No public measurement of how mass-scanning pressure scales with an estate. 1.0 would mean every system is found independently; 0 that finding one is finding all.' },
     /* share of reached systems a landed campaign actually touches */
     reachShare:     { l: 'Share of reachable systems a landed campaign touches', v: 0.7, lo: 0.45, hi: 0.90,
       why: 'A campaign that reaches your estate rarely enumerates all of it before being noticed or moving on.' },
     /* chance a targeted campaign succeeds when a remediation window is open */
     windowSuccess:  { l: 'Chance a targeted campaign succeeds with a window open', v: 0.38, lo: 0.22, hi: 0.60,
-      why: 'An adversary enumerating you specifically, with an unremediated exposed system to find. Refitted with scanHazBase against the corrected stream: an open window somewhere in the estate is not the same as one this adversary can reach and use, and the opportunistic route already counts mass exploitation of the same windows.' },
+      why: 'An adversary enumerating you specifically, with an unremediated exposed system to find. Held well below certainty: an open window somewhere in the estate is not the same as one this adversary can reach and use, and mass exploitation of those same windows is already counted on the opportunistic route.' },
     /* how far ahead of ordinary software appliance exploitation runs */
     edgeLeadF:      { l: 'Appliance exploitation lead over ordinary software', v: 0.6, lo: 0.40, hi: 0.85,
       why: 'Appliances draw exploitation earlier on both sides of publication. Applied to the magnitude of the clock, so it holds for pre-disclosure exploits too.' },
@@ -581,25 +601,27 @@
      * adds a CVE BECAUSE code is circulating, which manufactures part of the
      * correlation this conditional is measuring. */
     wildRate:       { l: 'Scaling on the measured confirmed-exploitation rate', v: 1, lo: 0.55, hi: 1.6,
-      why: 'The in-the-wild conditional is a residual over mismatched populations, and KEV undercounts exploitation. The range spans both.' },
+      why: 'The confirmed-exploitation rate is derived across populations that do not match each other exactly, and KEV undercounts real exploitation. The range spans both.' },
     /* What the three public catalogues cannot see.
      *
      * `pPoC` is measured against ExploitDB, Metasploit and Nuclei, and the
      * calibration file's own coverageCaveat says plainly that it is a FLOOR:
-     * the dated sample fell from 1,019 CVEs in 2017 to 94 in 2026 while CVE
-     * publication tripled. Exploit code did not become rarer over that decade.
+     * the dated sample fell from 1,019 CVEs in 2017 to 146 in 2024 while CVE
+     * publication nearly tripled. Exploit code did not become rarer over that decade.
      * It moved to GitHub, to private tooling, and to commercial kits that index
      * nowhere. Taking a number the file itself calls a floor and running it as
      * the value is the one place this model was quietly optimistic.
      *
-     * Applied to `pPoC` and divided back out of `pWildGivenPoC`, so the
-     * unconditional confirmed-exploitation rate — the quantity that IS measured
-     * against a full corpus — is preserved exactly at every setting. More bugs
-     * have public code than the catalogues see; the same number reach KEV; so
-     * the conditional falls by the same factor. The corpus anchor does not
-     * move, and neither does the 81.2% PoC-first share. */
+     * Applied to `pPoC`, divided back out of `pWildGivenPoC`, and the no-PoC
+     * conditional rescaled by the shrinkage of its own base — see the band
+     * table in drawCoeffs — so the unconditional confirmed-exploitation rate,
+     * the quantity that IS measured against a full corpus, is preserved
+     * exactly at every setting. More bugs have public code than the catalogues
+     * see; the same number reach KEV; so the conditionals move by exactly the
+     * factors that keep both counts. The corpus anchor does not move, and
+     * neither does the 81.2% PoC-first share. */
     pocCoverage:    { l: 'True public-exploit availability against what the catalogues index', v: 1.6, lo: 1.0, hi: 3.0,
-      why: 'The dated catalogue sample fell from 1,019 CVEs a year to 94 while publication tripled; exploit code moved to GitHub rather than becoming rarer. 1.0 is the floor the catalogues can see, and the measured confirmed-exploitation rate is held fixed across the range.' },
+      why: 'The dated catalogue sample fell from 1,019 CVEs a year to 146 in the latest complete year while publication nearly tripled; exploit code moved to GitHub rather than becoming rarer. 1.0 is the floor the catalogues can see, and the measured confirmed-exploitation rate is held fixed across the range.' },
     /* How much of the measured pre-publication mass is a genuine zero-day
      * rather than a late CVE record. See MEASURED.preIsRecordLag for why the
      * measured 36.5% cannot be read as an adversary capability. The rest of
@@ -609,7 +631,7 @@
       why: 'Published zero-day counts run to 75-100 a year across all software. The measured 36.5% pre-publication share would put over a hundred in the critical band alone, so most of it is CVE-record lag rather than adversary pre-disclosure.' },
     /* Impact scaling on the three sub-critical bands, together. See BANDS. */
     subCritImpact:  { l: 'Foothold value of a sub-critical exploited bug, against a critical', v: 1, lo: 0.65, hi: 1.35,
-      why: 'Severity is a poor proxy for whether a bug is exploited and a fair one for what exploiting it gives you. No public measurement separates the two, so the band foothold ratios are judgement and this scales all three together.' },
+      why: 'Severity is a poor proxy for whether a bug is exploited and a fair one for what exploiting it gives you. No public measurement separates the two, so the value given to each severity band is judgement, and this scales all three together.' },
     /* Affected systems that are in inventory and still not fixed inside the
      * horizon. The model had no such branch: every in-inventory system was
      * remediated eventually, and only the out-of-inventory share — 4% at the
@@ -618,7 +640,7 @@
      * never FULLY remediated across the observation window, and that is a
      * measurement of estates with an inventory and a change process. */
     neverFixShare:  { l: 'Share of affected in-inventory systems not remediated inside the year', v: 0.16, lo: 0.06, hi: 0.34,
-      why: 'Exceptions, business objections, an owner who left, a system nobody dares reboot. Verizon measured roughly half of edge-device KEV vulnerabilities never fully remediated; this is the per-system residual that survives a working change process.' },
+      why: 'Exceptions, business objections, an owner who left, a system nobody dares reboot. Verizon measured roughly half of edge-device KEV vulnerabilities never fully remediated; this is the share that survives even a working change process.' },
     /* How campaign pressure scales with HEADCOUNT — the people-side twin of
      * crowdExp, and its absence was the largest structural defect in this
      * model.
@@ -640,8 +662,8 @@
      * At e=0.65 a 20,000-seat estate carries the arrival pressure of about
      * 6,300, which is what the correlation between recipients of one campaign
      * is worth. */
-    headExp:        { l: 'How people-route pressure scales with headcount (exponent)', v: 0.65, lo: 0.45, hi: 0.85,
-      why: 'No public measurement of how lure and credential-exposure pressure scales with an organisation. 1.0 would mean every person is targeted independently; 0 that reaching one is reaching all. The systems-side twin of this coefficient is crowdExp.' },
+    headExp:        { l: 'How pressure on the people routes scales with headcount', v: 0.65, lo: 0.45, hi: 0.85,
+      why: 'No public measurement of how lure and credential-exposure pressure scales with an organisation. 1.0 would mean every person is targeted independently; 0 that reaching one is reaching all. The same scaling is applied on the systems side.' },
     /* What the identity, people and configuration controls are worth against a
      * TARGETED adversary taking the non-vulnerability path.
      *
@@ -821,6 +843,17 @@
     edgeCadence:  1.6,
     edgeEmerg:    1.5,
     edgeEmergHit: 0.8,
+    /* ASSUMED.preHazard discounts the pre-publication window because zero-day
+     * activity is targeted — which holds for ordinary software and is mostly
+     * wrong for appliances. The defining edge campaigns of recent years were
+     * MASS exploitation of zero-days — MOVEit, the Barracuda ESG run, the
+     * Ivanti waves — and the published zero-day series attribute roughly 44%
+     * of exploited zero-days to edge and security products, about twice this
+     * stream's appliance share. So on the edge tier the discount is scaled
+     * back toward full hazard, clamped at 1 at the use site: an appliance
+     * zero-day still draws less traffic than public code, but not four times
+     * less. */
+    edgePreHaz:   2.4,
     /* Affected-fraction bounds. The drawn ends are ASSUMED.afEdgeMin and
      * ASSUMED.afWebMax; these are the fixed ends opposite them. */
     afEdgeMax:    0.90,  /* one appliance advisory can cover almost the tier    */
@@ -922,7 +955,7 @@
         h: 'Emergency change path. Zero means every vulnerability waits for the routine cycle.' },
       { k: 'emergHit',  l: 'Out-of-band trigger rate', min: 0, max: 100, step: 5, v: 25,
         f: function (v) { return v + '%'; },
-        h: 'Share of armed vulnerabilities recognised as urgent in time to take the out-of-band path.' },
+        h: 'Share of vulnerabilities with working exploit code that are recognised as urgent in time to take the emergency change path.' },
       { k: 'virtual',   l: 'Mitigated by WAF or IPS rule', min: 0,   max: 80,   step: 5,   v: 20,
         f: function (v) { return v + '%'; },
         h: 'Recovers the exposure window while the permanent fix ships. Does not apply to appliances.' },
@@ -941,7 +974,7 @@
        * cannot see any of it. Set 34 here and the loop carries 374. */
       { k: 'stackVulns', l: 'Criticals in your stack, per year', min: 0, max: 200, step: 1, v: 34,
         f: function (v) { return fmtN(v); },
-        h: 'Published criticals in software you operate. The model derives the High, Medium and Low stream beside them from the corpus ratios — about ' + Math.round(MEASURED.streamPerCritical) + 'x this number in total — because two thirds of confirmed exploitation sits below Critical. Worldwide critical run-rate is ' + C.volume.curYearRunRate.critical.toLocaleString('en-US') + '.' },
+        h: 'Published criticals in software you operate. The High, Medium and Low stream beside them is derived from published ratios, about ' + Math.round(MEASURED.streamPerCritical) + 'x this number in total, because two thirds of confirmed exploitation sits below Critical. Worldwide critical run-rate is ' + C.volume.curYearRunRate.critical.toLocaleString('en-US') + '.' },
       /* The three attacker clocks an autonomous capability could plausibly move,
        * separated because they are not the same claim and do not carry the same
        * evidence. Bundled into one dial they were indistinguishable, and the
@@ -958,7 +991,7 @@
        * configured. */
       { k: 'ai',        l: 'Exploit arrival speed',      min: 0,   max: 100,  step: 1,   v: 0,
         f: function (v) { return v === 0 ? 'as measured' : 'x' + (1 / clockScale(v)).toFixed(1) + ' sooner'; },
-        h: 'Compresses the publication-to-exploit clock. Zero is the settled record (' + C.pocTiming.settled.years[0] + '–' + C.pocTiming.settled.years[C.pocTiming.settled.years.length - 1] + ' pooled, n=' + C.pocTiming.settled.n + '), whose median is already under a day and the clock with the least room left to compress.' },
+        h: 'Compresses the publication-to-exploit clock. Zero is the measured record (' + C.pocTiming.settled.years[0] + '-' + C.pocTiming.settled.years[C.pocTiming.settled.years.length - 1] + ' pooled, ' + C.pocTiming.settled.n.toLocaleString('en-US') + ' records), whose median is already under a day. This is the clock with the least room left to compress.' },
       { k: 'weap',      l: 'Share of bugs weaponised',   min: 0,   max: 100,  step: 1,   v: 0,
         f: function (v) { return v === 0 ? 'as measured' : 'x' + weapMult(v).toFixed(1) + ' armed'; },
         h: 'How many published vulnerabilities acquire working exploit code at all, and how many arrive before disclosure. Measured today at ' + C.armed.pPoCCritical.toFixed(1) + '% of criticals. Breadth, not speed.' },
@@ -985,7 +1018,7 @@
        * the second. */
       { k: 'discovery', l: 'Vulnerability discovery rate', min: 0, max: 100, step: 1, v: 0,
         f: function (v) { return v === 0 ? 'as measured' : 'x' + discMult(v).toFixed(1) + ' found'; },
-        h: 'How many vulnerabilities are found in the software you already run. Scales the published stream against your stack without changing the stack. Breadth of the input, where the other three dials move what happens to it.' },
+        h: 'How many vulnerabilities are found in the software you already run. It raises how many published vulnerabilities land in your stack, without changing the stack itself. This dial changes the size of the input; the other three change what happens to it.' },
       { k: 'scan',      l: 'Mass-exploitation pressure',  min: 0,   max: 100,  step: 1,   v: 50,
         f: function (v) { return String(v); },
         h: 'Rate at which opportunistic exploitation reaches you once exploit code is public.' },
@@ -1007,7 +1040,7 @@
        * ratchet. Precision is wanted at the bottom of this range, not the top. */
       { k: 'agentSkill', l: 'Campaign success without a vulnerability', min: 0, max: 60, step: 0.5, v: 1,
         f: function (v) { return v + '%'; },
-        h: 'Per targeted campaign, when no remediation window is open: phishing, credential abuse, misconfiguration or chained logic flaws. This is the model\'s proxy for the routes it does not simulate directly.' },
+        h: 'Per targeted campaign, when no remediation window is open: phishing, credential abuse, misconfiguration or chained logic flaws. This is the model\'s way of counting a targeted adversary taking one of those routes rather than waiting for a vulnerability.' },
       /* A REDUCED-FORM route, like `agentSkill`, and for the same reason: the
        * model does not simulate what happens inside a supply-chain compromise,
        * so the slider is stated net of everything that would have to go right
@@ -1045,7 +1078,7 @@
         h: 'Anyone who can authenticate to something you run: staff, contractors, and the service desk. The denominator for phishing, credential abuse, insider action and device loss.' },
       { k: 'mfa',       l: 'Authentication strength', min: 0, max: 100, step: 1, v: 62,
         f: function (v) { return v + '%'; },
-        h: '0 is passwords alone. 100 is origin-bound, phishing-resistant authentication everywhere, including the service desk. The single largest control in this half of the model.' },
+        h: '0 is passwords alone. 100 is origin-bound, phishing-resistant authentication everywhere, including the service desk. The single largest control on the routes that need no vulnerability.' },
       { k: 'awareness', l: 'Filtering and user reporting', min: 0, max: 100, step: 1, v: 48,
         f: function (v) { return v + '%'; },
         h: 'Mail filtering, link and attachment handling, and how fast a user who did click tells somebody. Filtering thins how many lures reach an engaged person; reporting shortens how long the ones that convert go unnoticed.' },
@@ -1057,7 +1090,7 @@
         h: 'Baselines, drift detection and external attack-surface monitoring. The only control acting on the misconfiguration route, which no patch cycle can close.' },
       { k: 'insiderCtl', l: 'Personnel and least privilege', min: 0, max: 100, step: 1, v: 48,
         f: function (v) { return v + '%'; },
-        h: 'Joiner-mover-leaver rigour, least privilege and egress monitoring. Deliberately the weakest control effect in the model: an authorised person acting within their access is the hardest case here.' },
+        h: 'Joiner-mover-leaver rigour, least privilege and egress monitoring. Deliberately the weakest control effect here: an authorised person acting within their access is the hardest case in this model.' },
       { k: 'deviceCtl', l: 'Device encryption and management', min: 0, max: 100, step: 1, v: 72,
         f: function (v) { return v + '%'; },
         h: 'Full-disk encryption, MDM enrolment and remote wipe. Answers most of the device-loss class, which is why that class is small.' },
@@ -1296,19 +1329,18 @@
    * ladder reached 99.9%, which is arithmetic rather than an instrument. The
    * rebalanced ladder trades campaign VOLUME for campaign CAPABILITY —
    * sector 4x->2.5x and named 9x->5x on `campaigns`, against 2.5x and 4x on
-   * `agentSkill` — and what moves is the mix, not just the total. The targeted
-   * route goes from 4% of first compromises at the bottom rung to 73% at the
-   * top, which is the claim: the more deliberate the attention, the more of
-   * your risk sits on routes no remediation cycle touches.
+   * `agentSkill` — and what moves is the mix, not just the total: the more
+   * deliberate the attention, the more of the reader's risk sits on routes no
+   * remediation cycle touches.
    *
-   * The totals rise too, and that is the finding rather than a side effect.
-   * The old figures were low BECAUSE the route was closed; opening it should
-   * raise them. The ladder now reads 28.8 / 37.1 / 61.1 / 86.5 percent
-   * compromise, the targeted route carrying 4 / 21 / 50 / 68 percent of first
-   * compromises. Those totals moved again when four defects were fixed
-   * together — a stream discounted twice, a biased binomial, an appliance clock
-   * applied to a signed time, and a per-year count that reached past the year —
-   * so re-measure the column before quoting it; the MIX is the durable claim.
+   * The totals rise too, and that is the finding rather than a side effect —
+   * the old figures were low BECAUSE the route was closed. No measured column
+   * is quoted here any more: two sets were written into this comment over its
+   * life and both went stale within a few commits, the second still claiming
+   * a 73% targeted share at the top rung after the five people routes had
+   * diluted it to about half. The durable claims are the orderings, and the
+   * suite asserts them — compromise monotone up the ladder, and the mix
+   * moving onto the targeted route as attention rises.
    *
    * Coefficients are judgement and nothing else — no public measurement gives
    * per-adversary success against a patched estate. 4% on the top rung is
@@ -1339,7 +1371,7 @@
   /* MATURITY - how well the estate is run. Orthogonal to what you are, so it
    * is a transform rather than another table of absolutes. */
   /* 'bod' is not a maturity level so much as a mandated regime. CISA BOD 26-04
-   * (10 June 2026) supersedes BOD 22-01 and prioritises on four decision
+   * (10 June 2026) supersedes BOD 19-02 and BOD 22-01 and prioritises on four decision
    * points - in the KEV catalogue, publicly exposed, automatable by an
    * adversary, and technical impact - with the shortest tier at three days
    * plus forensic triage. Its own heuristic for "automatable" is a public
@@ -1349,19 +1381,31 @@
   /* The `d` strings describe what each regime does to the estate, in the same
    * terms as the multipliers beside them. 'BOD 26-04' in particular is the one
    * control on the page whose label cannot be guessed from the label alone. */
+  /* `configAssurance` is carried on this ladder and on no other. Baselines,
+   * drift detection and attack-surface monitoring are how well the estate is
+   * RUN — owned by the same programme as change windows and detection content
+   * — not part of the people programme or the identity stack. Until it was
+   * carried here, a reader who picked every top rung on every selector still
+   * ran configuration at the slider default, and misconfiguration became the
+   * largest residual route of their fully hardened estate: a gap no selector
+   * could close. Offsets, like inventory and coverage, with the typical rung
+   * at zero so compose({}) stays defaults(). */
   var MATURITY = {
-    tight:   { l: 'Mature',    d: 'Change windows in days rather than weeks, an emergency path that genuinely runs, applicability established quickly, and detection content maintained against live telemetry.',
-      cadence: 0.30, emergH: 0.35, emergHit: 1.9, awareH: 0.35, detect: 0.05, virtual: 2.5, inventory: 4,   edrCoverage: 12 },
+    tight:   { l: 'Mature',    d: 'Change windows in days rather than weeks, an emergency path that genuinely runs, applicability established quickly, detection content maintained against live telemetry, and configuration held to baselines.',
+      cadence: 0.30, emergH: 0.35, emergHit: 1.9, awareH: 0.35, detect: 0.05, virtual: 2.5, inventory: 4,   edrCoverage: 12,  configAssurance: 28 },
     typical: { l: 'Typical',   d: 'The baseline estate: scheduled change windows, an out-of-band path used when somebody escalates, and partial telemetry coverage.',
-      cadence: 1,    emergH: 1,    emergHit: 1,   awareH: 1,    detect: 1,    virtual: 1,   inventory: 0,   edrCoverage: 0 },
+      cadence: 1,    emergH: 1,    emergHit: 1,   awareH: 1,    detect: 1,    virtual: 1,   inventory: 0,   edrCoverage: 0,   configAssurance: 0 },
     /* `inventory: -12` was written against a slider that floored at 80, so the
      * sprawling estate bottomed out at 84% — better inventory than the rung's
      * own description claims. With the floor at 50 it can now reach the gap the
      * words describe. */
-    loose:   { l: 'Sprawling', d: 'Change control by exception, applicability established late, little virtual patching, and a material share of the estate in no remediation cycle at all.',
-      cadence: 2.6,  emergH: 2.4,  emergHit: 0.5, awareH: 3.5,  detect: 3.2,  virtual: 0.3, inventory: -22, edrCoverage: -25 },
+    loose:   { l: 'Sprawling', d: 'Change control by exception, applicability established late, little virtual patching, configuration drifting unwatched, and a material share of the estate in no remediation cycle at all.',
+      cadence: 2.6,  emergH: 2.4,  emergHit: 0.5, awareH: 3.5,  detect: 3.2,  virtual: 0.3, inventory: -22, edrCoverage: -25, configAssurance: -28 },
+    /* BOD 26-04's decision points include "publicly exposed", which cannot be
+     * answered without knowing the exposed estate — a modest configuration
+     * gain, of the same kind as its inventory one. */
     bod:     { l: 'BOD 26-04', d: 'A mandated regime rather than a rung on the ladder. Prioritising on KEV presence, exposure, automatability and impact buys faster, more reliable triage and a better-known estate, not a faster change window.',
-      cadence: 1,    emergH: 1,    emergHit: 1.55, awareH: 0.33, detect: 1,    virtual: 1,   inventory: 3,   edrCoverage: 4 },
+      cadence: 1,    emergH: 1,    emergHit: 1.55, awareH: 0.33, detect: 1,    virtual: 1,   inventory: 3,   edrCoverage: 4,   configAssurance: 8 },
   };
 
   /* The rung and the attention level the baseline estate already represents.
@@ -1477,6 +1521,7 @@
     });
     out.inventory += mat.inventory;
     out.edrCoverage += mat.edrCoverage;
+    out.configAssurance += mat.configAssurance;
 
     /* Detection is an assignment, not a multiplier, because the reader picked
      * a stack and the stack states its own dwell time and coverage. The one
@@ -1787,14 +1832,24 @@
      * scales both conditionals together and so preserves the measured 81.2%
      * PoC-first share, which is what the calibration test checks. */
     k.bands = MEASURED.bands.map(function (b) {
+      /* The catalogue-visible armed share under this scenario, and the true
+       * share once `pocCoverage` raises it. The no-PoC-wild conditional is
+       * rescaled by the shrinkage of its own base, (1 - visible)/(1 - true):
+       * without that factor the no-PoC mass fell as coverage rose — about 1%
+       * of the corpus rate at the central value and 3.4% at the top of the
+       * range — so "preserved exactly" was preserved-to-within-a-few-percent.
+       * With it, the corpus total and the PoC-first share are both invariant
+       * in `pocCoverage` by algebra rather than by tolerance. */
+      var pPoCcat = Math.min(0.9, b.pPoC * weapMult(weap));
+      var pPoCtrue = Math.min(0.9, pPoCcat * k.pocCoverage);
       return {
         key: b.key,
         isCritical: b.isCritical,
         /* the band's share of the stream, so one draw picks a band */
         w: b.perCritical / MEASURED.streamPerCritical,
-        pPoC: Math.min(0.9, b.pPoC * weapMult(weap) * k.pocCoverage),
+        pPoC: pPoCtrue,
         pWildGivenPoC: Math.min(1, b.pWildGivenPoC * k.wildRate / k.pocCoverage),
-        pWildNoPoC: Math.min(1, b.pWildNoPoC * k.wildRate),
+        pWildNoPoC: Math.min(1, b.pWildNoPoC * k.wildRate * (1 - pPoCcat) / (1 - pPoCtrue)),
         foothold: b.isCritical ? 1 : Math.min(1, b.foothold * k.subCritImpact),
       };
     });
@@ -1917,6 +1972,15 @@
    * "150 blocks" for as long as it took somebody to read both. */
   function blocksFor(trials) {
     return trials >= 6000 ? 650 : Math.max(10, Math.floor(trials / 40));
+  }
+  /* Coefficient sets a run of `trials` actually draws: one per block start,
+   * including the partial block at the end when the block size does not
+   * divide the trial count. The page footer and the deck used to print
+   * blocksFor() for this — 650 where the default run draws 653 — and a
+   * number in copy has to be one the run produces. */
+  function coeffDrawsFor(trials) {
+    var blockN = Math.max(1, Math.floor(trials / blocksFor(trials)));
+    return Math.ceil(trials / blockN);
   }
 
   function createRun(P, trials, seed, opts) {
@@ -2064,7 +2128,14 @@
           if (inWild) wildN++;
           if (band.isCritical) { critArmedN++; if (inWild) critWildN++; }
 
-          /* 3. when does the exploit exist, relative to the patch? */
+          /* 3. when does the exploit exist, relative to the patch?
+           *
+           * A wild bug with NO public code is always timed pre-publication
+           * here. In reality much of that population is exploited only after
+           * disclosure, with privately built exploits worked up from the
+           * patch — so this is the earliest onset the evidence supports, not
+           * the expected one: the same stance the PoC clock takes, declared
+           * beside it in SCOPE.wildTimingNote. */
           var tX = hasPoC ? drawPoCTime(rnd, k)
                           : -k.preMedian * Math.exp(SHAPE.sigPre * inverseNormal(rnd()));
           if (isEdge) tX = edgeLead(tX, k.edgeLeadF); /* ahead on BOTH sides of zero */
@@ -2075,7 +2146,12 @@
            * NVD has caught up, which is why the second carries full hazard.
            * See MEASURED.preIsRecordLag. */
           var zeroDay = rnd() < k.zeroDayShare;
-          var preHaz = (tX < 0 && zeroDay) ? k.preHazard : 1;
+          /* The targeted-only discount holds for ordinary software; appliance
+           * zero-days are mass-exploited before disclosure often enough that
+           * the discount is mostly wrong there. See SHAPE.edgePreHaz. */
+          var preHaz = (tX < 0 && zeroDay)
+            ? Math.min(1, k.preHazard * (isEdge ? SHAPE.edgePreHaz : 1))
+            : 1;
 
           /* 4. how much of your estate does it touch? */
           var af = isEdge
@@ -2644,7 +2720,7 @@
     RNG: RNG, inverseNormal: inverseNormal,
     clockScale: clockScale, weapMult: weapMult, preMult: preMult,
     tempoScale: tempoScale, discMult: discMult, SCOPE: SCOPE,
-    blocksFor: blocksFor,
+    blocksFor: blocksFor, coeffDrawsFor: coeffDrawsFor,
     fmtN: fmtN,
   };
 });

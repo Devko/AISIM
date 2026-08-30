@@ -156,11 +156,17 @@ section('Figures come from the run, not the copy');
    * reader will quote as the range. */
   const settled = Object.assign({}, RUN_A, { bandReliable: true });
   const withBand = textOf(DECK._slides(ctxFor(settled)));
+  /* "90% band", the page's own label for the same interval — the deck used to
+   * say "90% uncertainty band" and the two surfaces printed one quantity two
+   * ways. The regex asserts the label, not any adjective inside it. */
   ok('a settled band is quoted beside the figure',
     withBand.indexOf(pct1(RUN_A.pLo)) >= 0 && withBand.indexOf(pct1(RUN_A.pHi)) >= 0 &&
-    /90% credible band/.test(withBand));
+    /90% band/.test(withBand));
+  /* The property, not the phrase, for the same reason as the scope gate below:
+   * the slide has to SAY the band is not ready and must not print it. Which
+   * adjective it uses for the band is a copy decision, not a contract. */
   ok('an unsettled band is declared rather than printed',
-    /credible band has not settled/.test(a) && a.indexOf(pct1(RUN_A.pHi)) < 0,
+    /band has not settled/.test(a) && a.indexOf(pct1(RUN_A.pHi)) < 0,
     'bandReliable was ' + RUN_A.bandReliable);
 
   /* The metric toggle is a different question, not a different presentation. */

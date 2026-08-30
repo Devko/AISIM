@@ -71,7 +71,7 @@ typography:
     lineHeight: 1.45
   caption-sm:
     fontFamily: "IBM Plex Sans, ui-sans-serif, system-ui, sans-serif"
-    fontSize: "11.5px"
+    fontSize: "12px"
     fontWeight: 400
     lineHeight: 1.45
   caption-xs:
@@ -81,7 +81,7 @@ typography:
     lineHeight: 1.45
   preset:
     fontFamily: "IBM Plex Sans, ui-sans-serif, system-ui, sans-serif"
-    fontSize: "11.5px"
+    fontSize: "12px"
     fontWeight: 400
     lineHeight: 1.3
   toc:
@@ -91,19 +91,19 @@ typography:
     lineHeight: 1.4
   label:
     fontFamily: "IBM Plex Mono, ui-monospace, SFMono-Regular, Menlo, monospace"
-    fontSize: "10.5px"
+    fontSize: "11.5px"
     fontWeight: 600
     lineHeight: 1.3
     letterSpacing: "0.16em"
   label-micro:
     fontFamily: "IBM Plex Mono, ui-monospace, SFMono-Regular, Menlo, monospace"
-    fontSize: "10px"
+    fontSize: "11px"
     fontWeight: 600
     lineHeight: 1.3
     letterSpacing: "0.14em"
   label-min:
     fontFamily: "IBM Plex Mono, ui-monospace, SFMono-Regular, Menlo, monospace"
-    fontSize: "9.5px"
+    fontSize: "11px"
     fontWeight: 600
     lineHeight: 1.3
     letterSpacing: "0.14em"
@@ -403,7 +403,7 @@ document rather than a broken one.
   keeps the whole weight.
 - **Body** (Plex Sans 400, 15px, 1.55): all prose. Measure is capped — 66ch for
   the standfirst and footer notes, 74ch for chapter leads.
-- **Label** (Plex Mono 600, 10.5px, 0.16em, uppercase): every structural label.
+- **Label** (Plex Mono 600, 11.5px, 0.16em, uppercase): every structural label.
   Tracking runs 0.04em–0.18em depending on size; the smaller the type, the
   wider the tracking.
 
@@ -443,15 +443,18 @@ that passes no palette at all.
 **The Long Label Rule.** Uppercase with wide tracking is a device for labels of
 two or three words. The readout labels are 40-character sentences, and caps
 plus tracking removes the word shapes a reader navigates by — so they are set
-in the body face, sentence case, at 11.5px — in the bank and in the dock
+in the body face, sentence case, at 12px — in the bank and in the dock
 alike. The dock label is the bank label in another position, and it spent a
 while set in tracked mono caps instead: same string, two treatments, and the
 caps cost 66px it did not have. 263px against 197px, on a bar whose whole
 promise is that the figure survives to 320px.
 
-**The 10px Floor.** No text below 10px. 9.5px survives only in provenance tags
-and segment labels, where the type sits on a bordered element already doing the
-de-emphasis.
+**The 11px Floor.** No functional text below 11px, tracked caps labels and
+provenance tags included. The floor was 10px — with 9.5px surviving in tags and
+segment labels on the argument that a bordered element already does the
+de-emphasis — until a legibility audit made the case that a border de-emphasises
+without needing the type to be unreadable on a high-DPI phone. De-emphasis comes
+from `--mut`/`--dim` and tracking, never from dropping under the floor.
 
 ## Layout
 
@@ -792,7 +795,7 @@ rule moved onto `.estate` itself and `.estate + #cd` zeroes the doubled padding.
 
 - **Corner style:** 14px. **Background:** `--panel` on `--ink`. **Border:** 1px
   `--rule`. **Shadow:** `--shadow`, light only. **Padding:** 18px.
-- **Heading:** mono, 10.5px, 0.16em, uppercase, weight 600. A `.d` or `.a`
+- **Heading:** mono, 11.5px, 0.16em, uppercase, weight 600. A `.d` or `.a`
   modifier tints the heading Defender Teal or Attacker Vermilion, which is how
   a card declares which side of the model it belongs to — and that choice
   cascades to the card's slider fills, thumbs and values through `--accent`.
@@ -801,7 +804,7 @@ rule moved onto `.estate` itself and `.estate + #cd` zeroes the doubled padding.
 
 - No fill, no border, no radius, no shadow. A 1px `--rule2` top rule, 20px of
   padding above the ordinal, 42px below the chapter.
-- **Ordinal:** mono, 10px, 0.14em, `--dim`, a *sibling* of the heading and
+- **Ordinal:** mono, 11px, 0.14em, `--dim`, a *sibling* of the heading and
   never a child — `js/app.js` reads the `h3`'s `textContent` for the exported
   PNG title, and a number folded into the heading would appear in every
   exported image.
@@ -827,7 +830,7 @@ rule moved onto `.estate` itself and `.estate + #cd` zeroes the doubled padding.
   across cells is what aligns them, and it costs the bank about 22px of height,
   because the tallest cell now sets each row for all four. Neither a guessed
   `min-height` nor a per-cell rule can do this.
-- **Label:** body face, 11.5px, sentence case, `--mut`. See The Long Label Rule.
+- **Label:** body face, 12px, sentence case, `--mut`. See The Long Label Rule.
 - **Value:** mono 600, Compromise Crimson by default; `.plain` switches it to
   body text.
 - **Interval rail (`.band`):** a 3px rail under the two probability readouts,
@@ -865,7 +868,7 @@ rule moved onto `.estate` itself and `.estate + #cd` zeroes the doubled padding.
 - Carries the compromise probability, its band, and the current estate summary.
   It is `aria-hidden` — the real bank is still in the document — and it slides
   in over 260ms.
-- **Label:** body face, 11.5px, sentence case, matching `.stat .k` exactly,
+- **Label:** body face, 12px, sentence case, matching `.stat .k` exactly,
   because it is the same label. See The Long Label Rule. `.dock-k` still
   shrinks and ellipsises and `.dock-v` still does not, but at 197px the label
   now fits whole at 320px, so the truncation is a backstop rather than the
@@ -884,7 +887,7 @@ rule moved onto `.estate` itself and `.estate + #cd` zeroes the doubled padding.
 
 ### Provenance tags
 
-- Mono, 9.5px, 0.1em, uppercase, 2px/6px padding, 4px radius, border from
+- Mono, 11px, 0.1em, uppercase, 2px/6px padding, 4px radius, border from
   `currentColor`, transparent fill.
 - Variants: `.m` measured (Defender Teal), `.r` reported (Pre-Patch Violet),
   `.a` assumed (Assumed Amber).
@@ -894,7 +897,7 @@ rule moved onto `.estate` itself and `.estate + #cd` zeroes the doubled padding.
 
 ### Selector metadata and trait notes
 
-- **`.mtr`:** a mono 10px `--dim` line under each detection posture reporting
+- **`.mtr`:** a mono 11px `--dim` line under each detection posture reporting
   the dwell time and coverage that posture writes (`10 d · 78%`), read from
   `M.DETECTION[k].p`. A console that does not show what its presets write is
   not a console.

@@ -39,7 +39,7 @@ The tempo dial is the one worth sitting with. It cannot change whether you were
 compromised — only whether anyone reached it in time. Against a reported-tempo
 adversary a 24/7 SOC is worth a large margin of incident rate over no detection
 at all; at full tempo roughly half of that margin is gone. A faster
-adversary does not beat detection on any one intrusion. It devalues the
+adversary does not beat detection on any single intrusion. It devalues the
 investment.
 
 The discovery dial is the one that was missing. It scales the published stream
@@ -184,7 +184,8 @@ The model separates two things that are usually conflated:
 - **A working exploit exists** — public exploit code, measured against
   ExploitDB, Metasploit and Nuclei. 8.2% of criticals, ever — and that is a
   *floor*, not a value. The dated sample in those three catalogues fell from
-  1,019 CVEs in 2017 to 94 in 2026 while CVE publication tripled; exploit code
+  1,019 CVEs in 2017 to 146 in 2024, the latest complete year, while CVE
+  publication nearly tripled; exploit code
   moved to GitHub and to private tooling rather than becoming rarer. The
   calibration file has always said so in its own `coverageCaveat`, and the model
   used to run the floor as though it were the measurement. `ASSUMED.pocCoverage`
@@ -371,10 +372,10 @@ Three results that hold across most settings:
    points.** Reducing what you expose is the only large one. Patch cadence has a
    floor because a fifth of exploitation predates the patch. Read this alongside
    the scope limits below: the finding holds *within the routes that are
-   modelled*, and it holds partly because the two routes no defender control
-   touches — supply chain, and campaigns that need no vulnerability — carry
-   about two fifths of first compromises at the baseline estate (20% targeted,
-   21% supply) and a clear majority from the `sector` rung upward.
+   modelled*, and it holds partly because the two routes the remediation
+   process cannot touch — supply chain, and campaigns that need no vulnerability — carry
+   about a quarter of first compromises at the baseline estate (14% targeted,
+   11% supply) and roughly half at the `sector` rung.
 2. **Detection changes nothing about being compromised and everything about
    whether it matters.** It is flat on one metric and among the largest terms on
    the other. The page has a toggle for exactly this.
@@ -408,23 +409,23 @@ engine with two geometries and two copy budgets rather than two exporters.
 
 | | pages | geometry | register |
 |---|---:|---|---|
-| **LinkedIn carousel** | 10 | 1080 × 1350 portrait | ~28 words a slide, no presenter |
+| **LinkedIn carousel** | 11 | 1080 × 1350 portrait | ~28 words a slide, no presenter |
 | **Briefing deck** | 13 | 16:9 at projection size | full paragraphs, parameters and method |
 
 The sequence is the same in both, and it is an argument about one estate rather
 than in general:
 
-1. **What was configured** — the five shape controls as you answered them, and
+1. **What was configured** — the seven shape controls as you answered them, and
    (briefing only) the parameters they compose to.
 2. **The result** — probability of compromise or of an incident over twelve
    months, with its credible band when the band has settled and an explicit
    statement that it has not when it hasn't.
-3. **How it got there** — the funnel from published criticals to compromises,
-   and the split of first compromise by route.
+3. **How it got there** — the funnel from published vulnerabilities to
+   compromises, and the split of first compromise by route.
 4. **What moves it** — the sensitivity ranking for that configuration.
 5. **What to do** — the same prioritised actions the page prints, each with the
    reduction it buys *on this estate* and the reason it works.
-6. **What would change it** — the three adversary scenarios swept against the
+6. **What would change it** — the four adversary scenarios swept against the
    same estate, and what detection is worth under each.
 7. **The link** — the configured URL, so a colleague opens the exact run rather
    than reconstructing it.
@@ -436,7 +437,8 @@ give the reader no way to tell which was current.
 **The scope limit rides the footer of every slide.** Decks are read a page at a
 time and reshared a page at a time, so a caveat on the method slide is a caveat
 that does not travel with the slide carrying the percentage. Every page says
-*lower bound — phishing, credential abuse and insider action not counted*, and
+*lower bound — denial of service, fraud without intrusion, and physical
+premises access not counted*, and
 the result slide carries the full statement plus the refusal: this is not a
 risk assessment for a named organisation.
 
@@ -493,8 +495,8 @@ M.simulate(M.compose({
   detection: 'tuned',
 }), 40000, 1234);
 
-// the three scenario dials are ordinary parameters, 0 = the measured record
-M.simulate(Object.assign(M.defaults(), { ai: 0, weap: 60, tempo: 80 }), 40000, 1234);
+// the four scenario dials are ordinary parameters, 0 = the measured record
+M.simulate(Object.assign(M.defaults(), { ai: 0, weap: 60, tempo: 80, discovery: 40 }), 40000, 1234);
 ```
 
 A run can also be advanced in pieces, which is how the page keeps a 60,000-trial
@@ -509,10 +511,10 @@ run.result();
 
 ### The shape controls are editorial
 
-`EXPOSURE`, `TRAITS`, `ATTENTION`, `MATURITY` and `DETECTION` in `js/model.js`
-are judgement, not measurement — no public dataset gives per-sector estate
-composition. They exist because the alternative is asking a reader to guess
-"criticals in my stack per year" cold.
+`EXPOSURE`, `TRAITS`, `ATTENTION`, `MATURITY`, `DETECTION`, `IDENTITY` and
+`PEOPLE` in `js/model.js` are judgement, not measurement — no public dataset
+gives per-sector estate composition. They exist because the alternative is
+asking a reader to guess "criticals in my stack per year" cold.
 
 Each answers exactly one question, which is the rule that decides where a new
 one belongs:
@@ -524,6 +526,8 @@ one belongs:
 | `ATTENTION` | who is aiming at you? | one of four |
 | `MATURITY` | how well is the estate run? | one of four |
 | `DETECTION` | what have you deployed to see an intrusion? | one of five |
+| `IDENTITY` | how do the people with access authenticate? | one of four |
+| `PEOPLE` | how well run are filtering, reporting and personnel process? | one of three |
 
 `EXPOSURE` is single-select because it is one axis, and its rungs are
 alternatives rather than attributes. You cannot be both corporate-network-only
@@ -644,7 +648,7 @@ model does what the model says, and a mechanism that is coherently wrong answers
 | Supply-chain and insider dwell | detected on the estate median, like a commodity intrusion | their own dwell penalties, and automated response mostly does not fire on either |
 | `awareness` | called "Filtering and user reporting"; reporting did nothing at all | filtering thins arrivals, reporting is a share of phishing compromises on a two-hour clock |
 | EPSS phrasing | "less than a 1% chance of exploitation" | an EPSS score below 1%, which is a probability over the **next 30 days** |
-| The quoted magnitudes | four separate stale figures in comments and copy — a 23-point band that measured 34, a "mid teens" floor that measured 51, a three-quarters tempo margin that measured 54%, dial effects off by 2–3× | measured, or replaced by the recipe that produces them, because every one of them had gone stale within a few commits of being written |
+| The quoted magnitudes | four separate stale figures in comments and copy — a 23-point band that measured 34, a "mid teens" floor that measured in the fifties, a three-quarters tempo margin that measured 54%, dial effects off by 2–3× | measured, or replaced by the recipe that produces them, because every one of them had gone stale within a few commits of being written |
 
 Two things are worth saying about what this pass did **not** overturn.
 
@@ -696,8 +700,8 @@ number was quietly doing.
   is falsifiable, and one block in `js/model.js` is the only thing to edit if
   you disagree.
 - **The addition raised the number, and that is the finding.** Counting five
-  more classes moved the baseline compromise rate from roughly 42% to roughly
-  64%. The old figure was not conservative, it was incomplete — and the
+  more classes moved the baseline compromise rate from roughly 42% to the high
+  sixties. The old figure was not conservative, it was incomplete — and the
   recommendation ranking reordered with it: phishing-resistant authentication
   now ranks above patch cadence and exposed footprint on most estates. That
   reordering is the point of having done this.

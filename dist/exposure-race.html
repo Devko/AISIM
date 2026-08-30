@@ -7,7 +7,7 @@
 <meta name="description" content="A Monte Carlo model of exploit availability against remediation, calibrated to measured CVE, exploit-catalogue and KEV data. Exploit-clock compression is modelled as an explicit scenario rather than baked into the baseline.">
 <meta name="color-scheme" content="dark light">
 <meta property="og:title" content="Exposure Race: which clock does an autonomous adversary move?">
-<meta property="og:description" content="The clock AI is supposed to have collapsed was already at zero: median time from CVE publication to public exploit code has not exceeded one day in any settled year since 2015. Three other clocks are not at the floor, and the largest routes of all are not in this model at all.">
+<meta property="og:description" content="The clock AI is supposed to have collapsed was already at zero: median time from CVE publication to public exploit code has not exceeded one day in any complete year since 2015. Three other clocks are not at the floor, and the five access classes that need no vulnerability are simulated beside the three that do.">
 <meta property="og:type" content="article">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -123,7 +123,7 @@ a { color: inherit; text-underline-offset: .18em; text-decoration-thickness: 1px
 /* ── masthead ───────────────────────────────────────────────────────────── */
 header { border-bottom: 1px solid var(--rule); padding: 30px 0 30px; margin-bottom: 26px; }
 .eyebrow {
-  font-family: var(--mono); font-size: 10.5px; letter-spacing: .18em;
+  font-family: var(--mono); font-size: 11.5px; letter-spacing: .18em;
   text-transform: uppercase; color: var(--mut);
   display: flex; gap: 12px; align-items: center; flex-wrap: wrap;
 }
@@ -156,7 +156,7 @@ h1 em { font-style: italic; color: var(--att); }
 /* ── the measured clock ─────────────────────────────────────────────────── */
 .clock { border-top: 1px solid var(--rule2); padding-top: 12px; }
 .clock-h {
-  font-family: var(--mono); font-size: 10px; letter-spacing: .14em;
+  font-family: var(--mono); font-size: 11px; letter-spacing: .14em;
   text-transform: uppercase; color: var(--mut);
   display: flex; align-items: center; gap: 8px; margin-bottom: 4px;
 }
@@ -295,7 +295,7 @@ button.ghost { background: transparent; }
 .rail {
   position: sticky; top: 16px; max-height: calc(100vh - 32px);
   overflow-y: auto; padding-right: 6px;
-  transition: top .26s var(--ease), max-height .26s var(--ease);
+  transition: top .26s var(--ease);
   /* Deliberately NOT scroll-behavior: smooth, and the jump links do not pass
    * behavior:"smooth" either. Measured: where the engine is not ticking a
    * scroll animation — a throttled renderer, a background tab, a headless
@@ -393,7 +393,7 @@ button.ghost { background: transparent; }
   border-radius: 14px; padding: 18px; margin-bottom: 18px; box-shadow: var(--shadow);
 }
 .card h2 {
-  font-family: var(--mono); font-size: 10.5px; letter-spacing: .16em;
+  font-family: var(--mono); font-size: 11.5px; letter-spacing: .16em;
   text-transform: uppercase; margin: 0; font-weight: 600;
 }
 .card h2.d { color: var(--def); }
@@ -446,7 +446,7 @@ button.ghost { background: transparent; }
  * h3's textContent for the exported PNG title, and a number folded into the
  * heading would end up in every exported image. */
 .ord {
-  font-family: var(--mono); font-size: 10px; font-weight: 600; letter-spacing: .14em;
+  font-family: var(--mono); font-size: 11px; font-weight: 600; letter-spacing: .14em;
   color: var(--dim); display: block; margin-bottom: 7px;
 }
 /* The title keeps a 260px basis and the row is allowed to wrap, so the tools
@@ -475,7 +475,7 @@ button.ghost { background: transparent; }
 .ladder-4 { grid-template-columns: repeat(3, 1fr); }
 .ladder-5 { grid-template-columns: 1fr 1fr; }
 .presets button {
-  padding: 7px 9px; font-size: 11.5px; text-align: left; min-width: 0;
+  padding: 7px 9px; font-size: 12px; text-align: left; min-width: 0;
   overflow: hidden; text-overflow: ellipsis;
 }
 /* BOD 26-04 is a mandated regime rather than a rung on the maturity ladder,
@@ -500,10 +500,10 @@ button.ghost { background: transparent; }
 
 .seg { margin-bottom: 16px; }
 .seg-l {
-  font-family: var(--mono); font-size: 9.5px; letter-spacing: .14em;
+  font-family: var(--mono); font-size: 11px; letter-spacing: .14em;
   text-transform: uppercase; color: var(--mut); margin-bottom: 7px;
 }
-.seg-d { color: var(--mut); font-size: 11.5px; line-height: 1.45; margin: 8px 0 0; }
+.seg-d { color: var(--mut); font-size: 12px; line-height: 1.45; margin: 8px 0 0; }
 /* The composed estate, reporting what all four controls above have produced.
  * Ruled off and set in the mono face because it is a readout rather than
  * another description — the one line on the card that is an answer. */
@@ -515,7 +515,7 @@ button.ghost { background: transparent; }
 /* 9px could not clear AA against the card in either theme; the border already
  * does the de-emphasis, so the type does not have to. */
 .seg-hint {
-  font-size: 10px; letter-spacing: .08em; color: var(--mut);
+  font-size: 11px; letter-spacing: .08em; color: var(--mut);
   border: 1px solid var(--rule2); border-radius: 3px; padding: 1px 4px; margin-left: 5px;
 }
 /* multi-select traits read as checkable chips, not as one-of-N */
@@ -545,7 +545,7 @@ button.ghost { background: transparent; }
   color: var(--accent, var(--def)); white-space: nowrap;
   font-variant-numeric: tabular-nums;
 }
-.hint { color: var(--mut); font-size: 11.5px; margin-top: 4px; line-height: 1.45; }
+.hint { color: var(--mut); font-size: 12px; margin-top: 4px; line-height: 1.45; }
 
 /* Chapter 07 argues three dials by name, and the dials are several thousand
  * pixels up the page in the rail. Naming a control in prose and then leaving
@@ -656,7 +656,7 @@ details.more[open] > div { animation: rise .28s var(--ease) both; }
 }
 .toc a::before {
   content: counter(toc, decimal-leading-zero);
-  font-family: var(--mono); font-size: 10px; color: var(--dim);
+  font-family: var(--mono); font-size: 11px; color: var(--dim);
   letter-spacing: .06em; flex: none;
 }
 .toc a:hover { color: var(--txt); }
@@ -750,7 +750,7 @@ details.more[open] > div { animation: rise .28s var(--ease) both; }
  * device for two-word labels; at this length it removes the word shapes you
  * read by, and wrapped to three lines on a phone. Sentence case, body face. */
 .stat .k {
-  font-family: var(--body); font-size: 11.5px; letter-spacing: 0;
+  font-family: var(--body); font-size: 12px; letter-spacing: 0;
   color: var(--mut); line-height: 1.35;
   /* No flex:1 here any more. Growing the label to push the figure down only
    * ever bottom-aligned the label; what sits under the figure differs cell to
@@ -775,7 +775,7 @@ details.more[open] > div { animation: rise .28s var(--ease) both; }
   color: var(--mut); letter-spacing: 0; margin-left: 5px;
 }
 .stat .ci {
-  font-family: var(--mono); font-size: 10.5px; color: var(--mut); margin-top: 4px;
+  font-family: var(--mono); font-size: 11px; color: var(--mut); margin-top: 4px;
 }
 
 /* ── chart frames ───────────────────────────────────────────────────────── */
@@ -808,7 +808,7 @@ details.more[open] > div { animation: rise .28s var(--ease) both; }
 .panel.pending .chart, .panel.pending .acts { opacity: .38; }
 .panel.pending .tools::after {
   content: 'recomputing';
-  font-family: var(--mono); font-size: 10px; letter-spacing: .14em;
+  font-family: var(--mono); font-size: 11px; letter-spacing: .14em;
   text-transform: uppercase; color: var(--mut);
   align-self: center; margin-left: 2px; white-space: nowrap;
 }
@@ -835,12 +835,12 @@ details.more[open] > div { animation: rise .28s var(--ease) both; }
 .two .panel { margin-bottom: 0; }
 
 .legend {
-  display: flex; gap: 16px; flex-wrap: wrap; font-size: 11.5px;
+  display: flex; gap: 16px; flex-wrap: wrap; font-size: 12px;
   color: var(--mut); margin-bottom: 8px;
 }
 /* Each detection posture reports the dwell time and coverage it writes. */
 .presets .mtr {
-  display: block; font-family: var(--mono); font-size: 10px;
+  display: block; font-family: var(--mono); font-size: 11px;
   color: var(--dim); letter-spacing: .04em; margin-top: 3px;
 }
 .presets button.on .mtr { color: var(--ink); }
@@ -854,7 +854,7 @@ details.more[open] > div { animation: rise .28s var(--ease) both; }
  * attribute no touch or keyboard user can reach. */
 .trait-notes { margin-top: 10px; }
 .trait-notes > div {
-  font-size: 11.5px; line-height: 1.45; color: var(--mut);
+  font-size: 12px; line-height: 1.45; color: var(--mut);
   padding: 8px 0; border-top: 1px solid var(--rule);
 }
 .trait-notes b { color: var(--txt); font-weight: 600; }
@@ -901,7 +901,7 @@ ul.acts li:last-child { border-bottom: 0; padding-bottom: 0; }
 /* ── evidence table ─────────────────────────────────────────────────────── */
 .tbl { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 18px; }
 .tbl th {
-  text-align: right; font-family: var(--mono); font-size: 10px; letter-spacing: .1em;
+  text-align: right; font-family: var(--mono); font-size: 11px; letter-spacing: .1em;
   text-transform: uppercase; color: var(--mut); font-weight: 600;
   padding: 0 0 9px; border-bottom: 1px solid var(--rule2);
 }
@@ -919,14 +919,14 @@ ul.acts li:last-child { border-bottom: 0; padding-bottom: 0; }
 .anchors > div { padding: 12px 0; border-bottom: 1px solid var(--rule); }
 .anchors dt { font-size: 13px; font-weight: 500; margin-bottom: 4px; }
 .anchors dt b { font-weight: 700; }
-.anchors dd { margin: 0; font-size: 11.5px; color: var(--mut); font-family: var(--mono); }
+.anchors dd { margin: 0; font-size: 12px; color: var(--mut); font-family: var(--mono); }
 .anchors .measured { color: var(--def); }
 .anchors .reported { color: var(--zero); }
 .anchors .assumed  { color: var(--warn); }
 .anchor-note { display: block; font-size: 11px; color: var(--dim); font-family: var(--body); margin-top: 3px; }
 
 .tag {
-  font-family: var(--mono); font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase;
+  font-family: var(--mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase;
   padding: 2px 6px; border-radius: 4px; border: 1px solid currentColor; white-space: nowrap;
 }
 .tag.m { color: var(--def); }
@@ -1137,18 +1137,18 @@ footer code {
   <div class="mast">
     <div class="mast-copy">
       <h1>Which clock does an autonomous adversary <em>actually</em> move?</h1>
-      <p class="sub">A Monte Carlo model of exploit availability against remediation, resimulated
-      on every change. The adversary timeline is <b>measured, not assumed</b>: days from CVE
-      publication to public exploit code. That clock has sat at its floor &mdash; a median under
-      one day &mdash; in every settled year since 2015. <b>Three other mechanisms have not:
-      weaponised share, post-exploitation tempo, and vulnerability discovery rate.</b></p>
+      <p class="sub">A Monte Carlo model of exploit availability against remediation, rerun on
+      every change. The adversary timeline is <b>measured, not assumed</b>: days from CVE
+      publication to public exploit code. That clock has sat at its floor: the median has not
+      exceeded one day in any complete year since 2015. <b>Three other mechanisms have not: the share of
+      bugs weaponised, post-exploitation tempo, and the rate new vulnerabilities are found.</b></p>
     </div>
 
     <!-- The thesis in three measured figures, read off the vendored snapshot at
          render time rather than typed into the prose, so they cannot go stale. -->
     <aside class="clock" aria-labelledby="clock-h">
       <div class="clock-h" id="clock-h">The exploit clock <span class="tag m"
-      title="Measured: read directly from the vendored corpus and reproducible offline. See Model provenance.">measured</span></div>
+      title="Measured: read directly from the vulnerability data shipped with this page, and reproducible offline. See Model provenance." >measured</span></div>
       <dl id="clock"></dl>
     </aside>
   </div>
@@ -1217,7 +1217,7 @@ footer code {
     <span data-scope-modelled>…</span>. <span data-scope-vulncount>Three</span> of them need a
     published vulnerability. The rest do not, and no change window closes them. <b>Not counted:</b>
     <span data-scope-excluded>…</span>. Vulnerability exploitation accounts for
-    <span data-scope-share>31%</span> of breaches in the <span data-scope-src>DBIR</span>: a
+    <span data-scope-share>20%</span> of breaches in the <span data-scope-src>DBIR</span>: a
     minority of routes, and not the largest. Every figure here is a lower bound.
   </p>
 
@@ -1249,8 +1249,8 @@ footer code {
 
     <div class="card def">
       <h2 class="d">Your environment</h2>
-      <p class="note">Place yourself on each axis, then adjust any parameter. Every figure
-      resimulates as you go.</p>
+      <p class="note">Place yourself on each axis, then adjust any parameter. Every figure is
+      recalculated as you go.</p>
 
       <div class="seg">
         <div class="seg-l">Public exposure <span class="seg-hint">pick one</span></div>
@@ -1338,9 +1338,10 @@ footer code {
         <div class="ph-copy">
           <span class="ord">01</span>
           <h3>Exploit availability against remediation</h3>
-          <p class="lead">Day zero is patch availability. Everything to the left of it is
-          exploitation that precedes any available fix. The hatched region is the probability that
-          public exploit code exists before remediation completes.</p>
+          <p class="lead">Day zero is CVE publication. Everything to the left of it is exploit
+          code that precedes the record — mostly publication lag, not zero-days. The hatched
+          region is remediation that completes with exploit code already public; the badge is that
+          probability across all remediation, drawn window or not.</p>
         </div>
         <div class="tools">
           <button class="icon-btn" data-copy="race" type="button">Copy</button>
@@ -1368,12 +1369,12 @@ footer code {
         <div>
           <p class="lead">The horizontal axis is days from CVE publication. Day 0 is the
           vertical rule, and the shaded band to its left is time when <b>no CVE record existed
-          yet</b>. Most of that band is not a zero-day: it is publication lag, with exploit code
-          already public and mass scanning already following it, which is why the model gives it
-          full hazard rather than the discount a genuinely pre-disclosure exploit gets. The same
-          measured series reports the share negative at 98.5% in 2000, on medians of tens of days
-          before publication — impossible as a claim about adversaries, unremarkable as one about
-          NVD.</p>
+          yet</b>. Most of that band is not a zero-day. It is publication lag: exploit code is
+          already public and mass scanning has already followed it, so the model treats that time
+          as fully exposed rather than discounting it the way it discounts a genuine
+          pre-disclosure exploit. The same series puts 98.5% of exploits ahead of publication in
+          2000, at a median of 44 days. That measures how slowly records were published, not what
+          attackers could do.</p>
 
           <p class="lead">Two distributions mirror off the centre line. Above it,
           <b>remediation complete</b> is when your remediation lands, day by day. Below it,
@@ -1382,7 +1383,7 @@ footer code {
           own scale, which runs from 0% at the centre line down to 100% at the bottom.</p>
 
           <p class="lead"><b>Unremediated exposure</b> is the hatched region. For each day it is
-          the part of that day’s remediation for which exploit code already existed, so it is the
+          the part of that day's remediation for which exploit code already existed, so it is the
           share of the remediation curve that lost the race.</p>
 
           <p class="lead">The two large figures answer different questions. The marker on the
@@ -1404,13 +1405,13 @@ footer code {
           <span class="ord">02</span>
           <h3>Attrition from publication to compromise</h3>
           <p class="lead">Each stage is a subset of the one above it. The stream entering the top
-          is every severity band, not just Critical: you set the critical count and the model derives
-          the High, Medium and Low volume beside it from the published corpus ratios, each carrying
-          its own arming and exploitation rate. Counting criticals alone would discard
-          <b>two thirds</b> of everything known to be exploited. The two largest reductions then
-          occur outside the remediation process — most published vulnerabilities land on a version
-          or configuration that is not exposed to them, and most of the remainder never acquire a
-          working exploit.</p>
+          is every severity band, not just Critical: you set the Critical count, and the High, Medium
+          and Low volumes beside it are derived from published ratios, each with its own rate of
+          acquiring exploit code and of being exploited. Counting Criticals alone would discard
+          <b>two thirds</b> of everything known to be exploited. The two largest reductions happen
+          outside the remediation process: most published vulnerabilities land on a version or
+          configuration that is not exposed to them, and most of the rest never get a working
+          exploit.</p>
         </div>
         <div class="tools">
           <button class="icon-btn" data-copy="funnel" type="button">Copy</button>
@@ -1427,18 +1428,20 @@ footer code {
         <div class="ph-copy">
           <span class="ord">03</span>
           <h3>Sensitivity analysis</h3>
-          <p class="lead">Each bar varies a single parameter across its plausible range with all
-          others held constant. A <b>compromise</b> is an adversary establishing a foothold; it
-          becomes an <b>incident</b> when detection and response fail to contain it before the
-          adversary reaches its objective. The two respond to different parameters, and that
-          divergence is what should drive remediation priority. Read the ranking rather than the
-          ratio between bars: length depends on the range chosen for each parameter. Detection
-          sits flat against compromise <i>by construction</i>, being modelled only after a
-          foothold exists, so controls that block exploitation outright are outside the model
-          rather than measured at zero. Headcount is a scale term, not a lever: the routes that
-          scale with people do so <i>sub-linearly</i>, because one lure reaches every mailbox in a
-          single event, and a bar that long would otherwise read as advice to employ fewer
-          people.</p>
+          <p class="lead">Each bar varies a single parameter across its plausible range, holding
+          everything else fixed. Read the ranking rather than the ratio between bars: bar length
+          depends on the range chosen for each parameter. The baseline marked on the chart is
+          recomputed at this chart's own trial count with the uncertain inputs held central, so it
+          can sit a point or two from the headline.</p>
+          <p class="lead">A <b>compromise</b> is an adversary establishing a foothold. It becomes
+          an <b>incident</b> when detection and response fail to contain it before the adversary
+          reaches its objective. The two respond to different parameters, and that difference is
+          what should drive priority.</p>
+          <p class="lead">Two bars need a caveat. Detection is flat against compromise because
+          detection only enters the model once a foothold exists, so controls that block
+          exploitation outright sit outside the model rather than measuring as zero. Headcount is
+          a measure of size rather than a control, and the routes that scale with people scale
+          less than proportionally, because one lure reaches every mailbox at once.</p>
         </div>
         <div class="tools">
           <div class="switch" role="group" aria-label="Metric">
@@ -1449,12 +1452,13 @@ footer code {
           <button class="icon-btn" data-dl="torn" type="button">PNG</button>
         </div>
       </div>
-      <!-- 17 levers x 25px a row + 54px of gutter. The reservation is what the
+      <!-- 25 levers x 25px a row + 54px of gutter. The reservation is what the
            page holds open before any script runs, so it has to match what
            js/charts.js will draw: it said 379, which was thirteen levers, and
-           the four added since made the sensitivity chart shove a screen and a
-           half of document down by 100px the moment the settle pass landed.
-           tools/check-layout.js computes both and fails the build on a gap. -->
+           the four added at the time made the sensitivity chart shove a screen
+           and a half of document down by 100px the moment the settle pass
+           landed. tools/check-layout.js computes both and fails the build on a
+           gap. -->
       <svg id="torn" class="chart" height="679" role="img" aria-label="Sensitivity of the outcome to each parameter"></svg>
     </section>
 
@@ -1463,8 +1467,9 @@ footer code {
         <div class="ph-copy">
           <span class="ord">04</span>
           <h3>Prioritised remediation actions</h3>
-          <p class="lead">The five parameter changes with the largest effect on
-          <span id="acts-metric">annual probability of compromise</span> at current settings.</p>
+          <p class="lead">The five changes to your configuration with the largest effect on
+          <span id="acts-metric">annual probability of compromise</span>, at your current
+          settings.</p>
         </div>
       </div>
       <ul class="acts" id="acts"></ul>
@@ -1480,10 +1485,10 @@ footer code {
             <p class="lead">Class of the <em>first</em> compromise, counted once per simulated
             year. Only opportunistic exploitation turns fully on your change window; a targeted
             campaign turns partly on it, and the other six not at all. That is why the ranked
-            actions above are not simply <em>patch faster</em>. The coefficients behind the five
-            classes needing no vulnerability are judgement, so the stacked pair beneath shows the
-            one check available on them: this estate's mix against the population it is anchored
-            to.</p>
+            actions above are not simply <em>patch faster</em>. The five classes that need no
+            vulnerability rest on judgement rather than measurement, so the pair of bars beneath
+            shows the only check available on them: this estate's mix of routes against the
+            reported breach population it is calibrated to.</p>
           </div>
           <div class="tools">
             <button class="icon-btn" data-copy="routes" type="button">Copy</button>
@@ -1515,25 +1520,29 @@ footer code {
           <span class="ord">07</span>
           <h3>Four clocks an autonomous adversary could move</h3>
           <p class="lead">BOD 26-04 names adversary use of AI as a reason the window between patch
-          release and exploitation may narrow. That is four separate claims carrying different
-          evidence and different consequences, so each takes its own dial on one axis.
-          <button type="button" class="ctl-link" data-ctl="ai">Arrival speed<span class="vh">, go to this dial in the console</span></button> is the one the phrase usually means, and the flattest curve here: the
-          measured median has <b>not exceeded one day in any settled year since 2015</b>, and the
+          release and exploitation may narrow. That is four separate claims with different evidence
+          behind them and different consequences, so each gets its own dial. All four default to
+          the measured record.</p>
+
+          <p class="lead">
+          <button type="button" class="ctl-link" data-ctl="ai">Arrival speed<span class="vh">, go to this dial in the console</span></button> is the one the phrase usually means, and the curve with the least room left. The
+          measured median has <b>not exceeded one day in any complete year since 2015</b>, and the
           share arriving ahead of the CVE record has fallen rather than risen. <button type="button" class="ctl-link" data-ctl="weap">Weaponised share<span class="vh">, go to this dial in the console</span></button> is worth
-          several times as much, because breadth has room left where speed does not.
-          <button type="button" class="ctl-link" data-ctl="tempo">Post-exploitation tempo<span class="vh">, go to this dial in the console</span></button> is flat here <i>by construction</i>: speed from foothold
-          to objective cannot change whether you were breached, only whether anyone reached it in
+          several times as much, because breadth has room left where speed does not.</p>
+
+          <p class="lead">
+          <button type="button" class="ctl-link" data-ctl="tempo">Post-exploitation tempo<span class="vh">, go to this dial in the console</span></button> is flat against compromise because speed from foothold to
+          objective cannot change whether you were breached, only whether anyone reached it in
           time. Switch the readout to incidents and it lifts off the floor. Even there the curve
-          understates where it bites: against a 24/7 SOC, full tempo removes roughly
-          <b>half</b> of the margin detection buys over having none. A faster adversary
-          does not beat detection on any single intrusion; it devalues the investment.</p>
+          understates where it bites: against a 24/7 SOC, full tempo removes roughly <b>half</b>
+          of the margin that detection buys over having none. A faster adversary does not beat
+          detection on any single intrusion. It devalues the investment.</p>
           <p class="lead">The steepest curve here is the last one, and it is not a clock at all.
           <button type="button" class="ctl-link" data-ctl="discovery">Discovery rate<span class="vh">, go to this dial in the console</span></button> asks how many
-          vulnerabilities are found in software you already run: the size of the stream rather than
-          the speed of anything that happens to it. Machine-found bugs in real codebases are a
-          present-tense capability rather than a forecast, which makes this the least speculative
-          of the four and, on most estates, comfortably the largest. All four dials default to the
-          measured record.</p>
+          vulnerabilities are found in software you already run: the size of the stream rather
+          than the speed of anything downstream of it. Machine-found bugs in real codebases are a
+          capability that exists today rather than a forecast, which makes this the least
+          speculative of the four and, on most estates, the largest.</p>
         </div>
         <div class="tools">
           <button class="icon-btn" data-copy="sweep" type="button">Copy</button>
@@ -1549,8 +1558,8 @@ footer code {
         <div class="ph-copy">
           <span class="ord">08</span>
           <h3>Why severity is not the prioritisation trigger</h3>
-          <p class="lead">The conventional approach counts Critical-rated CVEs. The corpus does not
-          support it. Below is the full scored CVE population, bucketed by CVSS band, against the
+          <p class="lead">The conventional approach counts Critical-rated CVEs. The published record does
+          not support it. Below is the full scored CVE population, bucketed by CVSS band, against the
           share of each band that has reached the confirmed-exploited catalogue.</p>
         </div>
         <div class="tools">
@@ -1567,14 +1576,14 @@ footer code {
       </div>
       <p class="lead foot" id="ev-foot"></p>
       <p class="lead codified"><b>This position is now codified.</b> CISA Binding Operational Directive
-      <b>26-04</b> (10 June 2026) supersedes BOD 22-01 and removes severity as the
+      <b>26-04</b> (10 June 2026) supersedes BOD 19-02 and BOD 22-01 and removes severity as the
       trigger entirely. It prioritises on four SSVC decision points: presence in the
       KEV catalogue, public exposure of the asset, whether exploitation is
       <em>automatable</em>, and the technical impact obtained. Remediation tiers run
       from three days plus forensic triage down to &ldquo;fix on system upgrade&rdquo;.
       The published heuristic for <em>automatable</em> is a public proof-of-concept
-      achieving remote code execution that executes reliably, which is the same
-      primitive this model measures.</p>
+      achieving remote code execution that runs reliably, which is the same test
+      this model applies.</p>
     </section>
 
     <!-- ── volume ── -->
@@ -1583,7 +1592,7 @@ footer code {
         <div class="ph-copy">
           <span class="ord">09</span>
           <h3>Severity-label inflation</h3>
-          <p class="lead">The Critical-rated population is growing faster than the corpus that
+          <p class="lead">The Critical-rated population is growing faster than the CVE population that
           contains it. A model anchored to criticals per year therefore drifts more pessimistic
           each year for reasons unrelated to the estate being assessed. This is the second reason
           severity is not used as an input here.</p>
@@ -1597,7 +1606,7 @@ footer code {
       <p class="lead foot">Part of that increase reflects
       scoring policy rather than vulnerability reality. CNAs self-assign scores, and the share each
       rates 9.0 or above ranges from near zero to roughly two in five against the same scale. NVD
-      has also ceased analysis on a growing share of the corpus.</p>
+      has also stopped analysing a growing share of published CVEs.</p>
     </section>
 
     <!-- ── anchors ── -->
@@ -1606,14 +1615,14 @@ footer code {
         <div class="ph-copy">
           <span class="ord">10</span>
           <h3>Model provenance</h3>
-          <p class="lead">Three classes of coefficient, distinguished rather than blended.
-          <span class="tag m">measured</span> is read directly from the vendored corpus and is
-          reproducible offline. <span class="tag r">reported</span> is a dated published figure:
-          cited, but dependent on a third party's methodology.
-          <span class="tag a">assumed</span> is judgement, used where no public measurement exists.
-          The latter two are drawn from their stated range on every block of trials, which is the
-          source of the credible bands. Where a coefficient is contested, the stated range is the
-          parameter to challenge.</p>
+          <p class="lead">Every input carries one of three labels, kept separate rather than blended.
+          <span class="tag m">measured</span> is read directly from the vulnerability data shipped
+          with this page and can be reproduced offline. <span class="tag r">reported</span> is a
+          dated published figure: cited, but dependent on someone else's method.
+          <span class="tag a">assumed</span> is judgement, used where no public measurement
+          exists. The last two are redrawn from their stated range throughout every run, which is
+          where the uncertainty bands come from. If you disagree with a number, the range beside
+          it is the thing to argue with.</p>
         </div>
       </div>
       <div class="anchors" id="anchors"></div>
@@ -1624,26 +1633,27 @@ footer code {
       <div class="panel-head">
         <div class="ph-copy">
           <span class="ord">11</span>
-          <h3>Take this run with you</h3>
-          <p class="lead">Both report <em>your</em> estate rather than this page's argument: what
-          you configured, the resulting probability with its credible band, the funnel and route
-          split behind it, what moves the number most, and the prioritised actions with the
-          reduction each buys here. The last slide carries the configured link, so a colleague
-          opens this exact run rather than rebuilding it. Every slide repeats the scope limit in
-          its footer: this is a lower bound, never a risk assessment for a named organisation.</p>
+          <h3>Export this run</h3>
+          <p class="lead">Both exports report <em>your</em> estate rather than this page's
+          argument: what you configured, the resulting probability with its uncertainty band, the
+          funnel and route split behind it, what moves the number most, and the ranked actions
+          with the reduction each buys here. The last slide carries a link to this exact
+          configuration, so a colleague opens the run rather than rebuilding it. Every slide
+          repeats the scope limit in its footer: this is a lower bound, never a risk assessment
+          for a named organisation.</p>
         </div>
       </div>
       <div class="exports">
         <div class="export">
           <div class="seg-l">LinkedIn carousel</div>
-          <p>Portrait slides at 1080 &times; 1350, written to a carousel's copy budget. Upload it
+          <p>Portrait slides at 1080 &times; 1350, kept short enough to read on a phone. Upload it
           as a document post and each page becomes a swipeable slide.</p>
           <button id="deck-carousel" class="icon-btn" type="button">Build carousel PDF</button>
         </div>
         <div class="export">
           <div class="seg-l">Briefing deck</div>
-          <p>16:9 at projection size, and three slides longer: the parameters your five answers
-          compose to, the rest of the readout, and the method. Text is selectable, so a figure can
+          <p>16:9 at projection size, and two slides longer: the parameter values your
+          selections produce, and the method. Text is selectable, so a figure can
           be quoted without being retyped.</p>
           <button id="deck-internal" class="icon-btn" type="button">Build briefing PDF</button>
         </div>
@@ -1656,22 +1666,22 @@ footer code {
     <footer>
       <div class="fnote">
         <div class="seg-l">Method</div>
-        <p><span data-n-heavy>60,000</span> simulated years across
-        <span data-blocks>650</span> coefficient blocks per parameter change, dropping to
+        <p><span data-n-heavy>60,000</span> simulated years for every change you make, with the
+        uncertain inputs redrawn <span data-blocks>653</span> times across that run, dropping to
         <span data-n-fast>4,000</span> years while a control is being dragged. The adversary
         timeline is sampled from the measured distribution of days between CVE publication and
-        public exploit code. The remediation timeline is derived from triage delay, out-of-band
-        capability and routine cadence. Compromise is modelled as a correlated campaign arrival
-        rather than as independent per-system trials, which would saturate near 100% and overstate
-        the result.</p>
+        public exploit code. The remediation timeline is built from triage delay, emergency-change
+        capability and routine cadence. A compromise arrives as a campaign that can reach several
+        systems at once, rather than as an independent roll per system, which would saturate near
+        100% and overstate the result.</p>
       </div>
       <div class="fnote">
         <div class="seg-l">Provenance</div>
         <p>Vulnerability, exploit-catalogue, EPSS and KEV figures are from the
         <a href="https://devko.github.io/CyberMon/">CyberMon</a> snapshot
-        <code data-snapshot>…</code>, vendored under <code>data/cybermon/</code> so every number here is
-        reproducible offline. Regenerate with <code>node tools/refresh-data.js &amp;&amp; node
-        tools/derive-calibration.js</code>. Verify the model with <code>node test/model.test.js</code>.</p>
+        <code data-snapshot>…</code>. That snapshot ships with this page rather than being fetched
+        when it loads, so every measured figure can be reproduced offline. The data, the model and
+        the checks that verify it are in the public repository.</p>
       </div>
       <div class="fnote">
         <div class="seg-l">Scope</div>
@@ -1679,11 +1689,11 @@ footer code {
         abuse has led the <span data-scope-src>DBIR</span> initial-access ranking throughout the
         series, ahead of vulnerability exploitation. A model built on the patch clock alone
         therefore misses the larger half of the routes, which is why the classes needing no
-        vulnerability are simulated here rather than left as a residual rate.</p>
-        <p>Every coefficient behind those classes is judgement rather than measurement: no public
-        corpus answers them the way the CVE corpus answers the exploit clock. What is checkable is
-        the <em>mix</em>, which at the baseline estate is anchored to the reported initial-access
-        distribution, and a test fails if it drifts. <span data-scope-independence>…</span> Run-rate
+        vulnerability are simulated here rather than folded into a single leftover rate.</p>
+        <p>Every input behind those classes is judgement rather than measurement: no public dataset
+        answers them the way the CVE record answers the exploit clock. What can be checked is
+        the <em>mix</em>: at the baseline estate it is calibrated to the reported initial-access
+        distribution, and an automated check fails if it drifts. <span data-scope-independence>…</span> Run-rate
         figures are linear extrapolation from a partial year.</p>
       </div>
       <div class="fnote">
@@ -1695,16 +1705,14 @@ footer code {
         against the Verizon DBIR 2026 edge-device series (a median around a month to full
         remediation, with roughly half never fully remediated) and the Edgescan and Cyentia
         vulnerability-management series; containment bounded by Sophos State of Ransomware 2026 (44%
-        of attacks stopped before encryption — a <i>per-attack</i> rate, so the quantity read
-        against it is containment per intrusion rather than the chance every intrusion in a year was
-        contained).</p>
+        of attacks stopped before encryption, which is a <i>per-attack</i> rate, so it is applied
+        to each intrusion rather than to a year as a whole).</p>
         <p>These are vendor incident-response and survey populations, which skew toward
-        organisations that needed help, and none of them is reproducible from the data vendored in
-        this repository the way the CVE corpus is. They are cited and dated so a reader can go and
-        look; the coefficients drawn from them carry wide declared ranges, and none of them is
-        load-bearing on the ordering this page argues for. Everything in the
-        <span class="tag m">measured</span> tier is regenerated from the snapshot and checked in
-        CI.</p>
+        organisations that needed help, and none of them can be reproduced from the data shipped with
+        this page the way the CVE figures can. They are cited and dated so you can go and look. The
+        inputs drawn from them carry wide declared ranges, and none of them changes the ranking of
+        the four dials. Everything in the <span class="tag m">measured</span> tier is regenerated
+        from the snapshot and rechecked automatically on every change.</p>
       </div>
     </footer>
 
@@ -2339,7 +2347,17 @@ footer code {
      *
      * `latest` is still exported and the page still shows it — a reader should
      * see the most recent row and see it marked provisional. It just does not
-     * calibrate anything. */
+     * calibrate anything.
+     *
+     * One conditioning is carried rather than corrected. The quantile
+     * positions below are shares of the 90-day arming series, and the model
+     * applies them to the whole armed population — whose arming rate is
+     * measured on a one-year cohort and raised further by ASSUMED.pocCoverage.
+     * Exploit code that arrives past the series horizon is therefore drawn
+     * earlier than it arrived; the tail past the p75 knot reaches to a year,
+     * which recovers some of that mass but not its timing. The residual
+     * front-loads arrival, the same direction as every other timing choice
+     * here, and is declared in SCOPE.wildTimingNote. */
     pocBefore: C.pocTiming.settled.pctBefore / 100,
     pocMedian: C.pocTiming.settled.medianDays,
     pocWithinWeek: C.pocTiming.settled.pctWithinWeek / 100,
@@ -2480,7 +2498,7 @@ footer code {
      * is to narrow the tails — the middle of the distribution is roughly
      * right, the best and worst estates are both understated. */
     routeIndependence: true,
-    routeIndependenceNote: 'Access classes are drawn independently. Real control weaknesses correlate, since an estate weak on authentication is usually also weak on patching, so this understates how concentrated risk is at both ends of the range.',
+    routeIndependenceNote: 'The access classes are simulated independently of each other. In reality control weaknesses correlate, since an estate weak on authentication is usually also weak on patching, so this understates how concentrated risk is at both ends of the range.',
     /* Detection enters this model in exactly one place — contained() — and
      * never touches a hazard, a remediation clock or an exploit-success roll.
      * A perfectly flat compromise line against detection posture is therefore
@@ -2512,27 +2530,35 @@ footer code {
      * in-the-wild pressure. Every window here should be read as the earliest
      * one the evidence supports, not the expected one.
      *
-     * TWO. The floor is not a finding. A perfectly run estate — everything in
-     * inventory, applicability in an hour, a daily change window, full
-     * telemetry, and no criticals at all — still reports a compromise rate in
-     * the mid teens, entirely from supply-chain arrivals and from targeted
-     * campaigns succeeding with no vulnerability to use. Both of those sit on
-     * the threat side of the page, where the reader has no lever, because this
-     * model does not simulate the controls that actually move them:
-     * segmentation, egress control, phishing-resistant MFA, privileged access
-     * management, provenance verification. That floor is the model's ignorance,
-     * not an irreducible property of the world, and a reader who takes it as
-     * "nothing more can be done here" has been misled by an absence. */
+     * TWO. The floor is not a finding. An estate run to the recipe in
+     * `floorRecipe` — remediation perfected, no criticals at all — still
+     * carries most of a typical estate's compromise rate, because the recipe
+     * perfects the patch clock and most of the rate never raced it: at
+     * default control settings the remainder is mostly phishing and
+     * credential abuse. Drive every control in this model to its ceiling as
+     * well and what is left is mostly supply-chain arrivals, plus the
+     * residual each ceiling deliberately stops short of. That last remainder
+     * sits where the reader has no lever because this model does not simulate
+     * the controls that would move it — provenance verification, segmentation,
+     * egress control. The floor is the model's ignorance, not an irreducible
+     * property of the world, and a reader who takes it as "nothing more can
+     * be done here" has been misled by an absence. */
     wildTimingUsesPoCClock: true,
-    wildTimingNote: 'In-the-wild exposure is timed from when exploit code exists, which is the earliest onset the evidence supports rather than the expected one. The KEV-latency series in the same snapshot is far slower, but it measures cataloguing rather than exploitation.',
+    wildTimingNote: 'In-the-wild exposure is timed from when exploit code exists, which is the earliest onset the evidence supports rather than the expected one. The KEV-latency series in the same snapshot is far slower, but it measures cataloguing rather than exploitation. Two smaller choices lean the same way: exploitation with no public code is timed from before the CVE record lands, though in reality much of it begins after disclosure with privately built exploits, and the quantile positions of the clock come from a 90-day-window series applied to the whole armed stream.',
     floorIsUnmodelledNotIrreducible: true,
     /* This note used to say the floor came from routes the model did not
      * simulate, and named phishing-resistant MFA and egress control as the
      * missing controls. Four of the five routes it meant are now simulated
      * and two of those controls are now sliders, so the floor has moved and
-     * the reason has changed with it: what is left is supply chain, which
-     * this model still carries as one reduced-form rate. */
-    floorNote: 'The compromise rate a perfectly run estate still carries comes mostly from the supply-chain route, which is a single reduced-form rate rather than a simulation of what happens inside a supplier compromise. Provenance verification, segmentation and blast-radius control are not modelled, so that remainder measures what this model still omits rather than what cannot be fixed.',
+     * the reason has changed with it. It also used to attribute the whole
+     * floor to supply chain, which is true only of an estate with every
+     * control at its ceiling; the floorRecipe estate leaves the controls
+     * where the reader has them, and at the defaults its remainder is mostly
+     * phishing and credential abuse. Supply chain is singled out because it
+     * is the one term no control on this page moves at all — and because it
+     * is one judgement rate doing that much work, the note says plainly that
+     * the floor tracks its slider. */
+    floorNote: 'With every control here at its ceiling, the compromise rate that remains comes mostly from the supply-chain route — a single reduced-form judgement rate, not a simulation of what happens inside a supplier compromise, and the floor tracks that slider almost linearly. Provenance verification, segmentation and blast-radius control are not modelled, so that remainder measures what this model still omits rather than what cannot be fixed.',
     /* The figure the note above used to quote — a floor in the mid teens — was
      * measured on an estate with no people and nothing exposed, not on the one
      * the sentence goes on to describe, which reads three times that. Stated as
@@ -2542,7 +2568,7 @@ footer code {
     /* Share of breaches attributed to vulnerability exploitation as the initial
      * access vector. `reported`, not `measured`: somebody else's population and
      * methodology, cited so the page's coverage claim has one source. */
-    vulnShareOfBreaches: 0.31,
+    vulnShareOfBreaches: 0.20,
     src: 'Verizon DBIR 2026',
     /* `agentSkill` is no longer the model's stand-in for phishing, credential
      * abuse and insider action — those are simulated. What it still carries is
@@ -2587,9 +2613,11 @@ footer code {
      * racing a 19-minute breakout it therefore usually lost. Most of what the
      * reported figure counts is an endpoint agent killing an encryptor on
      * machine time, which is exactly that branch, and it fires in seconds to
-     * minutes rather than in half an hour. Retuned, the ladder reads
-     * 17/31/45/57/66 and the rung carrying the anchor's own population — EDR
-     * deployed — lands on it. */
+     * minutes rather than in half an hour. Retuned, the ladder brackets the
+     * anchor and the rung carrying the anchor's own population — EDR deployed
+     * — lands on it; the suite asserts both. The measured column is not
+     * quoted here any more: the one this comment used to carry had drifted
+     * two points by the time anyone re-read it. */
     containmentReported: 0.44,
     containmentSrc: 'Sophos State of Ransomware 2026',
     containmentNote: 'Reported containment is an unconditional rate across all ransomware attacks, measured per attack. It bounds the containment block as a whole rather than any single regime coefficient, and the quantity to read it against is containment per intrusion rather than the chance that every intrusion in a year was contained.',
@@ -2636,7 +2664,7 @@ footer code {
    * ═══════════════════════════════════════════════════════════════════════ */
   var ASSUMED = {
     /* days before publication that a pre-disclosure exploit appears (median) */
-    preMedian:      { l: 'Days a pre-disclosure exploit precedes publication (median)', v: 7,    lo: 3,    hi: 21,   why: 'No public measurement of pre-disclosure exploit age. Shape assumed lognormal.' },
+    preMedian:      { l: 'Days a pre-disclosure exploit precedes publication (median)', v: 7,    lo: 3,    hi: 21,   why: 'No public measurement of how long a pre-disclosure exploit exists before the CVE record. The spread around the median is assumed rather than measured.' },
     /* 75th percentile of the PoC clock, days (anchors the slow tail) */
     /* The fourth knot of the attacker clock, and the only one with no measured
      * value. The three below it come from CyberMon's `arming` series, which is
@@ -2647,7 +2675,7 @@ footer code {
      * between knots from two distributions, so the number stays but the claim
      * does not: it is judgement, bounded above by the horizon of the series it
      * is a knot in. */
-    pocP75:         { l: 'Days from publication to public exploit code (75th percentile)', v: 40,   lo: 20,   hi: 90,   why: 'No published p75 for the 90-day arming series the other three knots come from. Bounded above by that horizon.' },
+    pocP75:         { l: 'Days from publication to public exploit code (75th percentile)', v: 40,   lo: 20,   hi: 90,   why: 'No published 75th-percentile figure for the 90-day series the other three points come from, so it is capped by that 90-day window.' },
     /* Daily hazard that a mass-exploitation campaign reaches one exposed system.
      *
      * The value was 0.010 against a per-vulnerability lognormal spread of
@@ -2680,13 +2708,13 @@ footer code {
      * and the per-vulnerability arrival rate that reproduces the SAME anchored
      * mix falls by roughly the product. The aggregate this is held to has not
      * moved; what moved is how much of it this one number was doing. */
-    scanHazBase:    { l: 'Daily chance a mass-exploitation campaign reaches one exposed system', v: 0.0007, lo: 0.00028, hi: 0.00154, why: 'No public per-asset campaign-arrival rate; fitted so the initial-access mix reproduces SCOPE.accessMix. Stated as a mean, with the per-vulnerability spread around it mean-normalised.' },
+    scanHazBase:    { l: 'Daily chance a mass-exploitation campaign reaches one exposed system', v: 0.0007, lo: 0.00028, hi: 0.00154, why: 'No public per-asset campaign-arrival rate. Fitted so that the simulated mix of access routes matches the reported breach population. Stated as an average, with variation between vulnerabilities around it that leaves that average unchanged.' },
     /* hazard multiplier when an exploit exists publicly but is not known to be used */
-    pocOnlyHazard:  { l: 'Hazard multiplier when exploit code is public but not known to be used', v: 0.08, lo: 0.02, hi: 0.20, why: 'Public PoC without confirmed in-the-wild use still draws opportunistic traffic.' },
+    pocOnlyHazard:  { l: 'Attack-rate multiplier when exploit code is public but not known to be used', v: 0.08, lo: 0.02, hi: 0.20, why: 'Public PoC without confirmed in-the-wild use still draws opportunistic traffic.' },
     /* hazard multiplier for edge appliances vs ordinary web systems */
-    edgeHazard:     { l: 'Hazard multiplier for edge appliances against ordinary systems', v: 2.2,  lo: 1.4,  hi: 3.6,  why: 'Edge appliances are hit harder and carry no endpoint telemetry.' },
+    edgeHazard:     { l: 'Attack-rate multiplier for edge appliances against ordinary systems', v: 2.2,  lo: 1.4,  hi: 3.6,  why: 'Edge appliances are hit harder and carry no endpoint telemetry.' },
     /* hazard multiplier applied to the pre-publication window (targeted, not mass) */
-    preHazard:      { l: 'Hazard multiplier before publication, where activity is targeted', v: 0.25, lo: 0.08, hi: 0.60, why: 'Zero-day activity is targeted; mass scanning follows public code.' },
+    preHazard:      { l: 'Attack-rate multiplier before publication, where activity is targeted', v: 0.25, lo: 0.08, hi: 0.60, why: 'Zero-day activity against ordinary software is targeted; mass scanning follows public code. Appliances are the exception — their zero-days draw mass exploitation — and carry SHAPE.edgePreHaz on top of this.' },
     /* P(you actually run the affected product at all) */
     /* These two used to ask "do you run the affected product at all?", which is
      * the question `stackVulns` has ALREADY answered — its own label is
@@ -2709,7 +2737,7 @@ footer code {
     runsWeb:        { l: 'Chance an affected ordinary product is in a vulnerable version and configuration', v: 0.85, lo: 0.65, hi: 1.00, why: 'Version spread and optional features are wider in ordinary software, so more advisories land on a build or configuration that is not exposed to them.' },
     /* containment: breakout and objective timings, days */
     breakoutMedian: { l: 'Days from foothold to lateral movement (median)', v: 0.0134, lo: 0.009, hi: 0.033,
-      why: 'Median that reproduces the reported 29-minute average eCrime breakout under this model\'s lognormal spread. Upper bound is the 2024 figure (~48 min average).',
+      why: 'Median that reproduces the reported 29-minute average eCrime breakout under this model\'s spread of timings. Upper bound is the 2024 figure (~48 min average).',
       src: 'CrowdStrike Global Threat Report 2026' },
     objectiveMedian:{ l: 'Days from foothold to the adversary objective (median)', v: 5,    lo: 2,    hi: 12,
       why: 'Median dwell when the adversary announces itself, usually via a ransomware note, giving a direct read on time from foothold to objective.',
@@ -2728,7 +2756,7 @@ footer code {
        * right order-of-magnitude sanity check on the containment block AS A
        * WHOLE, which is where it now sits — in SCOPE, against the aggregate the
        * model actually produces. */
-      why: 'Detected after breakout but before the objective. Judgement: no published figure conditions containment on this window.' },
+      why: 'Detected after breakout but before the objective. Judgement: no published figure measures containment inside this window.' },
     containLate:    { l: 'Containment when detected after the objective', v: 0.15, lo: 0.03, hi: 0.38, why: 'Detected after the objective is reached. Not zero: ransomware is regularly stopped part-way through encryption, and exfiltration is regularly cut off part-way through a transfer.' },
     /* fraction of your estate an affected product covers */
     afEdgeMin:      { l: 'Share of the appliance tier one affected product covers', v: 0.30, lo: 0.15, hi: 0.45, why: 'Appliance fleets are homogeneous: one vendor covers much of the tier.' },
@@ -2745,14 +2773,14 @@ footer code {
      * the compromise probability of a 2,000-system estate moves from 40% to
      * 58%. A number that load-bearing does not get to sit outside the interval
      * that is supposed to describe the model's uncertainty. */
-    crowdExp:       { l: 'How campaign pressure scales with affected system count (exponent)', v: 0.4, lo: 0.25, hi: 0.70,
+    crowdExp:       { l: 'How campaign pressure scales with the number of affected systems', v: 0.4, lo: 0.25, hi: 0.70,
       why: 'No public measurement of how mass-scanning pressure scales with an estate. 1.0 would mean every system is found independently; 0 that finding one is finding all.' },
     /* share of reached systems a landed campaign actually touches */
     reachShare:     { l: 'Share of reachable systems a landed campaign touches', v: 0.7, lo: 0.45, hi: 0.90,
       why: 'A campaign that reaches your estate rarely enumerates all of it before being noticed or moving on.' },
     /* chance a targeted campaign succeeds when a remediation window is open */
     windowSuccess:  { l: 'Chance a targeted campaign succeeds with a window open', v: 0.38, lo: 0.22, hi: 0.60,
-      why: 'An adversary enumerating you specifically, with an unremediated exposed system to find. Refitted with scanHazBase against the corrected stream: an open window somewhere in the estate is not the same as one this adversary can reach and use, and the opportunistic route already counts mass exploitation of the same windows.' },
+      why: 'An adversary enumerating you specifically, with an unremediated exposed system to find. Held well below certainty: an open window somewhere in the estate is not the same as one this adversary can reach and use, and mass exploitation of those same windows is already counted on the opportunistic route.' },
     /* how far ahead of ordinary software appliance exploitation runs */
     edgeLeadF:      { l: 'Appliance exploitation lead over ordinary software', v: 0.6, lo: 0.40, hi: 0.85,
       why: 'Appliances draw exploitation earlier on both sides of publication. Applied to the magnitude of the clock, so it holds for pre-disclosure exploits too.' },
@@ -2780,25 +2808,27 @@ footer code {
      * adds a CVE BECAUSE code is circulating, which manufactures part of the
      * correlation this conditional is measuring. */
     wildRate:       { l: 'Scaling on the measured confirmed-exploitation rate', v: 1, lo: 0.55, hi: 1.6,
-      why: 'The in-the-wild conditional is a residual over mismatched populations, and KEV undercounts exploitation. The range spans both.' },
+      why: 'The confirmed-exploitation rate is derived across populations that do not match each other exactly, and KEV undercounts real exploitation. The range spans both.' },
     /* What the three public catalogues cannot see.
      *
      * `pPoC` is measured against ExploitDB, Metasploit and Nuclei, and the
      * calibration file's own coverageCaveat says plainly that it is a FLOOR:
-     * the dated sample fell from 1,019 CVEs in 2017 to 94 in 2026 while CVE
-     * publication tripled. Exploit code did not become rarer over that decade.
+     * the dated sample fell from 1,019 CVEs in 2017 to 146 in 2024 while CVE
+     * publication nearly tripled. Exploit code did not become rarer over that decade.
      * It moved to GitHub, to private tooling, and to commercial kits that index
      * nowhere. Taking a number the file itself calls a floor and running it as
      * the value is the one place this model was quietly optimistic.
      *
-     * Applied to `pPoC` and divided back out of `pWildGivenPoC`, so the
-     * unconditional confirmed-exploitation rate — the quantity that IS measured
-     * against a full corpus — is preserved exactly at every setting. More bugs
-     * have public code than the catalogues see; the same number reach KEV; so
-     * the conditional falls by the same factor. The corpus anchor does not
-     * move, and neither does the 81.2% PoC-first share. */
+     * Applied to `pPoC`, divided back out of `pWildGivenPoC`, and the no-PoC
+     * conditional rescaled by the shrinkage of its own base — see the band
+     * table in drawCoeffs — so the unconditional confirmed-exploitation rate,
+     * the quantity that IS measured against a full corpus, is preserved
+     * exactly at every setting. More bugs have public code than the catalogues
+     * see; the same number reach KEV; so the conditionals move by exactly the
+     * factors that keep both counts. The corpus anchor does not move, and
+     * neither does the 81.2% PoC-first share. */
     pocCoverage:    { l: 'True public-exploit availability against what the catalogues index', v: 1.6, lo: 1.0, hi: 3.0,
-      why: 'The dated catalogue sample fell from 1,019 CVEs a year to 94 while publication tripled; exploit code moved to GitHub rather than becoming rarer. 1.0 is the floor the catalogues can see, and the measured confirmed-exploitation rate is held fixed across the range.' },
+      why: 'The dated catalogue sample fell from 1,019 CVEs a year to 146 in the latest complete year while publication nearly tripled; exploit code moved to GitHub rather than becoming rarer. 1.0 is the floor the catalogues can see, and the measured confirmed-exploitation rate is held fixed across the range.' },
     /* How much of the measured pre-publication mass is a genuine zero-day
      * rather than a late CVE record. See MEASURED.preIsRecordLag for why the
      * measured 36.5% cannot be read as an adversary capability. The rest of
@@ -2808,7 +2838,7 @@ footer code {
       why: 'Published zero-day counts run to 75-100 a year across all software. The measured 36.5% pre-publication share would put over a hundred in the critical band alone, so most of it is CVE-record lag rather than adversary pre-disclosure.' },
     /* Impact scaling on the three sub-critical bands, together. See BANDS. */
     subCritImpact:  { l: 'Foothold value of a sub-critical exploited bug, against a critical', v: 1, lo: 0.65, hi: 1.35,
-      why: 'Severity is a poor proxy for whether a bug is exploited and a fair one for what exploiting it gives you. No public measurement separates the two, so the band foothold ratios are judgement and this scales all three together.' },
+      why: 'Severity is a poor proxy for whether a bug is exploited and a fair one for what exploiting it gives you. No public measurement separates the two, so the value given to each severity band is judgement, and this scales all three together.' },
     /* Affected systems that are in inventory and still not fixed inside the
      * horizon. The model had no such branch: every in-inventory system was
      * remediated eventually, and only the out-of-inventory share — 4% at the
@@ -2817,7 +2847,7 @@ footer code {
      * never FULLY remediated across the observation window, and that is a
      * measurement of estates with an inventory and a change process. */
     neverFixShare:  { l: 'Share of affected in-inventory systems not remediated inside the year', v: 0.16, lo: 0.06, hi: 0.34,
-      why: 'Exceptions, business objections, an owner who left, a system nobody dares reboot. Verizon measured roughly half of edge-device KEV vulnerabilities never fully remediated; this is the per-system residual that survives a working change process.' },
+      why: 'Exceptions, business objections, an owner who left, a system nobody dares reboot. Verizon measured roughly half of edge-device KEV vulnerabilities never fully remediated; this is the share that survives even a working change process.' },
     /* How campaign pressure scales with HEADCOUNT — the people-side twin of
      * crowdExp, and its absence was the largest structural defect in this
      * model.
@@ -2839,8 +2869,8 @@ footer code {
      * At e=0.65 a 20,000-seat estate carries the arrival pressure of about
      * 6,300, which is what the correlation between recipients of one campaign
      * is worth. */
-    headExp:        { l: 'How people-route pressure scales with headcount (exponent)', v: 0.65, lo: 0.45, hi: 0.85,
-      why: 'No public measurement of how lure and credential-exposure pressure scales with an organisation. 1.0 would mean every person is targeted independently; 0 that reaching one is reaching all. The systems-side twin of this coefficient is crowdExp.' },
+    headExp:        { l: 'How pressure on the people routes scales with headcount', v: 0.65, lo: 0.45, hi: 0.85,
+      why: 'No public measurement of how lure and credential-exposure pressure scales with an organisation. 1.0 would mean every person is targeted independently; 0 that reaching one is reaching all. The same scaling is applied on the systems side.' },
     /* What the identity, people and configuration controls are worth against a
      * TARGETED adversary taking the non-vulnerability path.
      *
@@ -3020,6 +3050,17 @@ footer code {
     edgeCadence:  1.6,
     edgeEmerg:    1.5,
     edgeEmergHit: 0.8,
+    /* ASSUMED.preHazard discounts the pre-publication window because zero-day
+     * activity is targeted — which holds for ordinary software and is mostly
+     * wrong for appliances. The defining edge campaigns of recent years were
+     * MASS exploitation of zero-days — MOVEit, the Barracuda ESG run, the
+     * Ivanti waves — and the published zero-day series attribute roughly 44%
+     * of exploited zero-days to edge and security products, about twice this
+     * stream's appliance share. So on the edge tier the discount is scaled
+     * back toward full hazard, clamped at 1 at the use site: an appliance
+     * zero-day still draws less traffic than public code, but not four times
+     * less. */
+    edgePreHaz:   2.4,
     /* Affected-fraction bounds. The drawn ends are ASSUMED.afEdgeMin and
      * ASSUMED.afWebMax; these are the fixed ends opposite them. */
     afEdgeMax:    0.90,  /* one appliance advisory can cover almost the tier    */
@@ -3121,7 +3162,7 @@ footer code {
         h: 'Emergency change path. Zero means every vulnerability waits for the routine cycle.' },
       { k: 'emergHit',  l: 'Out-of-band trigger rate', min: 0, max: 100, step: 5, v: 25,
         f: function (v) { return v + '%'; },
-        h: 'Share of armed vulnerabilities recognised as urgent in time to take the out-of-band path.' },
+        h: 'Share of vulnerabilities with working exploit code that are recognised as urgent in time to take the emergency change path.' },
       { k: 'virtual',   l: 'Mitigated by WAF or IPS rule', min: 0,   max: 80,   step: 5,   v: 20,
         f: function (v) { return v + '%'; },
         h: 'Recovers the exposure window while the permanent fix ships. Does not apply to appliances.' },
@@ -3140,7 +3181,7 @@ footer code {
        * cannot see any of it. Set 34 here and the loop carries 374. */
       { k: 'stackVulns', l: 'Criticals in your stack, per year', min: 0, max: 200, step: 1, v: 34,
         f: function (v) { return fmtN(v); },
-        h: 'Published criticals in software you operate. The model derives the High, Medium and Low stream beside them from the corpus ratios — about ' + Math.round(MEASURED.streamPerCritical) + 'x this number in total — because two thirds of confirmed exploitation sits below Critical. Worldwide critical run-rate is ' + C.volume.curYearRunRate.critical.toLocaleString('en-US') + '.' },
+        h: 'Published criticals in software you operate. The High, Medium and Low stream beside them is derived from published ratios, about ' + Math.round(MEASURED.streamPerCritical) + 'x this number in total, because two thirds of confirmed exploitation sits below Critical. Worldwide critical run-rate is ' + C.volume.curYearRunRate.critical.toLocaleString('en-US') + '.' },
       /* The three attacker clocks an autonomous capability could plausibly move,
        * separated because they are not the same claim and do not carry the same
        * evidence. Bundled into one dial they were indistinguishable, and the
@@ -3157,7 +3198,7 @@ footer code {
        * configured. */
       { k: 'ai',        l: 'Exploit arrival speed',      min: 0,   max: 100,  step: 1,   v: 0,
         f: function (v) { return v === 0 ? 'as measured' : 'x' + (1 / clockScale(v)).toFixed(1) + ' sooner'; },
-        h: 'Compresses the publication-to-exploit clock. Zero is the settled record (' + C.pocTiming.settled.years[0] + '–' + C.pocTiming.settled.years[C.pocTiming.settled.years.length - 1] + ' pooled, n=' + C.pocTiming.settled.n + '), whose median is already under a day and the clock with the least room left to compress.' },
+        h: 'Compresses the publication-to-exploit clock. Zero is the measured record (' + C.pocTiming.settled.years[0] + '-' + C.pocTiming.settled.years[C.pocTiming.settled.years.length - 1] + ' pooled, ' + C.pocTiming.settled.n.toLocaleString('en-US') + ' records), whose median is already under a day. This is the clock with the least room left to compress.' },
       { k: 'weap',      l: 'Share of bugs weaponised',   min: 0,   max: 100,  step: 1,   v: 0,
         f: function (v) { return v === 0 ? 'as measured' : 'x' + weapMult(v).toFixed(1) + ' armed'; },
         h: 'How many published vulnerabilities acquire working exploit code at all, and how many arrive before disclosure. Measured today at ' + C.armed.pPoCCritical.toFixed(1) + '% of criticals. Breadth, not speed.' },
@@ -3184,7 +3225,7 @@ footer code {
        * the second. */
       { k: 'discovery', l: 'Vulnerability discovery rate', min: 0, max: 100, step: 1, v: 0,
         f: function (v) { return v === 0 ? 'as measured' : 'x' + discMult(v).toFixed(1) + ' found'; },
-        h: 'How many vulnerabilities are found in the software you already run. Scales the published stream against your stack without changing the stack. Breadth of the input, where the other three dials move what happens to it.' },
+        h: 'How many vulnerabilities are found in the software you already run. It raises how many published vulnerabilities land in your stack, without changing the stack itself. This dial changes the size of the input; the other three change what happens to it.' },
       { k: 'scan',      l: 'Mass-exploitation pressure',  min: 0,   max: 100,  step: 1,   v: 50,
         f: function (v) { return String(v); },
         h: 'Rate at which opportunistic exploitation reaches you once exploit code is public.' },
@@ -3206,7 +3247,7 @@ footer code {
        * ratchet. Precision is wanted at the bottom of this range, not the top. */
       { k: 'agentSkill', l: 'Campaign success without a vulnerability', min: 0, max: 60, step: 0.5, v: 1,
         f: function (v) { return v + '%'; },
-        h: 'Per targeted campaign, when no remediation window is open: phishing, credential abuse, misconfiguration or chained logic flaws. This is the model\'s proxy for the routes it does not simulate directly.' },
+        h: 'Per targeted campaign, when no remediation window is open: phishing, credential abuse, misconfiguration or chained logic flaws. This is the model\'s way of counting a targeted adversary taking one of those routes rather than waiting for a vulnerability.' },
       /* A REDUCED-FORM route, like `agentSkill`, and for the same reason: the
        * model does not simulate what happens inside a supply-chain compromise,
        * so the slider is stated net of everything that would have to go right
@@ -3244,7 +3285,7 @@ footer code {
         h: 'Anyone who can authenticate to something you run: staff, contractors, and the service desk. The denominator for phishing, credential abuse, insider action and device loss.' },
       { k: 'mfa',       l: 'Authentication strength', min: 0, max: 100, step: 1, v: 62,
         f: function (v) { return v + '%'; },
-        h: '0 is passwords alone. 100 is origin-bound, phishing-resistant authentication everywhere, including the service desk. The single largest control in this half of the model.' },
+        h: '0 is passwords alone. 100 is origin-bound, phishing-resistant authentication everywhere, including the service desk. The single largest control on the routes that need no vulnerability.' },
       { k: 'awareness', l: 'Filtering and user reporting', min: 0, max: 100, step: 1, v: 48,
         f: function (v) { return v + '%'; },
         h: 'Mail filtering, link and attachment handling, and how fast a user who did click tells somebody. Filtering thins how many lures reach an engaged person; reporting shortens how long the ones that convert go unnoticed.' },
@@ -3256,7 +3297,7 @@ footer code {
         h: 'Baselines, drift detection and external attack-surface monitoring. The only control acting on the misconfiguration route, which no patch cycle can close.' },
       { k: 'insiderCtl', l: 'Personnel and least privilege', min: 0, max: 100, step: 1, v: 48,
         f: function (v) { return v + '%'; },
-        h: 'Joiner-mover-leaver rigour, least privilege and egress monitoring. Deliberately the weakest control effect in the model: an authorised person acting within their access is the hardest case here.' },
+        h: 'Joiner-mover-leaver rigour, least privilege and egress monitoring. Deliberately the weakest control effect here: an authorised person acting within their access is the hardest case in this model.' },
       { k: 'deviceCtl', l: 'Device encryption and management', min: 0, max: 100, step: 1, v: 72,
         f: function (v) { return v + '%'; },
         h: 'Full-disk encryption, MDM enrolment and remote wipe. Answers most of the device-loss class, which is why that class is small.' },
@@ -3495,19 +3536,18 @@ footer code {
    * ladder reached 99.9%, which is arithmetic rather than an instrument. The
    * rebalanced ladder trades campaign VOLUME for campaign CAPABILITY —
    * sector 4x->2.5x and named 9x->5x on `campaigns`, against 2.5x and 4x on
-   * `agentSkill` — and what moves is the mix, not just the total. The targeted
-   * route goes from 4% of first compromises at the bottom rung to 73% at the
-   * top, which is the claim: the more deliberate the attention, the more of
-   * your risk sits on routes no remediation cycle touches.
+   * `agentSkill` — and what moves is the mix, not just the total: the more
+   * deliberate the attention, the more of the reader's risk sits on routes no
+   * remediation cycle touches.
    *
-   * The totals rise too, and that is the finding rather than a side effect.
-   * The old figures were low BECAUSE the route was closed; opening it should
-   * raise them. The ladder now reads 28.8 / 37.1 / 61.1 / 86.5 percent
-   * compromise, the targeted route carrying 4 / 21 / 50 / 68 percent of first
-   * compromises. Those totals moved again when four defects were fixed
-   * together — a stream discounted twice, a biased binomial, an appliance clock
-   * applied to a signed time, and a per-year count that reached past the year —
-   * so re-measure the column before quoting it; the MIX is the durable claim.
+   * The totals rise too, and that is the finding rather than a side effect —
+   * the old figures were low BECAUSE the route was closed. No measured column
+   * is quoted here any more: two sets were written into this comment over its
+   * life and both went stale within a few commits, the second still claiming
+   * a 73% targeted share at the top rung after the five people routes had
+   * diluted it to about half. The durable claims are the orderings, and the
+   * suite asserts them — compromise monotone up the ladder, and the mix
+   * moving onto the targeted route as attention rises.
    *
    * Coefficients are judgement and nothing else — no public measurement gives
    * per-adversary success against a patched estate. 4% on the top rung is
@@ -3538,7 +3578,7 @@ footer code {
   /* MATURITY - how well the estate is run. Orthogonal to what you are, so it
    * is a transform rather than another table of absolutes. */
   /* 'bod' is not a maturity level so much as a mandated regime. CISA BOD 26-04
-   * (10 June 2026) supersedes BOD 22-01 and prioritises on four decision
+   * (10 June 2026) supersedes BOD 19-02 and BOD 22-01 and prioritises on four decision
    * points - in the KEV catalogue, publicly exposed, automatable by an
    * adversary, and technical impact - with the shortest tier at three days
    * plus forensic triage. Its own heuristic for "automatable" is a public
@@ -3548,19 +3588,31 @@ footer code {
   /* The `d` strings describe what each regime does to the estate, in the same
    * terms as the multipliers beside them. 'BOD 26-04' in particular is the one
    * control on the page whose label cannot be guessed from the label alone. */
+  /* `configAssurance` is carried on this ladder and on no other. Baselines,
+   * drift detection and attack-surface monitoring are how well the estate is
+   * RUN — owned by the same programme as change windows and detection content
+   * — not part of the people programme or the identity stack. Until it was
+   * carried here, a reader who picked every top rung on every selector still
+   * ran configuration at the slider default, and misconfiguration became the
+   * largest residual route of their fully hardened estate: a gap no selector
+   * could close. Offsets, like inventory and coverage, with the typical rung
+   * at zero so compose({}) stays defaults(). */
   var MATURITY = {
-    tight:   { l: 'Mature',    d: 'Change windows in days rather than weeks, an emergency path that genuinely runs, applicability established quickly, and detection content maintained against live telemetry.',
-      cadence: 0.30, emergH: 0.35, emergHit: 1.9, awareH: 0.35, detect: 0.05, virtual: 2.5, inventory: 4,   edrCoverage: 12 },
+    tight:   { l: 'Mature',    d: 'Change windows in days rather than weeks, an emergency path that genuinely runs, applicability established quickly, detection content maintained against live telemetry, and configuration held to baselines.',
+      cadence: 0.30, emergH: 0.35, emergHit: 1.9, awareH: 0.35, detect: 0.05, virtual: 2.5, inventory: 4,   edrCoverage: 12,  configAssurance: 28 },
     typical: { l: 'Typical',   d: 'The baseline estate: scheduled change windows, an out-of-band path used when somebody escalates, and partial telemetry coverage.',
-      cadence: 1,    emergH: 1,    emergHit: 1,   awareH: 1,    detect: 1,    virtual: 1,   inventory: 0,   edrCoverage: 0 },
+      cadence: 1,    emergH: 1,    emergHit: 1,   awareH: 1,    detect: 1,    virtual: 1,   inventory: 0,   edrCoverage: 0,   configAssurance: 0 },
     /* `inventory: -12` was written against a slider that floored at 80, so the
      * sprawling estate bottomed out at 84% — better inventory than the rung's
      * own description claims. With the floor at 50 it can now reach the gap the
      * words describe. */
-    loose:   { l: 'Sprawling', d: 'Change control by exception, applicability established late, little virtual patching, and a material share of the estate in no remediation cycle at all.',
-      cadence: 2.6,  emergH: 2.4,  emergHit: 0.5, awareH: 3.5,  detect: 3.2,  virtual: 0.3, inventory: -22, edrCoverage: -25 },
+    loose:   { l: 'Sprawling', d: 'Change control by exception, applicability established late, little virtual patching, configuration drifting unwatched, and a material share of the estate in no remediation cycle at all.',
+      cadence: 2.6,  emergH: 2.4,  emergHit: 0.5, awareH: 3.5,  detect: 3.2,  virtual: 0.3, inventory: -22, edrCoverage: -25, configAssurance: -28 },
+    /* BOD 26-04's decision points include "publicly exposed", which cannot be
+     * answered without knowing the exposed estate — a modest configuration
+     * gain, of the same kind as its inventory one. */
     bod:     { l: 'BOD 26-04', d: 'A mandated regime rather than a rung on the ladder. Prioritising on KEV presence, exposure, automatability and impact buys faster, more reliable triage and a better-known estate, not a faster change window.',
-      cadence: 1,    emergH: 1,    emergHit: 1.55, awareH: 0.33, detect: 1,    virtual: 1,   inventory: 3,   edrCoverage: 4 },
+      cadence: 1,    emergH: 1,    emergHit: 1.55, awareH: 0.33, detect: 1,    virtual: 1,   inventory: 3,   edrCoverage: 4,   configAssurance: 8 },
   };
 
   /* The rung and the attention level the baseline estate already represents.
@@ -3676,6 +3728,7 @@ footer code {
     });
     out.inventory += mat.inventory;
     out.edrCoverage += mat.edrCoverage;
+    out.configAssurance += mat.configAssurance;
 
     /* Detection is an assignment, not a multiplier, because the reader picked
      * a stack and the stack states its own dwell time and coverage. The one
@@ -3986,14 +4039,24 @@ footer code {
      * scales both conditionals together and so preserves the measured 81.2%
      * PoC-first share, which is what the calibration test checks. */
     k.bands = MEASURED.bands.map(function (b) {
+      /* The catalogue-visible armed share under this scenario, and the true
+       * share once `pocCoverage` raises it. The no-PoC-wild conditional is
+       * rescaled by the shrinkage of its own base, (1 - visible)/(1 - true):
+       * without that factor the no-PoC mass fell as coverage rose — about 1%
+       * of the corpus rate at the central value and 3.4% at the top of the
+       * range — so "preserved exactly" was preserved-to-within-a-few-percent.
+       * With it, the corpus total and the PoC-first share are both invariant
+       * in `pocCoverage` by algebra rather than by tolerance. */
+      var pPoCcat = Math.min(0.9, b.pPoC * weapMult(weap));
+      var pPoCtrue = Math.min(0.9, pPoCcat * k.pocCoverage);
       return {
         key: b.key,
         isCritical: b.isCritical,
         /* the band's share of the stream, so one draw picks a band */
         w: b.perCritical / MEASURED.streamPerCritical,
-        pPoC: Math.min(0.9, b.pPoC * weapMult(weap) * k.pocCoverage),
+        pPoC: pPoCtrue,
         pWildGivenPoC: Math.min(1, b.pWildGivenPoC * k.wildRate / k.pocCoverage),
-        pWildNoPoC: Math.min(1, b.pWildNoPoC * k.wildRate),
+        pWildNoPoC: Math.min(1, b.pWildNoPoC * k.wildRate * (1 - pPoCcat) / (1 - pPoCtrue)),
         foothold: b.isCritical ? 1 : Math.min(1, b.foothold * k.subCritImpact),
       };
     });
@@ -4116,6 +4179,15 @@ footer code {
    * "150 blocks" for as long as it took somebody to read both. */
   function blocksFor(trials) {
     return trials >= 6000 ? 650 : Math.max(10, Math.floor(trials / 40));
+  }
+  /* Coefficient sets a run of `trials` actually draws: one per block start,
+   * including the partial block at the end when the block size does not
+   * divide the trial count. The page footer and the deck used to print
+   * blocksFor() for this — 650 where the default run draws 653 — and a
+   * number in copy has to be one the run produces. */
+  function coeffDrawsFor(trials) {
+    var blockN = Math.max(1, Math.floor(trials / blocksFor(trials)));
+    return Math.ceil(trials / blockN);
   }
 
   function createRun(P, trials, seed, opts) {
@@ -4263,7 +4335,14 @@ footer code {
           if (inWild) wildN++;
           if (band.isCritical) { critArmedN++; if (inWild) critWildN++; }
 
-          /* 3. when does the exploit exist, relative to the patch? */
+          /* 3. when does the exploit exist, relative to the patch?
+           *
+           * A wild bug with NO public code is always timed pre-publication
+           * here. In reality much of that population is exploited only after
+           * disclosure, with privately built exploits worked up from the
+           * patch — so this is the earliest onset the evidence supports, not
+           * the expected one: the same stance the PoC clock takes, declared
+           * beside it in SCOPE.wildTimingNote. */
           var tX = hasPoC ? drawPoCTime(rnd, k)
                           : -k.preMedian * Math.exp(SHAPE.sigPre * inverseNormal(rnd()));
           if (isEdge) tX = edgeLead(tX, k.edgeLeadF); /* ahead on BOTH sides of zero */
@@ -4274,7 +4353,12 @@ footer code {
            * NVD has caught up, which is why the second carries full hazard.
            * See MEASURED.preIsRecordLag. */
           var zeroDay = rnd() < k.zeroDayShare;
-          var preHaz = (tX < 0 && zeroDay) ? k.preHazard : 1;
+          /* The targeted-only discount holds for ordinary software; appliance
+           * zero-days are mass-exploited before disclosure often enough that
+           * the discount is mostly wrong there. See SHAPE.edgePreHaz. */
+          var preHaz = (tX < 0 && zeroDay)
+            ? Math.min(1, k.preHazard * (isEdge ? SHAPE.edgePreHaz : 1))
+            : 1;
 
           /* 4. how much of your estate does it touch? */
           var af = isEdge
@@ -4843,7 +4927,7 @@ footer code {
     RNG: RNG, inverseNormal: inverseNormal,
     clockScale: clockScale, weapMult: weapMult, preMult: preMult,
     tempoScale: tempoScale, discMult: discMult, SCOPE: SCOPE,
-    blocksFor: blocksFor,
+    blocksFor: blocksFor, coeffDrawsFor: coeffDrawsFor,
     fmtN: fmtN,
   };
 });
@@ -4913,10 +4997,40 @@ footer code {
     for (var v = Math.ceil(a / s) * s; v <= b + 1e-9; v += s) out.push(+v.toFixed(4));
     return out;
   }
-  var pctS = function (v) { return (v * 100).toFixed(0) + '%'; };
+  /* Never lets rounding contradict the number: mass that exists is not shown
+   * as 0%, and a share short of everything is not shown as 100%. */
+  var pctS = function (v) {
+    var p = v * 100;
+    if (p > 0 && p < 0.5) return '<1%';
+    if (p >= 99.5 && p < 100) return '>99%';
+    return p.toFixed(0) + '%';
+  };
   function fmtDays(d) {
     var x = Math.abs(d);
     return x < 1 ? Math.round(x * 24) + 'h' : x < 10 ? x.toFixed(1) + 'd' : Math.round(x) + 'd';
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════
+   * DRAWN HEIGHTS — one source of truth, shared with the page's reservations.
+   *
+   * The markup reserves each chart's WIDE height before any script runs, and
+   * the narrow draws differ for four of the eight charts, so a phone's first
+   * paint reserved the wrong box and the document shifted when the draw
+   * landed. js/app.js corrects every reservation at boot through this
+   * function — the same arithmetic the draw itself uses, so the two cannot
+   * drift. `n` is the chart's row count where the height depends on one.
+   * ═══════════════════════════════════════════════════════════════════════ */
+  function chartHeight(kind, w, n) {
+    switch (kind) {
+      case 'race':     return w < 620 ? 362 : 396;
+      case 'funnel':   return n * (w < 640 ? 52 : 40) + (w < 640 ? 48 : 34);
+      case 'routes':   return n * (w < 400 ? 40 : 34) + 6 + 84;
+      case 'surv':     return 236;
+      case 'torn':     return n * (w < 560 ? 34 : 25) + 54;
+      case 'sweep':    return 268;
+      case 'severity': return n * 46 + (w < 620 ? 68 : 52);
+      case 'volume':   return 190;
+    }
   }
 
   /* ═══════════════════════════════════════════════════════════════════════
@@ -4931,7 +5045,7 @@ footer code {
     /* The narrow gutter carries one more row than the wide one: the
      * pre-disclosure readout cannot share a line with the band name at phone
      * width, so it drops beneath the cumulative caption. */
-    var h = narrow ? 362 : 396;
+    var h = chartHeight('race', w);
     /* BOT is measured back from the bottom, so a fourth caption row has to
      * come out of the gutter rather than be added past the edge. */
     var L = 46, R = w - 14, T = narrow ? 44 : 38;
@@ -5007,8 +5121,19 @@ footer code {
     svg.appendChild(el('path', { 'class': 'ch-area', d: path(ap) + ' Z', fill: pal.att, 'fill-opacity': 0.13, stroke: pal.att, 'stroke-width': 1, 'stroke-opacity': 0.45, 'stroke-linejoin': 'round' }));
 
     if (d.cum) {
-      var cp = [];
-      for (var q = 0; q < d.B; q++) cp.push([Xi(q), MID + d.cum[q] * hDn]);
+      /* The CDF is known at bin EDGES — cum[q] is the mass through bin q — so
+       * the curve is drawn edge-aligned rather than at bin centres, which
+       * displaced it half a bin to the left and left the day-zero marker
+       * visibly off the curve it annotates. The exact day-zero value is
+       * inserted as a point of its own, so the marker sits on the drawn line
+       * rather than on an interpolation near it. */
+      var of0 = (d.overflow && d.overflow.aBelow) || 0;
+      var cp = [[X(d.x0), MID + of0 * hDn]];
+      for (var q = 0; q < d.B; q++) {
+        var xe = d.x0 + (q + 1) * d.dx;
+        if (d.x0 + q * d.dx <= 0 && xe > 0) cp.push([x0px, MID + d.beforeFrac * hDn]);
+        cp.push([X(xe), MID + d.cum[q] * hDn]);
+      }
       /* `pathLength` normalises the dash unit to 1 so the stylesheet can draw
        * this curve without knowing its length. The dash itself is CSS-only:
        * a dasharray attribute here would export a half-drawn line. */
@@ -5047,7 +5172,10 @@ footer code {
     if (of.aAbove > 0.004) chip(R - 2, BOT - 4, 'end', pal.att, pctS(of.aAbove) + ' later ▸');
     /* Clear of the headline badge, which is opaque, drawn later, and occupies
      * T+4 to T+64 against the right edge. */
-    if (of.dAbove > 0.004) chip(R - 2, T + 80, 'end', pal.def, pctS(of.dAbove) + ' unremediated ▸');
+    /* "unremediated" overstated this chip: it counts remediation that lands
+     * PAST the drawn window, nearly all of it after exploit code exists, not
+     * remediation that never happens. */
+    if (of.dAbove > 0.004) chip(R - 2, T + 80, 'end', pal.def, pctS(of.dAbove) + ' complete later ▸');
 
     /* Narrow shortens both band names: the full strings run under the headline
      * badge and the day-zero readout at phone widths. */
@@ -5076,7 +5204,7 @@ footer code {
      * support — it is mostly a late CVE record in front of exploit code that is
      * already public. See MODEL.MEASURED.preIsRecordLag. */
     txt(svg, narrow ? L : R, BOT + (narrow ? 64 : 36),
-      pctS(d.beforeFrac) + (narrow ? ' beat the record' : ' public before the CVE record'),
+      pctS(d.beforeFrac) + (narrow ? ' before the CVE record' : ' public before the CVE record'),
       { a: narrow ? 'start' : 'end', c: pal.mut, fs: 10.5 });
     return svg;
   }
@@ -5090,7 +5218,7 @@ footer code {
     /* The narrow branch puts the label above its bar, which pushes the whole
      * stack down by one row's worth; the caption underneath then needs the
      * extra gutter or it is drawn past the bottom edge. */
-    var h = labels.length * rh + (narrow ? 48 : 34);
+    var h = chartHeight('funnel', w, labels.length);
     frame(svg, w, h);
     var L = narrow ? 8 : 300, R = w - 58, T = 10;
     var max = Math.max.apply(null, r.fn.concat([1e-3]));
@@ -5106,8 +5234,8 @@ footer code {
       var col = i === 0 ? pal.dim : i < 2 ? pal.def : i < 4 ? pal.warn : pal.bad;
       var barY = narrow ? y + 2 : y;
 
-      if (narrow) txt(svg, L, y - 4, labels[i], { c: i === last ? pal.txt : pal.mut, fs: 11.5 });
-      else txt(svg, L - 12, y + 15, labels[i], { a: 'end', c: i === last ? pal.txt : pal.mut, fs: 11.5 });
+      if (narrow) txt(svg, L, y - 4, labels[i], { c: i === last ? pal.txt : pal.mut, fs: 12 });
+      else txt(svg, L - 12, y + 15, labels[i], { a: 'end', c: i === last ? pal.txt : pal.mut, fs: 12 });
 
       svg.appendChild(el('rect', { 'class': 'ch-track', x: L, y: barY, width: Math.max(0, R - L), height: 19, rx: 3, fill: pal.sunk }));
       svg.appendChild(el('rect', { 'class': 'ch-bar', style: '--i:' + i, x: L, y: barY, width: bw, height: 19, rx: 3, fill: col, 'fill-opacity': i === last ? 1 : 0.8 }));
@@ -5117,9 +5245,12 @@ footer code {
         var drop = r.fn[i - 1] > 0 ? (1 - v / r.fn[i - 1]) * 100 : 0;
         /* Narrow puts the label above the bar, so the delta goes below it
          * rather than sharing the label's line — six of these labels are long
-         * enough to reach the right edge at phone width. */
+         * enough to reach the right edge at phone width. Signed explicitly: a
+         * stage wider than its parent is a model defect this chart must not
+         * hide, and the old hand-built minus printed it as "−-12%". */
         txt(svg, narrow ? R : L - 12, narrow ? barY + 32 : y + 1,
-          '−' + drop.toFixed(0) + '%', { a: 'end', c: pal.dim, fs: 10, mono: true });
+          (drop < 0 ? '+' : '−') + Math.abs(drop).toFixed(0) + '%',
+          { a: 'end', c: pal.dim, fs: 10, mono: true });
       }
     });
     txt(svg, L, T + labels.length * rh + (narrow ? 26 : 16), 'per simulated year, bar width square-root scaled', { c: pal.dim, fs: 10 });
@@ -5160,7 +5291,7 @@ footer code {
     var list = classes || [];
     var cols = [pal.att, pal.warn, pal.zero, pal.bad, pal.def, pal.mut, pal.txt, pal.dim];
     var rh = narrow ? 40 : 34, top = list.length * rh + 6;
-    var h = top + 84;
+    var h = chartHeight('routes', w, list.length);
     frame(svg, w, h);
     var L = 2, R = w - 4;
 
@@ -5174,7 +5305,7 @@ footer code {
       var barY = y + (narrow ? 17 : 4);
       var barR = R - valW;
       txt(svg, L, y + (narrow ? 10 : 11), narrow ? c.short : c.label,
-        { c: pal.txt, fs: 11.5 });
+        { c: pal.txt, fs: 12 });
       svg.appendChild(el('rect', {
         'class': 'ch-track', x: narrow ? L : L + 168, y: barY,
         width: Math.max(4, barR - (narrow ? L : L + 168)), height: 10, rx: 3, fill: pal.sunk,
@@ -5225,7 +5356,7 @@ footer code {
   }
 
   function survival(svg, w, r, pal) {
-    var h = 236;
+    var h = chartHeight('surv', w);
     frame(svg, w, h);
     var L = 40, R = w - 10, T = 12, B = h - 34;
     /* The horizon is read off the series rather than written as 365 in six
@@ -5254,7 +5385,12 @@ footer code {
     if (half > 0) {
       var x = L + (R - L) * half / H;
       svg.appendChild(el('line', { x1: x, y1: T, x2: x, y2: B, stroke: pal.bad, 'stroke-dasharray': '3 3' }));
-      txt(svg, x + 5, T + 11, 'day ' + half, { c: pal.bad, fs: 10.5, mono: true });
+      /* Anchored away from the right edge once the median sits in the later
+       * half of the year — left-anchored it ran into the years-clean label
+       * that shares this row, and the two read as one garbled string. */
+      var flip = x > L + (R - L) * 0.55;
+      txt(svg, flip ? x - 5 : x + 5, T + 11, 'day ' + half,
+        { a: flip ? 'end' : undefined, c: pal.bad, fs: 10.5, mono: true });
     }
     txt(svg, R, T + 11, pctS(r.surv[H]) + ' of years clean', { a: 'end', c: pal.mut, fs: 10.5 });
     return svg;
@@ -5271,7 +5407,7 @@ footer code {
      * row, and the bottom one the better/worse legend. Both were previously
      * saved by the letterboxing that came from measuring the chart too wide;
      * drawn at true width there is nothing to hide a label in. */
-    var h = rows.length * rh + 54;
+    var h = chartHeight('torn', w, rows.length);
     frame(svg, w, h);
     /* The gutter is sized for the longest parameter name, not for the average
      * one: right-anchored labels that outgrow it run off the left edge of the
@@ -5293,15 +5429,28 @@ footer code {
       var y = T + i * rh;
       if (narrow) txt(svg, 2, y - 5, r.l, { c: pal.txt, fs: 11 });
       else txt(svg, labelW - 10, y + 12, r.l, { a: 'end', c: pal.txt, fs: 11 });
-      [[(r.lo - base) / span * half, pal.def], [(r.hi - base) / span * half, pal.att]].forEach(function (pair) {
-        var dxv = pair[0], col = pair[1], bw = Math.abs(dxv);
+      [(r.lo - base) / span * half, (r.hi - base) / span * half].forEach(function (dxv) {
+        var bw = Math.abs(dxv);
         if (bw < 0.7) return;
+        /* Coloured by DIRECTION, not by which end of the lever produced it.
+         * The legend below promises left = better and right = worse, and a
+         * slider set outside a lever's swept range puts the favourable end on
+         * the far side of the baseline — where a fixed end-to-colour mapping
+         * painted a "better" bar onto the worse side. */
+        var col = dxv < 0 ? pal.def : pal.att;
         svg.appendChild(el('rect', {
           'class': dxv < 0 ? 'ch-bar ch-bar-r' : 'ch-bar', style: '--i:' + i,
           x: dxv < 0 ? CX - bw : CX, y: y + (narrow ? 1 : 3), width: bw, height: 13, rx: 2, fill: col, 'fill-opacity': 0.9,
         }));
       });
-      txt(svg, w - 2, y + (narrow ? 12 : 13), pctS(r.lo) + '→' + pctS(r.hi), { a: 'end', c: pal.mut, fs: 10, mono: true });
+      /* A range whose ends round to the same integer is shown at one decimal,
+       * so a visible bar never carries a "13%→13%" readout. */
+      var rlo = pctS(r.lo), rhi = pctS(r.hi);
+      if (rlo === rhi && r.lo !== r.hi) {
+        rlo = (r.lo * 100).toFixed(1) + '%';
+        rhi = (r.hi * 100).toFixed(1) + '%';
+      }
+      txt(svg, w - 2, y + (narrow ? 12 : 13), rlo + '→' + rhi, { a: 'end', c: pal.mut, fs: 10, mono: true });
     });
     var fy = T + rows.length * rh + 16;
     txt(svg, CX - 8, fy, '← better', { a: 'end', c: pal.def, fs: 10 });
@@ -5333,7 +5482,7 @@ footer code {
    * trade places, which is the same finding the detection chapter reports.
    * ═══════════════════════════════════════════════════════════════════════ */
   function sweep(svg, w, series, pal) {
-    var h = 268;
+    var h = chartHeight('sweep', w);
     frame(svg, w, h);
     var L = 40, R = w - 10, B = h - 44;
 
@@ -5403,7 +5552,7 @@ footer code {
   function severity(svg, w, cal, pal) {
     var bands = cal.exploitation.bands;
     var narrow = w < 560;
-    var rh = 46, h = bands.length * rh + (w < 620 ? 68 : 52);
+    var rh = 46, h = chartHeight('severity', w, bands.length);
     frame(svg, w, h);
     var L = narrow ? 66 : 96, R = w - 92, T = 20;
     /* Floored, like the funnel's and the sweep's. Every bar is a fraction of
@@ -5443,10 +5592,10 @@ footer code {
       cal.exploitation.kevBelowCritical.toFixed(0) + '% of confirmed-exploited';
     var b2 = 'vulnerabilities are rated below Critical.';
     if (w < 620) {
-      txt(svg, 0, fy, a, { c: pal.txt, fs: 11.5 });
-      txt(svg, 0, fy + 16, b2, { c: pal.txt, fs: 11.5 });
+      txt(svg, 0, fy, a, { c: pal.txt, fs: 12 });
+      txt(svg, 0, fy + 16, b2, { c: pal.txt, fs: 12 });
     } else {
-      txt(svg, 0, fy, a + ' ' + b2, { c: pal.txt, fs: 11.5 });
+      txt(svg, 0, fy, a + ' ' + b2, { c: pal.txt, fs: 12 });
     }
     return svg;
   }
@@ -5461,7 +5610,7 @@ footer code {
       { label: String(v.prevYear.year), pub: v.prevYear.published, crit: v.prevYear.critical, share: v.prevYear.criticalShare, partial: false },
       { label: v.curYearRunRate.year + ' run-rate', pub: v.curYearRunRate.published, crit: v.curYearRunRate.critical, share: v.curYearToDate.criticalShare, partial: true },
     ];
-    var h = 190;
+    var h = chartHeight('volume', w);
     frame(svg, w, h);
     var L = 4, R = w - 4, T = 26;
     var max = Math.max.apply(null, rows.map(function (r) { return r.pub; }).concat([1e-3]));
@@ -5486,11 +5635,11 @@ footer code {
       svg.appendChild(el('rect', { 'class': 'ch-bar', style: '--i:' + (i * 2 + 1), x: L, y: y + 20, width: Math.max(2, cw), height: 22, rx: 3, fill: pal.bad, 'fill-opacity': r.partial ? 0.75 : 1 }));
       txt(svg, L + Math.max(2, cw) + 8, y + 35,
         r.crit.toLocaleString('en-US') + ' critical · ' + r.share.toFixed(1) + '% of scored',
-        { c: pal.bad, fs: 11.5, w: 600, mono: true });
+        { c: pal.bad, fs: 12, w: 600, mono: true });
       if (r.partial) txt(svg, L, y + 56, 'linear run-rate of a partial year, not a forecast', { c: pal.dim, fs: 10 });
     });
     txt(svg, L, h - 6, 'Criticals grew ' + cal.volume.growth.critical + '× against ' + cal.volume.growth.published + '× total volume.',
-      { c: pal.txt, fs: 11.5 });
+      { c: pal.txt, fs: 12 });
     return svg;
   }
 
@@ -5595,8 +5744,9 @@ footer code {
     });
   }
 
-  /* Eight chart renderers, the PNG exporter, and the one formatter js/app.js
-   * shares with them. `el` and `clear` used to be on this list too: they are
+  /* Eight chart renderers, the PNG exporter, and the two helpers js/app.js
+   * shares with them: the day formatter, and the height arithmetic behind the
+   * page's pre-draw reservations. `el` and `clear` used to be on this list too: they are
    * the internal SVG-node and container helpers, exported at some point for a
    * caller that never arrived. Nothing outside this file has ever referenced
    * either, and an exported helper is a shape somebody else can come to depend
@@ -5605,7 +5755,7 @@ footer code {
   return {
     race: race, funnel: funnel, routes: routes, survival: survival,
     tornado: tornado, sweep: sweep, severity: severity, volume: volume,
-    toPNG: toPNG, fmtDays: fmtDays,
+    toPNG: toPNG, fmtDays: fmtDays, chartHeight: chartHeight,
   };
 });
 
@@ -6275,11 +6425,21 @@ footer code {
   function pct(n, dp) { return n.toFixed(dp === undefined ? 1 : dp) + '%'; }
   function num(n, dp) { return Number(n).toFixed(dp === undefined ? 1 : dp); }
   function thou(n) { return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
-  function pts(n) { return (n >= 0 ? '+' : '−') + Math.abs(n * 100).toFixed(1) + 'pt'; }
+  /* " pts", with the space, because that is how the page prints the same
+   * quantity — a deck that abbreviates differently reads as a second source. */
+  function pts(n) { return (n >= 0 ? '+' : '−') + Math.abs(n * 100).toFixed(1) + ' pts'; }
   /* A margin a control BUYS, stated as the reduction it is. Signed pts() reads
-   * backwards here: "−9.3pt of incidents" is a gain, and a slide that has to
+   * backwards here: "−9.3 pts of incidents" is a gain, and a slide that has to
    * be reasoned about before it can be read is a slide that gets misquoted. */
-  function gain(n) { return (n * 100).toFixed(1) + 'pt'; }
+  function gain(n) { return (n * 100).toFixed(1) + ' pts'; }
+  /* Counts read from the model land in running prose, and the page's style
+   * writes small counts as words. */
+  var NUM_WORDS = ['zero', 'one', 'two', 'three', 'four', 'five', 'six',
+    'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve'];
+  function countWord(n, capital) {
+    var s = NUM_WORDS[n] || String(n);
+    return capital ? s.charAt(0).toUpperCase() + s.slice(1) : s;
+  }
 
   function band(cal, name) {
     var found = cal.exploitation.bands.filter(function (b) { return b.band === name; })[0];
@@ -6297,8 +6457,8 @@ footer code {
     var lo = isP ? run.pLo : run.incLo;
     var hi = isP ? run.pHi : run.incHi;
     var bandLine = run.bandReliable
-      ? '90% credible band ' + pct(100 * lo) + ' to ' + pct(100 * hi)
-      : 'point estimate; the credible band has not settled';
+      ? '90% band ' + pct(100 * lo) + ' to ' + pct(100 * hi)
+      : 'headline figure; the uncertainty band has not settled';
     var excluded = scope.excludedShort || 'Denial of service, fraud without intrusion, and physical premises access';
     var trialsN = (ctx.trials || 0).toLocaleString('en-GB');
     var blocksN = String(ctx.blocks || 0);
@@ -6316,7 +6476,8 @@ footer code {
         ? 'How likely is this estate to be compromised in the next 12 months?'
         : 'How likely is this estate to suffer an incident in the next 12 months?',
       short: ctx.estate,
-      long: 'A Monte Carlo simulation of exploit availability against this estate’s remediation, run over 60,000 simulated years and calibrated to a dated public corpus. What follows is the configuration, the result, what drives it, and what moves it most.',
+      long: 'A Monte Carlo simulation of exploit availability against this estate\'s remediation, run over ' +
+        trialsN + ' simulated years and calibrated to a dated public dataset. What follows is the configuration, the result, and what moves it most.',
       estate: ctx.estate,
       note: 'Calibrated to CyberMon ' + cal.snapshot.cvelist + '. Reproducible offline.',
     });
@@ -6326,8 +6487,8 @@ footer code {
       id: 'estate',
       eyebrow: 'what was configured',
       title: 'The estate this reports on',
-      short: (ctx.config || []).length + ' questions, answered on the page. Everything that follows is derived from these.',
-      long: 'The shape controls, as they were set. These are editorial judgement about the estate rather than measurement of it, which is why every figure downstream is tagged assumed.',
+      short: 'The estate as configured on the page. Everything that follows is derived from these answers.',
+      long: 'The shape controls, as they were set. These describe your estate rather than measure it, which is why every figure downstream is tagged assumed.',
       rows: ctx.config || [],
       tag: 'assumed',
     });
@@ -6337,8 +6498,8 @@ footer code {
       id: 'inputs',
       only: 'internal',
       eyebrow: 'the resulting parameters',
-      title: 'What those answers compose to',
-      long: 'The controls above compose by summing excess over one, so stacking is order-independent with diminishing returns. These are the values the simulation actually ran on, and every one of them stays editable on the page. The identity half gates the five access classes where no vulnerability is involved.',
+      title: 'What those answers produce',
+      long: 'The controls above stack with diminishing returns, and the order they are set in makes no difference. These are the values the simulation actually ran on, and every one of them stays editable on the page. The identity controls gate the five access classes where no vulnerability is involved.',
       rows: ctx.params || [],
       tag: 'assumed',
     });
@@ -6357,11 +6518,11 @@ footer code {
        * BEING the routes and states the reverse of what the model does. It
        * then went stale a second time when three classes became eight. Naming
        * them from SCOPE fixes both failure modes at once. */
-      short: modelled.length + ' access classes, simulated for this estate. ' +
+      short: countWord(modelled.length, true) + ' access classes, simulated for this estate. ' +
         excluded + ' are not counted, so real risk is higher than this.',
-      long: 'Across ' + trialsN + ' simulated years for this estate, in ' + blocksN +
-        ' coefficient blocks. The point estimate settles long before that; the credible band does not. ' +
-        modelled.length + ' access classes are simulated: ' + classList + '. ' +
+      long: 'Across ' + trialsN + ' simulated years for this estate, with the uncertain inputs redrawn ' +
+        blocksN + ' times. The headline figure settles long before that; the uncertainty band does not. ' +
+        countWord(modelled.length, true) + ' access classes are simulated: ' + classList + '. ' +
         excluded + ' are not counted, so this remains a lower bound rather than a complete picture.',
       note: 'Not a risk assessment for a named organisation. The inputs are judgement, not measurement.',
       chart: 'surv',
@@ -6378,19 +6539,19 @@ footer code {
        * compromise and incident is the argument detection rests on. Splitting
        * them across slides loses exactly the comparison they exist to make. */
       tiles: [
-        { l: 'Probability of compromise, 12 months', v: pct(100 * run.p),
+        { l: 'Probability of compromise, 12-month window', v: pct(100 * run.p),
           sub: run.bandReliable ? pct(100 * run.pLo) + ' to ' + pct(100 * run.pHi) : 'point estimate',
           lead: isP },
-        { l: 'Probability of an incident, 12 months', v: pct(100 * run.incident),
+        { l: 'Probability of an incident, 12-month window', v: pct(100 * run.incident),
           sub: run.bandReliable ? pct(100 * run.incLo) + ' to ' + pct(100 * run.incHi) : 'point estimate',
           lead: !isP },
         { l: 'Expected intrusions per year', v: num(run.events, 2),
-          sub: 'systems when mass-exploited, one per campaign' },
+          sub: 'one per campaign, however many systems it reaches' },
         { l: 'Median time to first compromise',
-          v: run.med == null ? '> 12' : String(Math.round(run.med)),
-          sub: run.med == null ? 'months — no compromise in most years' : 'days, across simulated years' },
+          v: run.med == null ? '>12' : String(Math.round(run.med)),
+          sub: run.med == null ? 'months, no compromise in most years' : 'days, across simulated years' },
       ],
-      short: 'Compromise and incident are different questions. Detection moves the second and, by construction, cannot move the first.',
+      short: 'Compromise and incident are different questions. Detection moves the second and cannot move the first.',
       long: 'Compromise and incident are different questions: detection cannot change whether you were compromised, only whether anyone reached it in time. That is why both are reported, and why the gap between them is where the detection argument later in this deck lives.',
       tag: 'assumed',
     });
@@ -6400,10 +6561,10 @@ footer code {
       list.push({
         id: 'funnel',
         eyebrow: 'how the number is arrived at',
-        title: 'From published criticals to compromises',
-        short: ctx.funnel[0].v + ' criticals a year in this stack become ' +
+        title: 'From published vulnerabilities to compromises',
+        short: ctx.funnel[0].v + ' published vulnerabilities a year in this stack become ' +
           ctx.funnel[ctx.funnel.length - 1].v + ' compromises.',
-        long: 'Each stage is a filter on the one above it. The middle stages are measured against the corpus — how many criticals ever get public exploit code, and how many are confirmed exploited — and the outer ones are properties of this estate.',
+        long: 'Each stage is a filter on the one above it. The stream is every severity band, scaled from the critical count set on the page. The middle stages are measured against the published record: how many ever get public exploit code, and how many are confirmed exploited. The outer stages are properties of this estate.',
         rows: ctx.funnel,
         chart: 'funnel',
       });
@@ -6416,7 +6577,7 @@ footer code {
         eyebrow: 'where the compromise comes from',
         title: 'First compromise of the year, by access class',
         short: 'One of these classes turns fully on patching faster. Seven do not.',
-        long: 'Only opportunistic exploitation turns fully on your change window. A targeted campaign turns partly on it. A supplier, a phishing lure, a stolen credential, a misconfiguration, an insider and a lost laptop are indifferent to it. That is why the ranking on the next slide is not simply "patch faster".',
+        long: 'Only opportunistic exploitation turns fully on your change window. A targeted campaign turns partly on it. A supplier, a phishing lure, a stolen credential, a misconfiguration, an insider and a lost laptop are indifferent to it. That is why the ranking of drivers in this deck is not simply "patch faster".',
         rows: ctx.routeRows,
         note: 'Not counted at all: ' + excluded.toLowerCase() +
           '. The ' + cal.currentYear + ' DBIR attributes ' + pct(100 * (scope.vulnShareOfBreaches || 0), 0) +
@@ -6432,7 +6593,7 @@ footer code {
         eyebrow: 'what moves this number',
         title: 'Ranked by effect on this estate',
         short: 'Each parameter swept across its full range, against this configuration.',
-        long: 'Each parameter swept alone across its full declared range, against this configuration, with everything else held. The bar is the span; the recommendations that follow report the one-sided gain from moving each the good way.',
+        long: 'Each parameter varied on its own across its full stated range, against this configuration, with everything else held fixed. The bar is the whole span. The recommended actions in this deck report only what is gained by moving each parameter in the direction that helps.',
         chart: 'torn',
         needs: 'torn',
         /* The fallback the two-pass compose reaches for when the chart cannot
@@ -6461,8 +6622,8 @@ footer code {
         ? 'Ranked by the reduction each buys on this estate, not by general advice.'
         : 'At these settings the outcome is driven by routes remediation does not reach.',
       long: acts.length
-        ? 'Ranked by the reduction each buys on this estate. This is the one-sided gain from moving the parameter the good way, holding everything else, so the figures are what that change is worth here rather than what it is worth in general.'
-        : 'At these settings the outcome is driven by routes the remediation process does not reach. See the route split above: the levers that remain are the ones that close routes needing no vulnerability at all.',
+        ? 'Ranked by the reduction each buys on this estate. Each figure is what is gained by moving that parameter in the direction that helps, holding everything else fixed, so it is what the change is worth here rather than in general.'
+        : 'At these settings the outcome is driven by routes the remediation process does not reach. See the route split in this deck: the levers that remain are the ones that close routes needing no vulnerability at all.',
       acts: acts,
       note: acts.length ? 'Each figure is the reduction in the annual probability of ' +
         (isP ? 'compromise' : 'an incident') + ' for this estate, from moving that one parameter alone.' : null,
@@ -6483,7 +6644,7 @@ footer code {
           gain(ctx.soc.full) + '.',
         long: 'Moving this estate from no detection to a 24/7 SOC is worth ' + gain(ctx.soc.reported) +
           ' of incident rate against a reported-tempo adversary, and ' + gain(ctx.soc.full) +
-          ' against one at full tempo. A faster adversary does not beat detection on any one intrusion — it devalues the investment. This is the figure most sensitive to an assumption, and the assumption is adversary speed.',
+          ' against one at full tempo. A faster adversary does not beat detection on any single intrusion. It devalues the investment. This is the figure most sensitive to an assumption, and the assumption is adversary speed.',
       });
     }
 
@@ -6497,9 +6658,9 @@ footer code {
       list.push({
         id: 'scenario',
         eyebrow: 'what would change it',
-        title: 'Three adversary scenarios, against this same estate',
+        title: countWord(dial.length, true) + ' adversary scenarios, against this same estate',
         short: 'Worst case here is ' + worst.l.toLowerCase() + ', at ' + pts(worst.worth) + '.',
-        long: 'Each dial swept alone from the measured record to full travel, against this configuration. These are scenarios, not forecasts: the measured exploit clock has not accelerated, which is why compression sits behind a dial rather than in the baseline.',
+        long: 'Each dial moved on its own from the measured record to its full range, against this configuration. These are scenarios, not forecasts: the measured exploit clock has not accelerated, which is why compression sits behind a dial rather than in the baseline.',
         rows: dial.map(function (d) {
           return { l: d.l, v: pts(d.worth), strong: d.k === worst.k };
         }),
@@ -6515,12 +6676,12 @@ footer code {
       only: 'internal',
       eyebrow: 'method and scope',
       title: 'What this is, and what it is not',
-      long: 'Every figure in this deck is tagged by epistemic status. The estate is judgement; the exploit and exploitation rates are measured against a vendored corpus; adversary timings are reported by named third parties. The coefficients behind the access classes that need no vulnerability are judgement throughout, because no public corpus answers them the way the CVE corpus answers the exploit clock.',
+      long: 'Every figure in this deck is tagged by how well it is evidenced. The estate is judgement. The exploit and exploitation rates are measured against the vulnerability data shipped with the page. Adversary timings are reported by named third parties. The inputs behind the access classes that need no vulnerability are judgement throughout, because no public data answers them the way the CVE record answers the exploit clock.',
       rows: [
         { l: 'Simulated access classes', v: String(modelled.length), strong: true },
         { l: 'Not counted', v: excluded.toLowerCase(), strong: true },
-        { l: 'Trials', v: trialsN + ' years across ' + blocksN + ' blocks' },
-        { l: 'Corpus snapshot', v: cal.snapshot.cvelist },
+        { l: 'Simulated years', v: trialsN + ' years, inputs redrawn ' + blocksN + ' times' },
+        { l: 'Data snapshot', v: cal.snapshot.cvelist },
         { l: 'KEV catalogue', v: thou(cal.snapshot.kevCount) + ' · ' + cal.snapshot.kev },
         { l: 'Criticals confirmed exploited', v: pct(band(cal, '9.0-10.0').pExploited, 2) + ' (measured)' },
       ],
@@ -6533,10 +6694,10 @@ footer code {
       eyebrow: 'check it yourself',
       title: 'This configuration is a link',
       short: 'Open it, change an assumption you disagree with, and watch the number move.',
-      long: 'The link below carries the exact configuration this deck reports. Open it, change any assumption you disagree with, and the model reruns. The corpus is vendored and the calibration is generated from it, so every measured figure here is reproducible offline.',
+      long: 'The link below carries the exact configuration this deck reports. Open it, change any assumption you disagree with, and the model reruns. The vulnerability data ships with the page and the calibration is generated from it, so every measured figure here can be reproduced offline.',
       link: ctx.url,
       rows: [
-        { l: 'Corpus', v: cal.source.replace(/^https?:\/\//, '') },
+        { l: 'Data source', v: cal.source.replace(/^https?:\/\//, '') },
         { l: 'Snapshot', v: cal.snapshot.cvelist },
       ],
     });
@@ -6609,13 +6770,13 @@ footer code {
      * not travel with page 3 — and page 3 is the one with the percentage on
      * it. Slides are pulled out of decks; footers come with them. */
     var excluded = (ctx.scope && ctx.scope.excludedShort) ||
-      'Phishing, credential abuse and insider action';
+      'Denial of service, fraud without intrusion, and physical premises access';
     var source = 'Lower bound · ' + excluded.toLowerCase() + ' not counted';
     var pdf = PDF(fmt.w, fmt.h, {
       /* Named for what it reports, not for the tool that made it. This is the
        * string a colleague sees in a mail attachment and a tab title, and
        * "briefing deck" tells them nothing about which run it is. */
-      title: 'Exposure Race — simulated result for a configured estate',
+      title: 'Exposure Race: simulated result for a configured estate',
       author: 'Exposure Race',
       subject: 'Monte Carlo simulation of exploit availability against remediation for one configured estate. ' +
         'Lower bound: ' + excluded.toLowerCase() + ' are not counted. Not a risk assessment for a named ' +
@@ -6822,7 +6983,14 @@ footer code {
   var CAN_ANIMATE = typeof Element !== 'undefined' && !!Element.prototype.animate;
 
   var $ = function (id) { return document.getElementById(id); };
-  var pctS = function (v) { return (v * 100).toFixed(0) + '%'; };
+  /* Never lets rounding contradict the number: a probability that exists is
+   * not shown as 0%, and one short of certainty is not shown as 100%. */
+  var pctS = function (v) {
+    var p = v * 100;
+    if (p > 0 && p < 0.5) return '<1%';
+    if (p >= 99.5 && p < 100) return '>99%';
+    return p.toFixed(0) + '%';
+  };
   var num = function (v, d) { return Number(v).toFixed(d === undefined ? 0 : d); };
   var thou = function (v) { return Number(v).toLocaleString('en-US'); };
 
@@ -7152,7 +7320,7 @@ footer code {
        * two largest of those, so a summary omitting both would describe an
        * estate the model is not simulating. */
       M.fmtN(P.staff) + ' people with access',
-      P.mfa + '% phishing-resistant auth',
+      P.mfa + '% authentication strength',
     ];
     if (P.supply >= 0.3) bits.push(P.supply.toFixed(2) + ' supply-chain hits a year');
     return bits.join(' · ');
@@ -7380,8 +7548,8 @@ footer code {
     { k: 'discovery',   lo: 0,    hi: 80,  l: 'Vulnerability discovery rate' },
   ];
   var ADVICE = {
-    stackVulns: ['Reduce edge software footprint', 'Each exposed product commits you to its vulnerability stream, and it is the one term here that scales with how much software you chose to run rather than with how well you run it.'],
-    exposed:    ['Reduce the exposed attack surface', 'Fewer reachable systems reduces every other term simultaneously.'],
+    stackVulns: ['Reduce edge software footprint', 'Each exposed product commits you to its vulnerability stream, and it is the one input here that scales with how much software you chose to run rather than with how well you run it.'],
+    exposed:    ['Reduce the exposed attack surface', 'Fewer reachable systems reduces every other factor at the same time.'],
     edge:       ['Reduce or segment edge appliances', 'They remediate slower, support no endpoint agent, and are the asset class where mass exploitation begins at day zero.'],
     inventory:  ['Close the asset inventory gap', 'A system in no remediation cycle stays exposed for months rather than days.'],
     detect:     ['Reduce time to detect', 'This does not prevent compromise. It determines whether a compromise escalates to an incident, and no other parameter comes close on that metric.'],
@@ -7391,7 +7559,7 @@ footer code {
     emergHit:   ['Fix the trigger, not the speed', 'Remediating in hours has no effect if applicability is never established.'],
     virtual:    ['Front exposed services with enforceable rulesets', 'Recovers the exposure window while the permanent fix is tested. Does not cover appliances.'],
     campaigns:  ['Instrument the edge for enumeration', 'Targeted campaigns are distinguishable from background scanning where telemetry exists.'],
-    supply:     ['Verify software provenance and integrity', 'Remediation cadence has no effect on this vector.'],
+    supply:     ['Verify software provenance and integrity', 'Remediation cadence has no effect on this route.'],
     edrCoverage: ['Extend telemetry across the estate', 'Worth nothing against being compromised and a great deal against it becoming an incident. Appliances take no agent, so this has a ceiling you do not set.'],
     /* The one action on this list whose mechanism the model does not simulate.
      * It moves the residual rate at which a campaign succeeds with no
@@ -7407,8 +7575,8 @@ footer code {
     mfa: ['Move to phishing-resistant authentication', 'Origin-bound credentials with no fallback path, including for the service desk, which is where this control is usually undone. It gates the two largest non-vulnerability routes at once.'],
     awareness: ['Improve filtering and shorten reporting time', 'Fewer credible lures reaching somebody who acts, and faster escalation when one does. This acts on arrival rather than on what happens afterwards, so it composes with authentication rather than overlapping it.'],
     pam: ['Reduce what a valid account reaches', 'Just-in-time privilege, vaulting and session brokering. The only control here that acts after an adversary already holds working credentials.'],
-    configAssurance: ['Close reachable misconfiguration', 'Baselines, drift detection and external attack-surface monitoring. The one route in the model that no patch cycle can close, because there is nothing to patch.'],
-    insiderCtl: ['Tighten personnel and least privilege', 'Joiner-mover-leaver rigour, least privilege and egress monitoring. Deliberately the weakest control effect in the model: an authorised person acting within their access is the hardest case here.'],
+    configAssurance: ['Close reachable misconfiguration', 'Baselines, drift detection and external attack-surface monitoring. The one route here that no patch cycle can close, because there is nothing to patch.'],
+    insiderCtl: ['Tighten personnel and least privilege', 'Joiner-mover-leaver rigour, least privilege and egress monitoring. Deliberately the weakest control effect here: an authorised person acting within their access is the hardest case in this model.'],
     deviceCtl: ['Complete device encryption and enrolment', 'Full-disk encryption, MDM and remote wipe. Small in absolute terms, and close to solved wherever it is done at all.'],
     staff: ['Reduce standing access', 'Four of the eight routes scale with how many people can authenticate. This is a denominator, not a headcount recommendation: fewer standing accounts and narrower access reduce it without anyone leaving.'],
   };
@@ -7433,6 +7601,24 @@ footer code {
    * element itself already reports the exact drawing width. */
   function width(id) {
     return Math.max(280, Math.floor($(id).getBoundingClientRect().width));
+  }
+  /* Corrects each chart's pre-draw reservation for the CURRENT width. The
+   * markup can only carry one height per chart and carries the wide one, so
+   * on a narrow layout the box reserved before any script ran is wrong for
+   * four of the eight charts, and the document shifted by the difference when
+   * the settle pass finally drew them. Setting the drawn height here, at
+   * boot, moves that correction from seconds in to script load. The
+   * arithmetic is js/charts.js's own, so the two cannot drift. */
+  function reserveHeights() {
+    [['race'], ['funnel', M.FUNNEL.length], ['routes', ACCESS_ROWS.length],
+     ['surv'], ['torn', LEVERS.length], ['sweep'],
+     ['severity', C.exploitation.bands.length], ['volume'],
+    ].forEach(function (p) {
+      var svg = $(p[0]);
+      if (!svg) return;
+      var h = CH.chartHeight(p[0], width(p[0]), p[1]);
+      if (h) svg.setAttribute('height', h);
+    });
   }
   /* Stat values are counted to their new figure rather than swapped, so a
    * change reads as the instrument settling on a reading. Two cases skip the
@@ -7588,15 +7774,15 @@ footer code {
     /* The clock the MODEL runs on: the pooled settled years, not the most
      * recent row. Naming `latest` here while simulating something else put two
      * different clocks in one sentence. */
-    add(n, 'Measured clock, ' + C.pocTiming.settled.years[0] + '–' +
+    add(n, 'Measured clock, ' + C.pocTiming.settled.years[0] + '-' +
       C.pocTiming.settled.years[C.pocTiming.settled.years.length - 1] + ': median ',
       b(CH.fmtDays(d.median)), ' from publication to public exploit code.');
     if (P.ai > 0) {
       add(n, ' Modelled at ', b('+' + P.ai), ' compression, scaling that clock by ×' +
         d.scale.toFixed(2) + ': ', b(pctS(d.beforeFrac)),
-        ' of exploits arrive ahead of patch availability.');
+        ' of exploits are already public when the CVE record lands.');
     } else {
-      add(n, ' ', b(pctS(d.beforeFrac)), ' of exploits arrive ahead of patch availability.');
+      add(n, ' ', b(pctS(d.beforeFrac)), ' of exploits are already public when the CVE record lands.');
     }
   }
 
@@ -7637,7 +7823,7 @@ footer code {
   }
 
   /* The settle pass is the heaviest arithmetic on the page: a 60,000-trial run,
-   * then two 5,000-trial runs for each of the LEVERS rows, then one for each
+   * then two N_SENS-trial runs for each of the LEVERS rows, then one for each
    * point of each curve in CLOCKS. Run as one block it holds the main thread
    * for all of it — scrolling stops, hover states stick, and the theme button
    * does not answer until it ends.
@@ -7729,7 +7915,7 @@ footer code {
    * claimed a reading the charts below it were not showing. */
   var metricRaf = 0, metricTimer = null;
 
-  /* The sensitivity bars and the sweep are chapters 03 and 08. Together they
+  /* The sensitivity bars and the sweep are chapters 03 and 07. Together they
    * are 75 of the settle's 76 simulations — about 27 of its 28 seconds — and a
    * reader at the top of the page has not asked for either yet. They are held
    * back until one of those panels comes within a screen and a half, which is
@@ -7875,7 +8061,7 @@ footer code {
       });
     }
 
-    /* Everything from here is chapters 03 and 08. Built only once a reader is
+    /* Everything from here is chapters 03 and 07. Built only once a reader is
      * heading for them — see armSens. The stages already queued above are the
      * headline figures and the four charts above the fold, which every reader
      * gets regardless. */
@@ -7924,22 +8110,28 @@ footer code {
        * chart alone rather than drawing it from a half-filled array. */
       lastSens = { base: base, rows: rows, sweep: null };
     });
-    /* One curve per dial at six points each, rather than one curve at eleven.
-     * Each is swept over its own travel with the others held where the reader
-     * left them, so what the chart compares is four mechanisms against one
-     * estate. Six points is enough: every one of these curves is smooth and
+    /* One curve per dial at six grid points each, rather than one curve at
+     * eleven. Each is swept over its own travel with the others held where the
+     * reader left them, so what the chart compares is four mechanisms against
+     * one estate. Six points is enough: every one of these curves is smooth and
      * monotone, and the shape being compared is which of them is steepest. */
     CLOCKS.forEach(function (cl) {
       var pts = [];
-      sweepSeries.push({ k: cl.k, l: cl.l, c: cl.c, cur: snap[cl.k] || 0, pts: pts });
-      for (var a = 0; a <= 100; a += 20) {
-        (function (v) {
-          /* Points land in sweep order because the stages run in order, so the
-           * curve does not have to be sorted back into shape afterwards. */
-          pushSlicedSim(stages, over(cl.k, v, snap), N_SENS, SEED_SENS, SENS_OPTS,
-            function (r) { pts.push([v, r[metric]]); });
-        })(a);
-      }
+      var cur = snap[cl.k] || 0;
+      sweepSeries.push({ k: cl.k, l: cl.l, c: cl.c, cur: cur, pts: pts });
+      /* The grid, plus the dial's exact current value when it sits between
+       * grid points: the "you are here" marker is placed at that value, and on
+       * a convex curve a marker between two sampled points would hang off the
+       * drawn chord. */
+      var samples = [0, 20, 40, 60, 80, 100];
+      if (samples.indexOf(cur) < 0) samples.push(cur);
+      samples.sort(function (x, y) { return x - y; });
+      samples.forEach(function (v) {
+        /* Points land in sweep order because the stages run in order, so the
+         * curve does not have to be sorted back into shape afterwards. */
+        pushSlicedSim(stages, over(cl.k, v, snap), N_SENS, SEED_SENS, SENS_OPTS,
+          function (r) { pts.push([v, r[metric]]); });
+      });
     });
     stages.push(function () {
       /* Every curve's marker sits at the baseline height, because each dial is
@@ -7957,7 +8149,7 @@ footer code {
 
   /* Drains a built stage list one turn at a time. Extracted from heavy() so
    * the pass can be started from more than one place in it — a settle that
-   * stops after the main run, because chapters 03 and 08 have not been armed
+   * stops after the main run, because chapters 03 and 07 have not been armed
    * yet, runs the same loop as one that carries the whole tail. */
   function runStages(stages, gen, metric) {
     var i = 0;
@@ -7994,9 +8186,8 @@ footer code {
     var n = empty($('wild-note'));
     add(n, 'Of the ', b(num(r.fn[2], 2)), ' vulnerabilities a year in your stack that acquire a working exploit, ',
       b(num(r.wild, 2)), ' (' + pctS(r.wildShare) + ') are confirmed exploited against live targets. ',
-      b(num(r.critWild, 2)), ' of those are Critical-rated — the band this page cites its arming and ' +
-      'exploitation rates for, and roughly a third of what is actually exploited. The remainder still attract ' +
-      'opportunistic traffic at a fraction of the hazard rate.');
+      b(num(r.critWild, 2)), ' of those are Critical-rated, roughly a third of what is actually ' +
+      'exploited. The rest still draw opportunistic attack traffic, at a lower rate.');
   }
 
   /* The five actions are ranked by their effect at the current settings, so
@@ -8058,7 +8249,7 @@ footer code {
       var li0 = E('li');
       var t0 = E('div', 'a-t');
       add(t0, b('No defender parameter moves this materially.'),
-        E('span', null, 'At these settings the outcome is driven by vectors the remediation process does not reach. See the initial access vector split.'));
+        E('span', null, 'At these settings the outcome is driven by routes the remediation process does not reach. See how the first compromise arrives, below.'));
       add(li0, t0, E('div', 'a-d', 'n/a'));
       host.appendChild(li0);
     } else {
@@ -8184,14 +8375,30 @@ footer code {
         .catch(function () { toast('Could not render PNG'); });
     });
     if (cp) cp.addEventListener('click', function () {
-      render().then(function (bl) {
-        if (window.ClipboardItem && navigator.clipboard && navigator.clipboard.write) {
-          return navigator.clipboard.write([new ClipboardItem({ 'image/png': bl })])
-            .then(function () { toast('Chart copied to clipboard'); });
-        }
-        download(bl, 'exposure-race-' + id + '.png');
-        toast('Clipboard unavailable. PNG saved instead');
-      }).catch(function () { toast('Could not render PNG'); });
+      var blobP = render();
+      var saveInstead = function (msg) {
+        blobP.then(function (bl) { download(bl, 'exposure-race-' + id + '.png'); toast(msg); })
+          .catch(function () { toast('Could not render PNG'); });
+      };
+      if (!(window.ClipboardItem && navigator.clipboard && navigator.clipboard.write)) {
+        saveInstead('Clipboard unavailable. PNG saved instead');
+        return;
+      }
+      /* The ClipboardItem is constructed inside the click, with the PNG
+       * supplied as a promise: Safari rejects a write whose payload resolved
+       * after the user gesture ended, and that failure used to land in the
+       * render catch and report "Could not render PNG" for a render that had
+       * succeeded. A clipboard refusal now falls back to the download. */
+      var write;
+      try {
+        write = navigator.clipboard.write([new ClipboardItem({ 'image/png': blobP })]);
+      } catch (e) {
+        write = blobP.then(function (bl) {
+          return navigator.clipboard.write([new ClipboardItem({ 'image/png': bl })]);
+        });
+      }
+      write.then(function () { toast('Chart copied to clipboard'); })
+        .catch(function () { saveInstead('Clipboard refused the image. PNG saved instead'); });
     });
   }
 
@@ -8253,12 +8460,12 @@ footer code {
     var det = DET || closestDetection();
     var idn = IDN || closestIdentity(), ppl = PPL || closestPeople();
     var rows = [
-      { l: 'What strangers can reach', v: M.EXPOSURE[EXP] ? M.EXPOSURE[EXP].l : '—' },
-      { l: 'Adversary attention', v: M.ATTENTION[ATTN] ? M.ATTENTION[ATTN].l : '—' },
-      { l: 'Remediation maturity', v: M.MATURITY[MAT] ? M.MATURITY[MAT].l : '—' },
-      { l: 'Detection posture', v: M.DETECTION[det] ? M.DETECTION[det].l : '—' },
-      { l: 'Authentication', v: M.IDENTITY[idn] ? M.IDENTITY[idn].l : '—' },
-      { l: 'People and process', v: M.PEOPLE[ppl] ? M.PEOPLE[ppl].l : '—' },
+      { l: 'What strangers can reach', v: M.EXPOSURE[EXP] ? M.EXPOSURE[EXP].l : 'not set' },
+      { l: 'Adversary attention', v: M.ATTENTION[ATTN] ? M.ATTENTION[ATTN].l : 'not set' },
+      { l: 'Remediation maturity', v: M.MATURITY[MAT] ? M.MATURITY[MAT].l : 'not set' },
+      { l: 'Detection posture', v: M.DETECTION[det] ? M.DETECTION[det].l : 'not set' },
+      { l: 'Authentication', v: M.IDENTITY[idn] ? M.IDENTITY[idn].l : 'not set' },
+      { l: 'People and process', v: M.PEOPLE[ppl] ? M.PEOPLE[ppl].l : 'not set' },
     ];
     if (ON.length) {
       rows.splice(1, 0, { l: 'Also true of this estate',
@@ -8333,7 +8540,7 @@ footer code {
       /* The trial and block counts the deck's method slides state. Passed
        * rather than retyped there, for the reason in that file's header:
        * nothing in the deck states a number of its own. */
-      trials: N_HEAVY, blocks: M.blocksFor(N_HEAVY),
+      trials: N_HEAVY, blocks: M.coeffDrawsFor(N_HEAVY),
       /* Straight from the model's own scope declaration, so the caveat the
        * deck carries on every slide is the same string the page shows and
        * cannot be edited into something softer here. */
@@ -8409,18 +8616,19 @@ footer code {
     var sw = C.pocTiming.settled;
     anchorRow(host, 'Days from publication to a public exploit (median)', 'measured',
       num(sw.medianDays, 1) + ' d',
-      'CyberMon · ' + sw.years[0] + '–' + sw.years[sw.years.length - 1] +
-      ' settled years pooled, n=' + thou(sw.n) + ', 90-day horizon');
+      'CyberMon · ' + sw.years[0] + '-' + sw.years[sw.years.length - 1] +
+      ' complete years pooled, ' + thou(sw.n) + ' records, 90-day window');
     anchorRow(host, 'Exploits already public when the CVE record lands', 'measured',
       num(sw.pctBefore, 1) + '%',
-      'CyberMon · same pooled window · mostly NVD publication lag, not pre-disclosure: the same series reads ' +
+      'CyberMon · same pooled window. Mostly NVD publication lag rather than pre-disclosure exploitation: the same series reads ' +
       C.pocTiming.recordLag.firstPctBefore + '% in ' + C.pocTiming.recordLag.firstYear +
-      ' at a median of ' + Math.abs(C.pocTiming.recordLag.worstMedianDays) + ' days before publication');
+      ', with a median as deep as ' + Math.abs(C.pocTiming.recordLag.worstMedianDays) +
+      ' days before publication in ' + C.pocTiming.recordLag.worstYear);
     anchorRow(host, 'Most recent year, still collecting exploits', 'measured',
       C.pocTiming.latest.medianDays + ' d median · ' + C.pocTiming.latest.pctBefore + '% before',
-      'CyberMon · ' + C.pocTiming.latest.year + ', n=' +
-      C.pocTiming.series[C.pocTiming.series.length - 1].n +
-      (C.pocTiming.latest.provisional ? '. Provisional, right-censored, not used to calibrate' : ''));
+      'CyberMon · ' + C.pocTiming.latest.year + ', ' +
+      C.pocTiming.series[C.pocTiming.series.length - 1].n + ' records' +
+      (C.pocTiming.latest.provisional ? '. Incomplete year, still collecting, not used to calibrate' : ''));
     /* The instrument's own coverage, stated beside what it measured. Every
      * row above this one is read off a catalogue whose sample per year has
      * fallen by roughly six sevenths since 2017 while CVE publication tripled,
@@ -8430,7 +8638,7 @@ footer code {
     var trend = C.pocTiming.sampleTrend || [];
     var tPeak = trend.reduce(function (a, b) { return b.n > a.n ? b : a; }, trend[0] || { n: 0, year: 0 });
     var tLast = trend.filter(function (y) { return y.year <= 2024; }).pop() || tPeak;
-    anchorRow(host, 'Exploit-catalogue coverage, peak year against latest settled', 'measured',
+    anchorRow(host, 'Exploit-catalogue coverage, peak year against latest complete year', 'measured',
       thou(tPeak.n) + ' → ' + thou(tLast.n) + ' CVEs a year',
       'CyberMon · ' + tPeak.year + ' vs ' + tLast.year +
       '. The sample shrank as CVE volume grew, so the weaponised share above is a floor');
@@ -8477,7 +8685,7 @@ footer code {
     add(f, b(num(C.exploitation.kevBelowCritical) + '%'),
       ' of confirmed-exploited vulnerabilities are rated below Critical, and ',
       b(C.exploitation.criticalEpssBelow1pct + '%'),
-      ' of Critical-rated CVEs carry an EPSS score below 1% — that is a probability of exploitation ' +
+      ' of Critical-rated CVEs carry an EPSS score below 1%. That is a probability of exploitation ' +
       'activity in the next 30 days, not over the life of the vulnerability. Critical is only ',
       b(C.exploitation.criticalVsHigh + '×'),
       ' High. That is a weak signal, not a filter, which is why this model is driven by exploit availability rather than by severity band.');
@@ -8500,7 +8708,7 @@ footer code {
     var host = empty($('clock'));
     var sw = C.pocTiming.settled;
     clockRow(host, 'Median days from publication to public exploit code, ' +
-      sw.years[0] + '–' + sw.years[sw.years.length - 1],
+      sw.years[0] + '-' + sw.years[sw.years.length - 1],
       num(sw.medianDays, 1) + ' d');
     /* NOT "before the patch does". This is the share of the arming series with
      * a negative publication-to-exploit interval, and most of it is a late CVE
@@ -8548,7 +8756,7 @@ footer code {
       .forEach(function (el) { io.observe(el); });
   }
 
-  /* Arms chapters 03 and 08 when a reader heads for them. A screen and a half
+  /* Arms chapters 03 and 07 when a reader heads for them. A screen and a half
    * of margin, so the work starts before the panel is on screen rather than
    * when it arrives — the reader still waits, but they wait less.
    *
@@ -8622,6 +8830,7 @@ footer code {
     } catch (e) { /* ignore */ }
     $('theme-btn').textContent = currentTheme() === 'dark' ? 'Light' : 'Dark';
 
+    reserveHeights();
     fromURL();
     buildControls(M.SPEC.def, $('cd'), $('cd-adv'));
     buildControls(M.SPEC.att, $('ca'), $('ca-adv'));
@@ -8738,8 +8947,9 @@ footer code {
       var word = COUNT_WORD[n] || String(n);
       e.textContent = word.charAt(0).toUpperCase() + word.slice(1);
     });
-    /* Trial and block counts for the method note, from the constants that set
-     * them. See MODEL.blocksFor. */
+    /* Trial and redraw counts for the method note, from the constants that
+     * set them. See MODEL.coeffDrawsFor — not blocksFor, which understates
+     * the redraw count by the partial block at the end of the run. */
     document.querySelectorAll('[data-n-heavy]').forEach(function (e) {
       e.textContent = N_HEAVY.toLocaleString('en-GB');
     });
@@ -8747,7 +8957,7 @@ footer code {
       e.textContent = N_FAST.toLocaleString('en-GB');
     });
     document.querySelectorAll('[data-blocks]').forEach(function (e) {
-      e.textContent = String(M.blocksFor(N_HEAVY));
+      e.textContent = String(M.coeffDrawsFor(N_HEAVY));
     });
 
     renderAnchors();

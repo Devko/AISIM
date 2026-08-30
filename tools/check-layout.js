@@ -117,8 +117,18 @@ const LEVER_ROWS = [];
 for (let i = 0; i < LEVER_N; i++) {
   LEVER_ROWS.push({ k: 'k' + i, l: 'Lever ' + i, lo: 0.09, hi: 0.44, span: 0.35 });
 }
+/* The palette tokens js/app.js's CLOCKS actually uses — one per dial. This
+ * list ran short of MODEL.SCENARIO once, which handed the fourth series an
+ * undefined colour; el() silently drops an undefined attribute, so the gate
+ * rendered a strokeless, invisible curve and its attribute checks could not
+ * see the loss. The guard below makes a short list a build failure. */
+const SERIES_COLOURS = ['warn', 'att', 'zero', 'bad'];
+if (SERIES_COLOURS.length < MODEL.SCENARIO.length) {
+  throw new Error('SERIES_COLOURS has ' + SERIES_COLOURS.length +
+    ' entries for ' + MODEL.SCENARIO.length + ' scenario dials — a curve would render invisible');
+}
 const SERIES = MODEL.SCENARIO.map((k, i) => ({
-  k: k, l: 'Scenario dial ' + k, c: ['warn', 'att', 'zero'][i],
+  k: k, l: 'Scenario dial ' + k, c: SERIES_COLOURS[i],
   cur: 0, curY: R.p, pts: [[0, R.p], [50, 0.33], [100, 0.41]],
 }));
 

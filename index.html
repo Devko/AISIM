@@ -7,7 +7,7 @@
 <meta name="description" content="A Monte Carlo model of exploit availability against remediation, calibrated to measured CVE, exploit-catalogue and KEV data. Exploit-clock compression is modelled as an explicit scenario rather than baked into the baseline.">
 <meta name="color-scheme" content="dark light">
 <meta property="og:title" content="Exposure Race: which clock does an autonomous adversary move?">
-<meta property="og:description" content="The clock AI is supposed to have collapsed was already at zero: median time from CVE publication to public exploit code has not exceeded one day in any settled year since 2015. Three other clocks are not at the floor, and the largest routes of all are not in this model at all.">
+<meta property="og:description" content="The clock AI is supposed to have collapsed was already at zero: median time from CVE publication to public exploit code has not exceeded one day in any complete year since 2015. Three other clocks are not at the floor, and the five access classes that need no vulnerability are simulated beside the three that do.">
 <meta property="og:type" content="article">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -64,18 +64,18 @@
   <div class="mast">
     <div class="mast-copy">
       <h1>Which clock does an autonomous adversary <em>actually</em> move?</h1>
-      <p class="sub">A Monte Carlo model of exploit availability against remediation, resimulated
-      on every change. The adversary timeline is <b>measured, not assumed</b>: days from CVE
-      publication to public exploit code. That clock has sat at its floor &mdash; a median under
-      one day &mdash; in every settled year since 2015. <b>Three other mechanisms have not:
-      weaponised share, post-exploitation tempo, and vulnerability discovery rate.</b></p>
+      <p class="sub">A Monte Carlo model of exploit availability against remediation, rerun on
+      every change. The adversary timeline is <b>measured, not assumed</b>: days from CVE
+      publication to public exploit code. That clock has sat at its floor: the median has not
+      exceeded one day in any complete year since 2015. <b>Three other mechanisms have not: the share of
+      bugs weaponised, post-exploitation tempo, and the rate new vulnerabilities are found.</b></p>
     </div>
 
     <!-- The thesis in three measured figures, read off the vendored snapshot at
          render time rather than typed into the prose, so they cannot go stale. -->
     <aside class="clock" aria-labelledby="clock-h">
       <div class="clock-h" id="clock-h">The exploit clock <span class="tag m"
-      title="Measured: read directly from the vendored corpus and reproducible offline. See Model provenance.">measured</span></div>
+      title="Measured: read directly from the vulnerability data shipped with this page, and reproducible offline. See Model provenance." >measured</span></div>
       <dl id="clock"></dl>
     </aside>
   </div>
@@ -144,7 +144,7 @@
     <span data-scope-modelled>…</span>. <span data-scope-vulncount>Three</span> of them need a
     published vulnerability. The rest do not, and no change window closes them. <b>Not counted:</b>
     <span data-scope-excluded>…</span>. Vulnerability exploitation accounts for
-    <span data-scope-share>31%</span> of breaches in the <span data-scope-src>DBIR</span>: a
+    <span data-scope-share>20%</span> of breaches in the <span data-scope-src>DBIR</span>: a
     minority of routes, and not the largest. Every figure here is a lower bound.
   </p>
 
@@ -176,8 +176,8 @@
 
     <div class="card def">
       <h2 class="d">Your environment</h2>
-      <p class="note">Place yourself on each axis, then adjust any parameter. Every figure
-      resimulates as you go.</p>
+      <p class="note">Place yourself on each axis, then adjust any parameter. Every figure is
+      recalculated as you go.</p>
 
       <div class="seg">
         <div class="seg-l">Public exposure <span class="seg-hint">pick one</span></div>
@@ -265,9 +265,10 @@
         <div class="ph-copy">
           <span class="ord">01</span>
           <h3>Exploit availability against remediation</h3>
-          <p class="lead">Day zero is patch availability. Everything to the left of it is
-          exploitation that precedes any available fix. The hatched region is the probability that
-          public exploit code exists before remediation completes.</p>
+          <p class="lead">Day zero is CVE publication. Everything to the left of it is exploit
+          code that precedes the record — mostly publication lag, not zero-days. The hatched
+          region is remediation that completes with exploit code already public; the badge is that
+          probability across all remediation, drawn window or not.</p>
         </div>
         <div class="tools">
           <button class="icon-btn" data-copy="race" type="button">Copy</button>
@@ -295,12 +296,12 @@
         <div>
           <p class="lead">The horizontal axis is days from CVE publication. Day 0 is the
           vertical rule, and the shaded band to its left is time when <b>no CVE record existed
-          yet</b>. Most of that band is not a zero-day: it is publication lag, with exploit code
-          already public and mass scanning already following it, which is why the model gives it
-          full hazard rather than the discount a genuinely pre-disclosure exploit gets. The same
-          measured series reports the share negative at 98.5% in 2000, on medians of tens of days
-          before publication — impossible as a claim about adversaries, unremarkable as one about
-          NVD.</p>
+          yet</b>. Most of that band is not a zero-day. It is publication lag: exploit code is
+          already public and mass scanning has already followed it, so the model treats that time
+          as fully exposed rather than discounting it the way it discounts a genuine
+          pre-disclosure exploit. The same series puts 98.5% of exploits ahead of publication in
+          2000, at a median of 44 days. That measures how slowly records were published, not what
+          attackers could do.</p>
 
           <p class="lead">Two distributions mirror off the centre line. Above it,
           <b>remediation complete</b> is when your remediation lands, day by day. Below it,
@@ -309,7 +310,7 @@
           own scale, which runs from 0% at the centre line down to 100% at the bottom.</p>
 
           <p class="lead"><b>Unremediated exposure</b> is the hatched region. For each day it is
-          the part of that day’s remediation for which exploit code already existed, so it is the
+          the part of that day's remediation for which exploit code already existed, so it is the
           share of the remediation curve that lost the race.</p>
 
           <p class="lead">The two large figures answer different questions. The marker on the
@@ -331,13 +332,13 @@
           <span class="ord">02</span>
           <h3>Attrition from publication to compromise</h3>
           <p class="lead">Each stage is a subset of the one above it. The stream entering the top
-          is every severity band, not just Critical: you set the critical count and the model derives
-          the High, Medium and Low volume beside it from the published corpus ratios, each carrying
-          its own arming and exploitation rate. Counting criticals alone would discard
-          <b>two thirds</b> of everything known to be exploited. The two largest reductions then
-          occur outside the remediation process — most published vulnerabilities land on a version
-          or configuration that is not exposed to them, and most of the remainder never acquire a
-          working exploit.</p>
+          is every severity band, not just Critical: you set the Critical count, and the High, Medium
+          and Low volumes beside it are derived from published ratios, each with its own rate of
+          acquiring exploit code and of being exploited. Counting Criticals alone would discard
+          <b>two thirds</b> of everything known to be exploited. The two largest reductions happen
+          outside the remediation process: most published vulnerabilities land on a version or
+          configuration that is not exposed to them, and most of the rest never get a working
+          exploit.</p>
         </div>
         <div class="tools">
           <button class="icon-btn" data-copy="funnel" type="button">Copy</button>
@@ -354,18 +355,20 @@
         <div class="ph-copy">
           <span class="ord">03</span>
           <h3>Sensitivity analysis</h3>
-          <p class="lead">Each bar varies a single parameter across its plausible range with all
-          others held constant. A <b>compromise</b> is an adversary establishing a foothold; it
-          becomes an <b>incident</b> when detection and response fail to contain it before the
-          adversary reaches its objective. The two respond to different parameters, and that
-          divergence is what should drive remediation priority. Read the ranking rather than the
-          ratio between bars: length depends on the range chosen for each parameter. Detection
-          sits flat against compromise <i>by construction</i>, being modelled only after a
-          foothold exists, so controls that block exploitation outright are outside the model
-          rather than measured at zero. Headcount is a scale term, not a lever: the routes that
-          scale with people do so <i>sub-linearly</i>, because one lure reaches every mailbox in a
-          single event, and a bar that long would otherwise read as advice to employ fewer
-          people.</p>
+          <p class="lead">Each bar varies a single parameter across its plausible range, holding
+          everything else fixed. Read the ranking rather than the ratio between bars: bar length
+          depends on the range chosen for each parameter. The baseline marked on the chart is
+          recomputed at this chart's own trial count with the uncertain inputs held central, so it
+          can sit a point or two from the headline.</p>
+          <p class="lead">A <b>compromise</b> is an adversary establishing a foothold. It becomes
+          an <b>incident</b> when detection and response fail to contain it before the adversary
+          reaches its objective. The two respond to different parameters, and that difference is
+          what should drive priority.</p>
+          <p class="lead">Two bars need a caveat. Detection is flat against compromise because
+          detection only enters the model once a foothold exists, so controls that block
+          exploitation outright sit outside the model rather than measuring as zero. Headcount is
+          a measure of size rather than a control, and the routes that scale with people scale
+          less than proportionally, because one lure reaches every mailbox at once.</p>
         </div>
         <div class="tools">
           <div class="switch" role="group" aria-label="Metric">
@@ -376,12 +379,13 @@
           <button class="icon-btn" data-dl="torn" type="button">PNG</button>
         </div>
       </div>
-      <!-- 17 levers x 25px a row + 54px of gutter. The reservation is what the
+      <!-- 25 levers x 25px a row + 54px of gutter. The reservation is what the
            page holds open before any script runs, so it has to match what
            js/charts.js will draw: it said 379, which was thirteen levers, and
-           the four added since made the sensitivity chart shove a screen and a
-           half of document down by 100px the moment the settle pass landed.
-           tools/check-layout.js computes both and fails the build on a gap. -->
+           the four added at the time made the sensitivity chart shove a screen
+           and a half of document down by 100px the moment the settle pass
+           landed. tools/check-layout.js computes both and fails the build on a
+           gap. -->
       <svg id="torn" class="chart" height="679" role="img" aria-label="Sensitivity of the outcome to each parameter"></svg>
     </section>
 
@@ -390,8 +394,9 @@
         <div class="ph-copy">
           <span class="ord">04</span>
           <h3>Prioritised remediation actions</h3>
-          <p class="lead">The five parameter changes with the largest effect on
-          <span id="acts-metric">annual probability of compromise</span> at current settings.</p>
+          <p class="lead">The five changes to your configuration with the largest effect on
+          <span id="acts-metric">annual probability of compromise</span>, at your current
+          settings.</p>
         </div>
       </div>
       <ul class="acts" id="acts"></ul>
@@ -407,10 +412,10 @@
             <p class="lead">Class of the <em>first</em> compromise, counted once per simulated
             year. Only opportunistic exploitation turns fully on your change window; a targeted
             campaign turns partly on it, and the other six not at all. That is why the ranked
-            actions above are not simply <em>patch faster</em>. The coefficients behind the five
-            classes needing no vulnerability are judgement, so the stacked pair beneath shows the
-            one check available on them: this estate's mix against the population it is anchored
-            to.</p>
+            actions above are not simply <em>patch faster</em>. The five classes that need no
+            vulnerability rest on judgement rather than measurement, so the pair of bars beneath
+            shows the only check available on them: this estate's mix of routes against the
+            reported breach population it is calibrated to.</p>
           </div>
           <div class="tools">
             <button class="icon-btn" data-copy="routes" type="button">Copy</button>
@@ -442,25 +447,29 @@
           <span class="ord">07</span>
           <h3>Four clocks an autonomous adversary could move</h3>
           <p class="lead">BOD 26-04 names adversary use of AI as a reason the window between patch
-          release and exploitation may narrow. That is four separate claims carrying different
-          evidence and different consequences, so each takes its own dial on one axis.
-          <button type="button" class="ctl-link" data-ctl="ai">Arrival speed<span class="vh">, go to this dial in the console</span></button> is the one the phrase usually means, and the flattest curve here: the
-          measured median has <b>not exceeded one day in any settled year since 2015</b>, and the
+          release and exploitation may narrow. That is four separate claims with different evidence
+          behind them and different consequences, so each gets its own dial. All four default to
+          the measured record.</p>
+
+          <p class="lead">
+          <button type="button" class="ctl-link" data-ctl="ai">Arrival speed<span class="vh">, go to this dial in the console</span></button> is the one the phrase usually means, and the curve with the least room left. The
+          measured median has <b>not exceeded one day in any complete year since 2015</b>, and the
           share arriving ahead of the CVE record has fallen rather than risen. <button type="button" class="ctl-link" data-ctl="weap">Weaponised share<span class="vh">, go to this dial in the console</span></button> is worth
-          several times as much, because breadth has room left where speed does not.
-          <button type="button" class="ctl-link" data-ctl="tempo">Post-exploitation tempo<span class="vh">, go to this dial in the console</span></button> is flat here <i>by construction</i>: speed from foothold
-          to objective cannot change whether you were breached, only whether anyone reached it in
+          several times as much, because breadth has room left where speed does not.</p>
+
+          <p class="lead">
+          <button type="button" class="ctl-link" data-ctl="tempo">Post-exploitation tempo<span class="vh">, go to this dial in the console</span></button> is flat against compromise because speed from foothold to
+          objective cannot change whether you were breached, only whether anyone reached it in
           time. Switch the readout to incidents and it lifts off the floor. Even there the curve
-          understates where it bites: against a 24/7 SOC, full tempo removes roughly
-          <b>half</b> of the margin detection buys over having none. A faster adversary
-          does not beat detection on any single intrusion; it devalues the investment.</p>
+          understates where it bites: against a 24/7 SOC, full tempo removes roughly <b>half</b>
+          of the margin that detection buys over having none. A faster adversary does not beat
+          detection on any single intrusion. It devalues the investment.</p>
           <p class="lead">The steepest curve here is the last one, and it is not a clock at all.
           <button type="button" class="ctl-link" data-ctl="discovery">Discovery rate<span class="vh">, go to this dial in the console</span></button> asks how many
-          vulnerabilities are found in software you already run: the size of the stream rather than
-          the speed of anything that happens to it. Machine-found bugs in real codebases are a
-          present-tense capability rather than a forecast, which makes this the least speculative
-          of the four and, on most estates, comfortably the largest. All four dials default to the
-          measured record.</p>
+          vulnerabilities are found in software you already run: the size of the stream rather
+          than the speed of anything downstream of it. Machine-found bugs in real codebases are a
+          capability that exists today rather than a forecast, which makes this the least
+          speculative of the four and, on most estates, the largest.</p>
         </div>
         <div class="tools">
           <button class="icon-btn" data-copy="sweep" type="button">Copy</button>
@@ -476,8 +485,8 @@
         <div class="ph-copy">
           <span class="ord">08</span>
           <h3>Why severity is not the prioritisation trigger</h3>
-          <p class="lead">The conventional approach counts Critical-rated CVEs. The corpus does not
-          support it. Below is the full scored CVE population, bucketed by CVSS band, against the
+          <p class="lead">The conventional approach counts Critical-rated CVEs. The published record does
+          not support it. Below is the full scored CVE population, bucketed by CVSS band, against the
           share of each band that has reached the confirmed-exploited catalogue.</p>
         </div>
         <div class="tools">
@@ -494,14 +503,14 @@
       </div>
       <p class="lead foot" id="ev-foot"></p>
       <p class="lead codified"><b>This position is now codified.</b> CISA Binding Operational Directive
-      <b>26-04</b> (10 June 2026) supersedes BOD 22-01 and removes severity as the
+      <b>26-04</b> (10 June 2026) supersedes BOD 19-02 and BOD 22-01 and removes severity as the
       trigger entirely. It prioritises on four SSVC decision points: presence in the
       KEV catalogue, public exposure of the asset, whether exploitation is
       <em>automatable</em>, and the technical impact obtained. Remediation tiers run
       from three days plus forensic triage down to &ldquo;fix on system upgrade&rdquo;.
       The published heuristic for <em>automatable</em> is a public proof-of-concept
-      achieving remote code execution that executes reliably, which is the same
-      primitive this model measures.</p>
+      achieving remote code execution that runs reliably, which is the same test
+      this model applies.</p>
     </section>
 
     <!-- ── volume ── -->
@@ -510,7 +519,7 @@
         <div class="ph-copy">
           <span class="ord">09</span>
           <h3>Severity-label inflation</h3>
-          <p class="lead">The Critical-rated population is growing faster than the corpus that
+          <p class="lead">The Critical-rated population is growing faster than the CVE population that
           contains it. A model anchored to criticals per year therefore drifts more pessimistic
           each year for reasons unrelated to the estate being assessed. This is the second reason
           severity is not used as an input here.</p>
@@ -524,7 +533,7 @@
       <p class="lead foot">Part of that increase reflects
       scoring policy rather than vulnerability reality. CNAs self-assign scores, and the share each
       rates 9.0 or above ranges from near zero to roughly two in five against the same scale. NVD
-      has also ceased analysis on a growing share of the corpus.</p>
+      has also stopped analysing a growing share of published CVEs.</p>
     </section>
 
     <!-- ── anchors ── -->
@@ -533,14 +542,14 @@
         <div class="ph-copy">
           <span class="ord">10</span>
           <h3>Model provenance</h3>
-          <p class="lead">Three classes of coefficient, distinguished rather than blended.
-          <span class="tag m">measured</span> is read directly from the vendored corpus and is
-          reproducible offline. <span class="tag r">reported</span> is a dated published figure:
-          cited, but dependent on a third party's methodology.
-          <span class="tag a">assumed</span> is judgement, used where no public measurement exists.
-          The latter two are drawn from their stated range on every block of trials, which is the
-          source of the credible bands. Where a coefficient is contested, the stated range is the
-          parameter to challenge.</p>
+          <p class="lead">Every input carries one of three labels, kept separate rather than blended.
+          <span class="tag m">measured</span> is read directly from the vulnerability data shipped
+          with this page and can be reproduced offline. <span class="tag r">reported</span> is a
+          dated published figure: cited, but dependent on someone else's method.
+          <span class="tag a">assumed</span> is judgement, used where no public measurement
+          exists. The last two are redrawn from their stated range throughout every run, which is
+          where the uncertainty bands come from. If you disagree with a number, the range beside
+          it is the thing to argue with.</p>
         </div>
       </div>
       <div class="anchors" id="anchors"></div>
@@ -551,26 +560,27 @@
       <div class="panel-head">
         <div class="ph-copy">
           <span class="ord">11</span>
-          <h3>Take this run with you</h3>
-          <p class="lead">Both report <em>your</em> estate rather than this page's argument: what
-          you configured, the resulting probability with its credible band, the funnel and route
-          split behind it, what moves the number most, and the prioritised actions with the
-          reduction each buys here. The last slide carries the configured link, so a colleague
-          opens this exact run rather than rebuilding it. Every slide repeats the scope limit in
-          its footer: this is a lower bound, never a risk assessment for a named organisation.</p>
+          <h3>Export this run</h3>
+          <p class="lead">Both exports report <em>your</em> estate rather than this page's
+          argument: what you configured, the resulting probability with its uncertainty band, the
+          funnel and route split behind it, what moves the number most, and the ranked actions
+          with the reduction each buys here. The last slide carries a link to this exact
+          configuration, so a colleague opens the run rather than rebuilding it. Every slide
+          repeats the scope limit in its footer: this is a lower bound, never a risk assessment
+          for a named organisation.</p>
         </div>
       </div>
       <div class="exports">
         <div class="export">
           <div class="seg-l">LinkedIn carousel</div>
-          <p>Portrait slides at 1080 &times; 1350, written to a carousel's copy budget. Upload it
+          <p>Portrait slides at 1080 &times; 1350, kept short enough to read on a phone. Upload it
           as a document post and each page becomes a swipeable slide.</p>
           <button id="deck-carousel" class="icon-btn" type="button">Build carousel PDF</button>
         </div>
         <div class="export">
           <div class="seg-l">Briefing deck</div>
-          <p>16:9 at projection size, and three slides longer: the parameters your five answers
-          compose to, the rest of the readout, and the method. Text is selectable, so a figure can
+          <p>16:9 at projection size, and two slides longer: the parameter values your
+          selections produce, and the method. Text is selectable, so a figure can
           be quoted without being retyped.</p>
           <button id="deck-internal" class="icon-btn" type="button">Build briefing PDF</button>
         </div>
@@ -583,22 +593,22 @@
     <footer>
       <div class="fnote">
         <div class="seg-l">Method</div>
-        <p><span data-n-heavy>60,000</span> simulated years across
-        <span data-blocks>650</span> coefficient blocks per parameter change, dropping to
+        <p><span data-n-heavy>60,000</span> simulated years for every change you make, with the
+        uncertain inputs redrawn <span data-blocks>653</span> times across that run, dropping to
         <span data-n-fast>4,000</span> years while a control is being dragged. The adversary
         timeline is sampled from the measured distribution of days between CVE publication and
-        public exploit code. The remediation timeline is derived from triage delay, out-of-band
-        capability and routine cadence. Compromise is modelled as a correlated campaign arrival
-        rather than as independent per-system trials, which would saturate near 100% and overstate
-        the result.</p>
+        public exploit code. The remediation timeline is built from triage delay, emergency-change
+        capability and routine cadence. A compromise arrives as a campaign that can reach several
+        systems at once, rather than as an independent roll per system, which would saturate near
+        100% and overstate the result.</p>
       </div>
       <div class="fnote">
         <div class="seg-l">Provenance</div>
         <p>Vulnerability, exploit-catalogue, EPSS and KEV figures are from the
         <a href="https://devko.github.io/CyberMon/">CyberMon</a> snapshot
-        <code data-snapshot>…</code>, vendored under <code>data/cybermon/</code> so every number here is
-        reproducible offline. Regenerate with <code>node tools/refresh-data.js &amp;&amp; node
-        tools/derive-calibration.js</code>. Verify the model with <code>node test/model.test.js</code>.</p>
+        <code data-snapshot>…</code>. That snapshot ships with this page rather than being fetched
+        when it loads, so every measured figure can be reproduced offline. The data, the model and
+        the checks that verify it are in the public repository.</p>
       </div>
       <div class="fnote">
         <div class="seg-l">Scope</div>
@@ -606,11 +616,11 @@
         abuse has led the <span data-scope-src>DBIR</span> initial-access ranking throughout the
         series, ahead of vulnerability exploitation. A model built on the patch clock alone
         therefore misses the larger half of the routes, which is why the classes needing no
-        vulnerability are simulated here rather than left as a residual rate.</p>
-        <p>Every coefficient behind those classes is judgement rather than measurement: no public
-        corpus answers them the way the CVE corpus answers the exploit clock. What is checkable is
-        the <em>mix</em>, which at the baseline estate is anchored to the reported initial-access
-        distribution, and a test fails if it drifts. <span data-scope-independence>…</span> Run-rate
+        vulnerability are simulated here rather than folded into a single leftover rate.</p>
+        <p>Every input behind those classes is judgement rather than measurement: no public dataset
+        answers them the way the CVE record answers the exploit clock. What can be checked is
+        the <em>mix</em>: at the baseline estate it is calibrated to the reported initial-access
+        distribution, and an automated check fails if it drifts. <span data-scope-independence>…</span> Run-rate
         figures are linear extrapolation from a partial year.</p>
       </div>
       <div class="fnote">
@@ -622,16 +632,14 @@
         against the Verizon DBIR 2026 edge-device series (a median around a month to full
         remediation, with roughly half never fully remediated) and the Edgescan and Cyentia
         vulnerability-management series; containment bounded by Sophos State of Ransomware 2026 (44%
-        of attacks stopped before encryption — a <i>per-attack</i> rate, so the quantity read
-        against it is containment per intrusion rather than the chance every intrusion in a year was
-        contained).</p>
+        of attacks stopped before encryption, which is a <i>per-attack</i> rate, so it is applied
+        to each intrusion rather than to a year as a whole).</p>
         <p>These are vendor incident-response and survey populations, which skew toward
-        organisations that needed help, and none of them is reproducible from the data vendored in
-        this repository the way the CVE corpus is. They are cited and dated so a reader can go and
-        look; the coefficients drawn from them carry wide declared ranges, and none of them is
-        load-bearing on the ordering this page argues for. Everything in the
-        <span class="tag m">measured</span> tier is regenerated from the snapshot and checked in
-        CI.</p>
+        organisations that needed help, and none of them can be reproduced from the data shipped with
+        this page the way the CVE figures can. They are cited and dated so you can go and look. The
+        inputs drawn from them carry wide declared ranges, and none of them changes the ranking of
+        the four dials. Everything in the <span class="tag m">measured</span> tier is regenerated
+        from the snapshot and rechecked automatically on every change.</p>
       </div>
     </footer>
 
