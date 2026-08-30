@@ -66,6 +66,33 @@ const arming = poc.arming.years;
 const armLatest = arming[arming.length - 1];
 /* last non-provisional year: the defensible anchor */
 const armSolid = [...arming].reverse().find((y) => !y.provisional);
+/* Pooled settled anchor — what the model actually runs on.
+ *
+ * A single year is a thin base: the settled rows run from n=146 to n=1019 and
+ * their pre-publication share swings 33-42% on sampling noise alone. Pooling
+ * the most recent settled years gives a base an order of magnitude larger
+ * without reaching back into an era whose publication practice was different
+ * (2015 reads 62.9% pre-publication against 41.8% in 2024 — that is a change in
+ * how CVEs are published, not in how fast exploits arrive).
+ *
+ * The three statistics are pooled by n-weighting. For the two shares that is
+ * exact. For the median it is not — a weighted mean of medians is not a median
+ * — but only per-year summaries are published, and every year in the window
+ * reports 0 or 1 day, so the pooled anchor cannot land outside that range and
+ * the approximation cannot move it by as much as a day. Stated here rather than
+ * hidden because it is the one derived figure in this file that is not exact. */
+const SETTLED_WINDOW = 5;
+const settledYears = arming.filter((y) => !y.provisional).slice(-SETTLED_WINDOW);
+const settledN = settledYears.reduce((a, y) => a + y.n, 0);
+const wmean = (f) => r3(settledYears.reduce((a, y) => a + f(y) * y.n, 0) / settledN);
+const armPooled = {
+  years: settledYears.map((y) => y.year),
+  n: settledN,
+  medianDays: wmean((y) => y.median_days),
+  pctWithinWeek: wmean((y) => y.pct_within_week),
+  pctBefore: wmean((y) => y.pct_negative),
+  note: 'n-weighted over the settled years listed. Shares pool exactly; the median is a weighted mean of per-year medians, which is an approximation forced by the published summaries — every year in the window reports 0 or 1 day.',
+};
 
 /* ── KEV additions per year, and how many were preceded by a public PoC ── */
 const kevYears = poc.kev_preempt.years;
@@ -185,7 +212,34 @@ const out = {
     })),
     latest: { year: armLatest.year, medianDays: armLatest.median_days, pctWithinWeek: armLatest.pct_within_week, pctBefore: armLatest.pct_negative, provisional: !!armLatest.provisional },
     lastSettled: { year: armSolid.year, medianDays: armSolid.median_days, pctWithinWeek: armSolid.pct_within_week, pctBefore: armSolid.pct_negative },
+    /* The anchor js/model.js runs on. `latest` stays exported because the page
+     * shows the series and has to be able to name its most recent row, but the
+     * model must not be calibrated to a provisional one. */
+    settled: armPooled,
     caveat: 'Recent years are right-censored: PoCs are still arriving for them. Provisional years understate speed and understate the pre-publication share.',
+    /* The second caveat, and the one that cuts deeper than censoring, because
+     * it is a property of the INSTRUMENT rather than of the window.
+     *
+     * This series is measured on CVEs that appear in ExploitDB, Metasploit or
+     * Nuclei. The dated sample per year peaked above a thousand in 2017 and is
+     * down to the low hundreds, while CVE publication roughly tripled over the
+     * same span. Exploit code did not become five times rarer as vulnerability
+     * volume tripled; the catalogues stopped being where it lands. Public
+     * exploit code now appears predominantly in ad-hoc repositories, private
+     * channels and commercial brokerages, none of which this corpus can see,
+     * and one of the three sources counted here ships detection templates
+     * rather than exploits.
+     *
+     * Two consequences, and the second is the one that matters for the page's
+     * argument. The share of criticals recorded as acquiring exploit code is
+     * a floor rather than an estimate. And a shrinking sample selects for
+     * high-profile vulnerabilities, which are exactly the ones that acquire
+     * exploit code fastest — so this instrument would hold a near-zero median
+     * whether or not the broad population had moved. It can establish that
+     * the fast tail is already at the floor. It cannot, on its own, establish
+     * that no compression is available anywhere in the distribution. */
+    coverageCaveat: 'The dated sample fell from over a thousand CVEs a year to the low hundreds while CVE publication tripled. Exploit code moved off the public catalogues rather than becoming rarer, so the weaponised share is a floor, and the near-zero median describes the fast tail this instrument can still see.',
+    sampleTrend: arming.filter((y) => y.year >= 2015).map((y) => ({ year: y.year, n: y.n })),
     src: CM + 'exploits.html',
   },
 

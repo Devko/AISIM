@@ -20,22 +20,36 @@ const read = (p) => fs.readFileSync(path.join(ROOT, p), 'utf8');
 
 let html = read('index.html');
 
+/* Every substitution below goes through here, and every one of them throws on
+ * a miss. A build step whose replacements fail quietly does not produce a
+ * worse page, it produces a CONVINCING one: the stylesheet link was inlined by
+ * an unguarded .replace(), so renaming css/app.css would have shipped a 240KB
+ * single file - complete and correct in every other respect, with no styling
+ * at all - and the dist-freshness gate would have certified it as current. A
+ * third replacement here targeted markup that no longer exists and had been
+ * doing nothing for some time; that is this failure mode already arrived.
+ *
+ * The replacement is always a FUNCTION. Passing the file's text as a string
+ * would let a `$&` or `$'` inside it be read as a replacement pattern and
+ * corrupt the output - model.js carries regex-ish strings, and CSS is one
+ * `content: "$&"` away from the same trap. */
+function replaceOnce(hay, pattern, replacement, what) {
+  const found = typeof pattern === 'string' ? hay.indexOf(pattern) >= 0 : pattern.test(hay);
+  if (!found) throw new Error('could not find ' + what + ' in index.html');
+  return hay.replace(pattern, () => replacement);
+}
+
 /* Inline the stylesheet. */
 const css = read('css/app.css');
-html = html.replace(
-  /<link rel="stylesheet" href="css\/app\.css">/,
-  '<style>\n' + css + '\n</style>'
-);
+html = replaceOnce(html, /<link rel="stylesheet" href="css\/app\.css">/,
+  '<style>\n' + css + '\n</style>', 'the stylesheet link');
 
-/* Inline the scripts, in the order the page lists them. Using a function as
- * the replacement keeps `$&`-style sequences inside the source from being
- * interpreted as replacement patterns — model.js contains regex-ish strings. */
-const scripts = ['js/calibration.js', 'js/model.js', 'js/charts.js', 'js/app.js'];
+/* Inline the scripts, in the order the page lists them. */
+const scripts = ['js/calibration.js', 'js/model.js', 'js/charts.js', 'js/deck.js', 'js/app.js'];
 scripts.forEach((src) => {
-  const code = read(src);
   const tag = new RegExp('<script src="' + src.replace(/[/.]/g, '\\$&') + '"></script>');
-  if (!tag.test(html)) throw new Error('could not find script tag for ' + src);
-  html = html.replace(tag, () => '<script>\n' + code + '\n</script>');
+  html = replaceOnce(html, tag, '<script>\n' + read(src) + '\n</script>',
+    'the script tag for ' + src);
 });
 
 /* A closing tag inside an inlined source file would end its block early and
@@ -50,11 +64,17 @@ if (scriptBlocks !== scriptCloses) {
 const cal = JSON.parse(
   read('js/calibration.js').replace(/^[\s\S]*?return /, '').replace(/;\s*\}\);\s*$/, '')
 );
-html = html.replace('<span>v3</span>', '<span>v3 · single file</span>');
-html = html.replace('</head>',
+/* There was a third replacement here, stamping a '. single file' marker onto
+ * a `<span>v3</span>` in the masthead. That span is not in index.html and has
+ * not been for some time, so the line had been a silent no-op - which is the
+ * whole argument for replaceOnce() above. The provenance it reached for is
+ * carried by the head comment below, stamped unconditionally, which cannot go
+ * stale the same way. */
+html = replaceOnce(html, '</head>',
   '<!-- Exposure Race, self-contained build.\n' +
   '     Calibrated to CyberMon ' + cal.snapshot.cvelist + ' (' + cal.generatedAt + ').\n' +
-  '     Source: index.html + css/app.css + js/*.js — see README.md. -->\n</head>');
+  '     Source: index.html + css/app.css + js/*.js — see README.md. -->\n</head>',
+  'the closing head tag');
 
 fs.mkdirSync(path.join(ROOT, 'dist'), { recursive: true });
 const out = path.join(ROOT, 'dist', 'exposure-race.html');

@@ -37,6 +37,29 @@ jobs:
       - name: Verify the palette still clears its stated contrast floor
         run: node tools/check-contrast.js
 
+      # js/charts.js is the other half of the browser-only code, and until this
+      # step existed the line above was the whole of its coverage: it parses.
+      # The charts need a DOM, but they need very little of one — they build SVG
+      # and read almost nothing back — so this renders all eight against a real
+      # simulation result through a small shim, and checks what they hand the
+      # renderer. It also holds two contracts index.html has with js/app.js that
+      # nothing could see across: that the reserved <svg height> matches what
+      # gets drawn — it had already drifted 100px — and that every element id
+      # the script reaches for exists in the markup.
+      - name: Render every chart headlessly
+        run: node tools/check-layout.js
+
+      # js/deck.js writes the two exported decks. A deck travels without the
+      # page, so a figure it gets wrong has nothing around it to correct it —
+      # and every figure on a slide is quoted from the corpus. This asserts
+      # each one against a doctored snapshot as well as the real one, so a
+      # number hardcoded into slide copy fails rather than quietly going stale.
+      # It also checks the PDF's xref, which is byte offsets into the file and
+      # so is either exact or unopenable, with nothing in between to spot in
+      # review.
+      - name: Verify the deck export quotes the corpus and writes valid PDF
+        run: node tools/check-deck.js
+
       # The calibration module is generated from the vendored snapshot. If it
       # drifts from the data it claims to describe, the page is quoting numbers
       # that are not in the corpus any more — so fail the build.

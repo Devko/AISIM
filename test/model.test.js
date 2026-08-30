@@ -62,16 +62,77 @@ console.log('\n══ Exposure Race — model tests ═════════�
  * 3. Degenerate cases — the model must be able to reach zero
  * ───────────────────────────────────────────────────────────────────────── */
 {
-  ok('no vulns, no campaigns, no supply chain -> p = 0',
-    run({ stackVulns: 0, campaigns: 0, supply: 0 }, 20000).p === 0);
-  ok('nothing exposed -> essentially no vuln route',
-    run({ exposed: 5, stackVulns: 0, campaigns: 0, supply: 0 }, 20000).p === 0);
+  /* Isolating one route now means silencing eight, not three. `staff` and
+   * `exposed` are the scale terms for the five non-vulnerability classes, and
+   * both floor at zero for exactly this reason: a model that cannot be turned
+   * off cannot have any one of its parts measured. */
+  const OFF = { stackVulns: 0, campaigns: 0, supply: 0, staff: 0, exposed: 0 };
+  const only = (over, n) => run(Object.assign({}, OFF, over), n || 20000);
 
-  const supplyOnly = run({ stackVulns: 0, campaigns: 0, supply: 1.0 }, 40000).p;
-  near('supply chain alone follows Poisson: 1/yr -> 1-e^-1', supplyOnly, 1 - Math.exp(-1), 0.012);
+  ok('every route silenced -> p = 0', only({}).p === 0);
+  ok('no people and nothing exposed -> no human or misconfiguration route',
+    only({ stackVulns: 0 }).p === 0);
 
-  const campOnly = run({ stackVulns: 0, campaigns: 10, supply: 0, agentSkill: 10 }, 40000).p;
-  near('campaigns alone: 10/yr at 10% -> 1-e^-1', campOnly, 1 - Math.exp(-1), 0.02);
+  near('supply chain alone follows Poisson: 1/yr -> 1-e^-1',
+    only({ supply: 1.0 }, 40000).p, 1 - Math.exp(-1), 0.012);
+  near('campaigns alone: 10/yr at 10% -> 1-e^-1',
+    only({ campaigns: 10, agentSkill: 10 }, 40000).p, 1 - Math.exp(-1), 0.02);
+
+  /* Each new class in isolation, against its own closed form. These are the
+   * assertions that make the five additions checkable at all: every one is a
+   * Poisson arrival thinned by its gates, so the compromise probability is
+   * 1-exp(-lambda) and lambda is computable from the coefficients by hand.
+   * If a gate is wired to the wrong control, or a rate is scaled by the wrong
+   * denominator, exactly one of these moves. */
+  /* No single one of the five can be isolated by sliders: `staff` scales four
+   * of them at once and the control ceilings are all short of 1, so there is
+   * no setting that leaves exactly one alive. Poisson events ARE additive
+   * though, so `events` is the sum of the class rates exactly — which makes
+   * the whole set checkable in one closed form instead of five approximate
+   * ones. Every coefficient and every gate below appears in it, so a rate
+   * scaled by the wrong denominator or a gate wired to the wrong control
+   * fails here rather than passing four tests and breaking a fifth. */
+  const A = M.ASSUMED, eff = (c, ceil) => 1 - (c / 100) * ceil;
+  const humanLambda = (p) => p.staff * (
+    A.phishLure.v * eff(p.awareness, A.phishAwareEff.v)
+      * A.phishConv.v * eff(p.mfa, A.phishMfaEff.v)
+    + A.credExposure.v * A.credConv.v
+      * eff(p.mfa, A.credMfaEff.v) * eff(p.pam, A.credPamEff.v)
+    + A.insiderRate.v * eff(p.insiderCtl, A.insiderEff.v)
+    + A.deviceLoss.v * eff(p.deviceCtl, A.deviceEff.v));
+
+  {
+    const wide = { staff: 4000, mfa: 0, awareness: 0, pam: 0, insiderCtl: 0, deviceCtl: 0 };
+    near('the human routes sum to their closed form, ungated',
+      only(wide, 60000).events, humanLambda(wide), 0.03);
+
+    const gated = { staff: 4000, mfa: 100, awareness: 100, pam: 100, insiderCtl: 100, deviceCtl: 100 };
+    near('every control thins them by exactly the share it claims',
+      only(gated, 60000).events, humanLambda(gated), 0.02);
+
+    /* Each control against the one class it gates. `awareness` must not touch
+     * credential abuse, and `pam` must not touch phishing — a gate wired to
+     * the wrong route would still pass the two totals above if a second gate
+     * happened to compensate. */
+    const at = (over) => only(Object.assign({}, wide, over), 60000).events;
+    const full = at({});
+    ok('awareness reduces the human routes', at({ awareness: 100 }) < full - 0.02);
+    ok('authentication strength reduces them most',
+      at({ mfa: 100 }) < at({ awareness: 100 }),
+      `${fmt(at({ mfa: 100 }))} < ${fmt(at({ awareness: 100 }))}`);
+    ok('privileged access management reduces them', at({ pam: 100 }) < full - 0.005);
+  }
+  {
+    /* Misconfiguration is the one new class that scales with systems rather
+     * than people, so it isolates cleanly with nobody employed. */
+    const lam = (n, cfg) => n * A.misconfigRate.v * eff(cfg, A.configEff.v) * A.misconfigConv.v;
+    near('misconfiguration scales with exposed systems, not people',
+      only({ exposed: 800, configAssurance: 0, staff: 0 }, 60000).events, lam(800, 0), 0.02);
+    near('configuration assurance thins it by the stated share',
+      only({ exposed: 800, configAssurance: 100, staff: 0 }, 60000).events, lam(800, 100), 0.02);
+    ok('no people means no phishing, credential, insider or device route',
+      only({ exposed: 800, staff: 0 }, 20000).routeN[M.ROUTES.indexOf('phishing')] === 0);
+  }
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
@@ -106,10 +167,16 @@ console.log('\n══ Exposure Race — model tests ═════════�
 {
   const trials = 30000;
   const r = M.simulate(D(), trials, 1234, { surv: false, spread: 0 });
-  const totalRoutes = r.routeN[0] + r.routeN[1] + r.routeN[2];
+  /* Summed over every route, not the first three. This was `routeN[0] +
+   * routeN[1] + routeN[2]`, which asserted the invariant against a hardcoded
+   * route count — so adding an access class broke a test whose subject had
+   * not changed. The invariant is "one increment per compromised trial,
+   * whichever class won the race", and it should be written that way. */
+  const totalRoutes = r.routeN.reduce((a, b) => a + b, 0);
   const hits = Math.round(r.p * trials);
   ok('route attribution: one increment per compromised year',
     totalRoutes === hits, `routes=${totalRoutes} hits=${hits}`);
+  ok('every access class is tallied', r.routeN.length === M.ROUTES.length);
   near('route shares sum to 1', r.routes.reduce((a, b) => a + b, 0), 1, 1e-9);
 }
 
@@ -120,9 +187,22 @@ console.log('\n══ Exposure Race — model tests ═════════�
   const d = M.densities(D(), 40000);
   ok('density x-range covers the pre-disclosure zone', d.x0 < 0, `x0=${d.x0}`);
   ok('pLate is a direct comparison, in (0,1)', d.pLate > 0 && d.pLate < 1, `pLate=${fmt(d.pLate)}`);
+  /* Against the anchor the MODEL runs on — the pooled settled years — not
+   * against `latest`, which is the most censored row in the series and no
+   * longer calibrates anything. */
   near('measured pre-publication share is reproduced', d.beforeFrac,
-    C.pocTiming.latest.pctBefore / 100, 0.05,
-    `calibration says ${C.pocTiming.latest.pctBefore}%`);
+    C.pocTiming.settled.pctBefore / 100, 0.05,
+    `settled anchor says ${C.pocTiming.settled.pctBefore}%`);
+  ok('the clock is never calibrated to a provisional year',
+    C.pocTiming.settled.years.every((y) =>
+      !C.pocTiming.series.find((r) => r.year === y).provisional),
+    `pooled ${C.pocTiming.settled.years.join(', ')} · n=${C.pocTiming.settled.n}`);
+  ok('the pooled anchor is a stronger base than the row it replaced',
+    C.pocTiming.settled.n > 4 * (C.pocTiming.series[C.pocTiming.series.length - 1].n),
+    `n=${C.pocTiming.settled.n} vs latest n=${C.pocTiming.series[C.pocTiming.series.length - 1].n}`);
+  ok('the settled median agrees with every year it pools',
+    C.pocTiming.settled.medianDays >= 0 && C.pocTiming.settled.medianDays <= 1,
+    `${C.pocTiming.settled.medianDays} d`);
   /* every sample must land in a bin: the normalised arrays cannot be all-zero
    * and the bin count must match B */
   ok('attacker density has full support', d.A.length === d.B && d.A.some(v => v > 0));
@@ -148,6 +228,60 @@ console.log('\n══ Exposure Race — model tests ═════════�
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
+ * 3b. The exploit-clock sampler's knots stay in order
+ *
+ * drawPoCTime() is an inverse-CDF walk over four segments joined at knots:
+ * the pre-publication branch, then publication -> median, median -> 7 days,
+ * 7 days -> p75, then an exponential tail. Interpolating between consecutive
+ * knots inverts a CDF only if the knots are IN ORDER — which needs
+ * median <= 7 <= p75 on the time axis as well as pBefore <= 0.5 <= pWithinWeek
+ * <= 0.75 on the probability axis.
+ *
+ * drawCoeffs() clamps the probability side, and says why: pBefore is measured
+ * data times a slider, and the 2015 row of the same series reads 62.9%, so a
+ * snapshot refresh could push it past the median knot. The TIME side has no
+ * such guard and the same exposure. `median` is read straight off
+ * C.pocTiming.latest.medianDays — 3.5 days today, fixed by nothing. A year
+ * whose median exceeded 7 would put the second and third knots out of order
+ * and the sampler would return times that DECREASE as u rises across that
+ * segment: a silently misshapen exploit clock, in the one distribution this
+ * whole page is an argument about.
+ *
+ * The knots are asserted directly. Sampling cannot stand in for this: a
+ * reversed segment still yields a valid distribution, just the wrong one, and
+ * `densities().cum` in particular is a running sum of a histogram and so is
+ * monotone by construction whatever the sampler underneath it does. It would
+ * have passed at a median of 11 days, which is exactly the case this exists
+ * to catch.
+ * ───────────────────────────────────────────────────────────────────────── */
+{
+  const medianDays = C.pocTiming.latest.medianDays;
+  /* 7 is the hardcoded within-week knot in drawPoCTime. */
+  ok('the measured median sits below the within-week knot',
+    medianDays <= 7, `median ${medianDays}d against the 7d knot`);
+  /* p75 is drawn per block from this range, so the WHOLE range has to clear
+   * the knot, not just the central value. */
+  ok('the p75 assumption sits above the within-week knot',
+    M.ASSUMED.pocP75.lo >= 7, `pocP75 range ${M.ASSUMED.pocP75.lo}-${M.ASSUMED.pocP75.hi}d`);
+  /* The window has to account for essentially all of the mass. The existing
+   * conservation test asserts only that the two overflow buckets sum below 1,
+   * which a sampler losing half its draws would also satisfy. */
+  let notReaching = null;
+  [['as measured', { ai: 0, weap: 0 }],
+   ['fully compressed', { ai: 100, weap: 100 }],
+   ['weaponised only', { ai: 0, weap: 100 }]].forEach(([label, over]) => {
+    const d = M.densities(Object.assign(M.defaults(), over), 40000);
+    const total = d.cum[d.cum.length - 1] + d.overflow.aAbove;
+    if (Math.abs(total - 1) > 0.02 && !notReaching) {
+      notReaching = `${label}: cum + overflow = ${total.toFixed(4)}`;
+    }
+  });
+  ok('the exploit clock accounts for all its mass at every scenario setting',
+    notReaching === null, notReaching || 'within 2pt across the scenario travel');
+}
+
+
+/* ─────────────────────────────────────────────────────────────────────────
  * 7. BUG 3/4 REGRESSION — a baseline computed the same way is reproducible
  * ───────────────────────────────────────────────────────────────────────── */
 {
@@ -170,14 +304,27 @@ console.log('\n══ Exposure Race — model tests ═════════�
       `${fmt(r.incident)} <= ${fmt(r.p)}`);
   });
   const lo = pts[0].r.incident, hi = pts[pts.length - 1].r.incident;
-  ok('detection changes the incident rate substantially', hi / lo > 2,
+  ok('detection changes the incident rate substantially', hi / lo > 1.7,
     `0.1d -> ${fmt(lo)}   60d -> ${fmt(hi)}   ratio ${fmt(hi / lo)}x`);
   const fastContain = 1 - pts[0].r.incident / pts[0].r.p;
   ok('fast detection contains most compromises', fastContain > 0.5,
     `${(fastContain * 100).toFixed(0)}% contained at 2.4h`);
-  const slowContain = 1 - hi / pts[pts.length - 1].r.p;
-  ok('slow detection contains almost none', slowContain < 0.2,
-    `${(slowContain * 100).toFixed(0)}% contained at 60d`);
+  /* The dwell clock and the automated-response clock are separate, and only
+   * the second can beat breakout. Isolating the analyst effect therefore means
+   * removing the agents: with no telemetry there is no automated path, and slow
+   * detection collapses containment the way it always did. WITH agents the
+   * same 60-day dwell keeps a floor, because host isolation does not wait on
+   * the analyst queue — which is why the ratio above is 1.9x rather than the
+   * 2.5x this suite asserted while `containFast` was unreachable. */
+  const blindSlow = run({ detect: 60, edrCoverage: 0 }, 20000);
+  const slowContain = 1 - blindSlow.incident / blindSlow.p;
+  ok('slow detection with no agents contains almost none', slowContain < 0.15,
+    `${(slowContain * 100).toFixed(0)}% contained at 60d, no telemetry`);
+  const agentSlow = run({ detect: 60, edrCoverage: 90 }, 20000);
+  const agentFloor = 1 - agentSlow.incident / agentSlow.p;
+  ok('automated response floors containment where the dwell clock cannot',
+    agentFloor > slowContain + 0.08,
+    `${(agentFloor * 100).toFixed(0)}% with agents vs ${(slowContain * 100).toFixed(0)}% without, same 60d dwell`);
   ok('detection does NOT change the compromise rate',
     Math.abs(pts[0].r.p - pts[pts.length - 1].r.p) < 0.02,
     `${fmt(pts[0].r.p)} vs ${fmt(pts[pts.length - 1].r.p)}`);
@@ -198,9 +345,25 @@ console.log('\n══ Exposure Race — model tests ═════════�
   let monotone = true;
   for (let i = 1; i < r.fn.length; i++) if (r.fn[i] > r.fn[i - 1] + 1e-9) monotone = false;
   ok('funnel is non-increasing', monotone, r.fn.map(v => v.toFixed(2)).join(' > '));
+  /* Stage 1 asks whether the version and configuration you run are actually
+   * vulnerable. It used to ask whether you ran the product at all — the
+   * question `stackVulns` has already answered — and dropped 54% of the stream
+   * on a filter the reader had already applied. It is now a real but modest
+   * filter, and the bound is two-sided on purpose: too small and the stage is
+   * decoration, too large and it is discounting the stack a second time. */
   const drop = 1 - r.fn[1] / r.fn[0];
-  ok('the "do you run it" stage is a real filter, not decoration', drop > 0.25,
-    `drops ${(drop * 100).toFixed(0)}%`);
+  ok('the version/configuration stage filters, without re-discounting the stack',
+    drop > 0.05 && drop < 0.30, `drops ${(drop * 100).toFixed(0)}%`);
+  ok('stage 1 does not restate stage 0',
+    M.FUNNEL[0] !== M.FUNNEL[1] && !/software you operate/i.test(M.FUNNEL[1]),
+    M.FUNNEL[1]);
+
+  /* The calibration story the README tells has to be the one the model runs.
+   * At the default stack this is 34 criticals against the measured 2.87%
+   * in-the-wild rate; the double discount put the model at 0.45 while the
+   * prose claimed 0.98. */
+  near('in-the-wild criticals per year match the stack-rate calibration',
+    r.wild, D().stackVulns * (C.inWild.pKevCritical / 100), 0.25);
 
   /* armed vs in-the-wild is a hazard multiplier, not a funnel stage */
   ok('armed count equals the funnel stage that gates on it',
@@ -212,6 +375,63 @@ console.log('\n══ Exposure Race — model tests ═════════�
     (M.MEASURED.pPoC + (1 - M.MEASURED.pPoC) * M.MEASURED.pWildNoPoC);
   near('in-the-wild share of armed bugs matches the measured decomposition',
     r.wildShare, expectedWildShare, 0.03);
+
+  /* The check above ran on the DEFAULT estate only, and the default estate is
+   * one of the ones that never inverted. Stage 3 counted the in-inventory
+   * remediation window while stage 4 was reached through the out-of-inventory
+   * population too, so shielding the known half — virtual patching — emptied
+   * stage 3 without touching the stage beneath it. The funnel chart draws each
+   * bar as a share of the stage above and prints the drop between them, so it
+   * rendered a subset ten times wider than its superset and a delta of
+   * "−-962%". Both sliders below are ordinary settings.
+   *
+   * The grid is the test, not the single point: one configuration would pin
+   * the arithmetic that was wrong rather than the property that has to hold. */
+  let worst = null;
+  [0, 20, 40, 60, 80].forEach(virtual => {
+    [80, 88, 96, 100].forEach(inventory => {
+      const f = run({ virtual, inventory, cadence: 1, awareH: 1, emergHit: 100,
+                      exposed: 2000, stackVulns: 200, edge: 0 }, 6000).fn;
+      for (let i = 1; i < f.length; i++) {
+        const slack = f[i - 1] - f[i];
+        if (worst === null || slack < worst.slack) {
+          worst = { slack, i, virtual, inventory, f };
+        }
+      }
+    });
+  });
+  ok('the funnel stays a funnel across shielding and the inventory gap',
+    worst.slack >= -1e-9,
+    `tightest: stage ${worst.i} at virtual=${worst.virtual}% inventory=${worst.inventory}% ` +
+    `(${worst.f[worst.i - 1].toFixed(2)} -> ${worst.f[worst.i].toFixed(2)})`);
+  /* Stated as a RATIO, not as `>`. The strict inequality passed with the bug
+   * in place: the two runs differ in their RNG stream whatever stage 3 counts,
+   * so one landed above the other by noise and certified nothing. A gap this
+   * size has to move the stage by a multiple, and did not move it at all. */
+  const shielded = { virtual: 80, exposed: 2000, stackVulns: 200, edge: 0 };
+  const gapped = run(Object.assign({ inventory: 80 }, shielded), 8000).fn[3];
+  const known = run(Object.assign({ inventory: 100 }, shielded), 8000).fn[3];
+  /* The multiple was 3x while virtual patching closed a shielded window to
+   * exactly zero: at virtual=80 the in-inventory population contributed almost
+   * nothing to stage 3, so the dark population was nearly the whole of it. Now
+   * that a WAF rule takes hours to become enforceable, a shielded system has a
+   * real if short window too and both populations contribute — the ratio is
+   * 1.46x and the property being guarded is unchanged. Threshold set below the
+   * measured value with margin, not at it. */
+  ok('systems in no remediation cycle count as unremediated exposure',
+    gapped > known * 1.25,
+    `a fifth of the estate outside inventory widens stage 3 ${(gapped / known).toFixed(2)}x`);
+  /* And the shielded population is now exposed for the authoring lag rather
+   * than not at all — the half of the fix the ratio above cannot see. */
+  {
+    const lagged = run(Object.assign({ inventory: 100 }, shielded), 8000).fn[3];
+    const instant = M.simulate(
+      Object.assign(M.defaults(), { inventory: 100 }, shielded, { virtual: 0 }),
+      8000, 1234, { surv: false, spread: 0 }).fn[3];
+    ok('virtual patching shortens the exposure window without erasing it',
+      lagged > 0 && lagged < instant,
+      `virtual=80 leaves ${lagged.toFixed(2)} against ${instant.toFixed(2)} unshielded`);
+  }
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
@@ -260,16 +480,31 @@ console.log('\n══ Exposure Race — model tests ═════════�
    * At 40 blocks it did the latter: the reported width swung 6.6%-13.5% as
    * trials rose and wandered by a third between seeds, because a variance
    * estimated from B blocks carries a relative error of ~sqrt(2/(B-1)). */
+  /* Stated RELATIVE to the band, not in absolute points. The threshold was
+   * 0.035 absolute, tuned when the drawn coefficient set produced a ~23pt
+   * band. Adding the non-vulnerability classes added twelve more drawn
+   * coefficients and widened it to ~31pt, so the same relative stability
+   * failed an absolute test — the estimator had not got worse, the thing it
+   * estimates had got bigger. A ratio is the scale-invariant form of the
+   * claim this test was always making. */
   const widths = [30000, 60000, 120000].map(
     (n) => { const x = M.simulate(D(), n, 1234, { surv: false, spread: 1 }); return x.pHi - x.pLo; });
   const wSpread = Math.max(...widths) - Math.min(...widths);
-  ok('band width is stable as trials rise', wSpread < 0.035,
-    widths.map((w) => fmt(w)).join(' / ') + `  spread ${fmt(wSpread)}`);
+  const wMean = widths.reduce((a, b) => a + b, 0) / widths.length;
+  ok('band width is stable as trials rise', wSpread / wMean < 0.15,
+    widths.map((w) => fmt(w)).join(' / ') +
+    `  spread ${fmt(wSpread)} = ${(100 * wSpread / wMean).toFixed(1)}% of ${fmt(wMean)}`);
 
-  const bySeed = [1, 7, 99, 1234].map(
+  /* Eight seeds, not four. The band is ~31pt wide now that the structural
+   * constants AND the non-vulnerability class coefficients are drawn, and a
+   * four-seed check could not tell 650 blocks from 250 — both passed it while
+   * only one was actually stable. Relative, for the same reason as above. */
+  const bySeed = [1, 7, 42, 99, 777, 1234, 20260830, 31337].map(
     (s) => { const x = M.simulate(D(), 60000, s, { surv: false, spread: 1 }); return x.pHi - x.pLo; });
-  ok('band width is stable across seeds', Math.max(...bySeed) - Math.min(...bySeed) < 0.035,
-    bySeed.map((w) => fmt(w)).join(' / '));
+  const sSpread = Math.max(...bySeed) - Math.min(...bySeed);
+  const sMean = bySeed.reduce((a, b) => a + b, 0) / bySeed.length;
+  ok('band width is stable across seeds', sSpread / sMean < 0.16,
+    bySeed.map((w) => fmt(w)).join(' / ') + `  = ${(100 * sSpread / sMean).toFixed(1)}%`);
 
   const pBySeed = [1, 7, 99, 1234].map(
     (s) => M.simulate(D(), 60000, s, { surv: false, spread: 1 }).p);
@@ -300,8 +535,29 @@ console.log('\n══ Exposure Race — model tests ═════════�
   ok('every coefficient explains itself', unexplained.length === 0, unexplained.join(','));
 
   const cited = keys.filter((k) => M.ASSUMED[k].src);
-  ok('the vendor-sourced coefficients carry a citation', cited.length >= 4,
+  ok('the vendor-sourced coefficients carry a citation', cited.length >= 3,
     cited.join(', '));
+
+  /* A citation has to bound something, or it is decoration. The Sophos
+   * aggregate used to hang off `containMid` claiming to corroborate a
+   * conditional rate it does not measure; it now bounds the containment block
+   * as a whole, and this is the check that makes that real. If the model's
+   * containment across the whole detection ladder sits entirely above or
+   * entirely below the only published figure, one of the three regime
+   * coefficients is wrong and nothing else in the suite would say so. */
+  const ladder = Object.keys(M.DETECTION).map((d) => {
+    const r = M.simulate(M.compose({ detection: d }), 30000, 1234, { spread: 0 });
+    return { d, c: 1 - r.incident / r.p };
+  });
+  const worst = Math.min(...ladder.map((x) => x.c));
+  const best = Math.max(...ladder.map((x) => x.c));
+  const rep = M.SCOPE.containmentReported;
+  ok('the containment ladder brackets the reported aggregate',
+    worst < rep && best > rep,
+    `${(worst * 100).toFixed(0)}% .. ${(best * 100).toFixed(0)}% brackets ${(rep * 100).toFixed(0)}% (${M.SCOPE.containmentSrc})`);
+  ok('containment rises monotonically with detection posture',
+    ladder.every((x, i) => i === 0 || x.c >= ladder[i - 1].c - 0.01),
+    ladder.map((x) => `${x.d} ${(x.c * 100).toFixed(0)}%`).join('  '));
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
@@ -440,9 +696,22 @@ console.log('\n══ Exposure Race — model tests ═════════�
     ok('rising adversary attention moves the mix onto the targeted route',
       targeted.every((v, i) => i === 0 || v > targeted[i - 1]),
       targeted.map(x => (x * 100).toFixed(0) + '%').join(' -> '));
+    /* The claim is "off the remediation path", and it used to be tested as
+     * "on the targeted route" because targeted was the only such route. Five
+     * non-vulnerability classes later that proxy no longer holds: the share
+     * moved onto phishing and credential abuse, which are equally beyond
+     * patching, and the test failed while the finding it protects got
+     * stronger. Assert the actual claim — how little of the risk at the top
+     * rung the remediation cycle can reach. */
+    const offPath = M.ROUTES
+      .map((name, i) => (name === 'opportunistic' ? 0 : i))
+      .filter((i) => i > 0);
+    const top = M.simulate(P({ attention: attKeys[attKeys.length - 1] }), 20000, 1234,
+      { surv: false, spread: 0 });
+    const offShare = offPath.reduce((a, i) => a + top.routes[i], 0);
     ok('the top rung carries most of its risk off the remediation path',
-      targeted[targeted.length - 1] > 0.6,
-      `${(targeted[targeted.length - 1] * 100).toFixed(0)}% targeted at the top rung`);
+      offShare > 0.6,
+      `${(offShare * 100).toFixed(0)}% off the opportunistic route at the top rung`);
   }
 
   /* The ladder has to reach below the baseline on the capability axis too, or
@@ -713,6 +982,39 @@ console.log('\n══ Exposure Race — model tests ═════════�
     dWeap > dSpeed * 1.5,
     `speed +${(dSpeed * 100).toFixed(1)}pt vs weaponisation +${(dWeap * 100).toFixed(1)}pt`);
 
+  /* README.md and two comments in js/model.js publish these three figures as
+   * numbers, not as an ordering. Nothing pinned them, and all three had drifted
+   * from the model by the time anyone re-ran them: the README said +2.8 / +8.9
+   * / +1.7 against a measured +2.3 / +7.1 / +1.2, and js/model.js carried two
+   * different sets in two different comments. An ordering assertion cannot
+   * catch that — only the values can.
+   *
+   * TODO(tolerance): decide how tight this band should be, then delete this
+   * comment. The trade-off is real and it is a product decision, not a testing
+   * one:
+   *   - tight (say ±0.2pt) catches a coupling constant nudged by a tenth, and
+   *     fails the build on any deliberate recalibration until the docs are
+   *     rewritten — which is either the point or an obstruction, depending on
+   *     how often those constants are expected to move;
+   *   - loose (say ±1.0pt) survives ordinary recalibration and still catches
+   *     the kind of drift that actually happened here, which was 1.8pt.
+   * PUB is what README.md prints. Set TOL, and if the two ever disagree the
+   * failure message should say which document to correct. */
+  const PUB = { ai: 2.3, weap: 7.1, tempoInc: 1.2 };
+  const TOL = null;   // <-- points of tolerance, in percentage points
+  if (TOL !== null) {
+    const got = {
+      ai: (run({ ai: 100 }).p - base.p) * 100,
+      weap: (run({ weap: 100 }).p - base.p) * 100,
+      tempoInc: (run({ tempo: 100 }).incident - base.incident) * 100,
+    };
+    Object.keys(PUB).forEach((k) => {
+      ok(`the published worth of ${k} still matches the model`,
+        Math.abs(got[k] - PUB[k]) <= TOL,
+        `README.md says +${PUB[k]}pt, model gives +${got[k].toFixed(1)}pt`);
+    });
+  }
+
   /* A link shared before the split carried one `ai=N` meaning all three
    * effects. js/app.js restores the weaponisation term when a URL has `ai`
    * and no `weap`; the model's own fallback is what that relies on. */
@@ -730,13 +1032,60 @@ console.log('\n══ Exposure Race — model tests ═════════�
   ok('SCOPE names one modelled route per simulated route',
     S.modelled.length === M.ROUTES.length,
     `${S.modelled.length} vs ${M.ROUTES.length}`);
-  ok('SCOPE names the routes that are absent', S.excluded.length >= 3 &&
-    S.excluded.join(' ').toLowerCase().includes('phishing'));
+  ok('SCOPE names what is still absent', S.excluded.length >= 3);
+  /* The excluded list used to be required to mention phishing. It is now
+   * required NOT to: phishing is simulated, and a scope note still disclaiming
+   * it would understate the model to a reader deciding whether to trust the
+   * number. The two lists must stay disjoint, which is the invariant that
+   * catches a class added to one and not removed from the other. */
+  ok('nothing is both modelled and excluded',
+    !S.modelled.some((m) => S.excluded.some((e) =>
+      e.toLowerCase().includes(m.toLowerCase().split(' ')[0]))),
+    S.excluded.join(' | '));
+  ok('the human routes are modelled, not disclaimed',
+    S.modelled.join(' ').toLowerCase().includes('phishing') &&
+    !S.excludedShort.toLowerCase().includes('phishing'),
+    S.excludedShort);
   ok('SCOPE carries a cited, in-range coverage share',
     S.vulnShareOfBreaches > 0 && S.vulnShareOfBreaches < 1 && !!S.src,
     `${(S.vulnShareOfBreaches * 100).toFixed(0)}% per ${S.src}`);
   ok('SCOPE points at a proxy that is a real slider',
-    M.SPEC.def.concat(M.SPEC.att).some((x) => x.k === S.proxy), S.proxy);
+    M.SPEC.def.concat(M.SPEC.att, M.SPEC.idn).some((x) => x.k === S.proxy), S.proxy);
+
+  /* THE ANCHOR FOR THE NON-VULNERABILITY CLASSES.
+   *
+   * Their coefficients have no individual public source — there is no KEV for
+   * credential abuse — so no one of them can be checked on its own. What CAN
+   * be checked is the mix they produce together: at the baseline estate the
+   * model's initial-access split has to land near a dated third-party
+   * distribution, or the coefficients have been tuned to nothing.
+   *
+   * This is the assertion that makes the whole addition falsifiable, and it is
+   * the one to re-run after touching any rate in the ACCESS block. It is a
+   * POPULATION distribution, so a configured estate departing from it is the
+   * instrument working, not a failure — which is why it is asserted at the
+   * baseline and nowhere else. */
+  const mix = M.simulate(D(), 40000, 1234, { surv: false, spread: 0 });
+  const T = S.accessMix.target, tol = S.accessMix.tolerance;
+  ok('every simulated class has a target share',
+    M.ROUTES.every((n) => typeof T[n] === 'number'), M.ROUTES.join(' '));
+  near('the target mix is a distribution',
+    Object.keys(T).reduce((a, k) => a + T[k], 0), 1, 1e-9);
+  M.ROUTES.forEach((name, i) => {
+    ok(`baseline mix: ${name} lands near the reported share`,
+      Math.abs(mix.routes[i] - T[name]) <= tol,
+      `${(mix.routes[i] * 100).toFixed(1)}% vs ${(T[name] * 100).toFixed(1)}% target`);
+  });
+  ok('the anchor names its source', !!S.accessMix.src, S.accessMix.src);
+
+  /* The addition has to have RAISED the number, or the routes were not
+   * carrying anything. The old model's answer is recoverable by silencing
+   * them, which is also the honest way to show a reader what changed. */
+  const vulnOnly = M.simulate(
+    Object.assign(D(), { staff: 0 }), 40000, 1234, { surv: false, spread: 0 });
+  ok('counting the human routes raises the compromise rate',
+    mix.p > vulnOnly.p + 0.05,
+    `${fmt(mix.p)} with people vs ${fmt(vulnOnly.p)} without`);
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
@@ -752,6 +1101,260 @@ console.log('\n══ Exposure Race — model tests ═════════�
   const outside = all.filter(s => s.v < s.min || s.v > s.max);
   ok('every default sits inside its own range', outside.length === 0,
     outside.map(s => s.k).join(','));
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+ * 15b. The detection claim is a property of the construction, and says so
+ *
+ * "Detection changes nothing about being compromised" reads as a finding. It
+ * is not one — detection touches only contained(), so the flat line is
+ * guaranteed before any trial runs. The model must declare that rather than
+ * let the page present an axiom as a discovery.
+ * ───────────────────────────────────────────────────────────────────────── */
+{
+  ok('the model declares detection as post-compromise only',
+    M.SCOPE.detectionIsPostCompromiseOnly === true && !!M.SCOPE.detectionNote);
+  const best = M.simulate(Object.assign(D(), { detect: 0.1, edrCoverage: 100 }), 40000, 1234);
+  const worst = M.simulate(Object.assign(D(), { detect: 60, edrCoverage: 0 }), 40000, 1234);
+  ok('and the declaration is true: compromise is bit-identical across it',
+    best.p === worst.p, `${fmt(best.p)} vs ${fmt(worst.p)}`);
+  ok('while the incident rate moves a great deal',
+    worst.incident - best.incident > 0.08,
+    `${fmt(best.incident)} -> ${fmt(worst.incident)}`);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+ * 15c. Every structural constant is declared somewhere a reader can find it
+ * ───────────────────────────────────────────────────────────────────────── */
+{
+  const src = require('fs').readFileSync(require('path').join(__dirname, '../js/model.js'), 'utf8');
+  const loop = src.slice(src.indexOf('function createRun'), src.indexOf('function simulate'));
+  /* Strip comments, then look for bare decimal literals in executable code. */
+  const code = loop.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '');
+  const bare = (code.match(/[^\w.'"]\d+\.\d+/g) || [])
+    .map((m) => m.trim()).filter((m) => m !== '0.5');   /* the median index */
+  ok('no undeclared decimal constants remain in the trial loop',
+    bare.length === 0, bare.length ? bare.join(' ') : 'all live in SHAPE or ASSUMED');
+  ok('SHAPE is exported so a reader can find what is not drawn',
+    M.SHAPE && Object.keys(M.SHAPE).length > 10, `${Object.keys(M.SHAPE || {}).length} constants`);
+  /* The four that move the answer were promoted out of the loop into ASSUMED,
+   * where they are drawn and reach the credible interval. */
+  ['crowdExp', 'reachShare', 'windowSuccess', 'edgeLeadF', 'wildRate', 'wafLagH'].forEach((k) => {
+    ok(`${k} is a declared, drawn coefficient`,
+      !!M.ASSUMED[k] && M.ASSUMED[k].lo < M.ASSUMED[k].hi, M.ASSUMED[k] && M.ASSUMED[k].l);
+  });
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+ * 16. BUG 5 REGRESSION — the appliance clock is applied to a SIGNED time
+ *
+ * `tX` is negative when the exploit predates publication. A bare `tX *= 0.6`
+ * shrinks a negative number toward zero, so the asset class the model treats
+ * as the most heavily targeted got the SHORTEST zero-day lead in it: 6.6 days
+ * against 10.9 for ordinary software. The scaling has to move the magnitude
+ * toward "earlier" on both sides of zero.
+ * ───────────────────────────────────────────────────────────────────────── */
+{
+  /* Reach the sampler the way the trial loop does, by running two estates that
+   * differ only in appliance share and reading the pre-publication mass off the
+   * race chart, which reports it directly. */
+  const web = M.densities(Object.assign(D(), { edge: 0 }), 200000);
+  const edge = M.densities(Object.assign(D(), { edge: 100 }), 200000);
+  ok('appliances lead ordinary software before publication, not trail it',
+    edge.beforeFrac >= web.beforeFrac - 1e-9,
+    `edge ${fmt(edge.beforeFrac)} vs web ${fmt(web.beforeFrac)}`);
+  /* The mass below the drawn window is the deep pre-publication tail. An
+   * appliance lead that is genuinely longer puts MORE mass there, which is the
+   * signature the sign error reversed. */
+  ok('the appliance pre-publication tail runs further ahead',
+    edge.overflow.aBelow > web.overflow.aBelow,
+    `edge ${fmt(edge.overflow.aBelow)} vs web ${fmt(web.overflow.aBelow)} below the window`);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+ * 17. BUG 6 REGRESSION — the binomial sampler at small n
+ *
+ * The `n * p < 12` fast path substituted a Poisson for ANY p. The sampler is
+ * called with p = 0.7, p ~ 0.35 and p up to 0.9, so it ran outside the
+ * approximation's range on every small estate and understated compromise by up
+ * to 3pt. Small n must now be exact.
+ * ───────────────────────────────────────────────────────────────────────── */
+{
+  const draws = 120000;
+  const cases = [[1, 0.9], [2, 0.7], [3, 0.7], [5, 0.55], [10, 0.7], [24, 0.6], [40, 0.35]];
+  let worstMean = 0, worstZero = 0;
+  for (const [n, p] of cases) {
+    const g = M.RNG(5);
+    let sum = 0, zero = 0;
+    for (let i = 0; i < draws; i++) { const v = g.binom(n, p); sum += v; if (v === 0) zero++; }
+    worstMean = Math.max(worstMean, Math.abs(sum / draws / (n * p) - 1));
+    const tz = Math.pow(1 - p, n);
+    if (tz > 1e-3) worstZero = Math.max(worstZero, Math.abs(zero / draws - tz));
+  }
+  ok('binomial mean is unbiased at every small n the model uses',
+    worstMean < 0.02, `worst relative error ${(worstMean * 100).toFixed(2)}%`);
+  ok('binomial P(0) is unbiased at every small n the model uses',
+    worstZero < 0.01, `worst absolute error ${(worstZero * 100).toFixed(2)}pt`);
+  /* The tails still have to be sane where the approximations remain. */
+  const g = M.RNG(11);
+  let big = 0;
+  for (let i = 0; i < 40000; i++) big += g.binom(400, 0.7);
+  near('binomial stays unbiased above the exact-sampling cutoff', big / 40000, 280, 3);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+ * 18. BUG 7 REGRESSION — a per-year count must not contain the next year
+ *
+ * `n += c` ran before the horizon check, so a vulnerability published on day
+ * 350 whose exploit landed 30 days later was excluded from the compromise
+ * probability and included in the headline count. Roughly 5% of the systems in
+ * a figure labelled "per year" fell outside the year.
+ * ───────────────────────────────────────────────────────────────────────── */
+{
+  /* Push every clock long enough that most exploitation would land past day 365
+   * if the horizon were not enforced, then check the count collapses with the
+   * probability instead of floating above it. */
+  const slow = Object.assign(D(), { cadence: 90, awareH: 336, emergH: 0, campaigns: 0, supply: 0 });
+  const r = M.simulate(slow, 60000, 1234);
+  ok('no compromise events survive a run with no compromises',
+    r.p > 0 ? true : r.events === 0, `p=${fmt(r.p)} events=${r.events.toFixed(3)}`);
+  ok('the funnel last stage never exceeds the campaigns that reached you',
+    r.fn[5] <= r.fn[4] + 1e-9, `${r.fn[5].toFixed(3)} <= ${r.fn[4].toFixed(3)}`);
+
+  /* A run with only the two routes that are dated uniformly inside the year has
+   * an exactly known event count: one per Poisson arrival that succeeds. */
+  /* `staff: 0, exposed: 0` as well, or the five non-vulnerability classes are
+   * still arriving and the "exactly its arrival rate" claim is measuring six
+   * routes rather than one. */
+  const supplyOnly = Object.assign(D(), {
+    stackVulns: 0, campaigns: 0, supply: 0.5, staff: 0, exposed: 0,
+  });
+  const s = M.simulate(supplyOnly, 60000, 1234);
+  near('a supply-only estate reports exactly its arrival rate', s.events, 0.5, 0.02);
+  near('a supply-only estate compromises at 1 - exp(-rate)', s.p, 1 - Math.exp(-0.5), 0.01);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+ * 16. The verification pass — six defects a sweep found that no assertion in
+ *     this file could see. Each one was a mechanism that silently stopped
+ *     mattering rather than a number that came out visibly wrong, which is
+ *     the class of bug an internal-consistency suite is blind to.
+ * ───────────────────────────────────────────────────────────────────────── */
+{
+  /* (a) The drawn mean must sit on the central value.
+   * 21 of 23 ranges are asymmetric, so a flat uniform put E[draw] well off
+   * `v` — and every coefficient carrying a citation was therefore honoured
+   * only at spread 0, while the headline runs at spread 1. */
+  const rnd = M.RNG(31);
+  let worstKey = '', worstErr = 0;
+  Object.keys(M.ASSUMED).forEach((key) => {
+    const a = M.ASSUMED[key];
+    const w = a.hi - a.lo, pLo = (a.hi - a.v) / w;
+    let s = 0; const n = 120000;
+    for (let i = 0; i < n; i++) {
+      const u = rnd();
+      s += u < pLo ? a.lo + (a.v - a.lo) * (u / pLo)
+                   : a.v + (a.hi - a.v) * ((u - pLo) / (1 - pLo));
+    }
+    const err = Math.abs(s / n - a.v) / Math.abs(a.v);
+    if (err > worstErr) { worstErr = err; worstKey = key; }
+  });
+  ok('the drawn mean sits on the central value for every coefficient',
+    worstErr < 0.02, `worst ${(worstErr * 100).toFixed(2)}% (${worstKey})`);
+
+  /* The consequence that actually matters: the two spreads must agree on the
+   * headline to within the nonlinearity, not diverge by six points. */
+  const s0 = M.simulate(D(), 60000, 1234, { spread: 0, surv: false }).p;
+  const s1 = M.simulate(D(), 60000, 1234, { spread: 1, surv: false }).p;
+  ok('the full-range run reports near the pinned-coefficient run',
+    Math.abs(s1 - s0) < 0.035, `spread0 ${fmt(s0)} vs spread1 ${fmt(s1)}`);
+
+  /* (b) An out-of-band path must never be worse than not having one.
+   * The old either/or branch pulled urgent vulnerabilities OUT of a routine
+   * window and into a slower escalation, so the slider inverted past your own
+   * cadence. */
+  /* Measured on the funnel's last stage rather than on the headline, because
+   * the remediation clock only governs the vulnerability route. Reading `p`
+   * here would mix in every access class that never touches a change window,
+   * and the assertion would drift with their calibration rather than with the
+   * mechanism it is meant to pin. */
+  const succeeded = (over) => run(over, 30000).fn[M.FUNNEL.length - 1];
+  const none = succeeded({ emergH: 0 });
+  const slow = succeeded({ emergH: 336 });
+  const fast = succeeded({ emergH: 6 });
+  ok('a slow out-of-band path is never worse than having none',
+    slow <= none * 1.02, `emergH=336h ${fmt(slow)} vs none ${fmt(none)} exploited/yr`);
+  ok('a fast out-of-band path is worth a great deal',
+    fast < none * 0.9, `emergH=6h ${fmt(fast)} vs none ${fmt(none)} exploited/yr`);
+
+  /* (c) `agentSkill` must stay live on a sprawling estate. It is the model's
+   * only proxy for the routes SCOPE excludes, and a clamped `openFrac` used to
+   * pin it flat exactly where risk is highest. */
+  const sprawl = { exposed: 2000, edge: 100, inventory: 50, cadence: 90,
+                   awareH: 336, emergH: 0, virtual: 0, stackVulns: 200, supply: 0 };
+  /* Counted off the targeted column by NAME rather than read as a share of
+   * the headline: `routes` is a share of first compromises, so any access
+   * class added beside these dilutes it without the mechanism under test
+   * having moved at all. `routeN` is the raw tally, which is the quantity the
+   * slider actually governs. */
+  const ti = M.ROUTES.indexOf('targeted');
+  const targetedPer = (over) => {
+    const r = run(Object.assign({}, sprawl, over), 30000);
+    return r.routeN[ti] / r.trials;
+  };
+  const moved = targetedPer({ agentSkill: 60 }) - targetedPer({ agentSkill: 0 });
+  ok('the non-vulnerability route stays live on a sprawling estate',
+    moved > 0.01, `${(moved * 100).toFixed(2)}pt across the slider (was 0.09pt)`);
+
+  /* And the quantity it hangs off must be a probability, not a count. With a
+   * clamped `openFrac` every campaign on this estate won at `windowSuccess`
+   * flat; the targeted tally could not fall below that no matter what the
+   * slider said. */
+  ok('window-open probability never reaches certainty',
+    targetedPer({ agentSkill: 0, campaigns: 100 }) < 1,
+    'openFrac is 1-exp(-x), so it cannot saturate');
+
+  /* (d) The fast containment branch must be reachable. `containFast` is the
+   * largest coefficient in the containment block and fired on 0.00% of
+   * baseline compromises while a dwell median raced a 19-minute breakout. */
+  const kk = { bm: M.ASSUMED.breakoutMedian.v, ac: M.ASSUMED.autoContain.v,
+               ar: M.ASSUMED.autoRespond.v };
+  const P = M.compose({ detection: 'managed' });
+  const r2 = M.RNG(11);
+  let beat = 0; const n2 = 200000;
+  for (let i = 0; i < n2; i++) {
+    const isEdge = r2() < P.edge / 100;
+    const covered = !isEdge && r2() < P.edrCoverage / 100;
+    const auto = covered && r2() < kk.ac;
+    const tD = auto ? r2.lnorm(kk.ar, M.SHAPE.sigAuto)
+                    : r2.lnorm(P.detect, M.SHAPE.sigDetectOn);
+    if (tD < r2.lnorm(kk.bm, M.SHAPE.sigBreakout)) beat++;
+  }
+  ok('detection can beat breakout at the top of the ladder',
+    beat / n2 > 0.03, `${(beat / n2 * 100).toFixed(1)}% (was 0.014%)`);
+
+  /* (e) Discovery is a scenario dial, and the strongest of the four. */
+  const b = M.simulate(D(), 60000, 1234, { surv: false });
+  const dHi = M.simulate(Object.assign(D(), { discovery: 100 }), 60000, 1234, { surv: false });
+  const aiHi = M.simulate(Object.assign(D(), { ai: 100 }), 60000, 1234, { surv: false });
+  ok('discovery outruns the clock everyone means by "AI"',
+    dHi.p - b.p > aiHi.p - b.p,
+    `discovery +${((dHi.p - b.p) * 100).toFixed(1)}pt vs arrival speed +${((aiHi.p - b.p) * 100).toFixed(1)}pt`);
+  ok('discovery survives a selector click', M.compose({ exposure: 'product', discovery: 70 }).discovery === 70);
+  ok('discovery is declared in SCENARIO', M.SCENARIO.indexOf('discovery') >= 0, M.SCENARIO.join(','));
+
+  /* (f) A rung must be able to state what it does. `clampTo` snaps to the
+   * slider step, so declared values off the step were unreachable. */
+  const offStep = Object.keys(M.DETECTION).filter((d) =>
+    M.compose({ detection: d }).edrCoverage !== M.DETECTION[d].p.edrCoverage);
+  ok('every detection rung runs the coverage it declares', offStep.length === 0, offStep.join(','));
+
+  /* The two limitations the verification pass turned up that are declared
+   * rather than fixed, because fixing them would mean inventing a mechanism. */
+  ok('the in-the-wild timing proxy is declared', M.SCOPE.wildTimingUsesPoCClock === true,
+    M.SCOPE.wildTimingNote.slice(0, 48) + '…');
+  ok('the floor is declared as unmodelled, not irreducible',
+    M.SCOPE.floorIsUnmodelledNotIrreducible === true, M.SCOPE.floorNote.slice(0, 48) + '…');
 }
 
 /* ─────────────────────────────────────────────────────────────────────────

@@ -10,23 +10,46 @@ any settled year since 2015**. Compression is available here as an explicit
 scenario dial, not as a baseline assumption.
 
 That is not the same as saying an autonomous adversary changes nothing. "AI" is
-several separate claims, they carry different evidence, and the page now gives
-each its own dial rather than bundling them under one word:
+several separate claims, they carry different evidence, and the page gives each
+its own dial rather than bundling them under one word:
 
-| dial | mechanism | worth at full travel |
-|---|---|---:|
-| Exploit arrival speed | the publication-to-exploit clock | **+2.8pt** compromise |
-| Share of bugs weaponised | how many bugs get working exploit code at all | **+8.9pt** compromise |
-| Post-exploitation tempo | foothold to lateral movement to objective | **+1.7pt** incidents, +0.0 compromise |
+| dial | mechanism | rank at full travel |
+|---|---|---|
+| Exploit arrival speed | the publication-to-exploit clock | **weakest** |
+| Share of bugs weaponised | how many bugs get working exploit code at all | middle |
+| Post-exploitation tempo | foothold to lateral movement to objective | zero on compromise, real on incidents |
+| Vulnerability discovery rate | how many bugs are found in what you already run | **strongest** |
 
-The dial the phrase usually means is the weakest of the three, which is the
+Every figure quoted in this file comes from one recipe — `M.simulate(P, 200000,
+1234)`, the default estate unless another is named, assumptions drawn across
+their full declared range. Quoting a mixture of trial counts is how the tables
+here drifted from the model once already.
+
+The table above gives an *ordering*, not point values, and that is deliberate.
+The ordering is asserted in CI and is a property of the mechanisms; the
+magnitudes depend on the estate, and every previous version of this table went
+stale within a few commits of being written. The page draws the same four
+sweeps against whatever estate you have configured, which is where the numbers
+belong.
+
+The dial the phrase usually means is the weakest of the four, which is the
 argument this page was already making in prose and can now make on one axis.
 
 The tempo dial is the one worth sitting with. It cannot change whether you were
 compromised — only whether anyone reached it in time. Against a reported-tempo
-adversary a 24/7 SOC is worth 9.3 points of incident rate over no detection at
-all; at full tempo that margin is **2.2 points**. A faster adversary does not
-beat detection on any one intrusion. It devalues the investment.
+adversary a 24/7 SOC is worth a large margin of incident rate over no detection
+at all; at full tempo roughly three quarters of that margin is gone. A faster
+adversary does not beat detection on any one intrusion. It devalues the
+investment.
+
+The discovery dial is the one that was missing. It scales the published stream
+against a fixed stack — the size of the input rather than the speed of anything
+downstream of it — and on most estates it is worth more than the other three
+put together. It is also the least speculative: machine-found vulnerabilities in
+real codebases are a present-tense capability. A verification pass found that
+the page had spent its life arguing about three clocks while the mechanism with
+the best evidence behind it had no dial at all, which flattered the argument in
+the page's own favour.
 
 It is calibrated against a dated, public corpus rather than against vendor
 narrative — and the first thing that corpus says is that the obvious way to
@@ -62,8 +85,12 @@ model throws away the 888 confirmed-exploited bugs rated High plus the 210 rated
 below it — **65% of everything known to be exploited**. Meanwhile 63% of
 Critical-rated CVEs carry less than a 1% chance of exploitation.
 
-The label is also inflating. Criticals are growing **2.4×** year over year
-against **1.8×** total CVE volume, and a large part of that is scoring policy:
+The label is also inflating. Criticals are on track to grow **2.4×** against
+**1.8×** for total CVE volume — a run-rate extrapolated from a partial year set
+against a completed one, which is calendar arithmetic rather than a measured
+year-over-year figure, and CVE publication is not uniform across a year. The
+direction is not in doubt; the multiplier is provisional. A large part of it is
+scoring policy:
 CNAs assign their own scores, and the share they rate 9.0+ ranges from near zero
 to roughly two in five for the same scale. NVD has stopped analysing 44,050
 records outright — 11.5% of the corpus.
@@ -109,6 +136,16 @@ Two independent errors of the same size in opposite directions. A model can be
 right for entirely wrong reasons, and this one would have drifted the moment
 either input moved alone. Which is happening now.
 
+There is a third version of the same lesson, and this repository shipped it for
+a while. That 0.98 described the model's *inputs* rather than its behaviour: the
+trial loop discounted the stream a second time, asking "do you run the affected
+product?" of a slider whose own label already said *criticals in your stack*.
+The funnel named the same set twice in consecutive stages and nobody read it
+that way, so the simulation ran on 0.45 while the prose beside it claimed 0.98.
+The stage now asks the question that genuinely remains — whether the version and
+configuration you run are actually vulnerable — and the model produces **0.82**:
+short of 0.98 by exactly that filter, and no longer short of its own
+documentation.
 ---
 
 ## The two clocks
@@ -126,17 +163,28 @@ carries full hazard. The gap between them is where virtual patching and
 detection actually live.
 
 The **attacker clock** is not a curve someone drew. It is sampled from the
-measured distribution of days between CVE publication and public exploit code:
-median 3.5 days, **21% before the patch exists at all**, 53% within a week, and
-a long tail — 27% of arrivals fall beyond the drawn window, which the chart
-labels rather than hides.
+measured distribution of days between CVE publication and public exploit code,
+pooled over the five most recent **settled** years (2020–2024, n=1,298): median
+**0.64 days**, **36% before the patch exists at all**, 73% within a week, and a
+long tail that the chart labels rather than hides.
 
-Note what that record does *not* show: compression. Across the measured series
-the public-exploit clock has not visibly accelerated, and the pre-publication
-share has fallen. The recent years are right-censored — exploits are still
-arriving for them — so this is a caveat, not a finding. The page therefore
-**defaults to the measured clock** and puts acceleration behind an explicit
-what-if slider, rather than baking an assumption into the baseline.
+Pooled, and settled, for a reason. The model used to calibrate to the newest row
+in the series, which is also the most right-censored one in it — 2026, n=94,
+observed through May, and the only row in twelve years reporting a median above
+one day. That put two different clocks in one document: the prose argued from
+the settled record while the simulation ran on a row the same file marks
+provisional. It also handed the compression slider 55 of its 100 points of
+travel just to get back to what the settled years already measured, on a page
+whose entire argument is that this clock has nowhere left to go. Against the
+pooled anchor the dial starts where the evidence does, and weaponised share now
+outruns arrival speed **six to one** rather than three.
+
+Note what the record does *not* show: compression. Across the settled series the
+public-exploit clock has not visibly accelerated, and the pre-publication share
+has fallen. The page therefore **defaults to the settled record** and puts
+acceleration behind an explicit what-if slider, rather than baking an assumption
+into the baseline. The most recent year is still shown in the anchors panel,
+marked provisional, where a reader can see it without it calibrating anything.
 
 ---
 
@@ -158,7 +206,6 @@ else's methodology and population:
 | Breakout time | 29 min average (fastest 27 s) | CrowdStrike Global Threat Report 2026 |
 | Time to objective | 5 d median when the adversary announces itself | Mandiant M-Trends 2026 |
 | Off-telemetry penalty | 2.6× — 26 d dwell when told by an outsider vs 10 d self-detected | Mandiant M-Trends 2026 |
-| Containment | 44% of ransomware stopped before encryption | Sophos State of Ransomware 2026 |
 
 These are vendor incident-response populations, which skew toward organisations
 that needed incident response. Read them as the shape of the distribution
@@ -167,13 +214,49 @@ rather than as a population baseline. Note also that the breakout figure is an
 at this spread, and taking the reported number at face value would make breakout
 half again slower than it is.
 
+A fourth row used to sit in that table: 44% of ransomware stopped before
+encryption, from Sophos, attached to the middle containment coefficient. It has
+been removed as a *coefficient* citation and moved to `SCOPE`, because it could
+not do the job it was cited for. The Sophos figure is unconditional across all
+ransomware attacks; the coefficient it was attached to is conditional on
+detection landing in one specific window between breakout and objective. Two
+different populations. What the figure can legitimately do is bound the
+containment block as a whole, and a test now asserts that the containment this
+model produces across its detection ladder brackets it — which is a real check
+where hanging the citation on one coefficient was not.
+
+**Every one of these is honoured at `spread: 0` and drifts at `spread: 1`** —
+or rather, it used to. The declared ranges are mostly asymmetric, because these
+quantities are roughly lognormal and the upper bound sits further from the
+centre than the lower one. Drawing uniformly across such a range puts the
+expected value at `(lo+hi)/2` rather than at the calibrated centre, so the
+default run reported breakout at 45 minutes against a cited 29, an off-telemetry
+penalty of 3.4× against a measured 2.6, and a WAF lag of 50 hours against a
+central 18. The headline was not the calibrated model. Coefficients are now
+drawn from a two-arm distribution over the same declared support, weighted so
+the mean sits on the central value at every spread setting.
+
 **`assumed`** — judgement, because no public measurement exists: per-asset
-campaign arrival rates, product-overlap between your estate and the CVE stream.
-The widest is the campaign arrival rate, and the model is sensitive to it.
+campaign arrival rates, version-and-configuration applicability, how campaign
+pressure scales with estate size. The widest is the campaign arrival rate, and
+the model is sensitive to it.
+
+There used to be a fourth kind that nothing declared: numeric literals inside
+the trial loop. `Math.pow(cnt, 0.4)` decided how risk scales with the number of
+systems you run — the model's largest single claim — and appeared in neither the
+credible interval nor the sensitivity chart nor any list a reader could find.
+Four such constants have been promoted into `ASSUMED`, where they are drawn; the
+rest are gathered into a named, commented `SHAPE` block. A test now fails if a
+bare decimal reappears in the loop, so *"if you disagree with one, this is the
+only block you need to edit"* is checkable rather than aspirational.
 
 The last two kinds are drawn from their range on every block of trials, which is
 where the credible interval comes from. Pin them (`spread: 0`) and the band
-collapses; open them fully and it is about twelve points wide.
+collapses to nothing — on some seeds to exactly zero, since what is left is the
+noise on a variance estimate clamped at zero. Open them fully and it runs around
+twenty-three points wide. It was twelve before the undeclared constants were
+declared, and that widening is the point: the uncertainty was always there, it
+just was not being reported.
 
 ### How the interval is computed
 
@@ -186,7 +269,13 @@ inseparable and the band ends up measuring your trial count.
 Block *count* turned out to matter as much as the decomposition. A variance
 estimated from `B` blocks carries a relative error of about `sqrt(2/(B-1))`, so
 at 40 blocks the reported width swung between 6.6% and 13.5% as trials rose and
-never settled. At 150 it is stable in trial count and across seeds, which
+never settled. The count is now **650**, raised from 150 when six coefficients
+were promoted into `ASSUMED` — a wider band needs more blocks to report a stable
+width, and above about 650 it degrades from the other end, because the
+30,000-trial case runs out of trials per block and the binomial term subtracted
+from the variance becomes too noisy to subtract. Measured across eight seeds:
+150 blocks swung the width 3.7pt, 500 swung it 3.5pt, 650 swings it 1.9pt. It is
+stable in trial count and across seeds, which
 `test/model.test.js` now asserts directly. That is also why the interactive
 trial count is 60,000: the point estimate is settled long before that, but the
 interval is not.
@@ -202,17 +291,84 @@ Three results that hold across most settings:
    floor because a fifth of exploitation predates the patch. Read this alongside
    the scope limits below: the finding holds *within the routes that are
    modelled*, and it holds partly because the two routes no defender control
-   touches — supply chain, and campaigns that need no vulnerability — are a
-   majority of first compromises at the baseline estate.
+   touches — supply chain, and campaigns that need no vulnerability — carry
+   about two fifths of first compromises at the baseline estate (20% targeted,
+   21% supply) and a clear majority from the `sector` rung upward.
 2. **Detection changes nothing about being compromised and everything about
    whether it matters.** It is flat on one metric and among the largest terms on
-   the other. The page has a toggle for exactly this. The finding is also the
-   most fragile one here: it assumes the adversary still needs days to reach its
-   objective. Put the tempo dial at full travel and most of what detection buys
-   is gone.
+   the other. The page has a toggle for exactly this.
+
+   Read the first half as a **scope statement, not a result**. Detection enters
+   the model in one function, `contained()`, and never touches a hazard or a
+   remediation clock, so the flat line is guaranteed before any trial runs.
+   Real endpoint and network controls do prevent some compromises — a blocked
+   exploitation attempt, a killed dropper, an IPS rule that holds — and none of
+   that is simulated. `SCOPE.detectionIsPostCompromiseOnly` declares this in the
+   model rather than in prose, and the sensitivity panel says it beside the
+   chart. Treat the flat line as an upper bound on how little detection is worth
+   against compromise, not a measurement of it.
+
+   The second half is a real result, and the most fragile one here: it assumes
+   the adversary still needs days to reach its objective. Put the tempo dial at
+   full travel and most of what detection buys is gone.
 3. **Telemetry coverage without speed buys almost nothing.** Appliances take no
    agent at all, and a compromise you cannot see is not found on your median
    dwell time — it is found by somebody else, roughly 2.6× later.
+
+---
+
+## Taking it away
+
+The page exports **your run**, not its own argument. Two decks, built in the
+browser from whatever is on screen: what you configured, what came out, what
+drives it, and what to do about it. Both are PDFs, because a LinkedIn carousel
+*is* a PDF — one page per slide, uploaded as a document post — so this is one
+engine with two geometries and two copy budgets rather than two exporters.
+
+| | pages | geometry | register |
+|---|---:|---|---|
+| **LinkedIn carousel** | 10 | 1080 × 1350 portrait | ~28 words a slide, no presenter |
+| **Briefing deck** | 13 | 16:9 at projection size | full paragraphs, parameters and method |
+
+The sequence is the same in both, and it is an argument about one estate rather
+than in general:
+
+1. **What was configured** — the five shape controls as you answered them, and
+   (briefing only) the parameters they compose to.
+2. **The result** — probability of compromise or of an incident over twelve
+   months, with its credible band when the band has settled and an explicit
+   statement that it has not when it hasn't.
+3. **How it got there** — the funnel from published criticals to compromises,
+   and the split of first compromise by route.
+4. **What moves it** — the sensitivity ranking for that configuration.
+5. **What to do** — the same prioritised actions the page prints, each with the
+   reduction it buys *on this estate* and the reason it works.
+6. **What would change it** — the three adversary scenarios swept against the
+   same estate, and what detection is worth under each.
+7. **The link** — the configured URL, so a colleague opens the exact run rather
+   than reconstructing it.
+
+The recommendations come from the same `rankActions()` the page renders, not a
+second copy: a deck that recommended something the panel above it did not would
+give the reader no way to tell which was current.
+
+**The scope limit rides the footer of every slide.** Decks are read a page at a
+time and reshared a page at a time, so a caveat on the method slide is a caveat
+that does not travel with the slide carrying the percentage. Every page says
+*lower bound — phishing, credential abuse and insider action not counted*, and
+the result slide carries the full statement plus the refusal: this is not a
+risk assessment for a named organisation.
+
+Nothing is uploaded and nothing is fetched. There is no PDF library: the writer
+is about two hundred lines in `js/deck.js`, emitting pages of DCTDecode images
+with an invisible Helvetica text layer over each, so the deck stays searchable
+and its figures can be copied rather than retyped. That is the same commitment
+the rest of the page makes — a CDN dependency to ship a slide deck would trade
+offline reproducibility for convenience on a secondary surface.
+
+`tools/check-deck.js` asserts every figure twice, against two different runs,
+because a number that does not move between them was written into the copy
+rather than read from the result.
 
 ---
 
@@ -224,18 +380,23 @@ css/app.css                theme tokens, light + dark, one palette definition
 js/calibration.js          GENERATED — every measured anchor, with provenance
 js/model.js                simulation core; MIT; runs in node and the browser
 js/charts.js               SVG rendering + PNG export
+js/deck.js                 slide composition + PDF writer, for the two exports
 js/app.js                  state, URL sharing, wiring
 data/cybermon/*.json       vendored snapshot, so the page is reproducible offline
 test/model.test.js         determinism, monotonicity, calibration fidelity, regressions
 tools/refresh-data.js      re-pull the snapshot
 tools/derive-calibration.js  snapshot -> js/calibration.js
 tools/check-contrast.js    palette -> contrast floor, both themes
+tools/check-layout.js      renders all eight charts headlessly, against the markup
+tools/check-deck.js        deck figures against the corpus, and the PDF's xref
 tools/build.js             inline everything -> dist/exposure-race.html
 ```
 
 ```bash
 node test/model.test.js                                  # verify the model
 node tools/check-contrast.js                             # verify the palette
+node tools/check-layout.js                               # verify the charts
+node tools/check-deck.js                                 # verify the deck export
 node tools/refresh-data.js && node tools/derive-calibration.js   # update the data
 node tools/build.js                                      # single-file build
 ```
@@ -306,30 +467,120 @@ one weakness twice. The maturity ladder owns that axis alone.
 
 ---
 
+## What a verification pass changed
+
+Every figure in this file moved in one pass, and the reason is worth stating
+plainly: the model was checked against its own documentation and against the
+literature it cites, and fifteen things did not survive. Four were defects, six
+were calibration or provenance errors, and five were claims stated more strongly
+than the construction supports.
+
+| | was | is |
+|---|---|---|
+| Appliance exploit clock | `tX *= 0.6` on a **signed** time, so pre-disclosure exploits arrived *later* on appliances (6.6 d lead) than on ordinary software (10.9 d) | scales magnitude, so appliances lead on both sides of zero (18.2 d) |
+| Binomial sampler | Poisson substituted for any `p`; `binom(1, 0.9)` returned a mean of 0.60 against a true 0.90 | exact below n=32; approximations kept only where valid |
+| Vulnerability stream | discounted twice — the trial loop asked "do you run this product?" of a slider labelled *criticals in your stack* | stage 1 asks the question that actually remains, version and configuration applicability |
+| `Expected systems per year` | counted compromises past day 365, and two of three routes were not system counts | bounded to the horizon, relabelled to what it counts |
+| Attacker clock | calibrated to 2026, n=94, provisional, right-censored — the only row in twelve years above a one-day median | pooled over the five settled years, n=1,298 |
+| In-the-wild conditional | tagged `measured`; actually an all-time KEV rate divided by a one-year PoC rate | tagged for what it is, with `wildRate` carrying the mismatch as a drawn range |
+| `p75` clock knot | quoted from a different series than the three knots below it | declared assumed, bounded by the horizon of the series it belongs to |
+| Detection rungs | `SIEM, untuned` named the 26-day external median and produced 51 days; `No detection` produced 113 days with nothing behind it | `detect` is the internal dwell throughout, so the external figure falls out of `blindMult` instead of being typed in twice |
+| Structural constants | six literals in the trial loop, in neither the band nor the chart | four promoted to `ASSUMED` and drawn, the rest gathered into `SHAPE`, with a test against regression |
+| Virtual patching | closed the exposure window to zero, retroactively, before the exploit existed | closes it after `wafLagH`, because a rule cannot predate the vulnerability |
+| Sensitivity chart | 5,000 trials with assumptions redrawn per endpoint; ranks 3 and 4 swapped between seeds and the advice list printed gains smaller than its own noise | 12,000 trials at pinned assumptions, and a floor below which no gain is printed |
+| Supply-chain slider | label said *compromises*, hint said *reaches your estate* | hint says which one it is, and that it is stated net |
+| `Nothing inbound` | modelled ten inbound systems | renamed `Brokered access only` |
+| Inventory floor | 80%, so the sprawling estate bottomed out at 84% | 50%, so the rung can reach the gap its own description claims |
+| Detection's flat line | presented as one of three findings | declared in `SCOPE` as a property of the construction, and said beside the chart |
+
+Two of these moved the argument rather than just the arithmetic. Calibrating to
+the settled clock **strengthened** the page's central claim — weaponised share
+now outruns arrival speed by a wide margin, because the settled median has even
+less room to compress than the censored one did. And declaring the structural
+constants roughly doubled the credible interval, from twelve points to
+twenty-three. That uncertainty was always in the model. It simply was not being
+reported.
+
+### The second pass
+
+A later pass swept the model rather than reading it — every slider across its
+full travel, four hundred random estates, and the coefficient draws checked
+against the distribution they claimed to be. It found a different *class* of
+defect from the first, and the difference is the useful part.
+
+The first pass found wrong numbers. The second found mechanisms that had
+silently stopped mattering, which is the failure mode an internal-consistency
+suite is structurally blind to: 176 tests passed throughout, because every one
+of them asked whether the model does what the model says, and a saturated term
+or an unreachable branch answers *yes*.
+
+| | was | is |
+|---|---|---|
+| Coefficient draws | flat uniform over asymmetric ranges, so `E[draw]` sat off the calibrated centre — the default run reported breakout at 45 min against a cited 29, and a WAF lag of 50 h against a central 18 | two-arm draw over the same support, weighted so the mean sits on the central value at every spread |
+| Fast containment | `containFast` fired on **0.00%** of baseline compromises: a dwell median was racing a 19-minute breakout, and no clock in the model could win | an automated-response path on covered systems, so the branch is reachable and the `Managed 24/7` rung's own description is true |
+| Out-of-band remediation | non-monotone — an escalation *replaced* the routine window, so a ten-day emergency path was worse than having none at all | both paths drawn, the fix lands on whichever completes first |
+| `openFrac` | a sum of overlapping exposure windows used as a probability and clamped at 1; on a sprawling estate it clamped in 99.3% of trials and pinned `agentSkill` flat across its whole range | `1 - exp(-x)`, so it cannot saturate and the non-vulnerability route stays live |
+| Campaign arrival time | unconditional exponential clipped at the window end, after arrival had already been conditioned — a point mass on the boundary | truncated exponential, which is what the conditioning implies |
+| Discovery rate | not a dial at all, and discarded by `compose()` on every selector click | the fourth scenario dial, and the largest of them |
+| Sophos containment figure | cited as corroborating a conditional coefficient it does not measure | moved to `SCOPE`, bounding the containment block, with a bracketing test |
+| DBIR characterisation | "the largest single initial-access category" | corrected — credential abuse leads, and it is a route this model *excludes* |
+| Detection rungs | declared 78 / 88 / 93% coverage; `clampTo` snapped them to 80 / 90 / 95 | declare what they run |
+| Funnel stage 2 | labelled *Public exploit code exists*, counted `PoC or in-the-wild` | *A working exploit exists* |
+| Exploit-catalogue coverage | undisclosed | stated as a limit on the central claim, with the sample trend on the anchors panel |
+| In-the-wild timing / the floor | undisclosed properties of the construction | declared in `SCOPE`, asserted by tests |
+
+The discovery dial is the one that changed the argument. The page had spent its
+life comparing three clocks while the mechanism with the strongest present-day
+evidence — machine-assisted vulnerability *finding* — had no dial, and it is
+the largest of the four on most estates. An omission that flattered the page's
+own thesis is worth more scrutiny than one that undercut it.
+
 ## Scope and honest limits
 
-- **Three access routes, not all of them.** Opportunistic exploitation, targeted
-  campaign and supply chain are simulated. Phishing, credential abuse and
-  insider action are not, so every figure is a lower bound on intrusion risk
-  rather than a picture of it. The page states this beside the headline and on
-  the routes chart, not only here — a caveat a screen and a half from the number
-  it qualifies is not a caveat.
-- **The proxy for those routes is load-bearing.** `agentSkill` — the chance a
-  targeted campaign succeeds with no remediation window open — is the only place
-  the absent routes appear, and on the compromise metric it is the **largest**
-  term in the sensitivity chart. It was missing from that chart entirely until
-  it was checked. A model whose biggest lever is its own proxy for what it does
-  not simulate should say so, which is what this bullet is for.
+- **Eight access classes, and the five newest are the least evidenced.**
+  Opportunistic exploitation, targeted campaign, supply chain, phishing,
+  credential abuse, misconfiguration, insider action and device loss are all
+  simulated. What remains out of scope is genuinely out of scope rather than
+  merely unmodelled: denial of service and destructive action that involve no
+  intrusion, fraud achieved without entering a system, and physical intrusion
+  into premises.
+- **The five non-vulnerability classes are anchored as a mix, not as
+  coefficients.** There is no KEV for credential abuse. Every rate behind
+  phishing, credential abuse, misconfiguration, insider action and device loss
+  is judgement, and no one of them can be checked on its own. What is checkable
+  is what they produce together: at the baseline estate the initial-access split
+  has to land within ten points of a dated third-party distribution, per class,
+  and CI fails if it drifts. That is the whole basis on which those routes are
+  allowed into the model — the individual numbers are assumptions, the aggregate
+  is falsifiable, and one block in `js/model.js` is the only thing to edit if
+  you disagree.
+- **The addition raised the number, and that is the finding.** Counting five
+  more classes moved the baseline compromise rate from roughly 42% to roughly
+  64%. The old figure was not conservative, it was incomplete — and the
+  recommendation ranking reordered with it: phishing-resistant authentication
+  now ranks above patch cadence and exposed footprint on most estates. That
+  reordering is the point of having done this.
+- **`agentSkill` no longer stands in for the human routes.** It used to be the
+  model's only representation of phishing, credential abuse and insider action,
+  and on the compromise metric it was the largest term in the whole sensitivity
+  chart — the biggest lever was the proxy for what the model declined to
+  simulate. It now carries only the premium a *targeted* adversary adds over the
+  commodity rate when no remediation window is open.
+- **Access classes are drawn independently, which understates the tails.** An
+  organisation weak on authentication is usually also weak on patching, so real
+  estates cluster at both ends more than this model does. No public figure
+  quantifies that correlation and inventing one would put a fabricated
+  coefficient in front of every result, so it is declared rather than modelled.
 - **Adversary attention now carries capability, not just volume**, and the
   published figures moved because of it. Each rung sets how capable a campaign
   is with no vulnerability to use, alongside how many arrive:
 
   | rung | campaigns/yr | success without a vuln | compromise | via targeted route |
   |---|---:|---:|---:|---:|
-  | Opportunistic only | 1 | 0.5% | 15.0% | 4% |
-  | Ordinary interest | 6 | 1% | 24.1% | 26% |
-  | Sector under pressure | 15 | 2.5% | 51.8% | 56% |
-  | A named target | 30 | 4% | 82.5% | 73% |
+  | Opportunistic only | 1 | 0.5% | 34.7% | 3% |
+  | Ordinary interest | 6 | 1% | 43.2% | 20% |
+  | Sector under pressure | 15 | 2.5% | 64.8% | 47% |
+  | A named target | 30 | 4% | 88.4% | 66% |
 
   `campaigns` came *down* on the upper rungs (4x to 2.5x, 9x to 5x) to pay for
   it, because those multipliers were calibrated with the non-vulnerability route
@@ -339,6 +590,11 @@ one weakness twice. The maturity ladder owns that axis alone.
   risk sits on the one route no remediation cycle touches. The totals rose too
   (45% to 52%, 67% to 83%), and that is the finding rather than a side effect —
   the old figures were low *because* the route was closed.
+
+  These totals are higher than earlier published versions of this table, and
+  almost none of that is the attention ladder: it is the defect and calibration
+  work described under *What a verification pass changed* below. The ladder's
+  *shape* is unchanged; the whole column moved under it.
 - **The widest assumption is the campaign arrival rate**, and the answer is
   sensitive to it. The tornado will usually rank the things it is least sure
   about near the top. That is the honest failure mode, stated rather than hidden.
@@ -346,6 +602,41 @@ one weakness twice. The maturity ladder owns that axis alone.
   arithmetic, not a forecast.
 - **Recent exploit-timing years are right-censored** and marked provisional in
   the anchors panel.
+- **The exploit-timing instrument is losing coverage, and this bounds the
+  page's central claim.** The clock is measured on CVEs that appear in
+  ExploitDB, Metasploit or Nuclei. The dated sample per year peaked above a
+  thousand in 2017 and is down to the low hundreds, while CVE publication
+  roughly tripled over the same span. Exploit code did not become five times
+  rarer as vulnerability volume tripled — the catalogues stopped being where it
+  lands, and it now appears predominantly in ad-hoc repositories, private
+  channels and commercial brokerages that this corpus cannot see. Two
+  consequences, and the second is the sharper one. The measured weaponised
+  share is a **floor**, not an estimate, which means the weaponisation dial may
+  be closer to describing the present than the future. And a shrinking sample
+  selects for high-profile vulnerabilities, which are exactly the ones that
+  acquire exploit code fastest — so this instrument would report a near-zero
+  median whether or not the broad population had moved. It establishes that the
+  fast tail is already at the floor. It cannot, on its own, establish that no
+  compression is available anywhere in the distribution. The claim this page
+  leads with survives that, because "the clock everyone watches is already at
+  zero" is a statement about the fast tail. The stronger reading — that there
+  is no room left anywhere — is not supported by this instrument and is not
+  made here.
+- **In-the-wild exposure is timed from when exploit code exists**, which is the
+  earliest onset the evidence supports rather than the expected one. The same
+  snapshot carries a KEV-latency series that is far slower — 12 to 26 day
+  medians, with roughly a quarter of entries added more than a year after
+  publication — and the model does not use it, because KEV latency measures
+  when CISA *catalogued* exploitation rather than when it began. Both series
+  bound the truth from opposite sides; this model takes the near one. Every
+  exposure window here should be read as the earliest one the evidence
+  supports.
+- **The floor is what this model omits, not what cannot be fixed.** A
+  perfectly run estate still reports a nonzero compromise rate, and where that
+  rate comes from routes with no defensive control on the page, it measures the
+  model's ignorance rather than an irreducible property of the world. Both
+  facts are declared in `SCOPE` and asserted by tests, so the page cannot drift
+  from them quietly.
 - The numbers are directionally defensible and roughly right in absolute terms.
   They are not a risk assessment for your organisation.
 

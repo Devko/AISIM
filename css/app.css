@@ -260,51 +260,68 @@ button.ghost { background: transparent; }
 
 /* Ranked by how often each part is used, not by topic. The threat card comes
  * first because it is the half operated *while reading*; the estate card is
- * set once, at the start, and follows. Before this the rail was one 1,935 to
- * 2,612px scroller inside an ~868px sticky box, ordered by subject: one
- * slider of twelve was visible at rest, the compression control sat 536px
- * below the fold, and selecting traits pushed it a further 677px down. The
+ * set once, at the start, and follows. Ordering it by subject instead left
+ * one slider of twelve visible at rest and put the compression control 536px
+ * below the fold, with a trait selection pushing it a further 677px down. The
  * contents list, which is navigation rather than instrument, has left the
- * rail entirely — see .toc. */
+ * rail entirely — see .toc.
+ *
+ * Ranking is the whole of the answer here. A later pass tried to go further
+ * and pin the threat card in a scroller of its own; what that cost is set out
+ * against .card h2 below, and it is the reason this is one scroller again. */
 .rail {
   position: sticky; top: 16px; max-height: calc(100vh - 32px);
   overflow-y: auto; padding-right: 6px;
   transition: top .26s var(--ease), max-height .26s var(--ease);
+  /* Deliberately NOT scroll-behavior: smooth, and the jump links do not pass
+   * behavior:"smooth" either. Measured: where the engine is not ticking a
+   * scroll animation — a throttled renderer, a background tab, a headless
+   * pane — a smooth programmatic scroll does not arrive late, it does not
+   * arrive at all. Both forms were checked against this page: with smooth,
+   * .rail.scrollTop was still 0 nine hundred milliseconds after being
+   * assigned 300; with auto it was 300 immediately. A jump link that lands is
+   * worth more than one that glides, and what tells the reader where they
+   * landed is the outline on .ctrl.flash rather than the travel. */
 }
 
-/* Ranking is unconditional; pinning is not.
+/* One scroller, not two.
  *
- * Ranking costs nothing: the threat card comes first, so the compression
- * slider that chapter 07 hands the reader by name sits 347-458px into the
- * rail and is on screen at rest at every viewport. That alone fixes the case
- * that mattered — it used to sit 536px below the fold, and selecting traits
- * pushed it a further 677px away.
+ * The rail used to split at tall viewports: the threat card pinned inside its
+ * own `overflow-y: auto` zone, above a second `overflow-y: auto` zone holding
+ * the estate card. Measured at 1500x1080 that gave a 648px window onto 887px
+ * of threat controls and a 400px window onto 1,365px of estate controls — two
+ * scrollbars a few pixels apart in a 322px column, and a wheel gesture whose
+ * effect depended on which pixel row the pointer happened to be over. Worse,
+ * the seam between them was a card boundary, which is the one thing a scroll
+ * boundary must not look like: nothing on screen said the lower half was a
+ * separate 29%-of-content porthole rather than the end of the rail.
  *
- * Pinning it there permanently, so that it survives the reader scrolling the
- * rail, costs the estate card whatever the threat card occupies, and that
- * card is 550px. On a 900px viewport the rail is 868 and the pin would leave
- * the configuration a 318px window onto 1,331px of content. At 1000 the rail
- * is 968 and the window is 418; at 1100, 518. So the trade is bad on a laptop
- * and fine on a tall display, and a height query decides it rather than a
- * blanket rule: pin only where there is room to pin. */
-@media (min-width: 1041px) and (min-height: 1000px) {
-  .rail {
-    display: flex; flex-direction: column; min-height: 0;
-    overflow: visible; padding-right: 0;
-  }
-  /* flex-shrink must be 0. The two zones together overflow the rail by design
-   * — that is what the scroller is for — and a shrinkable pinned zone reads as
-   * slack: it collapsed the threat card from 386px to 207px and cut the
-   * compression slider in half.
-   *
-   * The ceiling is in vh, not %. A percentage max-height resolves against the
-   * parent's height, and .rail carries only a max-height, so the percentage
-   * was indefinite and silently did nothing — the zone sailed past a stated
-   * 55% cap to 65% of the rail. The ceiling exists so that opening
-   * "Additional threat parameters" cannot squeeze the scroller to nothing. */
-  .rail-fixed  { flex: 0 0 auto; min-height: 0; max-height: 60vh; overflow-y: auto; }
-  .rail-scroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding-right: 6px; }
+ * The pin was answering a real question the wrong way round. Chapter 07 hands
+ * the reader the compression slider by name, so that slider has to be
+ * reachable from six thousand pixels down the document. But "reachable from
+ * the prose" and "resident on screen forever" are different requirements, and
+ * only the second one costs a second scroll container. The prose carries the
+ * link now — see .ctl-link here and jumpToControl() in app.js — which answers
+ * it at every viewport, including the narrow one, where a pin has never
+ * existed at all and the reader was left to hunt.
+ *
+ * What replaces the pin as orientation is the card's own title: it sticks to
+ * the top of the single scroller, so the column always says which half of the
+ * model is under the pointer without spending a scrollbar to say it. */
+.card h2 {
+  position: sticky; top: 0; z-index: 2;
+  /* Bled out to the card's border edge so that controls pass behind an opaque
+   * band rather than behind the title's own glyphs; the padding then puts the
+   * text back exactly where the card's own padding had it. The hairline is
+   * unconditional rather than stuck-only. Detecting "stuck" needs either a
+   * sentinel and an observer or a scroll timeline that two engines do not
+   * have, and a rule under a card title is a device this page already owns —
+   * .panel is separated by nothing else. */
+  margin: -18px -18px 0; padding: 18px 18px 7px;
+  background: var(--panel); border-radius: 13px 13px 0 0;
+  border-bottom: 1px solid var(--rule);
 }
+.card h2 + .note { margin-top: 6px; }
 /* The docked readout is fixed to the top of the viewport, so the sticky rail
  * has to step down out from under it rather than scroll behind it. Scoped to
  * the two-column grid: below 1041px the rail is static and full-height, and
@@ -329,25 +346,23 @@ button.ghost { background: transparent; }
     display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
     gap: 0 22px; align-items: start;
   }
-  .rail-fixed, .rail-scroll { max-height: none; overflow: visible; padding-right: 0; }
+  /* The rail is not a scrollport here, so the nearest one is the document and
+   * a sticky title would pin to the window instead of to its card — under the
+   * docked readout, which is fixed there already. */
+  .card h2 { position: static; margin: 0; padding: 0; border-bottom: 0; background: none; }
+  .card h2 + .note { margin-top: 5px; }
 }
 /* The rail is its own scroll container, so the scrollbar has to be visible
  * enough that a wheel gesture landing on it is not read as a dead page. */
-.rail, .rail-scroll, .rail-fixed {
+.rail {
   scrollbar-width: thin; scrollbar-color: var(--rule2) transparent;
 }
-.rail::-webkit-scrollbar,
-.rail-scroll::-webkit-scrollbar,
-.rail-fixed::-webkit-scrollbar { width: 10px; }
-.rail::-webkit-scrollbar-thumb,
-.rail-scroll::-webkit-scrollbar-thumb,
-.rail-fixed::-webkit-scrollbar-thumb {
+.rail::-webkit-scrollbar { width: 10px; }
+.rail::-webkit-scrollbar-thumb {
   background: var(--rule2); border-radius: 5px;
   border: 3px solid var(--ink); background-clip: padding-box;
 }
-.rail:hover::-webkit-scrollbar-thumb,
-.rail-scroll:hover::-webkit-scrollbar-thumb,
-.rail-fixed:hover::-webkit-scrollbar-thumb { background: var(--dim); background-clip: padding-box; }
+.rail:hover::-webkit-scrollbar-thumb { background: var(--dim); background-clip: padding-box; }
 
 /* ── cards & panels ─────────────────────────────────────────────────────── */
 .card, .panel {
@@ -431,6 +446,9 @@ button.ghost { background: transparent; }
  * buttons read as an accident; a grid reads as a set of options. */
 .presets { display: grid; gap: 6px; }
 .chips { grid-template-columns: 1fr 1fr; }
+/* Three rungs in one row: the labels are single words and the ladder reads as
+ * an ordered axis, which a 2-plus-1 wrap would break. */
+.ladder-3 { grid-template-columns: repeat(3, 1fr); }
 .ladder-4 { grid-template-columns: repeat(3, 1fr); }
 .ladder-5 { grid-template-columns: 1fr 1fr; }
 .presets button {
@@ -443,7 +461,9 @@ button.ghost { background: transparent; }
  * the third takes the same treatment for the same reason. */
 .ladder-4 button:last-child, .ladder-5 button:last-child { grid-column: 1 / -1; }
 .chips button:last-child { grid-column: 1 / -1; }
-.ladder-4 button, .ladder-5 button, .quad button { text-align: center; }
+/* The three-rung ladder is exactly one row, so it is the one ladder whose last
+ * child must NOT span: doing so would push it onto a second row of its own. */
+.ladder-3 button, .ladder-4 button, .ladder-5 button, .quad button { text-align: center; }
 /* Four rungs in an even 2x2 rather than the 3-plus-1 the maturity ladder uses.
  * Its labels are single words that fit a third of the rail; "Opportunistic" is
  * one word wider than that cell, and a single unbreakable word cannot wrap, so
@@ -503,6 +523,48 @@ button.ghost { background: transparent; }
   font-variant-numeric: tabular-nums;
 }
 .hint { color: var(--mut); font-size: 11.5px; margin-top: 4px; line-height: 1.45; }
+
+/* Chapter 07 argues three dials by name, and the dials are several thousand
+ * pixels up the page in the rail. Naming a control in prose and then leaving
+ * the reader to find it is the gap the pinned rail used to paper over, at the
+ * cost of a second scrollbar; the name carries the reader to the control
+ * instead, at every viewport rather than only on a tall desktop.
+ *
+ * A button, not a link. It moves a scroll position and takes focus; it does
+ * not navigate, and nothing about it should offer a new tab or a copyable
+ * address. Weight is inherited from the <b> these replaced, so the emphasis
+ * the sentence was written with survives. The dashed rule is the affordance:
+ * a solid underline in this document means a citation. */
+.ctl-link {
+  /* --txt, not inherit. These replaced <b> inside a lead paragraph set in
+   * --mut, and inheriting made the three words the chapter is *about* dimmer
+   * than the ordinary bold either side of them: 7.9:1 against 16.4:1 on the
+   * same line. The emphasis has to survive becoming a control. */
+  font: inherit; color: var(--txt); font-weight: 600;
+  background: none; border: 0; border-radius: 2px;
+  padding: 0; margin: 0; cursor: pointer;
+  border-bottom: 1px dashed var(--rule2);
+  transition: color .14s var(--ease), border-color .14s var(--ease);
+}
+.ctl-link:hover { color: var(--accent, var(--att)); border-bottom-color: currentColor; }
+
+/* Arriving is not enough — the reader has to be told which of twelve sliders
+ * the sentence meant. An outline rather than a wash, because the groove fill
+ * already carries a background and a second one reads as a third state.
+ *
+ * `forwards` is what makes this work under reduced motion as well as with it.
+ * The global reduce rule turns every animation off, which would leave the
+ * static outline below holding indefinitely — so app.js removes the class on
+ * a timer, and with motion the animation has already faded it by then. */
+.ctrl.flash {
+  border-radius: 6px;
+  outline: 2px solid var(--accent, var(--rule2)); outline-offset: 6px;
+  animation: ctl-flash 1.2s var(--ease) 1 forwards;
+}
+@keyframes ctl-flash {
+  0%, 55% { outline-color: var(--accent, var(--rule2)); }
+  100%    { outline-color: transparent; }
+}
 
 /* A slider that shows only a thumb makes the reader estimate where in the
  * range they are. Filling the groove to the thumb states it. --fill is
@@ -801,6 +863,32 @@ ul.acts li:last-child { border-bottom: 0; padding-bottom: 0; }
 .tag.m { color: var(--def); }
 .tag.r { color: var(--zero); }
 .tag.a { color: var(--warn); }
+
+/* ── export ─────────────────────────────────────────────────────────────── */
+/* Two columns side by side because the choice is between two audiences, not
+ * between two file formats — they produce the same kind of file, and a list
+ * would have implied a default. Ruled rather than boxed: this is a chapter of
+ * the argument, and DESIGN.md reserves the card for the instrument. */
+.exports {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+  gap: 20px 32px; margin-top: 22px;
+}
+.export {
+  border-top: 1px solid var(--rule2); padding-top: 14px;
+  display: flex; flex-direction: column; align-items: flex-start; gap: 10px;
+}
+.export p { margin: 0; font-size: 13.5px; line-height: 1.5; color: var(--mut); max-width: 46ch; }
+/* Pushes the button to a common baseline when the two descriptions run to
+ * different lengths, so the pair reads as one choice rather than two. */
+.export button { margin-top: auto; }
+/* A build is a second or two of canvas work per slide. The button says so
+ * rather than appearing dead, and goes disabled so a second click cannot start
+ * a second build over the first. */
+.export button[disabled] { opacity: .6; cursor: progress; }
+.export-note {
+  grid-column: 1 / -1; margin: 0; font-size: 13.5px; line-height: 1.5;
+  color: var(--dim); max-width: 72ch;
+}
 
 /* ── footer ─────────────────────────────────────────────────────────────── */
 footer {

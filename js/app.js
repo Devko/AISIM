@@ -22,25 +22,51 @@
    * everything which composes on top of a rung without contradicting it. */
   var EXP = M.DEFAULT_EXPOSURE, ATTN = M.DEFAULT_ATTENTION;
   var ON = [], MAT = 'typical', DET = null;   /* ON = selected traits, multi-select */
+  /* The two identity ladders. Null until the reader picks one, exactly like
+   * DET: a null means "whichever rung the sliders currently resemble", so
+   * moving a slider by hand does not leave a contradicting button lit. */
+  var IDN = null, PPL = null;
   var SEED = 1234, SEED_SENS = 7;
   /* N_HEAVY is set by the credible interval, not by the point estimate: the
    * variance decomposition needs ~150 blocks with enough trials in each. The
    * point estimate is settled long before this. ~116ms on a laptop. */
-  var N_FAST = 4000, N_HEAVY = 60000, N_SENS = 5000;
+  /* N_SENS was 5,000, which could not resolve its own output: measured across
+   * eight seeds the one-sided gain a lever prints wandered by 2-3pt, while
+   * several of the levers being ranked have gains of 1.2-2.1pt in total. The
+   * chart was ordering things it could not tell apart. 12,000 halves that, and
+   * the rows are staged one per turn so the cost does not land on a frame. */
+  var N_FAST = 4000, N_HEAVY = 60000, N_SENS = 12000;
+  /* Below this, a lever's measured gain is not distinguishable from the noise
+   * on measuring it at N_SENS, so the advice list must not print a number for
+   * it. Set from the seed-to-seed spread above, with margin. */
+  var SENS_FLOOR = 0.025;
 
   /* Sliders shown up front. Detection is driven by the posture selector, so the
    * two knobs behind it live in "more" — the reader picks a stack, not a dwell
    * time they have no way to estimate. */
-  var BASIC = { exposed: 1, edge: 1, cadence: 1, stackVulns: 1, ai: 1, weap: 1, tempo: 1 };
+  /* staff and mfa join the up-front set: they are the denominator and the
+   * principal gate for the five non-vulnerability classes, so an identity card
+   * whose every slider sat behind a disclosure would have hidden the two
+   * controls the card exists for. */
+  var BASIC = { exposed: 1, edge: 1, cadence: 1, stackVulns: 1, ai: 1, weap: 1, tempo: 1,
+                discovery: 1, staff: 1, mfa: 1 };
 
-  /* The three scenario dials drawn together in chapter 07, in the order the
-   * chapter argues them: the clock everyone means by "AI", then the two that
+  /* The scenario dials drawn together in chapter 07, in the order the chapter
+   * argues them: the clock everyone means by "AI" first, then the ones that
    * turn out to matter more. Colours are the shared palette tokens, so the
-   * curve and its slider are never a guess apart. */
+   * curve and its slider are never a guess apart.
+   *
+   * `discovery` is last because it is the chapter's closing move, not because
+   * it is least: it is the largest of the four on this estate, and the one no
+   * version of this page could express until it existed. An autonomous
+   * capability that finds bugs raises the SIZE of the stream rather than the
+   * speed of anything, and the argument is only complete once a reader can see
+   * that beside the clock the phrase is usually about. */
   var CLOCKS = [
-    { k: 'ai',    l: 'Exploit arrival speed',    c: 'warn' },
-    { k: 'weap',  l: 'Share of bugs weaponised', c: 'att' },
-    { k: 'tempo', l: 'Post-exploitation tempo',  c: 'zero' },
+    { k: 'ai',        l: 'Exploit arrival speed',      c: 'warn' },
+    { k: 'weap',      l: 'Share of bugs weaponised',   c: 'att' },
+    { k: 'tempo',     l: 'Post-exploitation tempo',    c: 'zero' },
+    { k: 'discovery', l: 'Vulnerability discovery rate', c: 'bad' },
   ];
 
   /* Motion is opt-in. `ANIM` is what every entry animation in the stylesheet
@@ -160,6 +186,8 @@
     if (ON.length) parts.push('traits=' + ON.join(','));
     if (MAT !== 'typical') parts.push('mat=' + MAT);
     if (DET) parts.push('det=' + DET);
+    if (IDN) parts.push('idn=' + IDN);
+    if (PPL) parts.push('ppl=' + PPL);
     var q = parts.join('&');
     return location.origin + location.pathname + (q ? '?' + q : '');
   }
@@ -176,14 +204,19 @@
     }
     if (owns(M.MATURITY, q.get('mat'))) MAT = q.get('mat');
     if (owns(M.DETECTION, q.get('det'))) DET = q.get('det');
+    if (owns(M.IDENTITY, q.get('idn'))) IDN = q.get('idn');
+    if (owns(M.PEOPLE, q.get('ppl'))) PPL = q.get('ppl');
     applyShape();
     Object.keys(d).forEach(function (k) {
       if (!q.has(k)) return;
       var v = parseFloat(q.get(k));
       if (!isFinite(v)) return;
-      var s = spec(k);
-      if (s) v = Math.min(s.max, Math.max(s.min, v));
-      P[k] = v;
+      /* The model's own clamp, not a local range check. This clamped to
+       * [min,max] and stopped, so a value off the slider's step survived into
+       * P while syncAll() handed the input element a value the browser then
+       * snapped — the reading on screen and the number being simulated were
+       * different, silently, for the rest of the session. */
+      P[k] = M.clampTo(k, v);
     });
     /* Links shared before the AI slider was split carry one `ai=N` that meant
      * all three of its effects at once. Read alone it now means only the
@@ -198,15 +231,30 @@
   function pushURL() {
     try { history.replaceState(null, '', toURL()); } catch (e) { /* file:// */ }
   }
-  /* Every slider, indexed once. `spec()` used to concatenate the two spec
-   * arrays and filter them on each call, and syncAll() concatenated them
-   * again on every trait click; KEYS also gives the parameter signature the
-   * race chart is memoised on a stable order to build from. */
-  var ALL_SPEC = M.SPEC.def.concat(M.SPEC.att);
+  /* Both slider tables as one list, concatenated once rather than on every
+   * call — syncAll() rebuilt it on every trait click. KEYS gives the race
+   * chart's memoisation signature a stable order to build from.
+   *
+   * A `spec(k)` lookup and its backing index used to live here too. Its last
+   * caller was the range clamp in fromURL(), which now defers to the model's
+   * own clampTo() so that the snapping arithmetic has one definition instead
+   * of two — and with that caller gone the index had none. */
+  var ALL_SPEC = M.SPEC.def.concat(M.SPEC.att, M.SPEC.idn);
+
+  /* The eight access classes, in the order the model tallies them, with a
+   * short form for narrow charts. Derived from M.ACCESS rather than restated,
+   * so a class added to the model cannot go missing from the chart or arrive
+   * with a label that disagrees with the one the deck prints. */
+  var ACCESS_SHORT = {
+    opportunistic: 'Opportunistic', targeted: 'Targeted campaign', supply: 'Supply chain',
+    phishing: 'Phishing', credential: 'Credential abuse', misconfig: 'Misconfiguration',
+    insider: 'Insider', physical: 'Device loss',
+  };
+  var ACCESS_ROWS = Object.keys(M.ACCESS).map(function (k) {
+    return { key: k, label: M.ACCESS[k].l, short: ACCESS_SHORT[k] || M.ACCESS[k].l,
+             tier: M.ACCESS[k].tier, d: M.ACCESS[k].d };
+  });
   var KEYS = ALL_SPEC.map(function (s) { return s.k; });
-  var SPEC_BY_KEY = {};
-  ALL_SPEC.forEach(function (s) { SPEC_BY_KEY[s.k] = s; });
-  function spec(k) { return SPEC_BY_KEY[k]; }
 
   /* ── controls ──────────────────────────────────────────────────────────── */
   function buildControls(list, basicHost, advHost) {
@@ -245,6 +293,67 @@
       setVal(s);
     });
   }
+
+  /* Chapter 07 argues four dials by name and the dials are in the rail,
+   * thousands of pixels up the page. The rail used to answer that by pinning
+   * the card that holds them, which kept the promise only on a tall desktop
+   * and cost the other card a second scrollbar and 71% of its content. The
+   * sentence carries the reader to the dial instead.
+   *
+   * The rail is scrolled directly rather than through scrollIntoView, which
+   * walks *every* scrollable ancestor and would take the document with it —
+   * moving the reader off the paragraph that sent them, which is the one
+   * thing this must not do. Below 1041px the rail is a static grid and has no
+   * scrollport of its own, so there the page genuinely does have to move and
+   * scrollIntoView is the fallback rather than the method.
+   *
+   * Neither call asks for smooth. See the note on .rail in app.css: a smooth
+   * programmatic scroll is silently dropped, not merely unanimated, wherever
+   * the engine is not ticking one. The flash below is the orientation cue,
+   * and unlike the travel it survives reduced motion. */
+  var flashed = null, flashTimer = 0;
+  function jumpToControl(k) {
+    var input = $('i-' + k);
+    if (!input) return;
+    var ctrl = input.closest ? input.closest('.ctrl') : null;
+    if (!ctrl) ctrl = input.parentNode;
+    /* An advanced dial sits inside a collapsed <details>, which has no box to
+     * scroll to until it is open. */
+    var det = ctrl.closest && ctrl.closest('details');
+    if (det && !det.open) det.open = true;
+
+    var rail = document.querySelector('.rail');
+    if (rail && rail.scrollHeight > rail.clientHeight + 1) {
+      /* A third of the way down the scrollport rather than centred: the card
+       * title is sticky at the top of it, and a dial that lands underneath
+       * the title is a dial the reader was not shown. Offsets come off
+       * bounding rects rather than offsetTop, which is measured against
+       * whichever ancestor happens to be positioned. */
+      var delta = ctrl.getBoundingClientRect().top - rail.getBoundingClientRect().top;
+      rail.scrollTop = Math.max(0, rail.scrollTop + delta - rail.clientHeight / 3);
+    } else if (ctrl.scrollIntoView) {
+      ctrl.scrollIntoView({ block: 'center' });
+    }
+
+    /* Arriving is not enough: twelve sliders look alike, so the one the
+     * sentence meant has to say so, and it has to say so to a keyboard reader
+     * too — hence the focus, which also leaves the dial ready to be arrowed.
+     * preventScroll because focus() would otherwise scroll the dial into view
+     * on its own terms, undoing the third-of-the-scrollport placement above
+     * and dropping it back under the sticky title. */
+    if (flashed) flashed.classList.remove('flash');
+    clearTimeout(flashTimer);
+    /* Forces a reflow between remove and add so that a second press of the
+     * same link replays the animation instead of doing nothing. */
+    void ctrl.offsetWidth;
+    ctrl.classList.add('flash');
+    flashed = ctrl;
+    flashTimer = setTimeout(function () {
+      ctrl.classList.remove('flash');
+      if (flashed === ctrl) flashed = null;
+    }, 1800);
+    input.focus({ preventScroll: true });
+  }
   /* The formatted readout ("14 d", "as measured") is the value that means
    * something; the raw number a screen reader would otherwise announce is not.
    * On the compression slider in particular, "0" is exactly the wrong thing to
@@ -277,7 +386,7 @@
    * `weap` and `tempo` to zero while leaving `ai` standing. */
   function applyShape() {
     var opts = { exposure: EXP, traits: ON, attention: ATTN,
-                 maturity: MAT, detection: DET };
+                 maturity: MAT, detection: DET, identity: IDN, people: PPL };
     M.SCENARIO.forEach(function (k) { opts[k] = P[k]; });
     P = M.compose(opts);
   }
@@ -292,6 +401,21 @@
     });
     return best;
   }
+  /* The same question for the two identity ladders. Every coefficient a rung
+   * writes is on the same 0-100 scale, so plain Euclidean distance over the
+   * rung's own keys is the right metric here — no log term, because none of
+   * these is a duration. */
+  function closestOf(table) {
+    var best = null, bestD = Infinity;
+    Object.keys(table).forEach(function (k) {
+      var p = table[k].p, d = 0;
+      Object.keys(p).forEach(function (key) { d += Math.pow(P[key] - p[key], 2); });
+      if (d < bestD) { bestD = d; best = k; }
+    });
+    return best;
+  }
+  function closestIdentity() { return closestOf(M.IDENTITY); }
+  function closestPeople() { return closestOf(M.PEOPLE); }
 
   /* Descriptions do not stack, so a multi-select cannot explain itself in
    * prose. Show the resulting estate instead — that is what the reader needs
@@ -303,6 +427,12 @@
       P.stackVulns + ' criticals a year',
       P.cadence + '-day patch cycle',
       P.edrCoverage + '% on telemetry',
+      /* The estate is no longer only its systems. Four of the eight access
+       * classes scale with headcount, and authentication strength gates the
+       * two largest of those, so a summary omitting both would describe an
+       * estate the model is not simulating. */
+      M.fmtN(P.staff) + ' people with access',
+      P.mfa + '% phishing-resistant auth',
     ];
     if (P.supply >= 0.3) bits.push(P.supply.toFixed(2) + ' supply-chain hits a year');
     return bits.join(' · ');
@@ -350,7 +480,12 @@
     el.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 180, easing: ease() });
   }
 
-  function buildToggles(hostId, table, isOn, onPick, meta) {
+  /* `nearOf` names what the derived match was derived FROM. It was hardcoded
+   * to "your current dwell time and coverage", which is true of the detection
+   * ladder and of nothing else — the two identity ladders inherited it and
+   * told a screen-reader user that an authentication rung had been matched on
+   * dwell time. Each caller now says what its own rungs are matched on. */
+  function buildToggles(hostId, table, isOn, onPick, meta, nearOf) {
     var host = empty($(hostId));
     Object.keys(table).forEach(function (key) {
       var btn = E('button', null, table[key].l);
@@ -362,7 +497,7 @@
        * the button's accessible name. The dashed border says the same thing,
        * and says it to sighted readers only. */
       if (meta) btn.appendChild(E('span', 'vh near-note',
-        ', closest match to your current dwell time and coverage'));
+        ', closest match to your current ' + (nearOf || 'settings')));
       btn.setAttribute('aria-pressed', String(!!isOn(key)));
       btn.addEventListener('click', function () { onPick(key); });
       host.appendChild(btn);
@@ -375,13 +510,19 @@
       b2.classList.toggle('on', on);
       b2.setAttribute('aria-pressed', String(on));
     });
-    [['sel-exposure', EXP], ['sel-attention', ATTN],
-     ['sel-maturity', MAT], ['sel-detection', det]].forEach(function (pair) {
-      /* Moving the dwell or coverage slider clears the explicit choice and
-       * lights whichever posture the numbers now resemble. Shown identically
-       * to a click, that reads as a selection the reader never made — so a
-       * derived match is drawn as a match, and reports itself unpressed. */
-      var derived = pair[0] === 'sel-detection' && !DET;
+    /* Three ladders can now be derived rather than chosen, so the flag is
+     * carried in the row instead of tested against one id. Adding the identity
+     * ladders to the list without this would have drawn a derived match as a
+     * click the reader never made. */
+    [['sel-exposure', EXP, false], ['sel-attention', ATTN, false],
+     ['sel-maturity', MAT, false], ['sel-detection', det, !DET],
+     ['sel-identity', IDN || closestIdentity(), !IDN],
+     ['sel-people', PPL || closestPeople(), !PPL]].forEach(function (pair) {
+      /* Moving a slider behind a ladder clears the explicit choice and lights
+       * whichever posture the numbers now resemble. Shown identically to a
+       * click, that reads as a selection the reader never made — so a derived
+       * match is drawn as a match, and reports itself unpressed. */
+      var derived = pair[2];
       document.querySelectorAll('#' + pair[0] + ' button').forEach(function (b2) {
         var on = b2.dataset.key === pair[1];
         b2.classList.toggle('on', on && !derived);
@@ -399,6 +540,9 @@
      * rung selected now, so it no longer has an empty case to caption. */
     setDesc($('desc-profile'), estateSummary());
     setDesc($('desc-detection'), M.DETECTION[det] ? M.DETECTION[det].d : '');
+    var idn = IDN || closestIdentity(), ppl = PPL || closestPeople();
+    setDesc($('desc-identity'), M.IDENTITY[idn] ? M.IDENTITY[idn].d : '');
+    setDesc($('desc-people'), M.PEOPLE[ppl] ? M.PEOPLE[ppl].d : '');
   }
   /* The metric toggle is a selected-state control like the chips, so it
    * carries the same state to assistive technology. */
@@ -442,7 +586,18 @@
         var d = M.DETECTION[k].p;
         return (d.detect < 1 ? Math.round(d.detect * 24) + ' h' : d.detect + ' d') +
           ' · ' + d.edrCoverage + '%';
-      });
+      }, 'dwell time and coverage');
+    /* Same treatment for the two identity ladders: each reports the strength
+     * it writes, so a reader can see that "phishing-resistant" means 93 rather
+     * than having to open the sliders behind it to find out. */
+    buildToggles('sel-identity', M.IDENTITY,
+      function (k) { return k === (IDN || closestIdentity()); },
+      function (k) { IDN = k; applyShape(); syncAll(); refreshSelectors(); schedule(); },
+      function (k) { return M.IDENTITY[k].p.mfa + '%'; }, 'authentication strength');
+    buildToggles('sel-people', M.PEOPLE,
+      function (k) { return k === (PPL || closestPeople()); },
+      function (k) { PPL = k; applyShape(); syncAll(); refreshSelectors(); schedule(); },
+      function (k) { return M.PEOPLE[k].p.awareness + '%'; }, 'filtering and personnel settings');
     refreshSelectors();
   }
 
@@ -453,17 +608,26 @@
    *
    * Two levers were absent from this list for reasons that did not survive
    * being checked. `agentSkill` — access that needs no vulnerability — is the
-   * second-largest term in the entire model on the compromise metric, and a
-   * sensitivity chart that omits its own second-largest term is not a
-   * sensitivity chart. `edrCoverage` reads as a flat zero on compromise, which
+   * LARGEST term in the entire model on the compromise metric, and a
+   * sensitivity chart that omits its own largest term is not a sensitivity
+   * chart. (It was second when it was added, behind supply-chain hits, and
+   * the rebalanced attention ladder moved it past. The rank is measured, not
+   * remembered: re-check it before restating it here or in the advice below.) `edrCoverage` reads as a flat zero on compromise, which
    * is exactly why it belongs: it is the clearest case the page has of a
    * control that is worthless on one metric and decisive on the other, and it
-   * only makes that argument if it is drawn on both. */
+   * only makes that argument if it is drawn on both.
+   *
+   * One thing this chart cannot tell you, and should not be read as telling
+   * you: how long a bar is depends on the RANGE chosen for it below, and those
+   * ranges are judgement. `agentSkill` outranks every other lever at any range
+   * that has been tried, down to 0.5-5%, so the ORDER at the top is a property
+   * of the model. The 5x gap between its bar and the exposure bar is a property
+   * of the range. Read the ranking, not the ratio. */
   var LEVERS = [
     { k: 'stackVulns',  lo: 8,    hi: 90,  l: 'Criticals in your stack' },
     { k: 'exposed',     lo: 25,   hi: 400, l: 'Exposed systems' },
     { k: 'edge',        lo: 0,    hi: 70,  l: 'Edge appliance share' },
-    { k: 'inventory',   lo: 100,  hi: 86,  l: 'Inventory coverage' },
+    { k: 'inventory',   lo: 100,  hi: 70,  l: 'Inventory coverage' },
     { k: 'detect',      lo: 0.25, hi: 45,  l: 'Time to detect' },
     { k: 'edrCoverage', lo: 100,  hi: 0,   l: 'Endpoint telemetry coverage' },
     { k: 'cadence',     lo: 2,    hi: 60,  l: 'Routine remediation cycle' },
@@ -472,14 +636,31 @@
     { k: 'emergHit',    lo: 95,   hi: 25,  l: 'Out-of-band trigger rate' },
     { k: 'virtual',     lo: 70,   hi: 0,   l: 'WAF / virtual patching' },
     { k: 'campaigns',   lo: 0,    hi: 30,  l: 'Targeted campaigns' },
-    { k: 'agentSkill',  lo: 0.5,  hi: 40,  l: 'Access without a vulnerability' },
+    { k: 'agentSkill',  lo: 0.5,  hi: 40,  l: 'Campaign success without a vulnerability' },
+    /* The identity and people controls. They enter the ranking on the same
+     * terms as everything else — swept across their own declared travel — so
+     * whether phishing-resistant authentication outranks patch cadence is
+     * something the model answers rather than something the page asserts. */
+    { k: 'mfa',         lo: 100,  hi: 0,   l: 'Authentication strength' },
+    { k: 'awareness',   lo: 100,  hi: 0,   l: 'Filtering and user reporting' },
+    { k: 'pam',         lo: 100,  hi: 0,   l: 'Privileged access management' },
+    { k: 'configAssurance', lo: 100, hi: 0, l: 'Configuration assurance' },
+    { k: 'insiderCtl',  lo: 100,  hi: 0,   l: 'Personnel and least privilege' },
+    { k: 'deviceCtl',   lo: 100,  hi: 0,   l: 'Device encryption and management' },
+    /* Swept over a range proportionate to the other scale terms, not over the
+     * slider's full travel. `exposed` moves 25 to 400, about sixteenfold;
+     * 100 to 5000 is fifty, and a lever given a wider range than its
+     * neighbours ranks above them for that reason alone. The tornado compares
+     * levers, so the ranges have to be comparable. */
+    { k: 'staff',       lo: 200,  hi: 3000, l: 'People with access' },
     { k: 'supply',      lo: 0,    hi: 1,   l: 'Supply-chain hits' },
     { k: 'ai',          lo: 0,    hi: 80,  l: 'Exploit arrival speed' },
     { k: 'weap',        lo: 0,    hi: 80,  l: 'Share of bugs weaponised' },
     { k: 'tempo',       lo: 0,    hi: 80,  l: 'Post-exploitation tempo' },
+    { k: 'discovery',   lo: 0,    hi: 80,  l: 'Vulnerability discovery rate' },
   ];
   var ADVICE = {
-    stackVulns: ['Reduce edge software footprint', 'Each exposed product commits you to its vulnerability stream. This is the largest single term in the model.'],
+    stackVulns: ['Reduce edge software footprint', 'Each exposed product commits you to its vulnerability stream, and it is the one term here that scales with how much software you chose to run rather than with how well you run it.'],
     exposed:    ['Reduce the exposed attack surface', 'Fewer reachable systems reduces every other term simultaneously.'],
     edge:       ['Reduce or segment edge appliances', 'They remediate slower, support no endpoint agent, and are the asset class where mass exploitation begins at day zero.'],
     inventory:  ['Close the asset inventory gap', 'A system in no remediation cycle stays exposed for months rather than days.'],
@@ -497,7 +678,19 @@
      * vulnerability to use, which is where phishing, credential abuse and
      * misconfiguration live — so the advice names the controls rather than
      * implying the model has costed them. */
-    agentSkill: ['Close the routes that need no vulnerability', 'Phishing-resistant MFA, least privilege and egress control. The model does not simulate these routes; it carries them as one residual rate, and that rate is its second-largest term.'],
+    /* This entry used to read "close the routes that need no vulnerability"
+     * and describe them as unsimulated — it was the model's apology for its
+     * own biggest gap. Those routes are simulated now, each with its own
+     * control below, so this no longer stands in for them and names only what
+     * is genuinely left. */
+    agentSkill: ['Raise the cost of a determined adversary', 'Segmentation, egress control and blast-radius limits. This sets what a targeted adversary achieves when no remediation window is open for them to use.'],
+    mfa: ['Move to phishing-resistant authentication', 'Origin-bound credentials with no fallback path, including for the service desk, which is where this control is usually undone. It gates the two largest non-vulnerability routes at once.'],
+    awareness: ['Improve filtering and shorten reporting time', 'Fewer credible lures reaching somebody who acts, and faster escalation when one does. This acts on arrival rather than on what happens afterwards, so it composes with authentication rather than overlapping it.'],
+    pam: ['Reduce what a valid account reaches', 'Just-in-time privilege, vaulting and session brokering. The only control here that acts after an adversary already holds working credentials.'],
+    configAssurance: ['Close reachable misconfiguration', 'Baselines, drift detection and external attack-surface monitoring. The one route in the model that no patch cycle can close, because there is nothing to patch.'],
+    insiderCtl: ['Tighten personnel and least privilege', 'Joiner-mover-leaver rigour, least privilege and egress monitoring. Deliberately the weakest control effect in the model: an authorised person acting within their access is the hardest case here.'],
+    deviceCtl: ['Complete device encryption and enrolment', 'Full-disk encryption, MDM and remote wipe. Small in absolute terms, and close to solved wherever it is done at all.'],
+    staff: ['Reduce standing access', 'Four of the eight routes scale with how many people can authenticate. This is a denominator, not a headcount recommendation: fewer standing accounts and narrower access reduce it without anyone leaving.'],
   };
 
   function copyOf(src) { var o = {}; Object.keys(src).forEach(function (x) { o[x] = src[x]; }); return o; }
@@ -508,9 +701,18 @@
   /* One lever, both ends. Each run reseeds from SEED_SENS, so a row does not
    * depend on which rows were computed before it — which is what lets the
    * settle pass compute them one per turn without moving a single figure. */
-  function sensitivityRow(t, base) {
-    var lo = sim(over(t.k, t.lo, base), N_SENS, SEED_SENS)[METRIC];
-    var hi = sim(over(t.k, t.hi, base), N_SENS, SEED_SENS)[METRIC];
+  /* `spread: 0` pins every assumption at its central value. A tornado measures
+   * what moving a LEVER does; drawing the assumptions afresh on each endpoint
+   * adds parameter noise to a bar that is supposed to isolate one parameter,
+   * and at these trial counts that noise was reordering the chart. The credible
+   * interval on the headline is where parameter uncertainty belongs, and it is
+   * still drawn there. This MUST match the convention `base` is computed with
+   * below — the two were briefly out of step, and a gain of base-minus-lo
+   * across two different conventions is not a gain, it is a subtraction. */
+  function sensitivityRow(t, base, metric) {
+    var o = { surv: false, spread: 0 };
+    var lo = M.simulate(over(t.k, t.lo, base), N_SENS, SEED_SENS, o)[metric];
+    var hi = M.simulate(over(t.k, t.hi, base), N_SENS, SEED_SENS, o)[metric];
     return { k: t.k, l: t.l, lo: lo, hi: hi, span: Math.abs(hi - lo) };
   }
 
@@ -548,10 +750,22 @@
    * settle would not be seen — the docked readout while it is translated out
    * of view. It still records the value, so the next visible change counts
    * from the figure actually on screen. */
-  function setStat(id, value, fmt, unit, ci, straight) {
+  function setStat(id, value, fmt, unit, ci, straight, onSettle) {
     var el = $(id), ciEl = $(id + '-ci');
     if (!el) return;
-    if (ciEl) ciEl.textContent = ci;
+    /* The interval used to be painted right here, before the value's settle had
+     * even started. The settle runs on rAF, and the heavy pass that follows a
+     * change can starve it for most of a second, so the pair sat on screen
+     * visibly contradicting itself: a compromise probability of 27% beside a
+     * 90% band of 81% to 85%. Neither figure was wrong. Showing them together
+     * was, on a page whose whole claim is that its numbers are defensible.
+     * The interval and anything else belonging to the same reading are now
+     * painted by whichever branch paints the final value, so a reader never
+     * sees half of one result against half of another. */
+    var settle = function () {
+      if (ciEl) ciEl.textContent = ci;
+      if (onSettle) onSettle();
+    };
     stopStat(id);
 
     var from = statAt[id];
@@ -559,6 +773,7 @@
     if (!ANIM || straight || live() || value === null || !isFinite(value) ||
         typeof from !== 'number' || !isFinite(from) || from === value) {
       paintStat(el, fmt(value), unit);
+      settle();
       return;
     }
     var t0 = 0, span = value - from;
@@ -573,6 +788,7 @@
       if (k < 1) { statRaf[id] = requestAnimationFrame(step); return; }
       stopStat(id);
       statAt[id] = value;
+      settle();
     };
     statRaf[id] = requestAnimationFrame(step);
     /* rAF is not merely throttled but suspended outright in a background tab,
@@ -588,6 +804,7 @@
       stopStat(id);
       statAt[id] = value;
       paintStat(el, fmt(value), unit);
+      settle();
     }, 400);
   }
   /* The band is drawn on a full 0-100% scale rather than fitted to itself, so
@@ -607,15 +824,18 @@
     /* The fast pass while a slider is moving does not run enough blocks for the
      * interval to mean anything. Show the point estimate live and keep the last
      * trustworthy band rather than flashing a number that is mostly noise. */
+    var bandP = null, bandI = null;
     if (r.bandReliable) {
       lastBand.p = '90% band ' + pctS(r.pLo) + ' to ' + pctS(r.pHi);
       lastBand.i = '90% band ' + pctS(r.incLo) + ' to ' + pctS(r.incHi);
-      setBand('s-p-band', r.pLo, r.pHi);
-      setBand('s-i-band', r.incLo, r.incHi);
+      /* The rail under the figure is the same reading as the interval beside
+       * it, so it lands when the figure lands rather than ahead of it. */
+      bandP = function () { setBand('s-p-band', r.pLo, r.pHi); };
+      bandI = function () { setBand('s-i-band', r.incLo, r.incHi); };
     }
-    setStat('s-p', r.p, fmtPct, 'of years', lastBand.p);
-    setStat('s-i', r.incident, fmtPct, 'of years', lastBand.i);
-    setStat('s-n', r.events, fmtEvents, 'systems', 'across the 12-month window');
+    setStat('s-p', r.p, fmtPct, 'of years', lastBand.p, false, bandP);
+    setStat('s-i', r.incident, fmtPct, 'of years', lastBand.i, false, bandI);
+    setStat('s-n', r.events, fmtEvents, 'events', 'mass exploitation counts systems; every other route counts events');
     /* A bare rule in the value slot reads as a failed render, not as "this does
      * not happen inside the window". Give it an actual bound. */
     setStat('s-t', r.med == null ? null : r.med, fmtDaysN,
@@ -656,7 +876,11 @@
     var d = raceDensities();
     CH.race($('race'), width('race'), d, palette());
     var n = empty($('race-note'));
-    add(n, 'Measured ' + C.pocTiming.latest.year + ' clock: median ',
+    /* The clock the MODEL runs on: the pooled settled years, not the most
+     * recent row. Naming `latest` here while simulating something else put two
+     * different clocks in one sentence. */
+    add(n, 'Measured clock, ' + C.pocTiming.settled.years[0] + '–' +
+      C.pocTiming.settled.years[C.pocTiming.settled.years.length - 1] + ': median ',
       b(CH.fmtDays(d.median)), ' from publication to public exploit code.');
     if (P.ai > 0) {
       add(n, ' Modelled at ', b('+' + P.ai), ' compression, scaling that clock by ×' +
@@ -671,7 +895,7 @@
     var pal = palette();
     drawRace();
     CH.funnel($('funnel'), width('funnel'), r, M.FUNNEL, pal);
-    CH.routes($('routes'), width('routes'), r, pal, M.SCOPE);
+    CH.routes($('routes'), width('routes'), r, pal, M.SCOPE, ACCESS_ROWS);
     CH.survival($('surv'), width('surv'), r, pal);
     updateWild(r);
   }
@@ -703,16 +927,21 @@
     drawMain(r);
   }
 
-  /* The settle pass is about 380ms of arithmetic on this machine: a 60,000
-   * trial run, then 26 sensitivity runs, then 11 sweep points. Run as one
-   * block it holds the main thread for all of it — scrolling stops, hover
-   * states stick, and the theme button does not answer until it ends.
+  /* The settle pass is the heaviest arithmetic on the page: a 60,000-trial run,
+   * then two 5,000-trial runs for each of the LEVERS rows, then one for each
+   * point of each curve in CLOCKS. Run as one block it holds the main thread
+   * for all of it — scrolling stops, hover states stick, and the theme button
+   * does not answer until it ends.
    *
-   * It is therefore cut into stages that yield to the browser between them —
-   * six slices of the main run, then the render, then one stage per lever and
-   * one per sweep point, about thirty-four in all. No stage runs more than
-   * 10,000 trials or one lever, which measured 55ms as the longest remaining
-   * block against 260ms for the unsliced pass. Nothing is approximated: the
+   * It is therefore cut into stages that yield to the browser between them:
+   * six slices of the main run, the render, the baseline, one stage per lever,
+   * the tornado, one stage per sweep point, and the sweep — which is 45 at the
+   * present sizes of those two tables. The counts are deliberately not written
+   * out as literals here; an earlier version of this comment said 26 runs and
+   * 11 sweep points, and was describing a page that had since grown to 34 and
+   * 18. No stage runs more than 10,000 trials or one lever, which measured
+   * 55ms as the longest remaining block against 260ms for the unsliced pass.
+   * Nothing is approximated: the
    * run carries its own RNG and accumulators (see createRun), and each
    * sensitivity run reseeds from SEED_SENS independently of the others, so
    * stage-at-a-time gives bit-identical figures to one straight loop.
@@ -767,6 +996,12 @@
      * outright, so no stage should ever be in a position to answer half about
      * one estate and half about another. */
     var snap = copyOf(P);
+    /* The metric is part of that snapshot. Every stage read the live METRIC
+     * while reading the estate from `snap`, which was safe only because a
+     * metric change happens to cancel the pass — one guarantee standing on
+     * another, in a function whose stated discipline is that no stage can
+     * answer half about one reading and half about another. */
+    var metric = METRIC;
     var run = M.createRun(snap, N_HEAVY, SEED, { surv: true, spread: 1 });
 
     var base = null, rows = [], sweepSeries = [];
@@ -784,33 +1019,33 @@
 
     /* Baseline computed with EXACTLY the seed and trial count the bars use, so
      * a bar can never be offset against a mismatched base. */
-    stages.push(function () { base = sim(snap, N_SENS, SEED_SENS)[METRIC]; });
+    stages.push(function () { base = M.simulate(snap, N_SENS, SEED_SENS, { surv: false, spread: 0 })[metric]; });
     LEVERS.forEach(function (t) {
-      stages.push(function () { rows.push(sensitivityRow(t, snap)); });
+      stages.push(function () { rows.push(sensitivityRow(t, snap, metric)); });
     });
     stages.push(function () {
       rows.sort(function (x, y) { return y.span - x.span; });
       CH.tornado($('torn'), width('torn'), rows, base, palette());
-      renderActions(rows, base);
+      renderActions(rows, base, metric);
       /* Published with the bars, not eleven stages later with the sweep. A
        * redraw in that gap — a theme toggle, the resize debounce, beforeprint —
        * read lastSens and repainted the tornado with the PREVIOUS estate's
        * numbers, over bars that had already been redrawn with these. `sweep`
        * stays null until its points exist, so the same redraw leaves the sweep
        * chart alone rather than drawing it from a half-filled array. */
-      lastSens = { base: base, rows: rows, sweep: null, sweepCur: base };
+      lastSens = { base: base, rows: rows, sweep: null };
     });
-    /* Three curves at six points each rather than one at eleven. Each dial is
-     * swept over its own travel with the other two held where the reader left
-     * them, so what the chart compares is three mechanisms against one estate.
-     * Six points is enough: every one of these curves is smooth and monotone,
-     * and the shape being compared is which of them is steepest. */
+    /* One curve per dial at six points each, rather than one curve at eleven.
+     * Each is swept over its own travel with the others held where the reader
+     * left them, so what the chart compares is four mechanisms against one
+     * estate. Six points is enough: every one of these curves is smooth and
+     * monotone, and the shape being compared is which of them is steepest. */
     CLOCKS.forEach(function (cl) {
       var pts = [];
       sweepSeries.push({ k: cl.k, l: cl.l, c: cl.c, cur: snap[cl.k] || 0, pts: pts });
       for (var a = 0; a <= 100; a += 20) {
         (function (v) {
-          stages.push(function () { pts.push([v, sim(over(cl.k, v, snap), N_SENS, SEED_SENS)[METRIC]]); });
+          stages.push(function () { pts.push([v, M.simulate(over(cl.k, v, snap), N_SENS, SEED_SENS, { surv: false, spread: 0 })[metric]]); });
         })(a);
       }
     });
@@ -820,7 +1055,7 @@
        * current value each curve passes through exactly that number. It was a
        * further simulation of a figure already in hand. */
       sweepSeries.forEach(function (s2) { s2.curY = base; });
-      lastSens = { base: base, rows: rows, sweep: sweepSeries, sweepCur: base };
+      lastSens = { base: base, rows: rows, sweep: sweepSeries };
       CH.sweep($('sweep'), width('sweep'), sweepSeries, palette());
     });
 
@@ -828,7 +1063,21 @@
     var step = function () {
       heavyTimer = null;
       if (gen !== heavyGen) return;
-      stages[i++]();
+      var stage = stages[i++];
+      /* A throw in any one stage used to abandon the whole pass, and the pass
+       * is where the tornado, the prioritised actions, the sweep and both
+       * credible bands come from — so a single bad stage left four charts
+       * showing the previous estate indefinitely, with nothing in the console
+       * naming which one failed. These stages are independent pieces of
+       * arithmetic over a snapshot that is already taken; losing one is not a
+       * reason to lose the ones behind it. */
+      try {
+        stage();
+      } catch (err) {
+        if (window.console && console.error) {
+          console.error('Exposure Race: settle stage ' + i + '/' + stages.length + ' failed', err);
+        }
+      }
       if (i < stages.length) heavyTimer = yieldTo(step);
     };
     heavyTimer = yieldTo(step);
@@ -874,19 +1123,28 @@
     });
   }
 
-  function renderActions(rows, base) {
-    var acts = $('acts');
-    var before = actPositions(acts);
-    var host = empty(acts);
-    /* rows arrive ranked by the full span of the sensitivity bar, but what is
-     * printed here is the one-sided reduction from moving the parameter the
-     * good way. Ranking by one number and printing another gave a list that
-     * read −8.1, −7.9, −4.7, −1.7, −6.0. */
-    var items = rows.filter(function (r) { return base - r.lo > 0.004 && ADVICE[r.k]; })
+  /* rows arrive ranked by the full span of the sensitivity bar, but what is
+   * reported is the one-sided reduction from moving the parameter the good
+   * way. Ranking by one number and printing another gave a list that read
+   * −8.1, −7.9, −4.7, −1.7, −6.0.
+   *
+   * Shared with the deck export rather than reimplemented there. The deck's
+   * recommendations slide is the page's list travelling without the page, so
+   * a second copy of this ranking is a second answer waiting to disagree with
+   * the first — and the reader would have no way to tell which was current. */
+  function rankActions(rows, base) {
+    return rows.filter(function (r) { return base - r.lo > SENS_FLOOR && ADVICE[r.k]; })
       .map(function (r) { var o = {}; Object.keys(r).forEach(function (k) { o[k] = r[k]; });
         o.gain = base - r.lo; return o; })
       .sort(function (x, y) { return y.gain - x.gain; })
       .slice(0, 5);
+  }
+
+  function renderActions(rows, base, metric) {
+    var acts = $('acts');
+    var before = actPositions(acts);
+    var host = empty(acts);
+    var items = rankActions(rows, base);
     if (!items.length) {
       var li0 = E('li');
       var t0 = E('div', 'a-t');
@@ -906,7 +1164,7 @@
       });
     }
     playActs(host, before);
-    $('acts-metric').textContent = METRIC === 'p'
+    $('acts-metric').textContent = metric === 'p'
       ? 'annual probability of compromise' : 'annual probability of an incident';
   }
 
@@ -969,7 +1227,12 @@
     if (id === 'routes') return 'first compromise of the year, by route';
     if (id === 'surv') return pctS(r.p) + ' chance of compromise within 12 months';
     if (id === 'torn') return 'ranked by effect on the ' + (METRIC === 'p' ? 'compromise' : 'incident') + ' rate';
-    if (id === 'sweep') return 'what happens if the exploit clock compresses further';
+    /* Four dials, not one. This read 'what happens if the exploit clock
+     * compresses further' — true of the chart before the AI slider was split,
+     * and afterwards a caption that named the flattest of the curves and
+     * silently attributed the rest to it. The exported PNG travels without
+     * the chapter around it, so its caption has to carry the comparison. */
+    if (id === 'sweep') return 'each scenario dial swept alone, against the same estate';
     if (id === 'severity') return 'CISA KEV against the scored CVE population';
     if (id === 'volume') return C.volume.curYearRunRate.year + ' run-rate against ' + C.volume.prevYear.year + ' actual';
     return '';
@@ -993,6 +1256,19 @@
     var render = function () { return CH.toPNG(svg, exportOpts(chartTitle(id), subtitleFor(id))); };
     var dl = document.querySelector('[data-dl="' + id + '"]');
     var cp = document.querySelector('[data-copy="' + id + '"]');
+    /* Ten pairs of buttons reading "Copy" and "PNG" say nothing about what they
+     * act on or what the difference is, and a screen reader meets them as ten
+     * identical names. The visible label stays short; the accessible name and
+     * the tooltip carry the chart and the verb. */
+    var what = chartTitle(id);
+    if (dl) {
+      dl.title = 'Download the ' + what.toLowerCase() + ' chart as a PNG file';
+      dl.setAttribute('aria-label', dl.title);
+    }
+    if (cp) {
+      cp.title = 'Copy the ' + what.toLowerCase() + ' chart to the clipboard as an image';
+      cp.setAttribute('aria-label', cp.title);
+    }
     if (dl) dl.addEventListener('click', function () {
       render().then(function (bl) { download(bl, 'exposure-race-' + id + '.png'); toast('PNG saved'); })
         .catch(function () { toast('Could not render PNG'); });
@@ -1006,6 +1282,195 @@
         download(bl, 'exposure-race-' + id + '.png');
         toast('Clipboard unavailable. PNG saved instead');
       }).catch(function () { toast('Could not render PNG'); });
+    });
+  }
+
+  /* ── deck export ───────────────────────────────────────────────────────── */
+  /* Two PDFs reporting the run currently on screen: what was configured, what
+   * came out, and what to do about it. js/deck.js owns the slides and the PDF;
+   * this owns the reading they report, so neither can quote a figure the other
+   * did not compute.
+   *
+   * The deck reports the reader's own estate rather than the page's general
+   * argument. That is a deliberate reversal: a deck of the fixed argument is
+   * something the page already is, and the thing a reader cannot otherwise
+   * take out of here is their own number with the working behind it. The
+   * scope limit travels on every slide that carries a figure — not as a
+   * disclaimer at the end, because that is the slide people delete. */
+
+  /* The tempo chapter's claim, computed rather than asserted: what 24/7
+   * detection buys against a reported-tempo adversary, and what the same
+   * investment buys against one at full tempo. Four runs at the sensitivity
+   * trial count on one seed, so the two margins are comparable to each other
+   * rather than each to its own noise. Only the detection pair and `tempo`
+   * move — everything else stays on the reader's estate, so the margin the
+   * slide reports is the one THEY would be buying. */
+  function socMargin() {
+    var at = function (tempo, posture) {
+      var o = copyOf(P);
+      o.tempo = tempo;
+      o.detect = posture.detect;
+      o.edrCoverage = posture.edrCoverage;
+      return sim(o, N_SENS, SEED_SENS).incident;
+    };
+    var none = M.DETECTION.none.p, managed = M.DETECTION.managed.p;
+    return { reported: at(0, none) - at(0, managed), full: at(100, none) - at(100, managed) };
+  }
+
+  /* The five shape controls, read back as the reader set them. These are the
+   * questions the page asked, so the deck reprints the questions and not just
+   * the resulting coefficients — a slide listing `edge 25%, detect 3` is a
+   * dump of the model's internals, where "Internet-facing product / EDR +
+   * tuned SIEM" is the estate the reader would recognise as theirs. */
+  var DECK_PARAMS = [
+    { k: 'exposed',     l: 'Exposed systems' },
+    { k: 'staff',       l: 'People with access' },
+    { k: 'stackVulns',  l: 'Criticals a year in your stack' },
+    { k: 'edge',        l: 'Edge appliance share', u: '%' },
+    { k: 'cadence',     l: 'Routine remediation cycle', u: ' days' },
+    { k: 'inventory',   l: 'Inventory coverage', u: '%' },
+    { k: 'detect',      l: 'Median time to detect', u: ' days' },
+    { k: 'edrCoverage', l: 'Endpoint telemetry coverage', u: '%' },
+    /* The identity half of the estate. A deck listing only the patch-side
+     * parameters would describe an estate the model is no longer simulating —
+     * five of its eight access classes are gated by these four. */
+    { k: 'mfa',         l: 'Authentication strength', u: '%' },
+    { k: 'awareness',   l: 'Filtering and user reporting', u: '%' },
+    { k: 'pam',         l: 'Privileged access management', u: '%' },
+    { k: 'configAssurance', l: 'Configuration assurance', u: '%' },
+  ];
+  function deckConfig() {
+    var det = DET || closestDetection();
+    var idn = IDN || closestIdentity(), ppl = PPL || closestPeople();
+    var rows = [
+      { l: 'What strangers can reach', v: M.EXPOSURE[EXP] ? M.EXPOSURE[EXP].l : '—' },
+      { l: 'Adversary attention', v: M.ATTENTION[ATTN] ? M.ATTENTION[ATTN].l : '—' },
+      { l: 'Remediation maturity', v: M.MATURITY[MAT] ? M.MATURITY[MAT].l : '—' },
+      { l: 'Detection posture', v: M.DETECTION[det] ? M.DETECTION[det].l : '—' },
+      { l: 'Authentication', v: M.IDENTITY[idn] ? M.IDENTITY[idn].l : '—' },
+      { l: 'People and process', v: M.PEOPLE[ppl] ? M.PEOPLE[ppl].l : '—' },
+    ];
+    if (ON.length) {
+      rows.splice(1, 0, { l: 'Also true of this estate',
+        v: ON.map(function (k) { return M.TRAITS[k] ? M.TRAITS[k].l : k; }).join(' · ') });
+    }
+    /* Named only when moved. A scenario dial at zero is the measured record,
+     * and listing three "as measured" rows on every deck would bury the one
+     * that was actually turned up. */
+    M.SCENARIO.forEach(function (k) {
+      if (P[k]) rows.push({ l: SCEN_LABEL[k] + ' (scenario)', v: '+' + P[k] + ' of 100', scenario: true });
+    });
+    return rows;
+  }
+  function deckParams() {
+    return DECK_PARAMS.map(function (d) {
+      return { l: d.l, v: M.fmtN(P[d.k]) + (d.u || '') };
+    });
+  }
+  var SCEN_LABEL = { ai: 'Exploit arrival speed', weap: 'Share of bugs weaponised',
+                     tempo: 'Post-exploitation tempo',
+                     discovery: 'Vulnerability discovery rate' };
+
+  /* The same list the page prints, from the same ranking, so the deck cannot
+   * recommend anything the panel above it does not. */
+  function deckActions() {
+    if (!lastSens || !lastSens.rows) return [];
+    return rankActions(lastSens.rows, lastSens.base).map(function (r) {
+      return { k: r.k, title: ADVICE[r.k][0], detail: ADVICE[r.k][1], gain: r.gain };
+    });
+  }
+
+  /* The funnel and the route split, as rows. Built here rather than in
+   * js/deck.js so the deck needs no handle on the model: it is handed the
+   * stages the page drew, already labelled, and cannot fall out of step with
+   * M.FUNNEL by carrying its own copy of the labels. */
+  /* fmtEvents, not M.fmtN: the latter formats SLIDER values, where everything
+   * under 1000 is already an integer, and it printed a funnel stage as
+   * 34.01538333333333. Funnel stages are simulation output and need the
+   * page's own rule — two decimals below ten, whole numbers above. */
+  function deckFunnel(r) {
+    if (!r || !r.fn) return [];
+    return M.FUNNEL.map(function (l, i) {
+      return { l: l, v: fmtEvents(r.fn[i]), strong: i === 0 || i === M.FUNNEL.length - 1 };
+    });
+  }
+  /* Read off the model rather than restated here. This was a literal three-name
+   * array against a route list the model owns, so every route added past the
+   * third rendered as "undefined" in the deck and on the narrow-viewport routes
+   * chart — the failure mode the FUNNEL and SCOPE lists were already derived to
+   * avoid. `ACCESS` is the one definition of both the order and the names. */
+  var ROUTE_LABEL = M.ROUTES.map(function (k) { return M.ACCESS[k].l; });
+  function deckRoutes(r) {
+    if (!r || !r.routes) return [];
+    return r.routes.map(function (share, i) {
+      return { l: ROUTE_LABEL[i], v: pctS(share) };
+    });
+  }
+
+  /* Charts are passed as the live nodes rather than as data: the deck clones
+   * whatever the page has actually drawn, so a chart cannot appear in a slide
+   * in a state the reader never saw. A chart that has not been drawn yet has
+   * no viewBox, and the deck drops it rather than framing an empty box. */
+  function deckContext() {
+    var charts = {};
+    ['race', 'funnel', 'routes', 'surv', 'torn', 'sweep', 'severity', 'volume']
+      .forEach(function (id) { var n = $(id); if (n) charts[id] = n; });
+    return {
+      pal: palette(), cal: C, run: lastRun, sens: lastSens, metric: METRIC,
+      estate: estateSummary(), config: deckConfig(), params: deckParams(),
+      actions: deckActions(), charts: charts, soc: socMargin(),
+      funnel: deckFunnel(lastRun), routeRows: deckRoutes(lastRun),
+      /* The trial and block counts the deck's method slides state. Passed
+       * rather than retyped there, for the reason in that file's header:
+       * nothing in the deck states a number of its own. */
+      trials: N_HEAVY, blocks: M.blocksFor(N_HEAVY),
+      /* Straight from the model's own scope declaration, so the caveat the
+       * deck carries on every slide is the same string the page shows and
+       * cannot be edited into something softer here. */
+      scope: M.SCOPE,
+      /* When the run was made, not when the corpus was cut — those are two
+       * different dates and a deck that shows only the second invites the
+       * reader to treat a six-month-old simulation as current. */
+      dateLabel: new Date().toLocaleDateString('en-GB',
+        { day: 'numeric', month: 'long', year: 'numeric' }),
+      /* The full URL, state and all. A colleague handed the deck can open the
+       * exact configuration it reports rather than an empty page they then
+       * have to reconstruct from the estate slide. */
+      url: location.href,
+    };
+  }
+
+  function wireDeck(id, kind, label, file) {
+    var btn = $(id);
+    if (!btn) return;
+    btn.addEventListener('click', function () {
+      if (btn.disabled) return;
+      if (!window.DECK) { toast('Deck export is unavailable'); return; }
+      var was = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = 'Building…';
+      /* Deferred so the disabled state and the label actually paint: the four
+       * sensitivity runs and the first slide's layout are synchronous and
+       * would otherwise block the paint they were meant to announce.
+       *
+       * A timer rather than requestAnimationFrame, for the reason schedule()
+       * gives above — rAF does not fire in a background tab or an embedded
+       * pane. There it is an optimisation with a backstop; here it would have
+       * been the only path to the work, so a reader who clicked and switched
+       * tabs came back to a button reading "Building…" and a deck that had
+       * never started. A timer is clamped in that state, never skipped. */
+      setTimeout(function () {
+        window.DECK.build(kind, deckContext()).then(function (out) {
+          download(out.blob, file);
+          toast(out.pages + '-slide ' + label + ' saved');
+        }, function (e) {
+          toast('Could not build the ' + label);
+          if (window.console) console.error(e);
+        }).then(function () {
+          btn.disabled = false;
+          btn.textContent = was;
+        });
+      });
     });
   }
 
@@ -1027,12 +1492,35 @@
       'CyberMon · ExploitDB + Metasploit + Nuclei against cvelistV5, CY' + C.armed.window);
     anchorRow(host, 'Criticals confirmed exploited in the wild', 'measured',
       crit.pExploited + '%', 'CyberMon · CISA KEV ' + C.snapshot.kev + ' against the scored population');
+    /* Both rows report the pooled settled anchor, because that is what the
+     * model is calibrated to. The most recent row is still worth showing — it
+     * is the newest evidence a reader has — so it goes underneath, marked
+     * provisional, instead of standing in for the anchor. */
+    var sw = C.pocTiming.settled;
     anchorRow(host, 'Days from publication to a public exploit (median)', 'measured',
-      C.pocTiming.latest.medianDays + ' d',
-      'CyberMon · ' + C.pocTiming.latest.year + ', 90-day horizon' +
-      (C.pocTiming.latest.provisional ? ', provisional, right-censored' : ''));
+      num(sw.medianDays, 1) + ' d',
+      'CyberMon · ' + sw.years[0] + '–' + sw.years[sw.years.length - 1] +
+      ' settled years pooled, n=' + thou(sw.n) + ', 90-day horizon');
     anchorRow(host, 'Exploits that appear before the patch does', 'measured',
-      C.pocTiming.latest.pctBefore + '%', 'CyberMon · ' + C.pocTiming.latest.year + ' arming series');
+      num(sw.pctBefore, 1) + '%', 'CyberMon · same pooled window');
+    anchorRow(host, 'Most recent year, still collecting exploits', 'measured',
+      C.pocTiming.latest.medianDays + ' d median · ' + C.pocTiming.latest.pctBefore + '% before',
+      'CyberMon · ' + C.pocTiming.latest.year + ', n=' +
+      C.pocTiming.series[C.pocTiming.series.length - 1].n +
+      (C.pocTiming.latest.provisional ? '. Provisional, right-censored, not used to calibrate' : ''));
+    /* The instrument's own coverage, stated beside what it measured. Every
+     * row above this one is read off a catalogue whose sample per year has
+     * fallen by roughly six sevenths since 2017 while CVE publication tripled,
+     * and a reader who takes "median under a day" away from this panel is
+     * entitled to know which population it is a median OF. This is the one
+     * caveat on the page that qualifies the argument rather than the estate. */
+    var trend = C.pocTiming.sampleTrend || [];
+    var tPeak = trend.reduce(function (a, b) { return b.n > a.n ? b : a; }, trend[0] || { n: 0, year: 0 });
+    var tLast = trend.filter(function (y) { return y.year <= 2024; }).pop() || tPeak;
+    anchorRow(host, 'Exploit-catalogue coverage, peak year against latest settled', 'measured',
+      thou(tPeak.n) + ' → ' + thou(tLast.n) + ' CVEs a year',
+      'CyberMon · ' + tPeak.year + ' vs ' + tLast.year +
+      '. The sample shrank as CVE volume grew, so the weaponised share above is a floor');
     anchorRow(host, 'Criticals published worldwide, ' + C.volume.curYearRunRate.year + ' run-rate', 'measured',
       thou(C.volume.curYearRunRate.critical),
       'CyberMon · cvelistV5, ' + num(C.yearElapsed * 100) + '% of the year elapsed');
@@ -1090,12 +1578,18 @@
     add(wrap, E('dt', null, label), E('dd', null, value));
     host.appendChild(wrap);
   }
+  /* Reports the anchor the MODEL runs on — the pooled settled years — not the
+   * newest row. This is the masthead: the three figures the whole argument
+   * rests on. Naming the 2026 row here while simulating the settled record put
+   * the page's loudest claim and its own simulation on two different clocks. */
   function renderClock() {
     var host = empty($('clock'));
+    var sw = C.pocTiming.settled;
     clockRow(host, 'Median days from publication to public exploit code, ' +
-      C.pocTiming.latest.year, C.pocTiming.latest.medianDays + ' d');
+      sw.years[0] + '–' + sw.years[sw.years.length - 1],
+      num(sw.medianDays, 1) + ' d');
     clockRow(host, 'Exploits that arrive before the patch does',
-      C.pocTiming.latest.pctBefore + '%');
+      num(sw.pctBefore, 1) + '%');
     clockRow(host, 'Criticals that ever get a public working exploit',
       C.armed.pPoCCritical + '%');
   }
@@ -1175,8 +1669,13 @@
     fromURL();
     buildControls(M.SPEC.def, $('cd'), $('cd-adv'));
     buildControls(M.SPEC.att, $('ca'), $('ca-adv'));
+    buildControls(M.SPEC.idn, $('ci'), $('ci-adv'));
 
     buildShapeUI();
+
+    document.querySelectorAll('[data-ctl]').forEach(function (b) {
+      b.addEventListener('click', function () { jumpToControl(b.dataset.ctl); });
+    });
     document.querySelectorAll('[data-metric]').forEach(function (btn) {
       btn.addEventListener('click', function () {
         METRIC = btn.dataset.metric;
@@ -1211,7 +1710,7 @@
        * sender was looking at, and the next selector click re-derived the
        * sliders from the rung the reader thought they had cleared. */
       EXP = M.DEFAULT_EXPOSURE; ATTN = M.DEFAULT_ATTENTION;
-      ON = []; MAT = 'typical'; DET = null;
+      ON = []; MAT = 'typical'; DET = null; IDN = null; PPL = null;
       P = M.defaults();
       syncAll();
       refreshSelectors();
@@ -1223,12 +1722,11 @@
     syncMetric();
 
     ['race', 'funnel', 'routes', 'surv', 'torn', 'sweep', 'severity', 'volume'].forEach(wireExport);
+    wireDeck('deck-carousel', 'carousel', 'carousel', 'exposure-race-carousel.pdf');
+    wireDeck('deck-internal', 'internal', 'briefing deck', 'exposure-race-briefing.pdf');
 
     document.querySelectorAll('[data-snapshot]').forEach(function (e) {
       e.textContent = C.generatedAt.slice(0, 10);
-    });
-    document.querySelectorAll('[data-curyear]').forEach(function (e) {
-      e.textContent = String(C.currentYear);
     });
     /* The coverage claim is stated in three places — beside the headline, on
      * the routes chart and in the footer — and is written in none of them.
@@ -1243,6 +1741,42 @@
     document.querySelectorAll('[data-scope-excluded]').forEach(function (e) {
       e.textContent = M.SCOPE.excludedShort.charAt(0).toLowerCase() +
         M.SCOPE.excludedShort.slice(1);
+    });
+    /* The simulated list and its count, written from the model for the same
+     * reason as everything else here: the page said "three routes" for as
+     * long as there were three, and kept saying it for exactly as long as it
+     * took somebody to notice there were now eight. */
+    var COUNT_WORD = ['no', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight',
+      'nine', 'ten'];
+    document.querySelectorAll('[data-scope-count]').forEach(function (e) {
+      var n = M.SCOPE.modelled.length;
+      var word = COUNT_WORD[n] || String(n);
+      e.textContent = word.charAt(0).toUpperCase() + word.slice(1);
+    });
+    document.querySelectorAll('[data-scope-modelled]').forEach(function (e) {
+      e.textContent = M.SCOPE.modelled.map(function (l) { return l.toLowerCase(); }).join('; ');
+    });
+    /* How many of those classes need a published vulnerability. Read off the
+     * ACCESS table rather than typed, so adding a ninth route cannot leave the
+     * headline note claiming a split that no longer holds. */
+    document.querySelectorAll('[data-scope-independence]').forEach(function (e) {
+      e.textContent = M.SCOPE.routeIndependenceNote;
+    });
+    document.querySelectorAll('[data-scope-vulncount]').forEach(function (e) {
+      var n = Object.keys(M.ACCESS).filter(function (k) { return M.ACCESS[k].vuln; }).length;
+      var word = COUNT_WORD[n] || String(n);
+      e.textContent = word.charAt(0).toUpperCase() + word.slice(1);
+    });
+    /* Trial and block counts for the method note, from the constants that set
+     * them. See MODEL.blocksFor. */
+    document.querySelectorAll('[data-n-heavy]').forEach(function (e) {
+      e.textContent = N_HEAVY.toLocaleString('en-GB');
+    });
+    document.querySelectorAll('[data-n-fast]').forEach(function (e) {
+      e.textContent = N_FAST.toLocaleString('en-GB');
+    });
+    document.querySelectorAll('[data-blocks]').forEach(function (e) {
+      e.textContent = String(M.blocksFor(N_HEAVY));
     });
 
     renderAnchors();

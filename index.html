@@ -67,13 +67,14 @@
       <p class="sub">A Monte Carlo model of exploit availability against remediation, resimulated
       on every change. The adversary timeline is <b>measured, not assumed</b>: days from CVE
       publication to public exploit code. That clock has sat at the floor since 2015.
-      <b>Three slower clocks have not.</b></p>
+      <b>Three other mechanisms have not.</b></p>
     </div>
 
     <!-- The thesis in three measured figures, read off the vendored snapshot at
          render time rather than typed into the prose, so they cannot go stale. -->
     <aside class="clock" aria-labelledby="clock-h">
-      <div class="clock-h" id="clock-h">The exploit clock <span class="tag m">measured</span></div>
+      <div class="clock-h" id="clock-h">The exploit clock <span class="tag m"
+      title="Measured: read directly from the vendored corpus and reproducible offline. See Model provenance.">measured</span></div>
       <dl id="clock"></dl>
     </aside>
   </div>
@@ -110,8 +111,15 @@
       <div class="v" id="s-i">…</div><div class="ci" id="s-i-ci"></div>
       <div class="band" id="s-i-band" aria-hidden="true"></div>
     </div>
+    <!-- "systems" was wrong on two of the three routes. Mass exploitation
+         compromises a COUNT of systems and is tallied as one; a targeted
+         campaign and a supply-chain hit are each tallied as one whatever they
+         reach, because the model does not simulate how far either spreads
+         inside an estate. At the top attention rung that made three quarters
+         of a figure labelled "systems" not a system count. The label now names
+         what is actually counted, and the caption names the mix. -->
     <div class="stat plain">
-      <span class="k">Expected systems compromised per year</span>
+      <span class="k">Expected compromise events per year</span>
       <div class="v" id="s-n">…</div><div class="ci" id="s-n-ci"></div>
     </div>
     <div class="stat plain">
@@ -125,77 +133,99 @@
        the number a reader takes away, which is not a caveat but a disclaimer.
        The share and the source are written by js/app.js out of M.SCOPE, so the
        claim cannot drift from the model that makes it. -->
-  <p class="scope-note" id="scope-note">
-    <b>Three routes are simulated:</b> opportunistic exploitation, targeted campaign and supply
-    chain. Not simulated: <span data-scope-excluded>phishing; credential abuse; insider
-    action</span>. Every figure above is therefore a <b>lower bound on intrusion</b> rather than a
-    picture of it. Vulnerability exploitation is the largest single initial-access category in the
-    <span data-scope-src>DBIR</span> series, at <span data-scope-share>31%</span> of breaches, and
-    still a minority of them.
+  <p class="scope-note">
+    <b><span data-scope-count>Eight</span> access classes are counted:</b>
+    <span data-scope-modelled>…</span>. <span data-scope-vulncount>Three</span> of them need a
+    published vulnerability. The rest do not, and no change window closes them. <b>Not counted:</b>
+    <span data-scope-excluded>…</span>. Vulnerability exploitation accounts for
+    <span data-scope-share>31%</span> of breaches in the <span data-scope-src>DBIR</span>: a
+    minority of routes, and not the largest. Every figure here is a lower bound.
   </p>
 
   <!-- ══════════════════ CONTROLS ══════════════════ -->
-  <!-- The rail is ranked by how often each part is needed, not by topic.
-       The threat card is used *while reading* — chapter 07 hands the reader the
-       compression slider by name — so it is pinned and stays on screen whatever
-       the rail is scrolled to. The estate configuration is set once, at the
-       start, and takes the bounded scroller beneath it. The contents list is
-       no longer here at all: it is front matter and now leads the document.
-       Before this the rail was a single 1,935-2,612px scroller inside an
-       ~868px sticky box: one slider of twelve was visible at rest, the
-       compression control sat 536px below the fold, and selecting traits
-       pushed it a further 677px away. See .rail in app.css. -->
+  <!-- The rail is ranked by how often each part is needed, not by topic. The
+       threat card is used *while reading* and comes first; the estate
+       configuration is set once, at the start, and follows. The contents list
+       is not here at all: it is front matter and leads the document.
+
+       One scroller. An earlier pass gave the threat card a scroller of its own
+       above the estate card in a second one, so that the compression slider
+       chapter 07 names could not be scrolled away. That cost two scrollbars in
+       a 322px column and left the estate card a 400px window onto 1,365px of
+       controls. The slider is reachable from the chapter directly now, by the
+       .ctl-link buttons in chapter 07, so the rail does not have to hold it in
+       place to keep the promise. See .rail in app.css. -->
   <div class="rail">
-    <div class="rail-fixed">
-      <div class="card att">
-        <h2 class="a">Threat environment</h2>
-        <p class="note">Parameters outside your control.</p>
-        <div class="seg">
-          <div class="seg-l">Adversary attention <span class="seg-hint">pick one</span></div>
-          <div class="presets quad" id="sel-attention"></div>
-          <p class="seg-d" id="desc-attention"></p>
-        </div>
-        <div id="ca"></div>
-        <details class="more"><summary>Additional threat parameters</summary><div id="ca-adv"></div></details>
+    <div class="card att">
+      <h2 class="a">Threat environment</h2>
+      <p class="note">Conditions you face rather than choices you make. All are editable here.</p>
+      <div class="seg">
+        <div class="seg-l">Adversary attention <span class="seg-hint">pick one</span></div>
+        <div class="presets quad" id="sel-attention"></div>
+        <p class="seg-d" id="desc-attention"></p>
       </div>
+      <div id="ca"></div>
+      <details class="more"><summary>Additional threat parameters</summary><div id="ca-adv"></div></details>
     </div>
 
-    <!-- Set once, so it is the half that scrolls. Its own growth — the trait
-         notes run to 683px with every attribute selected — now moves nothing
-         but itself. -->
-    <div class="rail-scroll">
-      <div class="card def">
-        <h2 class="d">Your environment</h2>
-        <p class="note">Place yourself on each axis, then adjust any parameter.</p>
+    <div class="card def">
+      <h2 class="d">Your environment</h2>
+      <p class="note">Place yourself on each axis, then adjust any parameter. Every figure
+      resimulates as you go.</p>
 
-        <div class="seg">
-          <div class="seg-l">Public exposure <span class="seg-hint">pick one</span></div>
-          <div class="presets ladder-5" id="sel-exposure"></div>
-          <p class="seg-d" id="desc-exposure"></p>
-        </div>
-        <div class="seg">
-          <div class="seg-l">Also true of us <span class="seg-hint">select any</span></div>
-          <div class="presets chips" id="sel-profile"></div>
-          <div class="trait-notes" id="trait-notes"></div>
-        </div>
-        <div class="seg">
-          <div class="seg-l">Operational maturity <span class="seg-hint">pick one</span></div>
-          <div class="presets ladder-4" id="sel-maturity"></div>
-          <p class="seg-d" id="desc-maturity"></p>
-        </div>
-        <div class="seg">
-          <div class="seg-l">Detection capability <span class="seg-hint">pick one</span></div>
-          <div class="presets ladder-5" id="sel-detection"></div>
-          <p class="seg-d" id="desc-detection"></p>
-        </div>
-        <!-- The composed result of all four controls above. It reported a total
-             before the reader had finished specifying it while it sat under the
-             chips; here it is the answer to the whole card. -->
-        <p class="seg-d estate" id="desc-profile"></p>
-
-        <div id="cd"></div>
-        <details class="more"><summary>Additional defender parameters</summary><div id="cd-adv"></div></details>
+      <div class="seg">
+        <div class="seg-l">Public exposure <span class="seg-hint">pick one</span></div>
+        <div class="presets ladder-5" id="sel-exposure"></div>
+        <p class="seg-d" id="desc-exposure"></p>
       </div>
+      <div class="seg">
+        <div class="seg-l">Also true of us <span class="seg-hint">select any</span></div>
+        <div class="presets chips" id="sel-profile"></div>
+        <div class="trait-notes" id="trait-notes"></div>
+      </div>
+      <div class="seg">
+        <div class="seg-l">Operational maturity <span class="seg-hint">pick one</span></div>
+        <div class="presets ladder-4" id="sel-maturity"></div>
+        <p class="seg-d" id="desc-maturity"></p>
+      </div>
+      <div class="seg">
+        <div class="seg-l">Detection capability <span class="seg-hint">pick one</span></div>
+        <div class="presets ladder-5" id="sel-detection"></div>
+        <p class="seg-d" id="desc-detection"></p>
+      </div>
+      <!-- The composed result of all four controls above. It reported a total
+           before the reader had finished specifying it while it sat under the
+           chips; here it is the answer to the whole card. -->
+      <div class="seg-l">Your estate as configured</div>
+      <p class="seg-d estate" id="desc-profile"></p>
+
+      <div id="cd"></div>
+      <details class="more"><summary>Additional defender parameters</summary><div id="cd-adv"></div></details>
+    </div>
+
+    <!-- A third card, not more sliders on the second. Everything above is the
+         race between a published vulnerability and your change window;
+         nothing here is. These gate the five access classes where no
+         vulnerability is involved at all, and the controls that move them
+         have no bearing on the patch clock. -->
+    <div class="card">
+      <h2 class="d">Identity and people</h2>
+      <p class="note">The routes that need no vulnerability. Four of the eight access classes
+      scale with how many people can authenticate, not with how many systems you run.</p>
+
+      <div class="seg">
+        <div class="seg-l">Authentication <span class="seg-hint">pick one</span></div>
+        <div class="presets ladder-4" id="sel-identity"></div>
+        <p class="seg-d" id="desc-identity"></p>
+      </div>
+      <div class="seg">
+        <div class="seg-l">People and process <span class="seg-hint">pick one</span></div>
+        <div class="presets ladder-3" id="sel-people"></div>
+        <p class="seg-d" id="desc-people"></p>
+      </div>
+
+      <div id="ci"></div>
+      <details class="more"><summary>Additional identity parameters</summary><div id="ci-adv"></div></details>
     </div>
   </div>
 
@@ -214,9 +244,9 @@
         <li><a href="#p-funnel">Attrition to compromise</a></li>
         <li><a href="#p-torn">Sensitivity analysis</a></li>
         <li><a href="#p-acts">Prioritised actions</a></li>
-        <li><a href="#p-routes">Access routes, and what is missing</a></li>
+        <li><a href="#p-routes">How the first compromise arrives</a></li>
         <li><a href="#p-surv">Time to first compromise</a></li>
-        <li><a href="#p-sweep">Three clocks an autonomous adversary could move</a></li>
+        <li><a href="#p-sweep">Four clocks an autonomous adversary could move</a></li>
         <li><a href="#p-severity">Why not severity</a></li>
         <li><a href="#p-volume">Severity-label inflation</a></li>
         <li><a href="#p-anchors">Model provenance</a></li>
@@ -246,6 +276,40 @@
       </div>
       <svg id="race" class="chart" height="396" role="img" aria-label="Exploit availability against remediation completion"></svg>
       <p class="lead foot" id="race-note"></p>
+
+      <!-- This figure carries two mirrored distributions, a second vertical
+           scale that only the cumulative curve reads against, and two large
+           percentages that measure different things. The legend names the four
+           marks but says nothing about how they compose, and every reading the
+           page depends on lives in that composition. Disclosed rather than set
+           inline so the argument still runs at pace for a reader who does not
+           need it, and so the lead above stays a lead. -->
+      <details class="more">
+        <summary>How to read this chart</summary>
+        <div>
+          <p class="lead">The horizontal axis is days from patch availability. Day 0 is the
+          vertical rule, and the shaded <b>pre-disclosure</b> band to its left is time when no fix
+          existed at all.</p>
+
+          <p class="lead">Two distributions mirror off the centre line. Above it,
+          <b>remediation complete</b> is when your remediation lands, day by day. Below it,
+          <b>exploit available</b> is when public exploit code appears, drawn twice: as a faint
+          daily density, and as the bold cumulative curve. The cumulative curve reads against its
+          own scale, which runs from 0% at the centre line down to 100% at the bottom.</p>
+
+          <p class="lead"><b>Unremediated exposure</b> is the hatched region. For each day it is
+          the part of that day’s remediation for which exploit code already existed, so it is the
+          share of the remediation curve that lost the race.</p>
+
+          <p class="lead">The two large figures answer different questions. The marker on the
+          cumulative curve at day 0 is the share of exploits that arrive <b>before the patch
+          does</b>. The badge is the share that arrive <b>before your remediation completes</b>,
+          which is always the later test of the two and therefore always the larger number. The
+          percentages at the edges are exploit or remediation mass falling outside the drawn
+          window, labelled there rather than folded into the end bins, which would invent a spike
+          that is not in the data.</p>
+        </div>
+      </details>
     </section>
 
     <!-- ── funnel ── -->
@@ -277,7 +341,11 @@
           others held constant. A <b>compromise</b> is an adversary establishing a foothold; it
           becomes an <b>incident</b> when detection and response fail to contain it before the
           adversary reaches its objective. The two respond to different parameters, and that
-          divergence is what should drive remediation priority.</p>
+          divergence is what should drive remediation priority. Read the ranking rather than the
+          ratio between bars: length depends on the range chosen for each parameter. Detection
+          sits flat against compromise <i>by construction</i>, being modelled only after a
+          foothold exists, so controls that block exploitation outright are outside the model
+          rather than measured at zero.</p>
         </div>
         <div class="tools">
           <div class="switch" role="group" aria-label="Metric">
@@ -288,7 +356,13 @@
           <button class="icon-btn" data-dl="torn" type="button">PNG</button>
         </div>
       </div>
-      <svg id="torn" class="chart" height="379" role="img" aria-label="Sensitivity of the outcome to each parameter"></svg>
+      <!-- 17 levers x 25px a row + 54px of gutter. The reservation is what the
+           page holds open before any script runs, so it has to match what
+           js/charts.js will draw: it said 379, which was thirteen levers, and
+           the four added since made the sensitivity chart shove a screen and a
+           half of document down by 100px the moment the settle pass landed.
+           tools/check-layout.js computes both and fails the build on a gap. -->
+      <svg id="torn" class="chart" height="679" role="img" aria-label="Sensitivity of the outcome to each parameter"></svg>
     </section>
 
     <section class="panel" id="p-acts">
@@ -309,20 +383,21 @@
         <div class="panel-head">
           <div class="ph-copy">
             <span class="ord">05</span>
-            <h3>Access routes, and what is missing</h3>
-            <p class="lead">Vector of the <em>first</em> compromise, counted once per simulated
-            year. The outlined bar beneath is a cited figure rather than a model output: the share
-            of real intrusions these three routes can speak to at all. Phishing and credential abuse
-            have no route here. The <em>campaign success without a vulnerability</em> parameter
-            carries both as one residual rate, ranked second of seventeen in the sensitivity
-            chart.</p>
+            <h3>How the first compromise arrives</h3>
+            <p class="lead">Class of the <em>first</em> compromise, counted once per simulated
+            year. Only opportunistic exploitation turns fully on your change window; a targeted
+            campaign turns partly on it, and the other six not at all. That is why the ranked
+            actions above are not simply <em>patch faster</em>. The coefficients behind the five
+            classes needing no vulnerability are judgement, so the stacked pair beneath shows the
+            one check available on them: this estate's mix against the population it is anchored
+            to.</p>
           </div>
           <div class="tools">
             <button class="icon-btn" data-copy="routes" type="button">Copy</button>
             <button class="icon-btn" data-dl="routes" type="button">PNG</button>
           </div>
         </div>
-        <svg id="routes" class="chart" height="258" role="img" aria-label="Access route of first compromise across the three modelled routes, against the share of real intrusions those routes cover"></svg>
+        <svg id="routes" class="chart" height="362" role="img" aria-label="Access class of first compromise across the eight simulated classes, with this estate's mix shown against the reported population it is anchored to"></svg>
       </section>
       <section class="panel" id="p-surv">
         <div class="panel-head">
@@ -345,28 +420,34 @@
       <div class="panel-head">
         <div class="ph-copy">
           <span class="ord">07</span>
-          <h3>Three clocks an autonomous adversary could move</h3>
+          <h3>Four clocks an autonomous adversary could move</h3>
           <p class="lead">BOD 26-04 names adversary use of AI as a reason the window between patch
-          release and exploitation may narrow. That is three separate claims carrying different
+          release and exploitation may narrow. That is four separate claims carrying different
           evidence and different consequences, so each takes its own dial on one axis.
-          <b>Arrival speed</b> is the one the phrase usually means, and the flattest curve here: the
+          <button type="button" class="ctl-link" data-ctl="ai">Arrival speed<span class="vh">, go to this dial in the console</span></button> is the one the phrase usually means, and the flattest curve here: the
           measured median has <b>not exceeded one day in any settled year since 2015</b>, and the
-          pre-disclosure share has fallen rather than risen. <b>Weaponised share</b> is worth
-          roughly three times as much, because breadth has room left where speed does not.
-          <b>Post-exploitation tempo</b> is flat on this metric, exactly flat, because speed from
-          foothold to objective cannot change whether you were breached, only whether anyone reached
-          it in time. Switch the readout to incidents and it lifts off the floor. Even there the
-          curve understates where it bites: against a 24/7 SOC, full tempo removes roughly
-          <b>three quarters</b> of the margin detection buys over having none, taking it from 9.3
-          points of incident rate to 2.2. A faster adversary does not beat detection on any single
-          intrusion; it devalues the investment. All three dials default to the measured record.</p>
+          pre-disclosure share has fallen rather than risen. <button type="button" class="ctl-link" data-ctl="weap">Weaponised share<span class="vh">, go to this dial in the console</span></button> is worth
+          several times as much, because breadth has room left where speed does not.
+          <button type="button" class="ctl-link" data-ctl="tempo">Post-exploitation tempo<span class="vh">, go to this dial in the console</span></button> is flat here <i>by construction</i>: speed from foothold
+          to objective cannot change whether you were breached, only whether anyone reached it in
+          time. Switch the readout to incidents and it lifts off the floor. Even there the curve
+          understates where it bites: against a 24/7 SOC, full tempo removes roughly
+          <b>three quarters</b> of the margin detection buys over having none. A faster adversary
+          does not beat detection on any single intrusion; it devalues the investment.</p>
+          <p class="lead">The steepest curve here is the last one, and it is not a clock at all.
+          <button type="button" class="ctl-link" data-ctl="discovery">Discovery rate<span class="vh">, go to this dial in the console</span></button> asks how many
+          vulnerabilities are found in software you already run: the size of the stream rather than
+          the speed of anything that happens to it. Machine-found bugs in real codebases are a
+          present-tense capability rather than a forecast, which makes this the least speculative
+          of the four and, on most estates, comfortably the largest. All four dials default to the
+          measured record.</p>
         </div>
         <div class="tools">
           <button class="icon-btn" data-copy="sweep" type="button">Copy</button>
           <button class="icon-btn" data-dl="sweep" type="button">PNG</button>
         </div>
       </div>
-      <svg id="sweep" class="chart" height="268" role="img" aria-label="Outcome against three scenario dials: exploit arrival speed, share of bugs weaponised, and post-exploitation tempo"></svg>
+      <svg id="sweep" class="chart" height="268" role="img" aria-label="Outcome against four scenario dials: exploit arrival speed, share of bugs weaponised, post-exploitation tempo, and vulnerability discovery rate"></svg>
     </section>
 
     <!-- ── evidence ── -->
@@ -445,16 +526,51 @@
       <div class="anchors" id="anchors"></div>
     </section>
 
+    <!-- ── export ── -->
+    <section class="panel part" id="p-export">
+      <div class="panel-head">
+        <div class="ph-copy">
+          <span class="ord">11</span>
+          <h3>Take this run with you</h3>
+          <p class="lead">Both report <em>your</em> estate rather than this page's argument: what
+          you configured, the resulting probability with its credible band, the funnel and route
+          split behind it, what moves the number most, and the prioritised actions with the
+          reduction each buys here. The last slide carries the configured link, so a colleague
+          opens this exact run rather than rebuilding it. Every slide repeats the scope limit in
+          its footer: this is a lower bound, never a risk assessment for a named organisation.</p>
+        </div>
+      </div>
+      <div class="exports">
+        <div class="export">
+          <div class="seg-l">LinkedIn carousel</div>
+          <p>Portrait slides at 1080 &times; 1350, written to a carousel's copy budget. Upload it
+          as a document post and each page becomes a swipeable slide.</p>
+          <button id="deck-carousel" class="icon-btn" type="button">Build carousel PDF</button>
+        </div>
+        <div class="export">
+          <div class="seg-l">Briefing deck</div>
+          <p>16:9 at projection size, and three slides longer: the parameters your five answers
+          compose to, the rest of the readout, and the method. Text is selectable, so a figure can
+          be quoted without being retyped.</p>
+          <button id="deck-internal" class="icon-btn" type="button">Build briefing PDF</button>
+        </div>
+        <p class="export-note">Built in the browser from the run currently on screen. Nothing is
+        uploaded. The charts are the ones drawn above, so scroll through the page first if you want
+        every chart in the deck.</p>
+      </div>
+    </section>
+
     <footer>
       <div class="fnote">
         <div class="seg-l">Method</div>
-        <p>60,000 simulated years across 150 blocks per parameter change, with a
-        4,000-year pass while a control is moving. The adversary timeline is
-        sampled from the measured distribution of days between CVE publication and public exploit
-        code. The remediation timeline is derived from triage delay, out-of-band capability and
-        routine cadence. Compromise is modelled as a correlated campaign arrival rather than as
-        independent per-system trials, since independent draws saturate at 100% and misstate the
-        result.</p>
+        <p><span data-n-heavy>60,000</span> simulated years across
+        <span data-blocks>650</span> coefficient blocks per parameter change, dropping to
+        <span data-n-fast>4,000</span> years while a control is being dragged. The adversary
+        timeline is sampled from the measured distribution of days between CVE publication and
+        public exploit code. The remediation timeline is derived from triage delay, out-of-band
+        capability and routine cadence. Compromise is modelled as a correlated campaign arrival
+        rather than as independent per-system trials, which would saturate near 100% and overstate
+        the result.</p>
       </div>
       <div class="fnote">
         <div class="seg-l">Provenance</div>
@@ -466,18 +582,16 @@
       </div>
       <div class="fnote">
         <div class="seg-l">Scope</div>
-        <p>Three access routes are simulated: opportunistic exploitation, targeted
-        campaign and supply chain. Not simulated: <span data-scope-excluded>phishing; credential
-        abuse; insider action</span>. Every probability here is therefore a lower bound on intrusion
-        risk rather than a complete picture of it, which is why the coverage statement sits beside
-        the headline and on the routes chart rather than only here. The <span data-curyear>2026</span>
-        DBIR attributes <span data-scope-share>31%</span> of breaches to vulnerability exploitation,
-        the largest single initial-access category and still a minority of the total. The one place
-        the absent routes appear at all is <em>campaign success without a vulnerability</em>, a
-        residual rate rather than a simulation of them; the sensitivity chart ranks it first of
-        seventeen on the compromise metric, which is the honest way to report a proxy that
-        load-bearing. Run-rate figures
-        are linear extrapolation from a partial year.</p>
+        <p>The classes counted and excluded are listed beside the headline figure. Credential
+        abuse has led the <span data-scope-src>DBIR</span> initial-access ranking throughout the
+        series, ahead of vulnerability exploitation. A model built on the patch clock alone
+        therefore misses the larger half of the routes, which is why the classes needing no
+        vulnerability are simulated here rather than left as a residual rate.</p>
+        <p>Every coefficient behind those classes is judgement rather than measurement: no public
+        corpus answers them the way the CVE corpus answers the exploit clock. What is checkable is
+        the <em>mix</em>, which at the baseline estate is anchored to the reported initial-access
+        distribution, and a test fails if it drifts. <span data-scope-independence>…</span> Run-rate
+        figures are linear extrapolation from a partial year.</p>
       </div>
       <div class="fnote">
         <div class="seg-l">Sources for the reported tier</div>
@@ -500,6 +614,7 @@
 <script src="js/calibration.js"></script>
 <script src="js/model.js"></script>
 <script src="js/charts.js"></script>
+<script src="js/deck.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>

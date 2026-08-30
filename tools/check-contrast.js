@@ -43,7 +43,19 @@ function block(re, label) {
   const m = CSS.match(re);
   if (!m) throw new Error('could not find the ' + label + ' token block in css/app.css');
   const out = {};
-  for (const d of m[1].matchAll(/--([\w-]+):\s*(#[0-9a-fA-F]{3,8})/g)) out[d[1]] = d[2].toLowerCase();
+  /* Six digits exactly. lum() reads the channels with substr(i, 2), so a
+   * three-digit shorthand or an eight-digit value with alpha would be parsed
+   * into nonsense and reported as a contrast failure — a true verdict reached
+   * by a false route, and a diagnostic that sends the reader to the wrong
+   * place. The palette is all six-digit today; this makes that a rule the gate
+   * states rather than a coincidence it depends on. */
+  for (const d of m[1].matchAll(/--([\w-]+):\s*(#[0-9a-fA-F]+)/g)) {
+    if (!/^#[0-9a-fA-F]{6}$/.test(d[2])) {
+      throw new Error('--' + d[1] + ' is ' + d[2] + ' in the ' + label + ' block. This gate ' +
+        'computes luminance from six hex digits; write it in full.');
+    }
+    out[d[1]] = d[2].toLowerCase();
+  }
   return out;
 }
 
@@ -87,6 +99,40 @@ for (const k of prefKeys) {
       'so it resolves to an empty string in light and paints nothing.');
   }
 }
+
+/* The check above catches a token defined in a dark block and missing from
+ * light. It cannot catch one missing from BOTH — and that is the same failure
+ * with the same consequence: palette() hands the empty string to an SVG
+ * `fill`, the mark paints nothing, and the page reads as merely sparse rather
+ * than as broken. The comment at the top of this file claims all thirteen
+ * tokens are protected; until now, twelve of the thirteen were protected only
+ * against being moved, not against being deleted.
+ *
+ * The required set is therefore read out of palette() itself rather than
+ * restated here, because a list transcribed into this file is a list that
+ * drifts from the one it is meant to mirror. A token added to palette() and
+ * forgotten in the stylesheet now fails the build. */
+const APP = fs.readFileSync(path.join(__dirname, '..', 'js', 'app.js'), 'utf8');
+const paletteFn = APP.match(/function palette\s*\(\)\s*\{([\s\S]*?)\n  \}/);
+if (!paletteFn) {
+  fails.push('could not find palette() in js/app.js, so this gate cannot verify the token set');
+} else {
+  const needed = [...paletteFn[1].matchAll(/get\('([\w-]+)'\)/g)].map((m) => m[1]);
+  /* A regex that silently stops matching would turn this gate into a no-op
+   * that still prints OK, which is the failure mode it was written to end. */
+  if (needed.length < 8) {
+    fails.push('palette() in js/app.js parsed to only ' + needed.length +
+      ' tokens — the extractor in this gate has stopped matching it');
+  }
+  for (const k of needed) {
+    if (!(k in light)) {
+      fails.push('--' + k + ' is read by palette() in js/app.js but is not defined on :root in ' +
+        'css/app.css. It resolves to the empty string and paints nothing.');
+    }
+  }
+  console.log('palette() reads ' + needed.length + ' tokens, all defined on :root.\n');
+}
+
 
 /* ── contrast ──────────────────────────────────────────────────────────── */
 for (const [themeName, tokens] of [['light', light], ['dark', Object.assign({}, light, darkAttr)]]) {

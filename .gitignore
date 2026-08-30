@@ -12,3 +12,9 @@ bod2604ig.html
 Thumbs.db
 .DS_Store
 desktop.ini
+
+# Design-canvas working files. Artboards and their assembled preview, kept on
+# disk while iterating on the layout; the decisions that survived are recorded
+# in DESIGN.md instead. The assembled preview alone is 2.5MB, and this repo is
+# published via Pages, so it is neither committed nor served.
+design-proposals/

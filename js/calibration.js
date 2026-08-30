@@ -275,7 +275,72 @@
       "pctWithinWeek": 80.1,
       "pctBefore": 41.8
     },
+    "settled": {
+      "years": [
+        2020,
+        2021,
+        2022,
+        2023,
+        2024
+      ],
+      "n": 1298,
+      "medianDays": 0.636,
+      "pctWithinWeek": 72.878,
+      "pctBefore": 36.468,
+      "note": "n-weighted over the settled years listed. Shares pool exactly; the median is a weighted mean of per-year medians, which is an approximation forced by the published summaries — every year in the window reports 0 or 1 day."
+    },
     "caveat": "Recent years are right-censored: PoCs are still arriving for them. Provisional years understate speed and understate the pre-publication share.",
+    "coverageCaveat": "The dated sample fell from over a thousand CVEs a year to the low hundreds while CVE publication tripled. Exploit code moved off the public catalogues rather than becoming rarer, so the weaponised share is a floor, and the near-zero median describes the fast tail this instrument can still see.",
+    "sampleTrend": [
+      {
+        "year": 2015,
+        "n": 542
+      },
+      {
+        "year": 2016,
+        "n": 397
+      },
+      {
+        "year": 2017,
+        "n": 1019
+      },
+      {
+        "year": 2018,
+        "n": 925
+      },
+      {
+        "year": 2019,
+        "n": 584
+      },
+      {
+        "year": 2020,
+        "n": 354
+      },
+      {
+        "year": 2021,
+        "n": 267
+      },
+      {
+        "year": 2022,
+        "n": 205
+      },
+      {
+        "year": 2023,
+        "n": 326
+      },
+      {
+        "year": 2024,
+        "n": 146
+      },
+      {
+        "year": 2025,
+        "n": 220
+      },
+      {
+        "year": 2026,
+        "n": 94
+      }
+    ],
     "src": "https://devko.github.io/CyberMon/exploits.html"
   },
   "kevLatency": {

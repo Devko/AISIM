@@ -235,6 +235,11 @@
     frame(svg, w, h);
     var L = narrow ? 8 : 300, R = w - 58, T = 10;
     var max = Math.max.apply(null, r.fn.concat([1e-3]));
+    /* The outcome row is emphasised against the stages above it. It was written
+     * as `i === 5`, which is the same row only for as long as the funnel has
+     * exactly six stages — a literal that would emphasise the wrong row, or no
+     * row, the moment MODEL.FUNNEL gained or lost one. */
+    var last = labels.length - 1;
 
     r.fn.forEach(function (v, i) {
       var y = T + i * rh + (narrow ? 16 : 0);
@@ -242,11 +247,11 @@
       var col = i === 0 ? pal.dim : i < 2 ? pal.def : i < 4 ? pal.warn : pal.bad;
       var barY = narrow ? y + 2 : y;
 
-      if (narrow) txt(svg, L, y - 4, labels[i], { c: i === 5 ? pal.txt : pal.mut, fs: 11.5 });
-      else txt(svg, L - 12, y + 15, labels[i], { a: 'end', c: i === 5 ? pal.txt : pal.mut, fs: 11.5 });
+      if (narrow) txt(svg, L, y - 4, labels[i], { c: i === last ? pal.txt : pal.mut, fs: 11.5 });
+      else txt(svg, L - 12, y + 15, labels[i], { a: 'end', c: i === last ? pal.txt : pal.mut, fs: 11.5 });
 
       svg.appendChild(el('rect', { 'class': 'ch-track', x: L, y: barY, width: Math.max(0, R - L), height: 19, rx: 3, fill: pal.sunk }));
-      svg.appendChild(el('rect', { 'class': 'ch-bar', style: '--i:' + i, x: L, y: barY, width: bw, height: 19, rx: 3, fill: col, 'fill-opacity': i === 5 ? 1 : 0.8 }));
+      svg.appendChild(el('rect', { 'class': 'ch-bar', style: '--i:' + i, x: L, y: barY, width: bw, height: 19, rx: 3, fill: col, 'fill-opacity': i === last ? 1 : 0.8 }));
       txt(svg, Math.min(R + 6, L + bw + 7), barY + 14, v < 1 ? v.toFixed(2) : v.toFixed(1), { c: col, fs: 12, w: 600, mono: true });
 
       if (i) {
@@ -282,52 +287,80 @@
    * the two blocks are drawn in different registers — filled bars against a
    * dashed outline — so no reader can mistake the reference for the output.
    * ═══════════════════════════════════════════════════════════════════════ */
-  function routes(svg, w, r, pal, scope) {
-    /* SVG text does not wrap, so the full labels run off the drawing below
-     * roughly 430px. The short forms say the same thing in the space there
-     * actually is. */
+  /* Eight access classes, not three. Labels and colours are taken from the
+   * caller rather than written here: this chart used to carry its own copy of
+   * the route names, which is a second definition of the model's own list and
+   * exactly the drift the funnel labels were centralised to avoid.
+   *
+   * The bar-per-row layout survived the change from three rows to eight, but
+   * the row height did not: at 56px the chart was 470px tall before the
+   * external-reference block, which pushed that block off every reserved
+   * height in the markup. Rows are compact and the type is unchanged. */
+  function routes(svg, w, r, pal, scope, classes) {
     var narrow = w < 400;
-    var names = narrow ? [
-      'Opportunistic exploitation',
-      'Targeted campaign',
-      'Supply chain',
-    ] : [
-      'Opportunistic: mass exploitation in the exposure window',
-      'Targeted campaign against the exposed estate',
-      'Supply chain: remediation cadence does not apply',
-    ];
-    var cols = [pal.att, pal.warn, pal.zero];
-    var rh = 56, top = names.length * rh + 6;
+    var list = classes || [];
+    var cols = [pal.att, pal.warn, pal.zero, pal.bad, pal.def, pal.mut, pal.txt, pal.dim];
+    var rh = narrow ? 40 : 34, top = list.length * rh + 6;
     var h = top + 84;
     frame(svg, w, h);
     var L = 2, R = w - 4;
-    r.routes.forEach(function (v, i) {
-      var y = 20 + i * rh;
-      txt(svg, L, y - 7, names[i], { c: pal.txt, fs: 11.5 });
-      svg.appendChild(el('rect', { 'class': 'ch-track', x: L, y: y, width: R - L, height: 12, rx: 3, fill: pal.sunk }));
-      svg.appendChild(el('rect', { 'class': 'ch-bar', style: '--i:' + i, x: L, y: y, width: Math.max(0, (R - L) * v), height: 12, rx: 3, fill: cols[i] }));
-      txt(svg, L, y + 30, pctS(v), { c: cols[i], fs: 14, w: 700, mono: true });
+
+    /* Widest share decides the label column, so the percentages line up in a
+     * column of their own rather than sitting inside bars of varying length
+     * where the short ones would have nowhere to put them. */
+    var valW = 46;
+    list.forEach(function (c, i) {
+      var v = r.routes[i] || 0;
+      var y = 8 + i * rh;
+      var barY = y + (narrow ? 17 : 4);
+      var barR = R - valW;
+      txt(svg, L, y + (narrow ? 10 : 11), narrow ? c.short : c.label,
+        { c: pal.txt, fs: 11.5 });
+      svg.appendChild(el('rect', {
+        'class': 'ch-track', x: narrow ? L : L + 168, y: barY,
+        width: Math.max(4, barR - (narrow ? L : L + 168)), height: 10, rx: 3, fill: pal.sunk,
+      }));
+      svg.appendChild(el('rect', {
+        'class': 'ch-bar', style: '--i:' + i, x: narrow ? L : L + 168, y: barY,
+        width: Math.max(0, (barR - (narrow ? L : L + 168)) * v), height: 10, rx: 3,
+        fill: cols[i % cols.length],
+      }));
+      txt(svg, R, barY + 9, pctS(v), { a: 'end', c: cols[i % cols.length], fs: 12, w: 700, mono: true });
     });
 
-    /* ── the picture those three sit inside ───────────────────────────────── */
-    if (!scope) return svg;
-    var share = scope.vulnShareOfBreaches;
+    /* ── the picture those classes sit inside ─────────────────────────────
+     *
+     * This block used to draw the model's coverage as a minority slice of all
+     * intrusion, with the majority dashed out as "not modelled". That was the
+     * honest picture when three vulnerability routes were all there was. It is
+     * no longer: the classes above cover the initial-access population the
+     * cited source describes, so what this now shows is how the model's own
+     * mix compares with that reported distribution — the anchor, drawn, rather
+     * than a gap. */
+    if (!scope || !scope.accessMix) return svg;
     var sy = top + 26;
     svg.appendChild(el('line', { x1: L, y1: top + 2, x2: R, y2: top + 2, stroke: pal.rule2 }));
-    txt(svg, L, top + 20, 'Against all intrusion, by external reference', { c: pal.mut, fs: 10.5 });
+    txt(svg, L, top + 20, 'This estate against the reported population', { c: pal.mut, fs: 10.5 });
 
-    var cut = L + (R - L) * share;
-    svg.appendChild(el('rect', { x: L, y: sy, width: cut - L, height: 12, rx: 3, fill: pal.att, 'fill-opacity': 0.55 }));
-    /* Dashed outline, not a fill: this half is the part the model cannot speak
-     * to, and it must not look like a measured quantity. */
-    svg.appendChild(el('rect', {
-      x: cut, y: sy, width: R - cut, height: 12, rx: 3,
-      fill: pal.sunk, stroke: pal.dim, 'stroke-dasharray': '3 3',
-    }));
-    txt(svg, L, sy + 28, pctS(share) + ' vulnerability exploitation', { c: pal.att, fs: 11, w: 600 });
-    txt(svg, R, sy + 28, narrow ? 'the rest: not modelled'
-      : 'phishing, credential abuse, insider: not modelled', { a: 'end', c: pal.dim, fs: 11 });
-    txt(svg, L, sy + 45, 'Reported share, ' + scope.src + '. Not an output of this model.',
+    /* One stacked bar for the model, one for the target, so a reader can see
+     * at a glance where their estate departs from the population — which is
+     * the instrument working, not an error. */
+    var stack = function (y, shares, op) {
+      var x = L;
+      shares.forEach(function (v, i) {
+        var wdt = (R - L) * v;
+        svg.appendChild(el('rect', {
+          x: x, y: y, width: Math.max(0, wdt), height: 10, rx: 2,
+          fill: cols[i % cols.length], 'fill-opacity': op,
+        }));
+        x += wdt;
+      });
+    };
+    stack(sy, r.routes, 0.92);
+    stack(sy + 15, list.map(function (c) { return scope.accessMix.target[c.key] || 0; }), 0.4);
+    txt(svg, L, sy + 40, 'Top: this estate. Below: ' + scope.accessMix.src.split(',')[0] + '.',
+      { c: pal.dim, fs: 10 });
+    txt(svg, L, sy + 54, 'A configured estate should depart from the population; that is what the controls do.',
       { c: pal.dim, fs: 10 });
     return svg;
   }
@@ -336,6 +369,12 @@
     var h = 236;
     frame(svg, w, h);
     var L = 40, R = w - 10, T = 12, B = h - 34;
+    /* The horizon is read off the series rather than written as 365 in six
+     * places. MODEL.H is the one definition of it, and a chart that restates a
+     * constant it does not own will eventually plot a 365-day axis under a
+     * series of some other length — silently, since every one of those six
+     * literals is individually plausible. */
+    var H = r.surv.length - 1;
     for (var i = 0; i <= 4; i++) {
       var y = T + (B - T) * i / 4;
       svg.appendChild(el('line', { x1: L, y1: y, x2: R, y2: y, stroke: pal.rule }));
@@ -343,22 +382,22 @@
     }
     /* The last tick sits exactly on the right edge, so it is anchored to it:
      * centred, half the label hangs outside the drawing and is cut off. */
-    [0, 90, 180, 270, 365].forEach(function (d) {
-      txt(svg, L + (R - L) * d / 365, B + 17, d ? d + 'd' : 'day 0',
-        { a: d === 365 ? 'end' : 'middle', c: pal.mut, fs: 10 });
+    [0, 90, 180, 270, H].forEach(function (d) {
+      txt(svg, L + (R - L) * d / H, B + 17, d ? d + 'd' : 'day 0',
+        { a: d === H ? 'end' : 'middle', c: pal.mut, fs: 10 });
     });
-    var pts = r.surv.map(function (v, i) { return [L + (R - L) * i / 365, T + (B - T) * (1 - v)]; });
+    var pts = r.surv.map(function (v, i) { return [L + (R - L) * i / H, T + (B - T) * (1 - v)]; });
     svg.appendChild(el('path', { 'class': 'ch-area', d: path(pts) + ' L ' + R + ' ' + B + ' L ' + L + ' ' + B + ' Z', fill: pal.def, 'fill-opacity': 0.10 }));
     svg.appendChild(el('path', { 'class': 'ch-line', d: path(pts), fill: 'none', stroke: pal.def, 'stroke-width': 2.2 }));
 
     var half = -1;
-    for (var k = 0; k <= 365; k++) if (r.surv[k] <= 0.5) { half = k; break; }
+    for (var k = 0; k <= H; k++) if (r.surv[k] <= 0.5) { half = k; break; }
     if (half > 0) {
-      var x = L + (R - L) * half / 365;
+      var x = L + (R - L) * half / H;
       svg.appendChild(el('line', { x1: x, y1: T, x2: x, y2: B, stroke: pal.bad, 'stroke-dasharray': '3 3' }));
       txt(svg, x + 5, T + 11, 'day ' + half, { c: pal.bad, fs: 10.5, mono: true });
     }
-    txt(svg, R, T + 11, pctS(r.surv[365]) + ' of years clean', { a: 'end', c: pal.mut, fs: 10.5 });
+    txt(svg, R, T + 11, pctS(r.surv[H]) + ' of years clean', { a: 'end', c: pal.mut, fs: 10.5 });
     return svg;
   }
 
@@ -375,7 +414,13 @@
      * drawn at true width there is nothing to hide a label in. */
     var h = rows.length * rh + 54;
     frame(svg, w, h);
-    var labelW = narrow ? 0 : Math.min(190, w * 0.36);
+    /* The gutter is sized for the longest parameter name, not for the average
+     * one: right-anchored labels that outgrow it run off the left edge of the
+     * SVG rather than wrapping or clipping, and the overflow is invisible in
+     * the DOM. 220 clears the longest name in the sensitivity list at every
+     * width above the narrow breakpoint, where labels move above the bar and
+     * the gutter stops applying. */
+    var labelW = narrow ? 0 : Math.min(220, w * 0.40);
     var valW = 52;
     var CX = narrow ? (w - valW) / 2 : labelW + (w - labelW - valW) / 2;
     var half = narrow ? (w - valW) / 2 - 6 : (w - labelW - valW) / 2 - 8;
@@ -485,8 +530,9 @@
         fill: 'none', stroke: col(s2), 'stroke-width': 2.2,
         'stroke-linecap': 'round', 'stroke-linejoin': 'round',
       }));
-      /* Where this dial actually sits. Three dials at zero stack one marker on
-       * top of another at the origin, which reads correctly as "you are here". */
+      /* Where this dial actually sits. Every dial at zero stacks the markers on
+       * top of one another at the origin, which reads correctly as "you are
+       * here" rather than as a rendering fault. */
       var c = XY([s2.cur, s2.curY]);
       svg.appendChild(el('circle', { 'class': 'ch-mark', cx: c[0], cy: c[1], r: 4, fill: col(s2) }));
     });
@@ -690,9 +736,16 @@
     });
   }
 
+  /* Eight chart renderers, the PNG exporter, and the one formatter js/app.js
+   * shares with them. `el` and `clear` used to be on this list too: they are
+   * the internal SVG-node and container helpers, exported at some point for a
+   * caller that never arrived. Nothing outside this file has ever referenced
+   * either, and an exported helper is a shape somebody else can come to depend
+   * on — which is exactly what makes these two harder to change than they
+   * should be for what they are. */
   return {
     race: race, funnel: funnel, routes: routes, survival: survival,
     tornado: tornado, sweep: sweep, severity: severity, volume: volume,
-    toPNG: toPNG, el: el, clear: clear, fmtDays: fmtDays,
+    toPNG: toPNG, fmtDays: fmtDays,
   };
 });

@@ -36,9 +36,10 @@ and who can act on that.
 
 The reframe is deliberately not a de-escalation. "The clock did not move" is a
 true finding that a reader can mistake for "nothing changed", and the page must
-not leave them there. Three dials replace the single AI slider so the comparison
-is visible rather than asserted, and the weakest of the three is the one the
-word usually means. The urgency the page carries is earned by its own charts —
+not leave them there. Four dials replace the single AI slider so the comparison
+is visible rather than asserted: the weakest of them is the one the word usually
+means, and the strongest is vulnerability discovery rate, which the page had no
+way to express at all until a verification pass found it missing. The urgency the page carries is earned by its own charts —
 post-exploitation tempo erasing three quarters of what a 24/7 SOC buys — never
 by adopting the register of the reports it exists to check.
 
@@ -97,23 +98,30 @@ so a reader can hand a colleague the exact configuration they were looking at.
   dependency, no build step required to view. Deployed on GitHub Pages with
   `.nojekyll`.
 - `js/model.js` is MIT and runs headless under Node as well as in the browser.
-- Five CI gates, all blocking: every script must parse; the model test suite;
-  the palette must still clear the contrast floor `DESIGN.md` states;
-  `js/calibration.js` must be reproducible from the vendored snapshot;
-  `dist/exposure-race.html` must be current. The parse gate exists because
-  `js/app.js` and `js/charts.js` are browser-only and no test requires them, so
-  a syntax error in either used to pass every other gate and ship. Drift in any of these means the page is quoting numbers no longer in
-  the corpus, or asserting an accessibility floor it no longer meets, and fails
-  the build.
+- Seven CI gates, all blocking: every script must parse; the model test suite;
+  the palette must still clear the contrast floor `DESIGN.md` states; every
+  chart must render headlessly at both widths, against the heights
+  `index.html` reserves for it; every figure the exported decks print must
+  still move when the corpus moves, and the PDF they write must have a valid
+  xref; `js/calibration.js` must be reproducible from the vendored snapshot;
+  `dist/exposure-race.html` must be current. The three browser-only files are
+  the reason for the first, fourth and fifth: `js/app.js`, `js/charts.js` and
+  `js/deck.js` need a DOM, so no test requires them, and a syntax error in any
+  of them used to pass every other gate and ship. Drift in any of these means
+  the page is quoting numbers no longer in the corpus, drawing a chart into a
+  box the wrong size, or asserting an accessibility floor it no longer meets,
+  and fails the build.
 - 60,000 interactive trials across 150 blocks. The point estimate settles long
   before that; the credible interval does not, and block count is what makes the
   reported width stable across seeds and trial counts.
 - Every number is tagged by epistemic status — `measured`, `reported`, or
   `assumed`. This is a product commitment, not a presentation device.
-- The five shape controls — exposure, attributes, attention, maturity and
-  detection — are explicitly editorial judgement, not measurement. They compose
-  by summing excess over 1, so stacking is order-independent with diminishing
-  returns, and every slider stays editable.
+- The seven shape controls — exposure, attributes, attention, maturity,
+  detection, authentication and people — are explicitly editorial judgement,
+  not measurement. They compose by summing excess over 1, so stacking is
+  order-independent with diminishing returns, and every slider stays editable.
+  The last two are assignments rather than multipliers, like detection, because
+  the reader picked a posture and the posture states its own coefficients.
 - **Each shape control answers exactly one question**, and that is what decides
   where a new one belongs. Exposure is a single-select ladder because it is one
   axis: its rungs are alternatives, not attributes, so contradictory estates
@@ -121,14 +129,57 @@ so a reader can hand a colleague the exact configuration they were looking at.
   threat card because adversary interest is not something the reader controls.
   A control that only ever raises the number is a ratchet, not an instrument —
   both ladders reach below the baseline as well as above it.
-- **Scope is stated where the number is, not in the footer.** Three access
-  routes are simulated: opportunistic exploitation, targeted campaign, supply
-  chain. Phishing, credential abuse and insider action are absent, so output is
-  a lower bound on intrusion risk rather than a picture of it. That statement
-  now sits directly beneath the headline figures and again on the routes chart,
-  drawn in outline so a cited share cannot be mistaken for an output. A caveat
-  a screen and a half from the figure it qualifies is a disclaimer, not a
-  caveat. Never present the output as a risk assessment for a named organisation.
+- **Eight access classes are simulated, not three — decided.** Opportunistic
+  exploitation, targeted campaign, supply chain, phishing, credential abuse,
+  misconfiguration, insider action and device loss. The five non-vulnerability
+  classes are not the same mechanism as the first three and could not be bolted
+  onto it: there is no patch for a person clicking a link, so no window opens
+  and no cadence closes it. They are independent annual arrivals gated by
+  controls the vulnerability engine never touches — authentication strength,
+  filtering, privileged access management, configuration assurance, personnel
+  controls and device management, which are a third control card.
+  - **Their coefficients are judgement and their mix is the anchor.** No public
+    corpus answers them the way the CVE corpus answers the exploit clock, so
+    no single rate is defensible alone. The baseline estate's initial-access
+    split is held to a dated third-party distribution, per class, within ten
+    points, asserted in CI. That is the discipline that makes the addition
+    falsifiable rather than decorative, and it is the assertion to re-run after
+    touching any rate in the ACCESS block.
+  - **The addition raised the headline from roughly 42% to roughly 64%,** and
+    reordered the recommendations: phishing-resistant authentication now ranks
+    above patch cadence on most estates. The previous figure was incomplete
+    rather than conservative, and saying so is part of shipping this.
+  - **Classes are drawn independently,** which understates concentration at
+    both ends. Declared in `SCOPE.routeIndependence` rather than left implicit.
+- **Scope is stated where the number is, not in the footer.** What remains
+  absent is genuinely out of scope — denial of service, fraud without
+  intrusion, physical premises access — so output is still a lower bound rather
+  than a picture. That statement sits directly beneath the headline figures and
+  again on the access chart. A caveat a screen and a half from the figure it
+  qualifies is a disclaimer, not a caveat. Never present the output as a risk
+  assessment for a named organisation.
+- **The exported decks report the reader's run, not the page's argument —
+  decided, after building the other one first.** The page exports a LinkedIn
+  carousel and a briefing deck, both PDFs, both reporting one estate: what was
+  configured, the resulting probability with its band, the funnel and route
+  split behind it, the sensitivity ranking, the prioritised actions with what
+  each buys *here*, and the configured link. The first build carried the fixed
+  argument instead, with the reader's number fenced onto one slide at the end.
+  It was coherent and it was the wrong artefact: the argument is what the page
+  already is, and what a reader cannot otherwise take away is their own number
+  with the working behind it. That resolves the argument-versus-tool tiebreak
+  for this surface and only this one, in favour of the tool.
+  - The recommendations are rendered from the same `rankActions()` the page
+    uses. A second ranking in the deck would be a second answer, and the reader
+    holding the PDF has no way to tell which is current.
+  - The scope limit rides the **footer of every slide**, because decks are read
+    and reshared one page at a time — a caveat on the method slide does not
+    travel with the slide carrying the percentage. The result slide additionally
+    carries the full statement and the refusal: never a risk assessment for a
+    named organisation.
+  - The band is quoted only once it has settled; below that the slide says so
+    rather than printing an interval the run did not earn. The interval is the
+    part a reader will quote as *the range*.
 - **The proxy is disclosed, because it is the largest term.** `agentSkill`
   carries the absent routes as one residual rate, and on the compromise metric
   it ranks first in the sensitivity chart. It was omitted from that chart
@@ -168,7 +219,9 @@ Real, dated, and vendored:
   entries), and NVD analysis status.
 - Reported coefficients, each attributed: breakout time (CrowdStrike Global
   Threat Report 2026), time to objective and the off-telemetry penalty (Mandiant
-  M-Trends 2026), containment rate (Sophos State of Ransomware 2026). These are
+  M-Trends 2026). The Sophos containment rate is no longer attached to a
+  coefficient — it is unconditional where the coefficient was conditional — and
+  now bounds the containment block as a whole from `SCOPE`. These are
   vendor incident-response populations and are labelled as distribution shape,
   not population baseline.
 - CISA BOD 26-04, 10 June 2026, cited and linked.
