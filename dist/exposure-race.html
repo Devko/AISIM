@@ -1136,12 +1136,15 @@ footer code {
 
   <div class="mast">
     <div class="mast-copy">
-      <h1>Which clock does an autonomous adversary <em>actually</em> move?</h1>
-      <p class="sub">A Monte Carlo model of exploit availability against remediation, rerun on
-      every change. The adversary timeline is <b>measured, not assumed</b>: days from CVE
-      publication to public exploit code. That clock has sat at its floor: the median has not
-      exceeded one day in any complete year since 2015. <b>Three other mechanisms have not: the share of
-      bugs weaponised, post-exploitation tempo, and the rate new vulnerabilities are found.</b></p>
+      <h1>The autonomous adversary is not a forecast</h1>
+      <p class="sub">The speed it promises is already the record: public exploit code has
+      trailed the CVE by <b>a day or less, at the median, in every complete year since
+      2015</b>. The discovery it promises exists now: machine-found vulnerabilities in real
+      codebases are a present-tense capability, and on most estates that dial outweighs the
+      other three together. The rest, the share of bugs weaponised and the tempo past the
+      foothold, runs on dials rather than baked-in assumptions. Set your estate against all
+      four and the Monte Carlo simulation reruns on every change, down to one number:
+      <b>the probability that you are compromised within twelve months</b>.</p>
     </div>
 
     <!-- The thesis in three measured figures, read off the vendored snapshot at
@@ -1229,10 +1232,10 @@ footer code {
 
        One scroller. An earlier pass gave the threat card a scroller of its own
        above the estate card in a second one, so that the compression slider
-       chapter 07 names could not be scrolled away. That cost two scrollbars in
+       chapter 08 names could not be scrolled away. That cost two scrollbars in
        a 322px column and left the estate card a 400px window onto 1,365px of
        controls. The slider is reachable from the chapter directly now, by the
-       .ctl-link buttons in chapter 07, so the rail does not have to hold it in
+       .ctl-link buttons in chapter 08, so the rail does not have to hold it in
        place to keep the promise. See .rail in app.css. -->
   <div class="rail">
     <div class="card att">
@@ -1321,6 +1324,7 @@ footer code {
       <ol>
         <li><a href="#p-race">Exploit against remediation</a></li>
         <li><a href="#p-funnel">Attrition to compromise</a></li>
+        <li><a href="#p-gates">Routes needing no vulnerability</a></li>
         <li><a href="#p-torn">Sensitivity analysis</a></li>
         <li><a href="#p-acts">Prioritised actions</a></li>
         <li><a href="#p-routes">How the first compromise arrives</a></li>
@@ -1422,11 +1426,40 @@ footer code {
       <p class="lead foot" id="wild-note"></p>
     </section>
 
+    <!-- ── the non-vulnerability gates ── -->
+    <section class="panel" id="p-gates">
+      <div class="panel-head">
+        <div class="ph-copy">
+          <span class="ord">03</span>
+          <h3>The routes that need no vulnerability</h3>
+          <p class="lead">More than half of first compromises on a typical estate involve no CVE,
+          and none of them races a change window. Each is an arrival stream against a set of
+          controls: filtering thins what reaches a person, authentication decides what a click or
+          a stolen credential is worth, privilege decides what a valid account reaches, and
+          configuration assurance closes what was never vulnerable, only reachable. Where the
+          first two bars are equal, nothing this estate does thins arrival — the control acts only
+          after the adversary is at the gate. Every rate here is <b>judgement, not measurement</b>;
+          what anchors them is the mix they produce, held to the reported breach population drawn
+          in chapter 06.</p>
+        </div>
+        <div class="tools">
+          <button class="icon-btn" data-copy="gates" type="button">Copy</button>
+          <button class="icon-btn" data-dl="gates" type="button">PNG</button>
+        </div>
+      </div>
+      <svg id="gates" class="chart" height="420" role="img" aria-label="Arrival and control gates on the five non-vulnerability access routes"></svg>
+      <p class="lead">The largest single control on this half of the model is authentication, and
+      it is a ladder rather than a dial — an adversary uses the weakest path in, not the best one
+      available.</p>
+      <svg id="ladder" class="chart" height="176" role="img" aria-label="Compromise probability at each rung of the authentication ladder"></svg>
+      <p class="lead foot" id="ladder-note"></p>
+    </section>
+
     <!-- ── sensitivity ── -->
     <section class="panel" id="p-torn">
       <div class="panel-head">
         <div class="ph-copy">
-          <span class="ord">03</span>
+          <span class="ord">04</span>
           <h3>Sensitivity analysis</h3>
           <p class="lead">Each bar varies a single parameter across its plausible range, holding
           everything else fixed. Read the ranking rather than the ratio between bars: bar length
@@ -1465,7 +1498,7 @@ footer code {
     <section class="panel" id="p-acts">
       <div class="panel-head">
         <div class="ph-copy">
-          <span class="ord">04</span>
+          <span class="ord">05</span>
           <h3>Prioritised remediation actions</h3>
           <p class="lead">The five changes to your configuration with the largest effect on
           <span id="acts-metric">annual probability of compromise</span>, at your current
@@ -1480,7 +1513,7 @@ footer code {
       <section class="panel" id="p-routes">
         <div class="panel-head">
           <div class="ph-copy">
-            <span class="ord">05</span>
+            <span class="ord">06</span>
             <h3>How the first compromise arrives</h3>
             <p class="lead">Class of the <em>first</em> compromise, counted once per simulated
             year. Only opportunistic exploitation turns fully on your change window; a targeted
@@ -1500,7 +1533,7 @@ footer code {
       <section class="panel" id="p-surv">
         <div class="panel-head">
           <div class="ph-copy">
-            <span class="ord">06</span>
+            <span class="ord">07</span>
             <h3>Time to first compromise</h3>
             <p class="lead">Proportion of simulated years without compromise, by day.</p>
           </div>
@@ -1517,7 +1550,7 @@ footer code {
     <section class="panel part" id="p-sweep">
       <div class="panel-head">
         <div class="ph-copy">
-          <span class="ord">07</span>
+          <span class="ord">08</span>
           <h3>Four clocks an autonomous adversary could move</h3>
           <p class="lead">BOD 26-04 names adversary use of AI as a reason the window between patch
           release and exploitation may narrow. That is four separate claims with different evidence
@@ -1556,7 +1589,7 @@ footer code {
     <section class="panel" id="p-severity">
       <div class="panel-head">
         <div class="ph-copy">
-          <span class="ord">08</span>
+          <span class="ord">09</span>
           <h3>Why severity is not the prioritisation trigger</h3>
           <p class="lead">The conventional approach counts Critical-rated CVEs. The published record does
           not support it. Below is the full scored CVE population, bucketed by CVSS band, against the
@@ -1590,7 +1623,7 @@ footer code {
     <section class="panel" id="p-volume">
       <div class="panel-head">
         <div class="ph-copy">
-          <span class="ord">09</span>
+          <span class="ord">10</span>
           <h3>Severity-label inflation</h3>
           <p class="lead">The Critical-rated population is growing faster than the CVE population that
           contains it. A model anchored to criticals per year therefore drifts more pessimistic
@@ -1613,7 +1646,7 @@ footer code {
     <section class="panel part" id="p-anchors">
       <div class="panel-head">
         <div class="ph-copy">
-          <span class="ord">10</span>
+          <span class="ord">11</span>
           <h3>Model provenance</h3>
           <p class="lead">Every input carries one of three labels, kept separate rather than blended.
           <span class="tag m">measured</span> is read directly from the vulnerability data shipped
@@ -1632,7 +1665,7 @@ footer code {
     <section class="panel part" id="p-export">
       <div class="panel-head">
         <div class="ph-copy">
-          <span class="ord">11</span>
+          <span class="ord">12</span>
           <h3>Export this run</h3>
           <p class="lead">Both exports report <em>your</em> estate rather than this page's
           argument: what you configured, the resulting probability with its uncertainty band, the
@@ -4133,6 +4166,11 @@ footer code {
    * both the names and the order. */
   var R = {};
   ROUTES.forEach(function (name, i) { R[name] = i; });
+  /* The five routes that need no vulnerability, in ROUTES order — derived
+   * from the same table for the same reason ROUTES is: the gates figure on
+   * the page reports these by name, and a list restated by hand is a list
+   * that drifts. */
+  var GATE_KEYS = ROUTES.filter(function (name) { return !ACCESS[name].vuln; });
   /* A strict funnel: every stage is a subset of the one above it.
    * Whether a vulnerability is merely armed (public exploit) or actually used
    * in the wild is NOT a funnel stage — it is a hazard multiplier, because
@@ -4205,6 +4243,9 @@ footer code {
     var route = ROUTES.map(function () { return 0; });
     var fn = [0, 0, 0, 0, 0, 0];
     var wildN = 0, armedN = 0, critArmedN = 0, critWildN = 0;
+    /* Per-route stage expectations for the non-vulnerability gates figure:
+     * [pressure, arrivals, compromises] per GATE_KEYS entry. */
+    var gsum = GATE_KEYS.map(function () { return [0, 0, 0]; });
     /* Credible interval by variance decomposition.
      *
      * Trials are grouped into blocks and ONE coefficient set is drawn per block,
@@ -4611,27 +4652,52 @@ footer code {
           : 0;
         var eff = function (control, ceiling) { return 1 - (control / 100) * ceiling; };
 
+        /* THE STAGES, TALLIED AS EXPECTATIONS before the arrivals below are
+         * sampled from them — the same treatment the funnel's first two
+         * stages get, and for the same reason: they are reported as per-year
+         * means, and the expectation is that mean with none of the variance.
+         * `pressure` is the arrival rate with the arrival-stage control at
+         * zero; where a route has no arrival-stage control the two are equal,
+         * which the gates figure shows rather than hides — nothing this
+         * estate does thins what reaches it on those routes. Consumes no
+         * randomness, so the trial stream is bit-identical with the tally in
+         * place. Order is GATE_KEYS order, which is ROUTES order. */
+
         /* Phishing. Awareness thins the arrivals; authentication blocks the
          * conversion. Two different stages, which is why a programme strong on
          * one and weak on the other does not average out. */
-        fire(heads * k.phishLure * eff(P.awareness, k.phishAwareEff),
-             k.phishConv * eff(P.mfa, k.phishMfaEff), R.phishing);
+        var phishP = heads * k.phishLure;
+        var phishA = phishP * eff(P.awareness, k.phishAwareEff);
+        var phishS = k.phishConv * eff(P.mfa, k.phishMfaEff);
 
         /* Credential abuse. Arrival is exposure elsewhere, so nothing the
          * estate does reduces it — only what the credential reaches once
          * used. Both gates act on conversion, hence the product. */
-        fire(heads * k.credExposure,
-             k.credConv * eff(P.mfa, k.credMfaEff) * eff(P.pam, k.credPamEff),
-             R.credential);
+        var credP = heads * k.credExposure;
+        var credS = k.credConv * eff(P.mfa, k.credMfaEff) * eff(P.pam, k.credPamEff);
 
         /* Misconfiguration. The one new class that scales with systems rather
          * than people, and the only route in the model where remediation
          * cadence is irrelevant by construction rather than by assumption. */
-        fire(P.exposed * k.misconfigRate * eff(P.configAssurance, k.configEff),
-             k.misconfigConv, R.misconfig);
+        var misP = P.exposed * k.misconfigRate;
+        var misA = misP * eff(P.configAssurance, k.configEff);
 
-        fire(heads * k.insiderRate, eff(P.insiderCtl, k.insiderEff), R.insider);
-        fire(heads * k.deviceLoss, eff(P.deviceCtl, k.deviceEff), R.physical);
+        var insP = heads * k.insiderRate;
+        var insS = eff(P.insiderCtl, k.insiderEff);
+        var devP = heads * k.deviceLoss;
+        var devS = eff(P.deviceCtl, k.deviceEff);
+
+        gsum[0][0] += phishP; gsum[0][1] += phishA; gsum[0][2] += phishA * phishS;
+        gsum[1][0] += credP;  gsum[1][1] += credP;  gsum[1][2] += credP * credS;
+        gsum[2][0] += misP;   gsum[2][1] += misA;   gsum[2][2] += misA * k.misconfigConv;
+        gsum[3][0] += insP;   gsum[3][1] += insP;   gsum[3][2] += insP * insS;
+        gsum[4][0] += devP;   gsum[4][1] += devP;   gsum[4][2] += devP * devS;
+
+        fire(phishA, phishS, R.phishing);
+        fire(credP, credS, R.credential);
+        fire(misA, k.misconfigConv, R.misconfig);
+        fire(insP, insS, R.insider);
+        fire(devP, devS, R.physical);
 
         events += n;
         sysTotal += sysN;
@@ -4705,6 +4771,15 @@ footer code {
         surv: Array.prototype.slice.call(surv, 0, H + 1).map(function (v) { return v / trials; }),
         routes: route.map(function (v) { return v / totalRoute; }),
         routeN: route.slice(),
+        /* The non-vulnerability gates, as per-year expected rates: what
+         * reaches the estate, what survives the arrival-stage controls, and
+         * what converts to compromise. Exact per coefficient draw — see the
+         * tally in the loop — so at spread 0 these carry no Monte-Carlo
+         * noise at all. */
+        gates: GATE_KEYS.map(function (key, gi) {
+          return { key: key, pressure: gsum[gi][0] / trials,
+                   arrivals: gsum[gi][1] / trials, compromises: gsum[gi][2] / trials };
+        }),
         fn: fn.map(function (v) { return v / trials; }),
         armed: armedN / trials,
         wild: wildN / trials,
@@ -5024,6 +5099,8 @@ footer code {
     switch (kind) {
       case 'race':     return w < 620 ? 362 : 396;
       case 'funnel':   return n * (w < 640 ? 52 : 40) + (w < 640 ? 48 : 34);
+      case 'gates':    return n * (w < 640 ? 94 : 78) + (w < 640 ? 40 : 30);
+      case 'ladder':   return n * 34 + 40;
       case 'routes':   return n * (w < 400 ? 40 : 34) + 6 + 84;
       case 'surv':     return 236;
       case 'torn':     return n * (w < 560 ? 34 : 25) + 54;
@@ -5254,6 +5331,97 @@ footer code {
       }
     });
     txt(svg, L, T + labels.length * rh + (narrow ? 26 : 16), 'per simulated year, bar width square-root scaled', { c: pal.dim, fs: 10 });
+    return svg;
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════
+   * THE NON-VULNERABILITY GATES — arrivals against controls, per route.
+   *
+   * The funnel above this figure covers the mass-exploitation pipeline and
+   * nothing else, while more than half of first compromises on a typical
+   * estate arrive through the five routes drawn here. Each route gets its own
+   * three-stage reading: what reaches the estate, what survives the controls
+   * that act on arrival, and what converts to compromise. Bars are
+   * square-root scaled WITHIN each route, because the routes differ by three
+   * orders of magnitude in volume and a shared scale would erase every one
+   * but phishing; the printed figures carry the magnitudes, and the routes
+   * chart carries the cross-route comparison.
+   *
+   * Where the first two bars are equal, that is the finding, not a rendering
+   * economy: on those routes nothing the estate does thins arrival, and the
+   * controls act only after the adversary is at the gate.
+   * ═══════════════════════════════════════════════════════════════════════ */
+  function gates(svg, w, r, pal, rows) {
+    var narrow = w < 640;
+    var list = rows || [];
+    var gb = narrow ? 94 : 78;
+    var h = chartHeight('gates', w, list.length);
+    frame(svg, w, h);
+    var L = 2, R = w - 4;
+    var SL = narrow ? 96 : 168;              /* stage-label column */
+    var stages = ['reaching you', narrow ? 'past controls' : 'past the arrival controls', 'compromises'];
+    var num = function (v) {
+      return v >= 100 ? String(Math.round(v)) : v >= 10 ? v.toFixed(1) : v >= 1 ? v.toFixed(2) : v.toFixed(3);
+    };
+
+    list.forEach(function (row, i) {
+      var g = null;
+      for (var gi = 0; gi < r.gates.length; gi++) if (r.gates[gi].key === row.key) g = r.gates[gi];
+      if (!g) return;
+      var y0 = 8 + i * gb;
+      txt(svg, L, y0 + 10, narrow ? row.short : row.label, { c: pal.txt, fs: 12, w: 600 });
+      txt(svg, R, y0 + 10, row.gate, { a: 'end', c: pal.dim, fs: 10, mono: true, ls: '.04em' });
+
+      var vals = [g.pressure, g.arrivals, g.compromises];
+      var max = Math.max(g.pressure, 1e-9);
+      vals.forEach(function (v, s) {
+        var y = y0 + 22 + s * 16;
+        var bw = Math.max(1.5, (R - SL - 62) * Math.sqrt(Math.max(0, v) / max));
+        var col = s === 0 ? pal.dim : s === 1 ? pal.warn : pal.bad;
+        txt(svg, SL, y + 9, stages[s], { a: 'end', c: pal.mut, fs: 11 });
+        svg.appendChild(el('rect', { 'class': 'ch-track', x: SL + 10, y: y, width: Math.max(4, R - SL - 62), height: 10, rx: 3, fill: pal.sunk }));
+        svg.appendChild(el('rect', { 'class': 'ch-bar', style: '--i:' + (i * 3 + s), x: SL + 10, y: y, width: bw, height: 10, rx: 3, fill: col, 'fill-opacity': s === 2 ? 1 : 0.75 }));
+        txt(svg, R, y + 9, num(v), { a: 'end', c: col, fs: 11, w: 600, mono: true });
+      });
+    });
+    txt(svg, L, 8 + list.length * gb + (narrow ? 22 : 14),
+      'expected events per year for this estate; bars square-root scaled within each route',
+      { c: pal.dim, fs: 10 });
+    return svg;
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════
+   * THE AUTHENTICATION LADDER — one estate, four postures, weakest path in.
+   *
+   * The single largest control on the non-vulnerability half of the model,
+   * drawn as the ladder it is rather than the dial the slider suggests. Every
+   * bar is the SAME estate with only the identity posture changed, computed
+   * on the sensitivity settings — comparable with each other, and within a
+   * point of the headline rather than equal to it, which is the same
+   * relationship the scenario sweeps already have.
+   * ═══════════════════════════════════════════════════════════════════════ */
+  function ladder(svg, w, rows, pal) {
+    var list = rows || [];
+    var rh = 34;
+    var h = chartHeight('ladder', w, list.length);
+    frame(svg, w, h);
+    var L = 2, R = w - 4;
+    var narrow = w < 400;
+    var labW = narrow ? 0 : 168;
+    var max = Math.max.apply(null, list.map(function (x) { return x.v; }).concat([0.05])) * 1.1;
+
+    list.forEach(function (row, i) {
+      var y = 8 + i * rh;
+      var barY = y + (narrow ? 17 : 4);
+      var barL = narrow ? L : L + labW;
+      txt(svg, L, y + (narrow ? 10 : 11), row.l, { c: row.cur ? pal.txt : pal.mut, fs: 12, w: row.cur ? 600 : undefined });
+      svg.appendChild(el('rect', { 'class': 'ch-track', x: barL, y: barY, width: Math.max(4, R - 46 - barL), height: 10, rx: 3, fill: pal.sunk }));
+      svg.appendChild(el('rect', { 'class': 'ch-bar', style: '--i:' + i, x: barL, y: barY, width: Math.max(0, (R - 46 - barL) * (row.v / max)), height: 10, rx: 3, fill: row.cur ? pal.bad : pal.def, 'fill-opacity': row.cur ? 1 : 0.65 }));
+      txt(svg, R, barY + 9, pctS(row.v), { a: 'end', c: row.cur ? pal.bad : pal.def, fs: 12, w: 700, mono: true });
+    });
+    txt(svg, L, 8 + list.length * rh + 18,
+      'the same estate at each rung, weakest path in; highlighted: where this estate sits',
+      { c: pal.dim, fs: 10 });
     return svg;
   }
 
@@ -5753,7 +5921,8 @@ footer code {
    * on — which is exactly what makes these two harder to change than they
    * should be for what they are. */
   return {
-    race: race, funnel: funnel, routes: routes, survival: survival,
+    race: race, funnel: funnel, gates: gates, ladder: ladder,
+    routes: routes, survival: survival,
     tornado: tornado, sweep: sweep, severity: severity, volume: volume,
     toPNG: toPNG, fmtDays: fmtDays, chartHeight: chartHeight,
   };
@@ -7142,6 +7311,20 @@ footer code {
     return { key: k, label: M.ACCESS[k].l, short: ACCESS_SHORT[k] || M.ACCESS[k].l,
              tier: M.ACCESS[k].tier, d: M.ACCESS[k].d };
   });
+  /* The five non-vulnerability routes with the control chain that gates each —
+   * the caption the gates figure prints beside the route name. Filtered from
+   * ACCESS_ROWS for the same reason ACCESS_ROWS is derived from ACCESS: a
+   * hand-restated route list is a route list that drifts. */
+  var GATE_CHAIN = {
+    phishing: 'filtering → authentication',
+    credential: 'authentication → privilege',
+    misconfig: 'configuration assurance',
+    insider: 'personnel and least privilege',
+    physical: 'device encryption',
+  };
+  var GATE_ROWS = ACCESS_ROWS.filter(function (r) { return !M.ACCESS[r.key].vuln; })
+    .map(function (r) { return { key: r.key, label: r.label, short: r.short, gate: GATE_CHAIN[r.key] || '' }; });
+  var IDN_KEYS = Object.keys(M.IDENTITY);
   var KEYS = ALL_SPEC.map(function (s) { return s.k; });
 
   /* ── controls ──────────────────────────────────────────────────────────── */
@@ -7587,7 +7770,7 @@ footer code {
     return M.simulate(params, n, seed, { surv: !!wantSurv, spread: 1 });
   }
   /* ── render ────────────────────────────────────────────────────────────── */
-  var lastRun = null, lastSens = null, lastDens = null;
+  var lastRun = null, lastSens = null, lastDens = null, lastLadder = null;
   /* Each drawn curve carries the dial value it belongs to in `cur`, taken from
    * the pass's snapshot. Reading the live P at redraw time would move a marker
    * off the curve it was computed for whenever a redraw lands between passes —
@@ -7610,7 +7793,8 @@ footer code {
    * boot, moves that correction from seconds in to script load. The
    * arithmetic is js/charts.js's own, so the two cannot drift. */
   function reserveHeights() {
-    [['race'], ['funnel', M.FUNNEL.length], ['routes', ACCESS_ROWS.length],
+    [['race'], ['funnel', M.FUNNEL.length], ['gates', GATE_ROWS.length],
+     ['ladder', IDN_KEYS.length], ['routes', ACCESS_ROWS.length],
      ['surv'], ['torn', LEVERS.length], ['sweep'],
      ['severity', C.exploitation.bands.length], ['volume'],
     ].forEach(function (p) {
@@ -7767,7 +7951,7 @@ footer code {
     return lastDens;
   }
 
-  function drawRace() {
+  function drawRace(r) {
     var d = raceDensities();
     CH.race($('race'), width('race'), d, palette());
     var n = empty($('race-note'));
@@ -7784,12 +7968,23 @@ footer code {
     } else {
       add(n, ' ', b(pctS(d.beforeFrac)), ' of exploits are already public when the CVE record lands.');
     }
+    /* The scope of the figure, beside the figure. This chapter and the funnel
+     * under it draw the mass-exploitation route and nothing else, and on most
+     * estates that route is a minority of first compromises — exactly the
+     * miscalibration the page argues against, so the two chapters that could
+     * recreate it have to carry their own share, live. */
+    if (r) {
+      add(n, ' This figure and the funnel below cover the mass-exploitation route alone — ',
+        b(pctS(r.routes[0])),
+        ' of first compromises on this estate. The routes that need no vulnerability are gated in chapter 03.');
+    }
   }
 
   function drawMain(r) {
     var pal = palette();
-    drawRace();
+    drawRace(r);
     CH.funnel($('funnel'), width('funnel'), r, M.FUNNEL, pal);
+    CH.gates($('gates'), width('gates'), r, pal, GATE_ROWS);
     CH.routes($('routes'), width('routes'), r, pal, M.SCOPE, ACCESS_ROWS);
     CH.survival($('surv'), width('surv'), r, pal);
     updateWild(r);
@@ -7813,6 +8008,7 @@ footer code {
       /* Only once the sweep points belong to the same pass as the bars. */
       if (lastSens.sweep) CH.sweep($('sweep'), width('sweep'), lastSens.sweep, pal);
     }
+    if (lastLadder) CH.ladder($('ladder'), width('ladder'), lastLadder, pal);
   }
 
   function fast() {
@@ -8061,9 +8257,35 @@ footer code {
       });
     }
 
-    /* Everything from here is chapters 03 and 07. Built only once a reader is
+    /* Chapter 03's authentication ladder: the same estate at each identity
+     * rung, weakest path in. Runs in every settle pass — the chapter sits
+     * well above the sensitivity fold, so it cannot wait for armSens — and
+     * re-runs on a metric change because the reading IS the metric. Four
+     * short runs on the sensitivity settings: the ladder compares rungs
+     * against each other, so what matters is that all four share a seed and
+     * a trial count, not that they match the headline's. */
+    var ladderVals = [];
+    IDN_KEYS.forEach(function (rk) {
+      var o = copyOf(snap);
+      Object.keys(M.IDENTITY[rk].p).forEach(function (pk) { o[pk] = M.IDENTITY[rk].p[pk]; });
+      pushSlicedSim(stages, o, N_SENS, SEED_SENS, SENS_OPTS, function (r2) {
+        ladderVals.push({ k: rk, l: M.IDENTITY[rk].l, v: r2[metric] });
+      });
+    });
+    stages.push(function () {
+      var cur = closestIdentity();
+      ladderVals.forEach(function (rw) { rw.cur = rw.k === cur; });
+      lastLadder = ladderVals;
+      CH.ladder($('ladder'), width('ladder'), ladderVals, palette());
+      var nn = empty($('ladder-note'));
+      add(nn, 'Annual probability of ' + (metric === 'p' ? 'compromise' : 'an incident') +
+        ' for this estate, recomputed at each rung with everything else held. ' +
+        'The highlighted rung is where the current authentication settings sit.');
+    });
+
+    /* Everything from here is chapters 04 and 08. Built only once a reader is
      * heading for them — see armSens. The stages already queued above are the
-     * headline figures and the four charts above the fold, which every reader
+     * headline figures and the charts above the fold, which every reader
      * gets regardless. */
     if (!sensArmed) { runStages(stages, gen, metric); return; }
 
@@ -8188,6 +8410,10 @@ footer code {
       b(num(r.wild, 2)), ' (' + pctS(r.wildShare) + ') are confirmed exploited against live targets. ',
       b(num(r.critWild, 2)), ' of those are Critical-rated, roughly a third of what is actually ' +
       'exploited. The rest still draw opportunistic attack traffic, at a lower rate.');
+    var nv = 0;
+    ACCESS_ROWS.forEach(function (c, i) { if (!M.ACCESS[c.key].vuln) nv += r.routes[i]; });
+    add(n, ' This funnel is one route of eight: the five that need no vulnerability carry ',
+      b(pctS(nv)), ' of first compromises here, and are gated in the next chapter.');
   }
 
   /* The five actions are ranked by their effect at the current settings, so
@@ -8651,6 +8877,15 @@ footer code {
     anchorRow(host, 'CVEs NVD has stopped analysing', 'measured',
       thou(C.nvd.deferred) + ' (' + C.nvd.deferredShare.toFixed(1) + '%)',
       'CyberMon · NVD API status labels');
+    /* The one anchor the non-vulnerability half has. No single rate on those
+     * routes has a public measurement, so the aggregate they produce is what
+     * gets held to a source — and the provenance panel has to say so, because
+     * this is where a reader comes to ask what the people routes stand on. */
+    anchorRow(host, 'Initial-access mix the non-vulnerability rates are tuned to', 'reported',
+      ACCESS_ROWS.length + ' classes, ±' + Math.round(M.SCOPE.accessMix.tolerance * 100) + 'pt each',
+      M.SCOPE.accessMix.src + '. No single rate on the routes that need no vulnerability has a ' +
+      'public measurement, so the mix they produce is anchored instead — asserted in CI, and drawn ' +
+      'against this estate in chapter 06');
     /* cited figures first, then the pure judgement calls — a reader scanning
      * for what to argue with should reach the weakest material last, not first */
     var keys = Object.keys(M.ASSUMED);

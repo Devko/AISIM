@@ -1790,6 +1790,41 @@ console.log('\n══ Exposure Race — model tests ═════════�
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
+ * 14c. The non-vulnerability gates are exported, and they are the model
+ *
+ * The page's gates figure reports per-route stage rates: what reaches the
+ * estate, what survives the arrival-stage controls, what converts. They are
+ * tallied as exact expectations on the same coefficient draws the arrivals
+ * are sampled from, so at spread 0 they carry no Monte-Carlo noise at all —
+ * which is what makes the sharp assertions below possible.
+ * ───────────────────────────────────────────────────────────────────────── */
+{
+  const r = M.simulate(D(), 2000, 5, { surv: false, spread: 0 });
+  const keys = Object.keys(M.ACCESS).filter((k) => !M.ACCESS[k].vuln);
+  ok('the gates cover exactly the routes that need no vulnerability',
+    r.gates.length === keys.length && r.gates.every((g, i) => g.key === keys[i]),
+    r.gates.map((g) => g.key).join(' '));
+  ok('every gate narrows: pressure >= arrivals >= compromises',
+    r.gates.every((g) => g.pressure >= g.arrivals - 1e-12 && g.arrivals >= g.compromises - 1e-12));
+  /* Exact, not approximate, because the tally is an expectation. */
+  const a0 = M.simulate(Object.assign(D(), { awareness: 0 }), 500, 5,
+    { surv: false, spread: 0 }).gates[0];
+  const a100 = M.simulate(Object.assign(D(), { awareness: 100 }), 500, 5,
+    { surv: false, spread: 0 }).gates[0];
+  near('full filtering removes exactly the declared share of lures',
+    a100.arrivals / a0.arrivals, 1 - M.ASSUMED.phishAwareEff.v, 1e-9,
+    `${fmt(a100.arrivals / a0.arrivals)} against 1 - ${M.ASSUMED.phishAwareEff.v}`);
+  /* On an estate where only these routes exist, the sampled event count has
+   * to agree with the expected one, or the figure and the headline are two
+   * different models. */
+  const q = M.simulate(Object.assign(D(),
+    { exposed: 0, stackVulns: 0, campaigns: 0, supply: 0 }), 40000, 7);
+  const expct = q.gates.reduce((a, g) => a + g.compromises, 0);
+  near('sampled events match the gate expectation on a gates-only estate',
+    q.events, expct, 0.03, `${fmt(q.events)} sampled vs ${fmt(expct)} expected`);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
  * 15. Performance budget — the UI redraws on every slider move
  * ───────────────────────────────────────────────────────────────────────── */
 {

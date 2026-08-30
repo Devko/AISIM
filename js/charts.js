@@ -88,6 +88,8 @@
     switch (kind) {
       case 'race':     return w < 620 ? 362 : 396;
       case 'funnel':   return n * (w < 640 ? 52 : 40) + (w < 640 ? 48 : 34);
+      case 'gates':    return n * (w < 640 ? 94 : 78) + (w < 640 ? 40 : 30);
+      case 'ladder':   return n * 34 + 40;
       case 'routes':   return n * (w < 400 ? 40 : 34) + 6 + 84;
       case 'surv':     return 236;
       case 'torn':     return n * (w < 560 ? 34 : 25) + 54;
@@ -318,6 +320,97 @@
       }
     });
     txt(svg, L, T + labels.length * rh + (narrow ? 26 : 16), 'per simulated year, bar width square-root scaled', { c: pal.dim, fs: 10 });
+    return svg;
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════
+   * THE NON-VULNERABILITY GATES — arrivals against controls, per route.
+   *
+   * The funnel above this figure covers the mass-exploitation pipeline and
+   * nothing else, while more than half of first compromises on a typical
+   * estate arrive through the five routes drawn here. Each route gets its own
+   * three-stage reading: what reaches the estate, what survives the controls
+   * that act on arrival, and what converts to compromise. Bars are
+   * square-root scaled WITHIN each route, because the routes differ by three
+   * orders of magnitude in volume and a shared scale would erase every one
+   * but phishing; the printed figures carry the magnitudes, and the routes
+   * chart carries the cross-route comparison.
+   *
+   * Where the first two bars are equal, that is the finding, not a rendering
+   * economy: on those routes nothing the estate does thins arrival, and the
+   * controls act only after the adversary is at the gate.
+   * ═══════════════════════════════════════════════════════════════════════ */
+  function gates(svg, w, r, pal, rows) {
+    var narrow = w < 640;
+    var list = rows || [];
+    var gb = narrow ? 94 : 78;
+    var h = chartHeight('gates', w, list.length);
+    frame(svg, w, h);
+    var L = 2, R = w - 4;
+    var SL = narrow ? 96 : 168;              /* stage-label column */
+    var stages = ['reaching you', narrow ? 'past controls' : 'past the arrival controls', 'compromises'];
+    var num = function (v) {
+      return v >= 100 ? String(Math.round(v)) : v >= 10 ? v.toFixed(1) : v >= 1 ? v.toFixed(2) : v.toFixed(3);
+    };
+
+    list.forEach(function (row, i) {
+      var g = null;
+      for (var gi = 0; gi < r.gates.length; gi++) if (r.gates[gi].key === row.key) g = r.gates[gi];
+      if (!g) return;
+      var y0 = 8 + i * gb;
+      txt(svg, L, y0 + 10, narrow ? row.short : row.label, { c: pal.txt, fs: 12, w: 600 });
+      txt(svg, R, y0 + 10, row.gate, { a: 'end', c: pal.dim, fs: 10, mono: true, ls: '.04em' });
+
+      var vals = [g.pressure, g.arrivals, g.compromises];
+      var max = Math.max(g.pressure, 1e-9);
+      vals.forEach(function (v, s) {
+        var y = y0 + 22 + s * 16;
+        var bw = Math.max(1.5, (R - SL - 62) * Math.sqrt(Math.max(0, v) / max));
+        var col = s === 0 ? pal.dim : s === 1 ? pal.warn : pal.bad;
+        txt(svg, SL, y + 9, stages[s], { a: 'end', c: pal.mut, fs: 11 });
+        svg.appendChild(el('rect', { 'class': 'ch-track', x: SL + 10, y: y, width: Math.max(4, R - SL - 62), height: 10, rx: 3, fill: pal.sunk }));
+        svg.appendChild(el('rect', { 'class': 'ch-bar', style: '--i:' + (i * 3 + s), x: SL + 10, y: y, width: bw, height: 10, rx: 3, fill: col, 'fill-opacity': s === 2 ? 1 : 0.75 }));
+        txt(svg, R, y + 9, num(v), { a: 'end', c: col, fs: 11, w: 600, mono: true });
+      });
+    });
+    txt(svg, L, 8 + list.length * gb + (narrow ? 22 : 14),
+      'expected events per year for this estate; bars square-root scaled within each route',
+      { c: pal.dim, fs: 10 });
+    return svg;
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════
+   * THE AUTHENTICATION LADDER — one estate, four postures, weakest path in.
+   *
+   * The single largest control on the non-vulnerability half of the model,
+   * drawn as the ladder it is rather than the dial the slider suggests. Every
+   * bar is the SAME estate with only the identity posture changed, computed
+   * on the sensitivity settings — comparable with each other, and within a
+   * point of the headline rather than equal to it, which is the same
+   * relationship the scenario sweeps already have.
+   * ═══════════════════════════════════════════════════════════════════════ */
+  function ladder(svg, w, rows, pal) {
+    var list = rows || [];
+    var rh = 34;
+    var h = chartHeight('ladder', w, list.length);
+    frame(svg, w, h);
+    var L = 2, R = w - 4;
+    var narrow = w < 400;
+    var labW = narrow ? 0 : 168;
+    var max = Math.max.apply(null, list.map(function (x) { return x.v; }).concat([0.05])) * 1.1;
+
+    list.forEach(function (row, i) {
+      var y = 8 + i * rh;
+      var barY = y + (narrow ? 17 : 4);
+      var barL = narrow ? L : L + labW;
+      txt(svg, L, y + (narrow ? 10 : 11), row.l, { c: row.cur ? pal.txt : pal.mut, fs: 12, w: row.cur ? 600 : undefined });
+      svg.appendChild(el('rect', { 'class': 'ch-track', x: barL, y: barY, width: Math.max(4, R - 46 - barL), height: 10, rx: 3, fill: pal.sunk }));
+      svg.appendChild(el('rect', { 'class': 'ch-bar', style: '--i:' + i, x: barL, y: barY, width: Math.max(0, (R - 46 - barL) * (row.v / max)), height: 10, rx: 3, fill: row.cur ? pal.bad : pal.def, 'fill-opacity': row.cur ? 1 : 0.65 }));
+      txt(svg, R, barY + 9, pctS(row.v), { a: 'end', c: row.cur ? pal.bad : pal.def, fs: 12, w: 700, mono: true });
+    });
+    txt(svg, L, 8 + list.length * rh + 18,
+      'the same estate at each rung, weakest path in; highlighted: where this estate sits',
+      { c: pal.dim, fs: 10 });
     return svg;
   }
 
@@ -817,7 +910,8 @@
    * on — which is exactly what makes these two harder to change than they
    * should be for what they are. */
   return {
-    race: race, funnel: funnel, routes: routes, survival: survival,
+    race: race, funnel: funnel, gates: gates, ladder: ladder,
+    routes: routes, survival: survival,
     tornado: tornado, sweep: sweep, severity: severity, volume: volume,
     toPNG: toPNG, fmtDays: fmtDays, chartHeight: chartHeight,
   };

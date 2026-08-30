@@ -63,12 +63,15 @@
 
   <div class="mast">
     <div class="mast-copy">
-      <h1>Which clock does an autonomous adversary <em>actually</em> move?</h1>
-      <p class="sub">A Monte Carlo model of exploit availability against remediation, rerun on
-      every change. The adversary timeline is <b>measured, not assumed</b>: days from CVE
-      publication to public exploit code. That clock has sat at its floor: the median has not
-      exceeded one day in any complete year since 2015. <b>Three other mechanisms have not: the share of
-      bugs weaponised, post-exploitation tempo, and the rate new vulnerabilities are found.</b></p>
+      <h1>The autonomous adversary is not a forecast</h1>
+      <p class="sub">The speed it promises is already the record: public exploit code has
+      trailed the CVE by <b>a day or less, at the median, in every complete year since
+      2015</b>. The discovery it promises exists now: machine-found vulnerabilities in real
+      codebases are a present-tense capability, and on most estates that dial outweighs the
+      other three together. The rest, the share of bugs weaponised and the tempo past the
+      foothold, runs on dials rather than baked-in assumptions. Set your estate against all
+      four and the Monte Carlo simulation reruns on every change, down to one number:
+      <b>the probability that you are compromised within twelve months</b>.</p>
     </div>
 
     <!-- The thesis in three measured figures, read off the vendored snapshot at
@@ -156,10 +159,10 @@
 
        One scroller. An earlier pass gave the threat card a scroller of its own
        above the estate card in a second one, so that the compression slider
-       chapter 07 names could not be scrolled away. That cost two scrollbars in
+       chapter 08 names could not be scrolled away. That cost two scrollbars in
        a 322px column and left the estate card a 400px window onto 1,365px of
        controls. The slider is reachable from the chapter directly now, by the
-       .ctl-link buttons in chapter 07, so the rail does not have to hold it in
+       .ctl-link buttons in chapter 08, so the rail does not have to hold it in
        place to keep the promise. See .rail in app.css. -->
   <div class="rail">
     <div class="card att">
@@ -248,6 +251,7 @@
       <ol>
         <li><a href="#p-race">Exploit against remediation</a></li>
         <li><a href="#p-funnel">Attrition to compromise</a></li>
+        <li><a href="#p-gates">Routes needing no vulnerability</a></li>
         <li><a href="#p-torn">Sensitivity analysis</a></li>
         <li><a href="#p-acts">Prioritised actions</a></li>
         <li><a href="#p-routes">How the first compromise arrives</a></li>
@@ -349,11 +353,40 @@
       <p class="lead foot" id="wild-note"></p>
     </section>
 
+    <!-- ── the non-vulnerability gates ── -->
+    <section class="panel" id="p-gates">
+      <div class="panel-head">
+        <div class="ph-copy">
+          <span class="ord">03</span>
+          <h3>The routes that need no vulnerability</h3>
+          <p class="lead">More than half of first compromises on a typical estate involve no CVE,
+          and none of them races a change window. Each is an arrival stream against a set of
+          controls: filtering thins what reaches a person, authentication decides what a click or
+          a stolen credential is worth, privilege decides what a valid account reaches, and
+          configuration assurance closes what was never vulnerable, only reachable. Where the
+          first two bars are equal, nothing this estate does thins arrival — the control acts only
+          after the adversary is at the gate. Every rate here is <b>judgement, not measurement</b>;
+          what anchors them is the mix they produce, held to the reported breach population drawn
+          in chapter 06.</p>
+        </div>
+        <div class="tools">
+          <button class="icon-btn" data-copy="gates" type="button">Copy</button>
+          <button class="icon-btn" data-dl="gates" type="button">PNG</button>
+        </div>
+      </div>
+      <svg id="gates" class="chart" height="420" role="img" aria-label="Arrival and control gates on the five non-vulnerability access routes"></svg>
+      <p class="lead">The largest single control on this half of the model is authentication, and
+      it is a ladder rather than a dial — an adversary uses the weakest path in, not the best one
+      available.</p>
+      <svg id="ladder" class="chart" height="176" role="img" aria-label="Compromise probability at each rung of the authentication ladder"></svg>
+      <p class="lead foot" id="ladder-note"></p>
+    </section>
+
     <!-- ── sensitivity ── -->
     <section class="panel" id="p-torn">
       <div class="panel-head">
         <div class="ph-copy">
-          <span class="ord">03</span>
+          <span class="ord">04</span>
           <h3>Sensitivity analysis</h3>
           <p class="lead">Each bar varies a single parameter across its plausible range, holding
           everything else fixed. Read the ranking rather than the ratio between bars: bar length
@@ -392,7 +425,7 @@
     <section class="panel" id="p-acts">
       <div class="panel-head">
         <div class="ph-copy">
-          <span class="ord">04</span>
+          <span class="ord">05</span>
           <h3>Prioritised remediation actions</h3>
           <p class="lead">The five changes to your configuration with the largest effect on
           <span id="acts-metric">annual probability of compromise</span>, at your current
@@ -407,7 +440,7 @@
       <section class="panel" id="p-routes">
         <div class="panel-head">
           <div class="ph-copy">
-            <span class="ord">05</span>
+            <span class="ord">06</span>
             <h3>How the first compromise arrives</h3>
             <p class="lead">Class of the <em>first</em> compromise, counted once per simulated
             year. Only opportunistic exploitation turns fully on your change window; a targeted
@@ -427,7 +460,7 @@
       <section class="panel" id="p-surv">
         <div class="panel-head">
           <div class="ph-copy">
-            <span class="ord">06</span>
+            <span class="ord">07</span>
             <h3>Time to first compromise</h3>
             <p class="lead">Proportion of simulated years without compromise, by day.</p>
           </div>
@@ -444,7 +477,7 @@
     <section class="panel part" id="p-sweep">
       <div class="panel-head">
         <div class="ph-copy">
-          <span class="ord">07</span>
+          <span class="ord">08</span>
           <h3>Four clocks an autonomous adversary could move</h3>
           <p class="lead">BOD 26-04 names adversary use of AI as a reason the window between patch
           release and exploitation may narrow. That is four separate claims with different evidence
@@ -483,7 +516,7 @@
     <section class="panel" id="p-severity">
       <div class="panel-head">
         <div class="ph-copy">
-          <span class="ord">08</span>
+          <span class="ord">09</span>
           <h3>Why severity is not the prioritisation trigger</h3>
           <p class="lead">The conventional approach counts Critical-rated CVEs. The published record does
           not support it. Below is the full scored CVE population, bucketed by CVSS band, against the
@@ -517,7 +550,7 @@
     <section class="panel" id="p-volume">
       <div class="panel-head">
         <div class="ph-copy">
-          <span class="ord">09</span>
+          <span class="ord">10</span>
           <h3>Severity-label inflation</h3>
           <p class="lead">The Critical-rated population is growing faster than the CVE population that
           contains it. A model anchored to criticals per year therefore drifts more pessimistic
@@ -540,7 +573,7 @@
     <section class="panel part" id="p-anchors">
       <div class="panel-head">
         <div class="ph-copy">
-          <span class="ord">10</span>
+          <span class="ord">11</span>
           <h3>Model provenance</h3>
           <p class="lead">Every input carries one of three labels, kept separate rather than blended.
           <span class="tag m">measured</span> is read directly from the vulnerability data shipped
@@ -559,7 +592,7 @@
     <section class="panel part" id="p-export">
       <div class="panel-head">
         <div class="ph-copy">
-          <span class="ord">11</span>
+          <span class="ord">12</span>
           <h3>Export this run</h3>
           <p class="lead">Both exports report <em>your</em> estate rather than this page's
           argument: what you configured, the resulting probability with its uncertainty band, the

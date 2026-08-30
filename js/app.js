@@ -261,6 +261,20 @@
     return { key: k, label: M.ACCESS[k].l, short: ACCESS_SHORT[k] || M.ACCESS[k].l,
              tier: M.ACCESS[k].tier, d: M.ACCESS[k].d };
   });
+  /* The five non-vulnerability routes with the control chain that gates each —
+   * the caption the gates figure prints beside the route name. Filtered from
+   * ACCESS_ROWS for the same reason ACCESS_ROWS is derived from ACCESS: a
+   * hand-restated route list is a route list that drifts. */
+  var GATE_CHAIN = {
+    phishing: 'filtering → authentication',
+    credential: 'authentication → privilege',
+    misconfig: 'configuration assurance',
+    insider: 'personnel and least privilege',
+    physical: 'device encryption',
+  };
+  var GATE_ROWS = ACCESS_ROWS.filter(function (r) { return !M.ACCESS[r.key].vuln; })
+    .map(function (r) { return { key: r.key, label: r.label, short: r.short, gate: GATE_CHAIN[r.key] || '' }; });
+  var IDN_KEYS = Object.keys(M.IDENTITY);
   var KEYS = ALL_SPEC.map(function (s) { return s.k; });
 
   /* ── controls ──────────────────────────────────────────────────────────── */
@@ -706,7 +720,7 @@
     return M.simulate(params, n, seed, { surv: !!wantSurv, spread: 1 });
   }
   /* ── render ────────────────────────────────────────────────────────────── */
-  var lastRun = null, lastSens = null, lastDens = null;
+  var lastRun = null, lastSens = null, lastDens = null, lastLadder = null;
   /* Each drawn curve carries the dial value it belongs to in `cur`, taken from
    * the pass's snapshot. Reading the live P at redraw time would move a marker
    * off the curve it was computed for whenever a redraw lands between passes —
@@ -729,7 +743,8 @@
    * boot, moves that correction from seconds in to script load. The
    * arithmetic is js/charts.js's own, so the two cannot drift. */
   function reserveHeights() {
-    [['race'], ['funnel', M.FUNNEL.length], ['routes', ACCESS_ROWS.length],
+    [['race'], ['funnel', M.FUNNEL.length], ['gates', GATE_ROWS.length],
+     ['ladder', IDN_KEYS.length], ['routes', ACCESS_ROWS.length],
      ['surv'], ['torn', LEVERS.length], ['sweep'],
      ['severity', C.exploitation.bands.length], ['volume'],
     ].forEach(function (p) {
@@ -886,7 +901,7 @@
     return lastDens;
   }
 
-  function drawRace() {
+  function drawRace(r) {
     var d = raceDensities();
     CH.race($('race'), width('race'), d, palette());
     var n = empty($('race-note'));
@@ -903,12 +918,23 @@
     } else {
       add(n, ' ', b(pctS(d.beforeFrac)), ' of exploits are already public when the CVE record lands.');
     }
+    /* The scope of the figure, beside the figure. This chapter and the funnel
+     * under it draw the mass-exploitation route and nothing else, and on most
+     * estates that route is a minority of first compromises — exactly the
+     * miscalibration the page argues against, so the two chapters that could
+     * recreate it have to carry their own share, live. */
+    if (r) {
+      add(n, ' This figure and the funnel below cover the mass-exploitation route alone — ',
+        b(pctS(r.routes[0])),
+        ' of first compromises on this estate. The routes that need no vulnerability are gated in chapter 03.');
+    }
   }
 
   function drawMain(r) {
     var pal = palette();
-    drawRace();
+    drawRace(r);
     CH.funnel($('funnel'), width('funnel'), r, M.FUNNEL, pal);
+    CH.gates($('gates'), width('gates'), r, pal, GATE_ROWS);
     CH.routes($('routes'), width('routes'), r, pal, M.SCOPE, ACCESS_ROWS);
     CH.survival($('surv'), width('surv'), r, pal);
     updateWild(r);
@@ -932,6 +958,7 @@
       /* Only once the sweep points belong to the same pass as the bars. */
       if (lastSens.sweep) CH.sweep($('sweep'), width('sweep'), lastSens.sweep, pal);
     }
+    if (lastLadder) CH.ladder($('ladder'), width('ladder'), lastLadder, pal);
   }
 
   function fast() {
@@ -1180,9 +1207,35 @@
       });
     }
 
-    /* Everything from here is chapters 03 and 07. Built only once a reader is
+    /* Chapter 03's authentication ladder: the same estate at each identity
+     * rung, weakest path in. Runs in every settle pass — the chapter sits
+     * well above the sensitivity fold, so it cannot wait for armSens — and
+     * re-runs on a metric change because the reading IS the metric. Four
+     * short runs on the sensitivity settings: the ladder compares rungs
+     * against each other, so what matters is that all four share a seed and
+     * a trial count, not that they match the headline's. */
+    var ladderVals = [];
+    IDN_KEYS.forEach(function (rk) {
+      var o = copyOf(snap);
+      Object.keys(M.IDENTITY[rk].p).forEach(function (pk) { o[pk] = M.IDENTITY[rk].p[pk]; });
+      pushSlicedSim(stages, o, N_SENS, SEED_SENS, SENS_OPTS, function (r2) {
+        ladderVals.push({ k: rk, l: M.IDENTITY[rk].l, v: r2[metric] });
+      });
+    });
+    stages.push(function () {
+      var cur = closestIdentity();
+      ladderVals.forEach(function (rw) { rw.cur = rw.k === cur; });
+      lastLadder = ladderVals;
+      CH.ladder($('ladder'), width('ladder'), ladderVals, palette());
+      var nn = empty($('ladder-note'));
+      add(nn, 'Annual probability of ' + (metric === 'p' ? 'compromise' : 'an incident') +
+        ' for this estate, recomputed at each rung with everything else held. ' +
+        'The highlighted rung is where the current authentication settings sit.');
+    });
+
+    /* Everything from here is chapters 04 and 08. Built only once a reader is
      * heading for them — see armSens. The stages already queued above are the
-     * headline figures and the four charts above the fold, which every reader
+     * headline figures and the charts above the fold, which every reader
      * gets regardless. */
     if (!sensArmed) { runStages(stages, gen, metric); return; }
 
@@ -1307,6 +1360,10 @@
       b(num(r.wild, 2)), ' (' + pctS(r.wildShare) + ') are confirmed exploited against live targets. ',
       b(num(r.critWild, 2)), ' of those are Critical-rated, roughly a third of what is actually ' +
       'exploited. The rest still draw opportunistic attack traffic, at a lower rate.');
+    var nv = 0;
+    ACCESS_ROWS.forEach(function (c, i) { if (!M.ACCESS[c.key].vuln) nv += r.routes[i]; });
+    add(n, ' This funnel is one route of eight: the five that need no vulnerability carry ',
+      b(pctS(nv)), ' of first compromises here, and are gated in the next chapter.');
   }
 
   /* The five actions are ranked by their effect at the current settings, so
@@ -1770,6 +1827,15 @@
     anchorRow(host, 'CVEs NVD has stopped analysing', 'measured',
       thou(C.nvd.deferred) + ' (' + C.nvd.deferredShare.toFixed(1) + '%)',
       'CyberMon · NVD API status labels');
+    /* The one anchor the non-vulnerability half has. No single rate on those
+     * routes has a public measurement, so the aggregate they produce is what
+     * gets held to a source — and the provenance panel has to say so, because
+     * this is where a reader comes to ask what the people routes stand on. */
+    anchorRow(host, 'Initial-access mix the non-vulnerability rates are tuned to', 'reported',
+      ACCESS_ROWS.length + ' classes, ±' + Math.round(M.SCOPE.accessMix.tolerance * 100) + 'pt each',
+      M.SCOPE.accessMix.src + '. No single rate on the routes that need no vulnerability has a ' +
+      'public measurement, so the mix they produce is anchored instead — asserted in CI, and drawn ' +
+      'against this estate in chapter 06');
     /* cited figures first, then the pure judgement calls — a reader scanning
      * for what to argue with should reach the weakest material last, not first */
     var keys = Object.keys(M.ASSUMED);

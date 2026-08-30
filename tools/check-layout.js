@@ -135,6 +135,17 @@ const SERIES = MODEL.SCENARIO.map((k, i) => ({
 const CHART = {
   race: (svg, w) => CHARTS.race(svg, w, DENS, PAL),
   funnel: (svg, w) => CHARTS.funnel(svg, w, R, MODEL.FUNNEL, PAL),
+  /* The gates rows are derived from MODEL.ACCESS exactly as js/app.js derives
+   * them, for the same reason the routes rows below are. */
+  gates: (svg, w) => CHARTS.gates(svg, w, R, PAL,
+    Object.keys(MODEL.ACCESS).filter((k) => !MODEL.ACCESS[k].vuln).map((k) => ({
+      key: k, label: MODEL.ACCESS[k].l, short: MODEL.ACCESS[k].l.split(' ')[0],
+      gate: 'control chain',
+    }))),
+  ladder: (svg, w) => CHARTS.ladder(svg, w,
+    Object.keys(MODEL.IDENTITY).map((k, i) => ({
+      k: k, l: MODEL.IDENTITY[k].l, v: 0.82 - i * 0.08, cur: k === MODEL.DEFAULT_IDENTITY,
+    })), PAL),
   torn: (svg, w) => CHARTS.tornado(svg, w, LEVER_ROWS, R.p, PAL),
   /* The access classes are passed in by js/app.js rather than held inside the
    * chart, so the harness has to supply them too — derived from MODEL.ACCESS

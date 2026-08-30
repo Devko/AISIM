@@ -1926,6 +1926,11 @@
    * both the names and the order. */
   var R = {};
   ROUTES.forEach(function (name, i) { R[name] = i; });
+  /* The five routes that need no vulnerability, in ROUTES order — derived
+   * from the same table for the same reason ROUTES is: the gates figure on
+   * the page reports these by name, and a list restated by hand is a list
+   * that drifts. */
+  var GATE_KEYS = ROUTES.filter(function (name) { return !ACCESS[name].vuln; });
   /* A strict funnel: every stage is a subset of the one above it.
    * Whether a vulnerability is merely armed (public exploit) or actually used
    * in the wild is NOT a funnel stage — it is a hazard multiplier, because
@@ -1998,6 +2003,9 @@
     var route = ROUTES.map(function () { return 0; });
     var fn = [0, 0, 0, 0, 0, 0];
     var wildN = 0, armedN = 0, critArmedN = 0, critWildN = 0;
+    /* Per-route stage expectations for the non-vulnerability gates figure:
+     * [pressure, arrivals, compromises] per GATE_KEYS entry. */
+    var gsum = GATE_KEYS.map(function () { return [0, 0, 0]; });
     /* Credible interval by variance decomposition.
      *
      * Trials are grouped into blocks and ONE coefficient set is drawn per block,
@@ -2404,27 +2412,52 @@
           : 0;
         var eff = function (control, ceiling) { return 1 - (control / 100) * ceiling; };
 
+        /* THE STAGES, TALLIED AS EXPECTATIONS before the arrivals below are
+         * sampled from them — the same treatment the funnel's first two
+         * stages get, and for the same reason: they are reported as per-year
+         * means, and the expectation is that mean with none of the variance.
+         * `pressure` is the arrival rate with the arrival-stage control at
+         * zero; where a route has no arrival-stage control the two are equal,
+         * which the gates figure shows rather than hides — nothing this
+         * estate does thins what reaches it on those routes. Consumes no
+         * randomness, so the trial stream is bit-identical with the tally in
+         * place. Order is GATE_KEYS order, which is ROUTES order. */
+
         /* Phishing. Awareness thins the arrivals; authentication blocks the
          * conversion. Two different stages, which is why a programme strong on
          * one and weak on the other does not average out. */
-        fire(heads * k.phishLure * eff(P.awareness, k.phishAwareEff),
-             k.phishConv * eff(P.mfa, k.phishMfaEff), R.phishing);
+        var phishP = heads * k.phishLure;
+        var phishA = phishP * eff(P.awareness, k.phishAwareEff);
+        var phishS = k.phishConv * eff(P.mfa, k.phishMfaEff);
 
         /* Credential abuse. Arrival is exposure elsewhere, so nothing the
          * estate does reduces it — only what the credential reaches once
          * used. Both gates act on conversion, hence the product. */
-        fire(heads * k.credExposure,
-             k.credConv * eff(P.mfa, k.credMfaEff) * eff(P.pam, k.credPamEff),
-             R.credential);
+        var credP = heads * k.credExposure;
+        var credS = k.credConv * eff(P.mfa, k.credMfaEff) * eff(P.pam, k.credPamEff);
 
         /* Misconfiguration. The one new class that scales with systems rather
          * than people, and the only route in the model where remediation
          * cadence is irrelevant by construction rather than by assumption. */
-        fire(P.exposed * k.misconfigRate * eff(P.configAssurance, k.configEff),
-             k.misconfigConv, R.misconfig);
+        var misP = P.exposed * k.misconfigRate;
+        var misA = misP * eff(P.configAssurance, k.configEff);
 
-        fire(heads * k.insiderRate, eff(P.insiderCtl, k.insiderEff), R.insider);
-        fire(heads * k.deviceLoss, eff(P.deviceCtl, k.deviceEff), R.physical);
+        var insP = heads * k.insiderRate;
+        var insS = eff(P.insiderCtl, k.insiderEff);
+        var devP = heads * k.deviceLoss;
+        var devS = eff(P.deviceCtl, k.deviceEff);
+
+        gsum[0][0] += phishP; gsum[0][1] += phishA; gsum[0][2] += phishA * phishS;
+        gsum[1][0] += credP;  gsum[1][1] += credP;  gsum[1][2] += credP * credS;
+        gsum[2][0] += misP;   gsum[2][1] += misA;   gsum[2][2] += misA * k.misconfigConv;
+        gsum[3][0] += insP;   gsum[3][1] += insP;   gsum[3][2] += insP * insS;
+        gsum[4][0] += devP;   gsum[4][1] += devP;   gsum[4][2] += devP * devS;
+
+        fire(phishA, phishS, R.phishing);
+        fire(credP, credS, R.credential);
+        fire(misA, k.misconfigConv, R.misconfig);
+        fire(insP, insS, R.insider);
+        fire(devP, devS, R.physical);
 
         events += n;
         sysTotal += sysN;
@@ -2498,6 +2531,15 @@
         surv: Array.prototype.slice.call(surv, 0, H + 1).map(function (v) { return v / trials; }),
         routes: route.map(function (v) { return v / totalRoute; }),
         routeN: route.slice(),
+        /* The non-vulnerability gates, as per-year expected rates: what
+         * reaches the estate, what survives the arrival-stage controls, and
+         * what converts to compromise. Exact per coefficient draw — see the
+         * tally in the loop — so at spread 0 these carry no Monte-Carlo
+         * noise at all. */
+        gates: GATE_KEYS.map(function (key, gi) {
+          return { key: key, pressure: gsum[gi][0] / trials,
+                   arrivals: gsum[gi][1] / trials, compromises: gsum[gi][2] / trials };
+        }),
         fn: fn.map(function (v) { return v / trials; }),
         armed: armedN / trials,
         wild: wildN / trials,
