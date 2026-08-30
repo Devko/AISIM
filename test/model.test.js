@@ -1732,10 +1732,36 @@ console.log('\n══ Exposure Race — model tests ═════════�
  * 15. Performance budget — the UI redraws on every slider move
  * ───────────────────────────────────────────────────────────────────────── */
 {
-  const t0 = Date.now();
+  /* A median of several runs after a warm-up, not one cold sample.
+   *
+   * This block runs last, so a single measurement times the heap and the GC
+   * pressure of every test before it as much as the arithmetic it means to
+   * time. The same pass measures 66ms on its own, 111ms here, and 124ms on a
+   * CI runner — which failed a budget the interactive path was nowhere near
+   * breaching. What the budget is about is whether a slider move feels
+   * instant, and a slider is moved repeatedly against a warm process, so that
+   * is what gets timed. The 120ms threshold is unchanged.
+   *
+   * The warm-up is not a courtesy: the first call through simulate compiles
+   * and specialises the whole path, and counting that in the answer times the
+   * JIT rather than the model.
+   *
+   * The range is reported alongside the median, because the failure this
+   * replaces was a real regression sitting inside a noisy estimator — the
+   * model went from 27ms to 66ms covering four severity bands instead of one,
+   * and a spread that starts creeping toward the threshold is the thing worth
+   * seeing before it fails. */
   M.simulate(D(), 6000, 1234, { surv: true, spread: 1 });
-  const dt = Date.now() - t0;
-  ok('6k-trial interactive pass stays under 120ms', dt < 120, `${dt}ms`);
+  const runs = [];
+  for (let i = 0; i < 7; i++) {
+    const t0 = Date.now();
+    M.simulate(D(), 6000, 1234, { surv: true, spread: 1 });
+    runs.push(Date.now() - t0);
+  }
+  runs.sort((a, b) => a - b);
+  const dt = runs[(runs.length - 1) >> 1];
+  ok('6k-trial interactive pass stays under 120ms', dt < 120,
+    `${dt}ms median of ${runs.length}, ${runs[0]}-${runs[runs.length - 1]}ms`);
 }
 
 /* ───────────────────────────────────────────────────────────────────────── */
