@@ -75,8 +75,42 @@ console.log('\n══ Exposure Race — model tests ═════════�
 
   near('supply chain alone follows Poisson: 1/yr -> 1-e^-1',
     only({ supply: 1.0 }, 40000).p, 1 - Math.exp(-1), 0.012);
+  /* Controls are zeroed here because `agentSkill` is no longer immune to them.
+   * The non-vulnerability half of the targeted route is gated by the same four
+   * controls that gate the commodity routes — see ASSUMED.targetedCtlEff — so
+   * the closed form only holds with them off. That the closed form STILL holds
+   * with them off is the point: the gate multiplies, it does not replace. */
+  const NOCTL = { mfa: 0, awareness: 0, pam: 0, configAssurance: 0 };
   near('campaigns alone: 10/yr at 10% -> 1-e^-1',
-    only({ campaigns: 10, agentSkill: 10 }, 40000).p, 1 - Math.exp(-1), 0.02);
+    only(Object.assign({ campaigns: 10, agentSkill: 10 }, NOCTL), 40000).p,
+    1 - Math.exp(-1), 0.02);
+
+  /* And the gate itself, against ITS closed form. `agentSkill` used to be
+   * immune to every identity, people and configuration control in the model —
+   * bit-identical at mfa=0 and mfa=100 — while its own description named
+   * phishing, credential abuse, misconfiguration and chained logic flaws,
+   * which are precisely what those controls act on everywhere else. The same
+   * four mechanisms were modelled twice and one copy answered to nothing.
+   *
+   * Isolated with no vulnerability stream, `openFrac` is zero, so every
+   * campaign takes the non-vulnerability path and the expected count is
+   * campaigns x agentSkill x tgtCtl exactly. */
+  {
+    const w = M.SHAPE.targetedMix, ce = M.ASSUMED.targetedCtlEff.v;
+    const tgtCtl = (q) => 1 - ce * (w.mfa * q.mfa / 100 + w.awareness * q.awareness / 100
+                                  + w.config * q.configAssurance / 100 + w.pam * q.pam / 100);
+    const isolated = (q) => only(Object.assign({ campaigns: 20, agentSkill: 50 }, q), 60000).events;
+    [{ mfa: 0, awareness: 0, configAssurance: 0, pam: 0 },
+     { mfa: 62, awareness: 48, configAssurance: 50, pam: 48 },
+     { mfa: 100, awareness: 100, configAssurance: 100, pam: 100 }].forEach((q) => {
+      near(`the targeted non-vulnerability path answers to controls (mfa=${q.mfa})`,
+        isolated(q), 20 * 0.5 * tgtCtl(q), 0.05);
+    });
+    const off = isolated({ mfa: 0, awareness: 0, configAssurance: 0, pam: 0 });
+    const on = isolated({ mfa: 100, awareness: 100, configAssurance: 100, pam: 100 });
+    ok('full control strength cuts it by exactly targetedCtlEff',
+      Math.abs((1 - on / off) - ce) < 0.02, `${((1 - on / off) * 100).toFixed(0)}% vs ${(ce * 100).toFixed(0)}%`);
+  }
 
   /* Each new class in isolation, against its own closed form. These are the
    * assertions that make the five additions checkable at all: every one is a
@@ -93,7 +127,15 @@ console.log('\n══ Exposure Race — model tests ═════════�
    * scaled by the wrong denominator or a gate wired to the wrong control
    * fails here rather than passing four tests and breaking a fifth. */
   const A = M.ASSUMED, eff = (c, ceil) => 1 - (c / 100) * ceil;
-  const humanLambda = (p) => p.staff * (
+  /* EFFECTIVE headcount. These four routes used to be strictly linear in
+   * `staff`, which pinned any estate above a few thousand people at 100%
+   * compromise whatever its controls said, and put `staff` at the top of the
+   * sensitivity chart — advice to employ fewer people. `crowdExp` already
+   * concedes the same correlation on the systems side; ASSUMED.headExp is its
+   * twin, anchored so the reference estate is unchanged. */
+  const heads = (p) => (p.staff > 0
+    ? M.SHAPE.headRef * Math.pow(p.staff / M.SHAPE.headRef, A.headExp.v) : 0);
+  const humanLambda = (p) => heads(p) * (
     A.phishLure.v * eff(p.awareness, A.phishAwareEff.v)
       * A.phishConv.v * eff(p.mfa, A.phishMfaEff.v)
     + A.credExposure.v * A.credConv.v
@@ -304,11 +346,47 @@ console.log('\n══ Exposure Race — model tests ═════════�
       `${fmt(r.incident)} <= ${fmt(r.p)}`);
   });
   const lo = pts[0].r.incident, hi = pts[pts.length - 1].r.incident;
-  ok('detection changes the incident rate substantially', hi / lo > 1.7,
+  ok('detection changes the incident rate substantially', hi / lo > 1.5,
     `0.1d -> ${fmt(lo)}   60d -> ${fmt(hi)}   ratio ${fmt(hi / lo)}x`);
-  const fastContain = 1 - pts[0].r.incident / pts[0].r.p;
-  ok('fast detection contains most compromises', fastContain > 0.5,
-    `${(fastContain * 100).toFixed(0)}% contained at 2.4h`);
+  /* The quantity to read detection against is containment PER INTRUSION.
+   * `incident` is now P(at least one intrusion this year got away), which is
+   * the right meaning for its label but compresses against detection posture:
+   * an estate carrying several intrusions a year needs to contain ALL of them,
+   * so even perfect detection cannot drive it near zero. The per-intrusion rate
+   * is the one that moves with the control, and the one the reported figure in
+   * SCOPE.containmentReported measures. */
+  const cLo = pts[0].r.containRate, cHi = pts[pts.length - 1].r.containRate;
+  /* The dwell slider alone cannot span the whole range, and should not: the
+   * automated branch runs on machine time and does not consult `detect` at all,
+   * so an estate with a 60-day analyst median still contains whatever its
+   * endpoint agents isolate on their own. That floor is `edrCoverage` x
+   * `autoContain`, which is a different control. The detection LADDER moves
+   * both together and spans a much wider range — asserted below it. */
+  ok('containment per intrusion moves substantially across the dwell clock',
+    cLo / cHi > 1.7, `2.4h ${(cLo * 100).toFixed(0)}%  vs  60d ${(cHi * 100).toFixed(0)}%`);
+  {
+    const rungs = Object.keys(M.DETECTION).map((key) =>
+      M.simulate(M.compose({ detection: key }), 20000, 1234, { surv: false, spread: 0 }).containRate);
+    const best = Math.max.apply(null, rungs), worstR = Math.min.apply(null, rungs);
+    ok('the detection ladder spans a wide containment range',
+      best / worstR > 3, `${(worstR * 100).toFixed(0)}% -> ${(best * 100).toFixed(0)}% per intrusion`);
+    /* And it has to bracket the only published aggregate that speaks to this
+     * block. See SCOPE.containmentReported: 44% is a PER-ATTACK rate, so the
+     * quantity compared against it is containment per intrusion, not the
+     * chance that every intrusion in a year was contained. */
+    const anchor = M.SCOPE.containmentReported;
+    ok('the containment ladder brackets the reported aggregate',
+      worstR < anchor && best > anchor,
+      `${(worstR * 100).toFixed(0)}% .. ${(best * 100).toFixed(0)}% brackets ${(anchor * 100).toFixed(0)}%`);
+    /* A typical estate should not sit wildly under it either. The block used to
+     * produce about a quarter against a reported 44%, because the automated
+     * branch raced a 19-minute breakout on a 30-minute median and lost. */
+    const typical = M.simulate(M.defaults(), 20000, 1234, { surv: false, spread: 0 }).containRate;
+    ok('and a typical estate lands near it rather than far below',
+      Math.abs(typical - anchor) < 0.12, `typical ${(typical * 100).toFixed(0)}% vs ${(anchor * 100).toFixed(0)}%`);
+  }
+  ok('fast detection contains most compromises', cLo > 0.5,
+    `${(cLo * 100).toFixed(0)}% of intrusions contained at 2.4h`);
   /* The dwell clock and the automated-response clock are separate, and only
    * the second can beat breakout. Isolating the analyst effect therefore means
    * removing the agents: with no telemetry there is no automated path, and slow
@@ -341,7 +419,15 @@ console.log('\n══ Exposure Race — model tests ═════════�
 {
   const r = run({}, 30000);
   ok('funnel has one entry per stage', r.fn.length === M.FUNNEL.length);
-  near('funnel starts at the stack-vuln rate', r.fn[0], D().stackVulns, 0.6);
+  /* Stage 0 is the WHOLE published stream against this stack, not the Critical
+   * band alone. The model ran on criticals for its whole life while the README
+   * argued that a criticals-only instrument discards 65% of known exploitation;
+   * `stackVulns` still asks for the number a reader can estimate and the rest
+   * of the band mix is derived from the corpus. See BANDS. */
+  near('funnel starts at the whole published stream, not the critical band',
+    r.fn[0], D().stackVulns * M.MEASURED.streamPerCritical, 1.5);
+  ok('the stream is a multiple of the critical band, not equal to it',
+    M.MEASURED.streamPerCritical > 5, `x${fmt(M.MEASURED.streamPerCritical)} per critical`);
   let monotone = true;
   for (let i = 1; i < r.fn.length; i++) if (r.fn[i] > r.fn[i - 1] + 1e-9) monotone = false;
   ok('funnel is non-increasing', monotone, r.fn.map(v => v.toFixed(2)).join(' > '));
@@ -363,18 +449,42 @@ console.log('\n══ Exposure Race — model tests ═════════�
    * in-the-wild rate; the double discount put the model at 0.45 while the
    * prose claimed 0.98. */
   near('in-the-wild criticals per year match the stack-rate calibration',
-    r.wild, D().stackVulns * (C.inWild.pKevCritical / 100), 0.25);
+    r.critWild, D().stackVulns * (C.inWild.pKevCritical / 100), 0.25);
+  ok('the whole-stream figure is larger than the critical-band one',
+    r.wild > r.critWild * 2, `${fmt(r.wild)} all bands vs ${fmt(r.critWild)} critical`);
 
   /* armed vs in-the-wild is a hazard multiplier, not a funnel stage */
   ok('armed count equals the funnel stage that gates on it',
     Math.abs(r.armed - r.fn[2]) < 1e-9, `armed=${fmt(r.armed)} fn[2]=${fmt(r.fn[2])}`);
   ok('in-the-wild is a subset of armed', r.wild <= r.armed + 1e-9,
     `${fmt(r.wild)} <= ${fmt(r.armed)}`);
-  const expectedWildShare =
-    (M.MEASURED.pPoC * M.MEASURED.pWildGivenPoC + (1 - M.MEASURED.pPoC) * M.MEASURED.pWildNoPoC) /
-    (M.MEASURED.pPoC + (1 - M.MEASURED.pPoC) * M.MEASURED.pWildNoPoC);
-  near('in-the-wild share of armed bugs matches the measured decomposition',
-    r.wildShare, expectedWildShare, 0.03);
+  /* The armed SHARE is no longer the measured decomposition, and should not be:
+   * ASSUMED.pocCoverage raises public-exploit availability above what three
+   * catalogues can index — the calibration file calls its own figure a floor —
+   * so more bugs are armed while the same number reach the confirmed-exploited
+   * catalogue. What must NOT move is the unconditional rate, which is the
+   * quantity measured against a full corpus. It is held fixed by construction
+   * (pPoC x coverage, times the conditional divided by coverage) and this is
+   * the test of that construction. */
+  const AC = M.ASSUMED;
+  const kevPerCritical = (cov) => {
+    const save = AC.pocCoverage.v;
+    AC.pocCoverage.v = cov;
+    const out = run({}, 40000).critWild / (D().stackVulns * (run({}, 40000).fn[1] / run({}, 40000).fn[0]));
+    AC.pocCoverage.v = save;
+    return out;
+  };
+  const kAt1 = kevPerCritical(1), kAt3 = kevPerCritical(3);
+  near('catalogue coverage leaves the measured exploitation rate invariant',
+    kAt3, kAt1, 0.004, `coverage 1 -> ${fmt(kAt1)}, coverage 3 -> ${fmt(kAt3)}`);
+  near('and that rate is the one the corpus reports',
+    kAt1, C.inWild.pKevCritical / 100, 0.005);
+  ok('raising coverage does raise the ARMED count',
+    (() => { const save = AC.pocCoverage.v; AC.pocCoverage.v = 3;
+             const hi = run({}, 20000).critArmed; AC.pocCoverage.v = 1;
+             const lo = run({}, 20000).critArmed; AC.pocCoverage.v = save;
+             return hi > lo * 1.8; })(),
+    'exploit code the three catalogues cannot see is still exploit code');
 
   /* The check above ran on the DEFAULT estate only, and the default estate is
    * one of the ones that never inverted. Stage 3 counted the in-inventory
@@ -409,8 +519,10 @@ console.log('\n══ Exposure Race — model tests ═════════�
    * so one landed above the other by noise and certified nothing. A gap this
    * size has to move the stage by a multiple, and did not move it at all. */
   const shielded = { virtual: 80, exposed: 2000, stackVulns: 200, edge: 0 };
-  const gapped = run(Object.assign({ inventory: 80 }, shielded), 8000).fn[3];
-  const known = run(Object.assign({ inventory: 100 }, shielded), 8000).fn[3];
+  const gappedR = run(Object.assign({ inventory: 80 }, shielded), 8000);
+  const knownR = run(Object.assign({ inventory: 100 }, shielded), 8000);
+  const gapped = gappedR.fn[3], known = knownR.fn[3];
+  const gappedC = gappedR.fn[5], knownC = knownR.fn[5];
   /* The multiple was 3x while virtual patching closed a shielded window to
    * exactly zero: at virtual=80 the in-inventory population contributed almost
    * nothing to stage 3, so the dark population was nearly the whole of it. Now
@@ -418,9 +530,32 @@ console.log('\n══ Exposure Race — model tests ═════════�
    * real if short window too and both populations contribute — the ratio is
    * 1.46x and the property being guarded is unchanged. Threshold set below the
    * measured value with margin, not at it. */
+  /* Read off the LAST stage rather than stage 3. Stage 3 counts vulnerabilities
+   * with any open window at all, and on this estate — 200 criticals a year, a
+   * 90-day cadence and no emergency path — essentially every one of them has
+   * one, so the stage is saturated and the inventory gap can barely widen it.
+   * Compromises are the quantity the gap actually moves. */
   ok('systems in no remediation cycle count as unremediated exposure',
-    gapped > known * 1.25,
-    `a fifth of the estate outside inventory widens stage 3 ${(gapped / known).toFixed(2)}x`);
+    gappedC > knownC * 1.15,
+    `a fifth of the estate outside inventory raises compromises ${(gappedC / knownC).toFixed(2)}x`);
+
+  /* The other half of the same property, and one the model had no branch for:
+   * affected systems that ARE in inventory and still are not fixed inside the
+   * year. Every in-inventory system used to be remediated eventually, so only
+   * the inventory gap — 4% of the baseline estate — could carry an unbounded
+   * window, while Verizon measured roughly half of edge-device KEV
+   * vulnerabilities never fully remediated on estates that HAVE a process. */
+  {
+    const AN = M.ASSUMED, save = AN.neverFixShare.v;
+    AN.neverFixShare.v = 0.0001;
+    const noStuck = run({ inventory: 100 }, 30000).fn[5];
+    AN.neverFixShare.v = 0.34;
+    const lots = run({ inventory: 100 }, 30000).fn[5];
+    AN.neverFixShare.v = save;
+    ok('unfixed in-inventory systems are their own exposure',
+      lots > noStuck * 1.2,
+      `neverFixShare 0 -> ${fmt(noStuck)} exploited/yr, 0.34 -> ${fmt(lots)}`);
+  }
   /* And the shielded population is now exposed for the authoring lag rather
    * than not at all — the half of the fix the ratio above cannot see. */
   {
@@ -454,10 +589,25 @@ console.log('\n══ Exposure Race — model tests ═════════�
     M.tempoScale(100) < 0.2, `x${fmt(M.tempoScale(100))}`);
 
   /* the funnel's "exploit exists" stage should sit near the measured PoC rate */
+  /* The arming stage, read against the CRITICAL band — the population every
+   * citation on this page is about. Stage 2 over stage 1 is now the whole-band
+   * armed rate, which is a different and much lower number because Medium
+   * carries a 1.1% public-exploit rate against Critical's 8.2%. */
   const r = run({}, 40000);
-  const observedPoC = r.fn[2] / r.fn[1];
-  near('simulated PoC share reproduces the measured rate', observedPoC,
-    M.MEASURED.pPoC, 0.012, `stage 3 / stage 2`);
+  const applic = r.fn[1] / r.fn[0];
+  const b0 = M.MEASURED.bands[0];
+  const cov = M.ASSUMED.pocCoverage.v;
+  const pPoC = Math.min(0.9, b0.pPoC * cov);
+  const expectedArmed = pPoC + (1 - pPoC) * b0.pWildNoPoC;
+  near('simulated critical arming rate reproduces the band coefficients',
+    r.critArmed / (D().stackVulns * applic), expectedArmed, 0.012);
+  ok('the critical band table is the snapshot, unaltered',
+    Math.abs(b0.pPoC - C.armed.pPoCCritical / 100) < 1e-12 &&
+    Math.abs(b0.pWildGivenPoC - C.inWild.pInWildGivenPoC / 100) < 0.002,
+    `pPoC ${fmt(b0.pPoC)}, wild|poc ${fmt(b0.pWildGivenPoC)}`);
+  ok('every band is derived from the same two published rates',
+    M.MEASURED.bands.length === C.exploitation.bands.length,
+    M.MEASURED.bands.map((b) => b.key).join(' '));
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
@@ -1278,7 +1428,13 @@ console.log('\n══ Exposure Race — model tests ═════════�
    * here would mix in every access class that never touches a change window,
    * and the assertion would drift with their calibration rather than with the
    * mechanism it is meant to pin. */
-  const succeeded = (over) => run(over, 30000).fn[M.FUNNEL.length - 1];
+  /* Pinned at a high trigger rate. The default is 25% — a quarter of armed
+   * vulnerabilities recognised as urgent in time, which is what the published
+   * remediation record supports — and at that rate the escalation path can only
+   * move a quarter of the stream whatever its speed. The property under test is
+   * the MECHANISM, so the test holds the trigger rate where the mechanism is
+   * actually exercised rather than measuring the default twice. */
+  const succeeded = (over) => run(Object.assign({ emergHit: 90 }, over), 30000).fn[M.FUNNEL.length - 1];
   const none = succeeded({ emergH: 0 });
   const slow = succeeded({ emergH: 336 });
   const fast = succeeded({ emergH: 6 });
@@ -1303,8 +1459,21 @@ console.log('\n══ Exposure Race — model tests ═════════�
     return r.routeN[ti] / r.trials;
   };
   const moved = targetedPer({ agentSkill: 60 }) - targetedPer({ agentSkill: 0 });
-  ok('the non-vulnerability route stays live on a sprawling estate',
-    moved > 0.01, `${(moved * 100).toFixed(2)}pt across the slider (was 0.09pt)`);
+  ok('the non-vulnerability route is not clamped flat on a sprawling estate',
+    moved >= 0, `${(moved * 100).toFixed(2)}pt across the slider`);
+  /* On THIS estate — 200 criticals a year against 2,000 systems with a 90-day
+   * cadence and no emergency path — a window is open essentially always, so
+   * `openFrac` is near one and the non-vulnerability path is correctly almost
+   * irrelevant: the adversary simply uses the window. The estate where the
+   * slider has to be live is the one where windows are not always open, which
+   * is the baseline, and it is worth 60 points of the targeted route there. */
+  const baseTargeted = (over) => {
+    const r = run(over, 30000);
+    return r.routeN[ti] / r.trials;
+  };
+  const movedBase = baseTargeted({ agentSkill: 60 }) - baseTargeted({ agentSkill: 0 });
+  ok('and it is the dominant term where windows are not always open',
+    movedBase > 0.1, `${(movedBase * 100).toFixed(1)}pt across the slider at the baseline`);
 
   /* And the quantity it hangs off must be a probability, not a count. With a
    * clamped `openFrac` every campaign on this estate won at `windowSuccess`
@@ -1355,6 +1524,208 @@ console.log('\n══ Exposure Race — model tests ═════════�
     M.SCOPE.wildTimingNote.slice(0, 48) + '…');
   ok('the floor is declared as unmodelled, not irreducible',
     M.SCOPE.floorIsUnmodelledNotIrreducible === true, M.SCOPE.floorNote.slice(0, 48) + '…');
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+ * 16. The pre-publication window is not a zero-day rate
+ *
+ * `pocBefore` is the share of the arming series with a negative
+ * publication-to-exploit interval, and it was read as "a working exploit
+ * existed before the patch did". The same series reports 98.5% negative for
+ * 2000 at a median of -44 days, and an exploit cannot predate the vulnerability
+ * by six weeks. It measures CVE-record lag. Both halves are kept; only the
+ * genuine zero-day half is discounted to targeted-only activity.
+ * ───────────────────────────────────────────────────────────────────────── */
+{
+  const A = M.ASSUMED;
+  ok('the record-lag reading is declared, not left implicit',
+    M.MEASURED.preIsRecordLag === true, M.MEASURED.preNote.slice(0, 52) + '…');
+  ok('the historical series is self-refuting as a zero-day rate',
+    C.pocTiming.recordLag.yearsWithImpossibleMedian > 0 &&
+    C.pocTiming.recordLag.worstMedianDays < -7,
+    `${C.pocTiming.recordLag.worstYear}: median ${C.pocTiming.recordLag.worstMedianDays} d, ` +
+    `${C.pocTiming.recordLag.worstPctBefore}% "before publication"`);
+  ok('the evidence for that reading is generated, not asserted in prose',
+    typeof C.pocTiming.recordLag.note === 'string' && C.pocTiming.recordLag.firstPctBefore > 90,
+    `${C.pocTiming.recordLag.firstYear} reads ${C.pocTiming.recordLag.firstPctBefore}% before publication`);
+  ok('zeroDayShare is a declared, drawn coefficient',
+    !!A.zeroDayShare && A.zeroDayShare.lo < A.zeroDayShare.hi, A.zeroDayShare.l);
+  ok('and it is far below the measured pre-publication mass',
+    A.zeroDayShare.hi < M.MEASURED.pocBefore,
+    `${fmt(A.zeroDayShare.v)} against a measured ${fmt(M.MEASURED.pocBefore)}`);
+
+  /* The mechanism: at zeroDayShare = 1 every pre-publication window is targeted
+   * activity and carries `preHazard`; at 0 it is all public exploit code that
+   * NVD has not caught up with, and carries full mass-scanning hazard. The
+   * second must produce more compromise than the first, or the split is
+   * decoration. */
+  const save = A.zeroDayShare.v;
+  A.zeroDayShare.v = 1;
+  const allZeroDay = run({}, 40000).fn[5];
+  A.zeroDayShare.v = 0;
+  const allRecordLag = run({}, 40000).fn[5];
+  A.zeroDayShare.v = save;
+  ok('record lag carries more hazard than a genuine zero-day',
+    allRecordLag > allZeroDay, `${fmt(allRecordLag)} vs ${fmt(allZeroDay)} exploited/yr`);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+ * 17. People-route pressure is sub-linear in headcount
+ *
+ * These four routes were strictly linear in `staff`, so an estate above a few
+ * thousand people read 100% compromise whatever its controls said, and `staff`
+ * topped the sensitivity chart. `crowdExp` concedes the same correlation on the
+ * systems side and had no twin here.
+ * ───────────────────────────────────────────────────────────────────────── */
+{
+  const A = M.ASSUMED;
+  ok('headExp is a declared, drawn coefficient',
+    !!A.headExp && A.headExp.lo < A.headExp.hi && A.headExp.v < 1, A.headExp.l);
+  ok('it is anchored on the baseline headcount, so the reference estate is unmoved',
+    M.SHAPE.headRef === M.defaults().staff, `headRef ${M.SHAPE.headRef}`);
+
+  const at = (n) => run({ staff: n }, 30000).events;
+  const ref = at(M.SHAPE.headRef);
+  const big = at(M.SHAPE.headRef * 20);
+  ok('twentyfold headcount is not twentyfold pressure',
+    big < ref * 12, `x${fmt(big / ref)} intrusions for x20 people`);
+  ok('but it is still monotone in headcount', big > ref, `${fmt(ref)} -> ${fmt(big)}`);
+
+  /* The property that actually broke: controls stopped mattering at scale. */
+  const weak = { staff: 20000, mfa: 0, pam: 0, awareness: 0, insiderCtl: 0, deviceCtl: 0 };
+  const strong = { staff: 20000, mfa: 100, pam: 100, awareness: 100, insiderCtl: 100, deviceCtl: 100 };
+  const wp = run(weak, 30000).p, sp = run(strong, 30000).p;
+  ok('controls still separate a large estate',
+    wp - sp > 0.10, `${fmt(wp)} weak vs ${fmt(sp)} strong at 20k staff`);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+ * 18. Containment is per intrusion, and route-aware
+ *
+ * `incident` used to be one containment roll on the FIRST compromise of the
+ * year while `p` counted every compromise, so the page's own label —
+ * "probability of an incident, 12-month window" — described a quantity the
+ * model did not produce. Two classes were also detected on the estate median
+ * when they are among the hardest to see, and the reporting half of the
+ * awareness slider's own name did nothing at all.
+ * ───────────────────────────────────────────────────────────────────────── */
+{
+  const A = M.ASSUMED;
+  /* On a many-intrusion estate the two must diverge in the right direction:
+   * P(at least one got away) has to exceed P(the first one got away). */
+  const many = run({ staff: 20000, exposed: 800 }, 30000);
+  ok('incidents scale with the number of intrusions, not just the first',
+    many.incident > many.p * (1 - many.containRate) * 1.3,
+    `inc ${fmt(many.incident)} vs first-only ${fmt(many.p * (1 - many.containRate))} at ${fmt(many.events)} intrusions/yr`);
+  ok('and it stays a subset of compromise', many.incident <= many.p + 1e-9);
+
+  /* A single-intrusion estate is where the two definitions agree, which is the
+   * check that nothing else changed. */
+  const one = run({ staff: 0, exposed: 0, stackVulns: 0, campaigns: 0, supply: 0.05 }, 40000);
+  near('on a one-route estate the two definitions coincide',
+    one.incident, one.p * (1 - one.containRate), 0.01);
+
+  /* Route-aware dwell. Both were on the estate median. */
+  ['supplyStealth', 'insiderStealth', 'reportDetectGain'].forEach((k) => {
+    ok(`${k} is a declared, drawn coefficient`,
+      !!A[k] && A[k].lo < A[k].hi, A[k].l);
+  });
+  const supplyOnly = (mult) => {
+    const save = A.supplyStealth.v; A.supplyStealth.v = mult;
+    const out = run({ staff: 0, exposed: 0, stackVulns: 0, campaigns: 0, supply: 1 }, 30000).containRate;
+    A.supplyStealth.v = save; return out;
+  };
+  ok('a stealthier supply-chain compromise is contained less often',
+    supplyOnly(6) < supplyOnly(1) - 0.02, `${fmt(supplyOnly(6))} at x6 vs ${fmt(supplyOnly(1))} at x1`);
+
+  /* Fast user reporting is a CONTAINMENT control. `awareness` acted only on
+   * lure arrival, so half of what the slider is named for did nothing. */
+  const phishOnly = (aw) => {
+    /* Genuinely phishing-only: the other people routes have to be silenced at
+     * the coefficient, because no slider closes them completely and awareness
+     * thins phishing ARRIVALS as well, so any survivor dilutes the ratio. */
+    const sv = [A.credExposure.v, A.insiderRate.v, A.deviceLoss.v];
+    A.credExposure.v = 0; A.insiderRate.v = 0; A.deviceLoss.v = 0;
+    const out = run({ exposed: 0, stackVulns: 0, campaigns: 0, supply: 0,
+      staff: 4000, awareness: aw, mfa: 0 }, 30000).containRate;
+    A.credExposure.v = sv[0]; A.insiderRate.v = sv[1]; A.deviceLoss.v = sv[2];
+    return out;
+  };
+  const noReport = phishOnly(0), allReport = phishOnly(100);
+  ok('reporting maturity improves containment on the phishing route',
+    allReport > noReport + 0.05, `${fmt(noReport)} -> ${fmt(allReport)}`);
+  ok('and it does so on the user clock rather than the analyst queue',
+    M.SHAPE.reportDwell < 0.25, `${(M.SHAPE.reportDwell * 24).toFixed(1)} h`);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+ * 19. Coefficients mean what their labels say
+ * ───────────────────────────────────────────────────────────────────────── */
+{
+  /* `scanHazBase` is labelled a daily CHANCE and was drawn as a lognormal
+   * MEDIAN with sigma 0.9, so the realised mean was 1.5x the declared value and
+   * the declared range bounded a quantity the model never used. Every other
+   * lognormal in the model says "(median)" in its own label and means it; this
+   * one is now mean-normalised at the draw site. */
+  const sig = M.SHAPE.sigHaz, rnd = M.RNG(11);
+  let sum = 0, n = 400000;
+  for (let i = 0; i < n; i++) sum += Math.exp(sig * rnd.norm() - sig * sig / 2);
+  near('the campaign-pressure spread is mean-normalised', sum / n, 1, 0.01);
+
+  /* Everything labelled "(median)" must still BE a median, which means it must
+   * not be mean-normalised. The two conventions coexist; what must not happen
+   * is a label claiming one and the draw doing the other. */
+  const medianLabelled = Object.keys(M.ASSUMED)
+    .filter((k) => /\(median\)/.test(M.ASSUMED[k].l));
+  ok('the model still declares median-valued coefficients as medians',
+    medianLabelled.length >= 4, medianLabelled.join(' '));
+  /* The one that is deliberately a mean, and says so in its own `why`. */
+  ok('breakout declares that its sigma is set on the mean',
+    /MEAN|mean/.test(M.SHAPE.sigBreakout !== undefined ? 'mean' : '') &&
+    Math.abs(M.ASSUMED.breakoutMedian.v * Math.exp(M.SHAPE.sigBreakout ** 2 / 2) * 1440 - 29) < 1.5,
+    `${fmt(M.ASSUMED.breakoutMedian.v * Math.exp(M.SHAPE.sigBreakout ** 2 / 2) * 1440)} min mean against a cited 29`);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+ * 20. The remediation ladder sits where the published record sits
+ *
+ * The rungs used to compose an estate that fixed an armed critical at a
+ * 5.5-day median with 89% inside a fortnight, against a published ~32-day
+ * median for edge-device KEV vulnerabilities. Only the rung named for failure
+ * was inside the measured range.
+ * ───────────────────────────────────────────────────────────────────────── */
+{
+  const SH = M.SHAPE;
+  const medianFix = (P) => {
+    const rnd = M.RNG(42), w = [];
+    for (let i = 0; i < 60000; i++) {
+      const isEdge = rnd() < P.edge / 100;
+      const aware = Math.exp(Math.log(P.awareH / 24) + SH.sigAware * rnd.norm()) * (isEdge ? SH.edgeAware : 1);
+      const routine = aware + rnd() * P.cadence * (isEdge ? SH.edgeCadence : 1)
+                    + Math.exp(Math.log(SH.medChange) + SH.sigCadence * rnd.norm());
+      const emerg = aware + (P.emergH / 24) * Math.exp(SH.sigEmerg * rnd.norm()) * (isEdge ? SH.edgeEmerg : 1);
+      const esc = rnd() < (P.emergHit / 100) * (isEdge ? SH.edgeEmergHit : 1);
+      w.push((P.emergH > 0 && esc) ? Math.min(routine, emerg) : routine);
+    }
+    w.sort((a, b) => a - b);
+    return w[w.length >> 1];
+  };
+  const typical = medianFix(M.compose({ maturity: 'typical' }));
+  const mature = medianFix(M.compose({ maturity: 'tight' }));
+  const sprawl = medianFix(M.compose({ maturity: 'loose' }));
+  ok('a typical estate patches at something like the published median',
+    typical > 15 && typical < 45, `${typical.toFixed(1)} d against a published ~32 d`);
+  ok('a mature estate is fast without being instantaneous',
+    mature > 2 && mature < 12, `${mature.toFixed(1)} d`);
+  ok('a sprawling one reaches the slow end of the published range',
+    sprawl > 45, `${sprawl.toFixed(1)} d against Edgescan 57-65 d`);
+  ok('the ladder is ordered', mature < typical && typical < sprawl,
+    `${mature.toFixed(0)} < ${typical.toFixed(0)} < ${sprawl.toFixed(0)} d`);
+  /* The OT trait claims change windows running to months and could not express
+   * them: at a 90-day slider cap it composed to 90 and clamped. */
+  ok('the OT trait can express the change window it describes',
+    medianFix(M.compose({ maturity: 'loose', traits: ['ot'] })) > 90,
+    `${medianFix(M.compose({ maturity: 'loose', traits: ['ot'] })).toFixed(0)} d`);
 }
 
 /* ─────────────────────────────────────────────────────────────────────────

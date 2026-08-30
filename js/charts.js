@@ -105,15 +105,19 @@
      * readout are allowed to arrive, and not before. */
     svg.style.setProperty('--zt', Math.max(0, Math.min(1, (x0px - L) / (R - L))).toFixed(3));
 
-    /* pre-disclosure zone */
+    /* The band left of day zero. Named for what it measures — exploit code
+     * that is public before the CVE record lands — rather than for
+     * "pre-disclosure", which claims an adversary capability the series cannot
+     * support: it reads 98.5% negative for 2000 at a median of 44 days before
+     * publication. See MODEL.MEASURED.preIsRecordLag. */
     svg.appendChild(el('rect', { x: L, y: T, width: Math.max(0, x0px - L), height: BOT - T, fill: pal.zero, 'fill-opacity': 0.07 }));
     svg.appendChild(el('line', { x1: x0px, y1: T - 5, x2: x0px, y2: BOT + 4, stroke: pal.zero, 'stroke-width': 1.5 }));
     if (narrow) {
-      txt(svg, x0px, T - 26, 'DAY 0 · PATCH AVAILABLE', { a: 'middle', c: pal.zero, fs: 10, ls: '.08em', mono: true });
-      txt(svg, L, T - 10, '← exploit precedes patch', { c: pal.zero, fs: 10 });
+      txt(svg, x0px, T - 26, 'DAY 0 · CVE PUBLISHED', { a: 'middle', c: pal.zero, fs: 10, ls: '.08em', mono: true });
+      txt(svg, L, T - 10, '← exploit public first', { c: pal.zero, fs: 10 });
     } else {
-      txt(svg, x0px - 8, T - 12, '← EXPLOIT AVAILABLE BEFORE ANY PATCH', { a: 'end', c: pal.zero, fs: 10, ls: '.08em', mono: true });
-      txt(svg, x0px + 8, T - 12, 'PATCH AVAILABLE · DAY 0', { c: pal.zero, fs: 10, ls: '.08em', mono: true });
+      txt(svg, x0px - 8, T - 12, '← EXPLOIT PUBLIC BEFORE THE CVE RECORD', { a: 'end', c: pal.zero, fs: 10, ls: '.08em', mono: true });
+      txt(svg, x0px + 8, T - 12, 'CVE PUBLISHED · DAY 0', { c: pal.zero, fs: 10, ls: '.08em', mono: true });
     }
 
     ticks(d.x0, d.x1, narrow ? 5 : 8).forEach(function (t) {
@@ -216,8 +220,11 @@
     txt(svg, bx + 14, by + 48, narrow ? 'EXPLOIT CODE FIRST' : 'EXPLOIT CODE BEFORE REMEDIATION',
       { c: pal.mut, fs: 10, ls: '.07em', mono: true });
 
+    /* "precede disclosure" claimed an adversary capability this series cannot
+     * support — it is mostly a late CVE record in front of exploit code that is
+     * already public. See MODEL.MEASURED.preIsRecordLag. */
     txt(svg, narrow ? L : R, BOT + (narrow ? 64 : 36),
-      pctS(d.beforeFrac) + ' precede disclosure',
+      pctS(d.beforeFrac) + (narrow ? ' beat the record' : ' public before the CVE record'),
       { a: narrow ? 'start' : 'end', c: pal.mut, fs: 10.5 });
     return svg;
   }

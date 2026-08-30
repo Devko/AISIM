@@ -771,7 +771,7 @@
         { l: 'Probability of an incident, 12 months', v: pct(100 * run.incident),
           sub: run.bandReliable ? pct(100 * run.incLo) + ' to ' + pct(100 * run.incHi) : 'point estimate',
           lead: !isP },
-        { l: 'Expected compromise events per year', v: num(run.events, 2),
+        { l: 'Expected intrusions per year', v: num(run.events, 2),
           sub: 'systems when mass-exploited, one per campaign' },
         { l: 'Median time to first compromise',
           v: run.med == null ? '> 12' : String(Math.round(run.med)),

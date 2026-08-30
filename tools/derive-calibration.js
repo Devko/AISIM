@@ -216,6 +216,34 @@ const out = {
      * shows the series and has to be able to name its most recent row, but the
      * model must not be calibrated to a provisional one. */
     settled: armPooled,
+    /* ── EVIDENCE THAT `pctBefore` IS RECORD LAG, NOT A ZERO-DAY RATE ──────
+     *
+     * The model reads the negative tail of this series as a pre-publication
+     * exposure window, and the page used to read it as "a working exploit
+     * existed before the patch did". The full series refutes that reading on
+     * its own: the early rows report medians of tens of days BEFORE
+     * publication and pct_negative above 95%, and an exploit cannot predate
+     * the vulnerability it exploits. The quantity is exploit-catalogue date
+     * minus NVD publication date, and a negative value means the CVE RECORD
+     * was late — for backfilled early-2000s entries, by years.
+     *
+     * Emitted rather than left in the raw snapshot so the claim the page makes
+     * about its own data is generated from that data, and so a test can assert
+     * it. The decay from 98.5% to the mid thirties is CVE assignment latency
+     * improving; it is not adversary capability collapsing by two thirds. */
+    recordLag: (() => {
+      const worst = arming.reduce((a, y) => (y.median_days < a.median_days ? y : a), arming[0]);
+      const early = arming.filter((y) => y.median_days < -7);
+      return {
+        worstYear: worst.year,
+        worstMedianDays: worst.median_days,
+        worstPctBefore: worst.pct_negative,
+        yearsWithImpossibleMedian: early.length,
+        firstYear: arming[0].year,
+        firstPctBefore: arming[0].pct_negative,
+        note: 'Years whose median exploit date precedes CVE publication by more than a week. An exploit cannot predate its vulnerability, so the negative tail of this series measures CVE-record lag rather than adversary pre-disclosure.',
+      };
+    })(),
     caveat: 'Recent years are right-censored: PoCs are still arriving for them. Provisional years understate speed and understate the pre-publication share.',
     /* The second caveat, and the one that cuts deeper than censoring, because
      * it is a property of the INSTRUMENT rather than of the window.

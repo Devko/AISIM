@@ -443,7 +443,11 @@ that passes no palette at all.
 **The Long Label Rule.** Uppercase with wide tracking is a device for labels of
 two or three words. The readout labels are 40-character sentences, and caps
 plus tracking removes the word shapes a reader navigates by — so they are set
-in the body face, sentence case, at 11.5px.
+in the body face, sentence case, at 11.5px — in the bank and in the dock
+alike. The dock label is the bank label in another position, and it spent a
+while set in tracked mono caps instead: same string, two treatments, and the
+caps cost 66px it did not have. 263px against 197px, on a bar whose whole
+promise is that the figure survives to 320px.
 
 **The 10px Floor.** No text below 10px. 9.5px survives only in provenance tags
 and segment labels, where the type sits on a bordered element already doing the
@@ -480,50 +484,53 @@ deliberately visible thin scrollbar: a wheel gesture landing on the rail must
 not read as a dead page. When the docked readout is up, it steps down to
 `top: 74px` so it does not scroll behind it.
 
-Inside that bound it is **ranked by use frequency, not by subject** — two
-zones, `.rail-fixed` and `.rail-scroll`:
+Inside that bound it is **one scroller holding three cards**, ranked by how
+often each is needed rather than by subject:
 
-- **`.rail-fixed`** holds the threat card. It is the half operated *while
-  reading*: chapter 07 hands the reader three scenario dials by name — arrival
-  speed, weaponised share, post-exploitation tempo — so the chapter that makes
-  the page's title claim and the controls that test it have to be able to
-  occupy the screen together. The card grew by two sliders when the single AI
-  control was split; it is still the shorter of the two cards, so the ranking
-  holds unchanged.
-- **`.rail-scroll`** holds the estate card. It is set once, at the start, so it
-  takes whatever height is left and scrolls inside it. Its own growth — the
-  trait notes run to 683px with everything selected — now moves nothing but
-  itself.
+- **Threat environment** leads, because it is the half operated *while
+  reading*: chapter 07 hands the reader four scenario dials by name — arrival
+  speed, weaponised share, post-exploitation tempo and discovery rate.
+- **Your environment** follows. It is set once, at the start, and it is the
+  tallest of the three.
+- **Identity and people** closes the rail. It gates the five access classes
+  that need no vulnerability, and nothing on it touches the patch clock.
 
-Ordered by subject, in one scroller, the rail was 1,935–2,612px of console in
-an ~868px box: one slider of twelve visible at rest, the compression control
-536px below the fold, and selecting traits pushing it a further 677px away.
+**One scroller, not two.** The rail used to split at tall viewports: a pinned
+`.rail-fixed` zone above a scrolling `.rail-scroll` one. Measured at 1500x1080
+that gave a 648px window onto 887px of threat controls above a 400px window
+onto 1,365px of estate controls — two scrollbars a few pixels apart in a 322px
+column, and a wheel gesture whose effect depended on which pixel row the
+pointer happened to be over. Worse, the seam between them was a card boundary,
+which is the one thing a scroll boundary must not look like: nothing on screen
+said the lower half was a separate porthole rather than the end of the rail.
 
-**Ranking is unconditional; pinning is not.** Ranking is free — the threat card
-comes first, so the scenario dials sit 347–458px into the rail and are on screen
-at rest at every viewport. Pinning it there permanently costs the estate card
-whatever the threat card occupies, and that card is 550px against 1,331px of
-estate content. Measured, with a reload at each height:
+**Reachable from the prose, not resident on screen.** The pin was answering a
+real question the wrong way round. Chapter 07 names four dials, so those dials
+have to be reachable from six thousand pixels down the document — but
+*reachable* and *permanently visible* are different requirements, and only the
+second one costs a second scroll container. The prose carries the link now:
+`.ctl-link` buttons in chapter 07, and `jumpToControl()` in `js/app.js`, which
+opens any collapsed `<details>`, scrolls the dial a third of the way down the
+scrollport rather than centring it, flashes `.ctrl.flash`, and moves focus so a
+keyboard reader arrives with the dial ready to be arrowed. A third of the way
+down rather than centred because the card title is sticky, and a dial that
+lands underneath the title is a dial the reader was not shown. This answers the
+question at every viewport, including the narrow one, where a pin never existed
+at all and the reader was left to hunt.
 
-| viewport | rail | mode | estate window |
-|---|---|---|---|
-| 900 | 868 | one ranked scroller | — (whole rail scrolls) |
-| 1000 | 968 | pinned split | 418px, 31% |
-| 1100 | 1068 | pinned split | 518px, 39% |
+**The card's own title is what replaces the pin as orientation.** `.card h2` is
+sticky to the top of the single scroller, bled out to the card's border edge so
+that controls pass behind an opaque band rather than behind the title's own
+glyphs. The column always says which half of the model is under the pointer
+without spending a scrollbar to say it.
 
-Pinned at 900 the window would be 318px, which is a bad trade on a laptop and a
-fine one on a tall display — so a height query decides it rather than a blanket
-rule. Below 1000px of viewport the rail is one ranked scroller; at or above it,
-the two zones split. `.rail-fixed` carries a `60vh` ceiling — resolving to 600px
-at 1000 and 660px at 1100 — so that opening *Additional threat parameters*
-cannot squeeze the scroller to nothing. In `vh`, because a percentage
-max-height resolves against the parent's height and `.rail` carries only a
-max-height, so a percentage silently does nothing: an earlier `55%` cap was
-ignored outright and the zone sailed past it to 65% of the rail.
-
-**Measure heights with a reload.** Resizing an emulated viewport does not
-re-resolve `vh`, so a resize-then-measure pass reports the previous size's
-layout. Every figure in this table was taken after a fresh load.
+The rail is a long scroller and is meant to be. Measured at 1440x900: an 810px
+window onto 3,346px of console, with the threat card at 0, the estate card at
+1,072 and the identity card at 2,489. The four scenario dials sit 407, 550, 693
+and 837px in, so the last of them is below the fold at rest. That is the
+condition the jump links exist to answer rather than a regression against them,
+and it is why the reachability guarantee is written in terms of the link and
+not in terms of a scroll offset that the next control added will invalidate.
 
 The contents list is **not** in the rail. It never had a panel, a radius or a
 fill, so it was always document material sitting inside the instrument — and it
@@ -537,8 +544,9 @@ Each has a specific job rather than a device name:
 
 - **1040px** — grid collapses to one column. The stat bank is already ahead of
   the controls in source order, so nothing reorders.
-- **1041px, at 1000px of viewport height** — the rail splits into a pinned zone
-  and a scroller. See The Room To Pin Rule.
+- **No height query.** The rail is one scroller at every viewport height. An
+  earlier pass split it into a pinned zone and a scroller above 1000px; see
+  The Reachable Not Resident Rule for why that was removed.
 - **≤1040px, intrinsic** — the console becomes
   `repeat(auto-fit, minmax(280px, 1fr))`. Not a breakpoint: a hard 700px floor
   put the widest slider of the entire responsive range at 699px — 608px against
@@ -600,13 +608,17 @@ the page exists to show. The bank holds nothing focusable, so leading costs the
 keyboard reader nothing. Any future reflow keeps the answer above the
 instrument, and keeps it there in the DOM.
 
-**The Room To Pin Rule.** A control the argument names should be reachable
-while that argument is being read — but not at any price. Pinning costs the
-rest of the rail exactly what the pinned card occupies, so pin only where there
-is room: rank always, pin above 1000px of viewport height. A guarantee that
-starves the configuration sitting next to it is not worth buying.
+**The Reachable Not Resident Rule.** A control the argument names by name has
+to be reachable from the sentence that names it. It does not have to be on
+screen while that sentence is read, and buying the second guarantee costs the
+rest of the rail exactly what the pinned card occupies. So the prose carries a
+link to the control instead: `.ctl-link` and `jumpToControl()` land it, flash
+it, and focus it, which works at every viewport including the narrow one where
+a pin was never possible. Rank the cards by how often each is needed; do not
+pin any of them. A named control that gains no link is the regression to watch
+for here, not a dial that sits below the fold at rest.
 
-**The Answer Stays Rule.** The page is roughly 7,000px tall and the rail is
+**The Answer Stays Rule.** The page is roughly 11,000px tall and the rail is
 sticky, so a reader adjusting a slider two thousand pixels down had no sight of
 the number they were moving. The docked readout carries it — the compromise
 probability, its band and the current estate — and appears only once the real
@@ -806,9 +818,15 @@ rule moved onto `.estate` itself and `.estate + #cd` zeroes the doubled padding.
   matters, so the two have to be read against each other — and the counts
   support them. The divider between the pair and the counts is the only one
   drawn at `--rule2`, because it is the only one that means something.
-- **Structure:** flex column with the label set to `flex: 1`, so values are
-  pushed to the bottom of each cell rather than sitting under a guessed
-  `min-height`.
+- **Structure:** each cell is a subgrid spanning the plate's four rows —
+  label, figure, interval, rail — so the four figures sit on one line across
+  the bank. A flex column with the label at `flex: 1` came first and only
+  bottom-aligned the *label*: what sits under each figure differs cell to cell,
+  the third carrying a three-line caption and only the first two an interval
+  rail, so the figures still landed at 510 / 510 / 481 / 529. Sharing the rows
+  across cells is what aligns them, and it costs the bank about 22px of height,
+  because the tallest cell now sets each row for all four. Neither a guessed
+  `min-height` nor a per-cell rule can do this.
 - **Label:** body face, 11.5px, sentence case, `--mut`. See The Long Label Rule.
 - **Value:** mono 600, Compromise Crimson by default; `.plain` switches it to
   body text.
@@ -847,6 +865,11 @@ rule moved onto `.estate` itself and `.estate + #cd` zeroes the doubled padding.
 - Carries the compromise probability, its band, and the current estate summary.
   It is `aria-hidden` — the real bank is still in the document — and it slides
   in over 260ms.
+- **Label:** body face, 11.5px, sentence case, matching `.stat .k` exactly,
+  because it is the same label. See The Long Label Rule. `.dock-k` still
+  shrinks and ellipsises and `.dock-v` still does not, but at 197px the label
+  now fits whole at 320px, so the truncation is a backstop rather than the
+  thing keeping the number on screen.
 
 ### Range inputs
 

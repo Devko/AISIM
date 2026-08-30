@@ -38,7 +38,7 @@ argument this page was already making in prose and can now make on one axis.
 The tempo dial is the one worth sitting with. It cannot change whether you were
 compromised — only whether anyone reached it in time. Against a reported-tempo
 adversary a 24/7 SOC is worth a large margin of incident rate over no detection
-at all; at full tempo roughly three quarters of that margin is gone. A faster
+at all; at full tempo roughly half of that margin is gone. A faster
 adversary does not beat detection on any one intrusion. It devalues the
 investment.
 
@@ -83,7 +83,30 @@ confirmed-exploited catalogue:
 Critical is **2.4× High**. That is a nudge, not a filter. And a criticals-only
 model throws away the 888 confirmed-exploited bugs rated High plus the 210 rated
 below it — **65% of everything known to be exploited**. Meanwhile 63% of
-Critical-rated CVEs carry less than a 1% chance of exploitation.
+Critical-rated CVEs score below 1% on EPSS, which is a probability of
+exploitation activity *in the next 30 days* rather than over the life of the
+vulnerability — a distinction the earlier phrasing here dropped, and one that
+turns a 30-day hazard into a lifetime claim.
+
+That criticism used to land on this model too. It ran on the Critical band
+alone: `stackVulns` asked for criticals, `pPoC` was the critical arming rate and
+the in-the-wild conditional came off the critical KEV rate, so the simulation
+covered the 584 confirmed-exploited criticals and none of the 1,098 below them.
+The argument in this section and the implementation underneath it contradicted
+each other, and the implementation was the one producing the numbers. Raising
+`stackVulns` could not fix it either, because the coefficients are
+band-conditional — 8.2% arming and 2.87% exploitation for Critical against 2.1%
+and 1.20% for High.
+
+The stream is now derived across every band. You still set the critical count,
+because that is the number anyone can estimate about their own estate, and the
+model carries the High, Medium and Low volume beside it at the published corpus
+ratios — about **11×** what you set — each band with its own arming rate, its own
+exploitation rate, and a foothold weight for the fact that a Medium-rated
+information disclosure is real exploitation and is not a foothold. For the
+Critical band the derivation reproduces the snapshot's own published
+conditionals exactly, which is the check that it is a re-derivation rather than
+a fresh set of assumptions.
 
 The label is also inflating. Criticals are on track to grow **2.4×** against
 **1.8×** for total CVE volume — a run-rate extrapolated from a partial year set
@@ -143,9 +166,15 @@ product?" of a slider whose own label already said *criticals in your stack*.
 The funnel named the same set twice in consecutive stages and nobody read it
 that way, so the simulation ran on 0.45 while the prose beside it claimed 0.98.
 The stage now asks the question that genuinely remains — whether the version and
-configuration you run are actually vulnerable — and the model produces **0.82**:
-short of 0.98 by exactly that filter, and no longer short of its own
-documentation.
+configuration you run are actually vulnerable — and the model produces **0.84**
+criticals confirmed exploited a year: short of 0.98 by exactly that filter, and
+no longer short of its own documentation.
+
+Note which number that is. It is the *Critical band*, reported separately for
+exactly this reason — every citation on the page is about that band, so the
+prose and the simulation have to be comparable. Across all four bands the model
+now carries **2.6** confirmed-exploited vulnerabilities a year against the same
+stack, and the ratio between the two is the 65% this section opened with.
 ---
 
 ## The two clocks
@@ -153,7 +182,18 @@ documentation.
 The model separates two things that are usually conflated:
 
 - **A working exploit exists** — public exploit code, measured against
-  ExploitDB, Metasploit and Nuclei. 8.2% of criticals, ever.
+  ExploitDB, Metasploit and Nuclei. 8.2% of criticals, ever — and that is a
+  *floor*, not a value. The dated sample in those three catalogues fell from
+  1,019 CVEs in 2017 to 94 in 2026 while CVE publication tripled; exploit code
+  moved to GitHub and to private tooling rather than becoming rarer. The
+  calibration file has always said so in its own `coverageCaveat`, and the model
+  used to run the floor as though it were the measurement. `ASSUMED.pocCoverage`
+  now carries the correction, drawn across a range from "the catalogues see
+  everything" to "they see a third of it". It is applied so the *unconditional*
+  confirmed-exploitation rate — the quantity that is measured against a full
+  corpus — is invariant across that range: more bugs are armed, the same number
+  reach the catalogue, so the conditional falls by the same factor. A test
+  asserts that invariance.
 - **It is used against real targets** — the confirmed-exploited catalogue.
   2.87% of criticals.
 
@@ -165,8 +205,43 @@ detection actually live.
 The **attacker clock** is not a curve someone drew. It is sampled from the
 measured distribution of days between CVE publication and public exploit code,
 pooled over the five most recent **settled** years (2020–2024, n=1,298): median
-**0.64 days**, **36% before the patch exists at all**, 73% within a week, and a
-long tail that the chart labels rather than hides.
+**0.64 days**, **36% with a negative interval**, 73% within a week, and a long
+tail that the chart labels rather than hides.
+
+That third figure used to read "36% before the patch exists at all", and it was
+wrong. The same series reports:
+
+| year | n | median | share negative |
+|---|---:|---:|---:|
+| 2000 | 273 | **−44 d** | 98.5% |
+| 2002 | 184 | **−57 d** | 95.7% |
+| 2005 | 1,173 | −2 d | 85.8% |
+| 2020 | 354 | +1 d | 35.6% |
+
+An exploit cannot exist fifty-seven days before the vulnerability does. The
+quantity is *exploit-catalogue date minus NVD publication date*, and a negative
+value means the CVE **record** was late — for backfilled early-2000s entries, by
+years. The smooth decay from 98.5% to the mid thirties is CVE assignment latency
+improving, not adversary capability collapsing by two thirds. Read as a zero-day
+rate it is off by about an order of magnitude: Google and Mandiant between them
+track roughly 75 to 100 exploited-in-the-wild zero-days a year across all
+software, and 36.5% of the armed critical stream alone would be about 124.
+
+The negative mass is kept, because it is measured and the exposure it describes
+is real, and split into the two mechanisms it actually contains:
+
+- **a genuine zero-day** — nobody outside the adversary knows. Targeted activity
+  only, discounted by `preHazard`. Sized by `ASSUMED.zeroDayShare`, whose whole
+  declared range sits below the measured share.
+- **record lag** — exploit code is public, the CVE record is not yet. This
+  carries **full** mass-scanning hazard, because public exploit code draws
+  scanning whether or not NVD has caught up. The defender is late to know; the
+  adversary is not late to act.
+
+The old code applied the targeted discount to the whole negative stretch, which
+discounted genuinely public exploit code fourfold on the grounds that a database
+record had not landed. The evidence for the split is generated from the snapshot
+rather than asserted here, and a test reads it.
 
 Pooled, and settled, for a reason. The model used to calibrate to the newest row
 in the series, which is also the most right-censored one in it — 2026, n=94,
@@ -254,9 +329,15 @@ The last two kinds are drawn from their range on every block of trials, which is
 where the credible interval comes from. Pin them (`spread: 0`) and the band
 collapses to nothing — on some seeds to exactly zero, since what is left is the
 noise on a variance estimate clamped at zero. Open them fully and it runs around
-twenty-three points wide. It was twelve before the undeclared constants were
-declared, and that widening is the point: the uncertainty was always there, it
-just was not being reported.
+thirty-four points wide. It was twelve before the undeclared constants were
+declared and twenty-three before the corrections in this file's own verification
+pass added nine more, and that widening is the point: the uncertainty was always
+there, it just was not being reported. A model that reports a narrower band
+after being made more honest has hidden something.
+
+The figure in this paragraph has gone stale twice. It is measured at the recipe
+named at the top of this file, over eight seeds, and if you change anything in
+`ASSUMED` you should expect to change it.
 
 ### How the interval is computed
 
@@ -498,8 +579,8 @@ the settled clock **strengthened** the page's central claim — weaponised share
 now outruns arrival speed by a wide margin, because the settled median has even
 less room to compress than the censored one did. And declaring the structural
 constants roughly doubled the credible interval, from twelve points to
-twenty-three. That uncertainty was always in the model. It simply was not being
-reported.
+twenty-three — and the third pass below widened it again, to thirty-four. That
+uncertainty was always in the model. It simply was not being reported.
 
 ### The second pass
 
@@ -535,6 +616,66 @@ evidence — machine-assisted vulnerability *finding* — had no dial, and it is
 the largest of the four on most estates. An omission that flattered the page's
 own thesis is worth more scrutiny than one that undercut it.
 
+### The third pass
+
+The first pass read the model. The second swept it. The third checked it against
+the **outside world** — every coefficient and every output judged against
+published measurement rather than against the model's own declarations — and it
+found a third class of defect again: places where the model was internally
+consistent, fully tested, and describing something that is not true of
+cybersecurity.
+
+259 tests passed throughout. They had to: every one of them asked whether the
+model does what the model says, and a mechanism that is coherently wrong answers
+*yes*.
+
+| | was | is |
+|---|---|---|
+| Severity coverage | the Critical band alone — 35% of confirmed exploitation — under a README whose opening section argues at length that exactly this is the wrong instrument | every band, derived from the corpus ratios, each with its own arming rate, exploitation rate and foothold weight |
+| Pre-publication window | `pctBefore` read as "an exploit existed before the patch did", from a series that reports −57-day medians and 98.5% negative for years when that is impossible | split into a small genuine zero-day share at targeted hazard and a CVE-record-lag remainder at **full** hazard, with the evidence generated from the snapshot |
+| Targeted route | `agentSkill` bit-identical at `mfa=0` and `mfa=100`, while its own description named phishing, credential abuse, misconfiguration and service-desk social engineering | gated by the same four controls at a lower ceiling; origin-bound authentication is now worth ~10 points against a named target instead of ~1 |
+| Remediation velocity | a "Typical" estate fixed an armed critical at a **5.5-day** median with 89% inside a fortnight; "Mature" managed 1.0 day | 26 days typical, 6 mature, 81 sprawling — inside the published range, where only the rung named for failure used to be |
+| Unfixed systems | every in-inventory system was eventually remediated; only the 4% inventory gap could carry an open window | `neverFixShare`, because the published measurement is that roughly half of edge KEV vulnerabilities are never fully remediated on estates that *have* a process |
+| Headcount scaling | strictly linear, so any estate above ~5,000 people read ~100% compromise whatever its controls said, and `staff` topped the sensitivity chart | `headExp`, the people-side twin of `crowdExp` — one lure reaches every mailbox in a single event |
+| `incident` | one containment roll on the **first** compromise of the year, under a label reading "probability of an incident, 12-month window"; on a 13-intrusion estate it reported 43% where the model's own containment rate implies 99.6% | rolled per intrusion, so the label is true |
+| `events` | one per compromised **system** on the mass-exploitation route and one per **intrusion** on every other — a sum of two units | intrusions, in one unit, with systems reported beside it |
+| Containment level | a typical estate contained ~25% against a reported 44%, because the automated branch raced a 19-minute breakout on a 30-minute median | automated response on a ten-minute median; the ladder now brackets the anchor and the EDR rung lands on it |
+| `scanHazBase` | labelled a daily *chance*, drawn as a lognormal *median* with σ=0.9, so the realised mean was 1.5× the label and the declared range bounded a quantity the model never used | mean-normalised at the draw site; the label is now true and the range is the one that bounds the run |
+| Supply-chain and insider dwell | detected on the estate median, like a commodity intrusion | their own dwell penalties, and automated response mostly does not fire on either |
+| `awareness` | called "Filtering and user reporting"; reporting did nothing at all | filtering thins arrivals, reporting is a share of phishing compromises on a two-hour clock |
+| EPSS phrasing | "less than a 1% chance of exploitation" | an EPSS score below 1%, which is a probability over the **next 30 days** |
+| The quoted magnitudes | four separate stale figures in comments and copy — a 23-point band that measured 34, a "mid teens" floor that measured 51, a three-quarters tempo margin that measured 54%, dial effects off by 2–3× | measured, or replaced by the recipe that produces them, because every one of them had gone stale within a few commits of being written |
+
+Two things are worth saying about what this pass did **not** overturn.
+
+The central claim held. The ordering — discovery rate above weaponised share
+above post-exploitation tempo above arrival speed — survives every correction,
+and weaponisation still outruns arrival speed about six to one. So does the
+finding that remediation cadence is a weak lever: re-measured from a
+published-rate baseline rather than the model's own optimistic one, patch speed
+still moves the answer by a few points where reducing exposed surface moves it
+by forty. That conclusion was previously being *handed* to the page by a
+baseline sitting on the flat part of the curve. It now has to earn it, and does.
+
+And the corrections did not all point the same way. Covering every severity band,
+lengthening the remediation clock, adding unfixed in-inventory systems and giving
+record-lag windows full hazard all *raise* risk; the sub-linear headcount scaling,
+the refitted arrival rate and the gated targeted route all *lower* it. The
+per-intrusion containment fix raises the incident figure and the containment
+retune lowers it. What did not survive is the idea that any of them was neutral.
+
+The refitted `scanHazBase` deserves a note of its own, because a coefficient
+moving by a factor of twenty looks like curve-fitting and is. It has never been
+measured — its own label has said so since it was written — so its value has only
+ever been whatever reproduced the reported initial-access mix. It was absorbing
+four separate omissions at once: a stream covering a third of known exploitation,
+invisible exploit code, no unfixed in-inventory systems, and a baseline that
+patched in five days. Corrected, the model carries about four times the armed
+volume across windows about five times wider, and the per-vulnerability arrival
+rate that reproduces the *same* anchored mix falls by roughly that product. The
+aggregate it is held to has not moved. What moved is how much of it this one
+number was quietly doing.
+
 ## Scope and honest limits
 
 - **Eight access classes, and the five newest are the least evidenced.**
@@ -565,7 +706,25 @@ own thesis is worth more scrutiny than one that undercut it.
   and on the compromise metric it was the largest term in the whole sensitivity
   chart — the biggest lever was the proxy for what the model declined to
   simulate. It now carries only the premium a *targeted* adversary adds over the
-  commodity rate when no remediation window is open.
+  commodity rate when no remediation window is open, and it answers to the same
+  identity, filtering, privilege and configuration controls as the commodity
+  routes do, at a lower ceiling. It did not, for most of this model's life: it
+  was bit-identical at `mfa=0` and `mfa=100` while its own description named the
+  four mechanisms those controls act on. That understated phishing-resistant
+  authentication precisely against the adversary it matters most against.
+- **Headcount is a scale term, and it scales sub-linearly.** The people routes
+  used to be strictly linear in `staff`, which pinned any estate above about
+  five thousand people near 100% compromise whatever its controls said, and put
+  `staff` at the top of the sensitivity chart — a bar that reads as advice to
+  employ fewer people. One phishing run reaches every mailbox in a single event;
+  `ASSUMED.headExp` is the people-side twin of the `crowdExp` exponent that has
+  always conceded the same correlation on the systems side.
+- **A large estate still reads high, and that is not the same defect.** Twenty
+  thousand people carry several successful intrusions a year in this model even
+  with origin-bound authentication and a 24/7 SOC, so the compromise figure sits
+  in the nineties. Large organisations do have compromises every year. What was
+  broken was not the level but the *flatness* — controls have to separate
+  estates at that size, and they now do by more than ten points.
 - **Access classes are drawn independently, which understates the tails.** An
   organisation weak on authentication is usually also weak on patching, so real
   estates cluster at both ends more than this model does. No public figure
@@ -577,10 +736,10 @@ own thesis is worth more scrutiny than one that undercut it.
 
   | rung | campaigns/yr | success without a vuln | compromise | via targeted route |
   |---|---:|---:|---:|---:|
-  | Opportunistic only | 1 | 0.5% | 34.7% | 3% |
-  | Ordinary interest | 6 | 1% | 43.2% | 20% |
-  | Sector under pressure | 15 | 2.5% | 64.8% | 47% |
-  | A named target | 30 | 4% | 88.4% | 66% |
+  | Opportunistic only | 1 | 0.5% | 61.3% | 2% |
+  | Ordinary interest | 6 | 1% | 67.1% | 14% |
+  | Sector under pressure | 15 | 2.5% | 79.3% | 33% |
+  | A named target | 30 | 4% | 92.2% | 52% |
 
   `campaigns` came *down* on the upper rungs (4x to 2.5x, 9x to 5x) to pay for
   it, because those multipliers were calibrated with the non-vulnerability route
@@ -594,10 +753,35 @@ own thesis is worth more scrutiny than one that undercut it.
   These totals are higher than earlier published versions of this table, and
   almost none of that is the attention ladder: it is the defect and calibration
   work described under *What a verification pass changed* below. The ladder's
-  *shape* is unchanged; the whole column moved under it.
+  *shape* is unchanged; the whole column moved under it. The targeted-route
+  column came *down* in the third pass, because that route now answers to the
+  identity and filtering controls the baseline estate already has switched on —
+  which is the correction, not a weakening of the claim. The mix still opens up
+  by a factor of twenty-five across the ladder.
+
+  Re-measure this table before quoting it. Four versions of it have gone stale.
 - **The widest assumption is the campaign arrival rate**, and the answer is
   sensitive to it. The tornado will usually rank the things it is least sure
   about near the top. That is the honest failure mode, stated rather than hidden.
+  It is also the coefficient that absorbs every omission elsewhere in the
+  vulnerability engine, because it has never been measured and its value is
+  therefore whatever reproduces the anchored initial-access mix. It moved by a
+  factor of twenty when four such omissions were corrected at once. Read it as a
+  residual, not as a measurement.
+- **Remediation velocity is anchored to published measurement, not to
+  aspiration.** A "Typical" estate here fixes an armed critical at about a
+  twenty-six-day median with roughly half done inside a month; "Mature" manages
+  six days, "Sprawling" eighty-one. Those brackets come from the Verizon
+  edge-device series, Edgescan MTTR and the Cyentia remediation curves. For most
+  of this model's life the same rungs read 5.5, 1.0 and 20 days, which is faster
+  than any published measurement of enterprise patching, and it mattered: a
+  baseline on the flat part of the remediation curve makes remediation levers
+  look cheap, and "patch speed is not the lever" is one of this page's own
+  conclusions. It survives the correction. It should not have been handed it.
+- **In-inventory systems can go unfixed.** Not every affected system in a
+  working change process gets remediated inside the year, and the model used to
+  assume otherwise — only the inventory gap could carry an unbounded window.
+  `ASSUMED.neverFixShare` carries the residual that survives a real process.
 - **Run-rate figures are linear extrapolation** of a partial year — calendar
   arithmetic, not a forecast.
 - **Recent exploit-timing years are right-censored** and marked provisional in

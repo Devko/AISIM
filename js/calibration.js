@@ -289,6 +289,15 @@
       "pctBefore": 36.468,
       "note": "n-weighted over the settled years listed. Shares pool exactly; the median is a weighted mean of per-year medians, which is an approximation forced by the published summaries — every year in the window reports 0 or 1 day."
     },
+    "recordLag": {
+      "worstYear": 2002,
+      "worstMedianDays": -57,
+      "worstPctBefore": 95.7,
+      "yearsWithImpossibleMedian": 5,
+      "firstYear": 2000,
+      "firstPctBefore": 98.5,
+      "note": "Years whose median exploit date precedes CVE publication by more than a week. An exploit cannot predate its vulnerability, so the negative tail of this series measures CVE-record lag rather than adversary pre-disclosure."
+    },
     "caveat": "Recent years are right-censored: PoCs are still arriving for them. Provisional years understate speed and understate the pre-publication share.",
     "coverageCaveat": "The dated sample fell from over a thousand CVEs a year to the low hundreds while CVE publication tripled. Exploit code moved off the public catalogues rather than becoming rarer, so the weaponised share is a floor, and the near-zero median describes the fast tail this instrument can still see.",
     "sampleTrend": [

@@ -178,10 +178,18 @@ h1 em { font-style: italic; color: var(--att); }
 /* The label yields, the answer does not. Nowrap with no shrink meant a 263px
  * label pushed the figure off the right edge below ~342px — at 320px, the
  * reflow width, what stayed on screen was the caption and what left was the
- * number. "The answer stays" has to survive its own narrowest case. */
+ * number. "The answer stays" has to survive its own narrowest case.
+ *
+ * It is also a 36-character sentence, so it takes the body face in sentence
+ * case per The Long Label Rule — the same treatment .stat .k carries, because
+ * this is that label in another position and a reader should not have to
+ * learn it twice. That is what buys the room: caps plus .13em tracking
+ * measured 263px against 197px set this way, so the 66px the rule gives back
+ * is the same 66px the ellipsis below was spending. The truncation stays as a
+ * backstop rather than as the thing keeping the number on screen. */
 .dock-k {
-  font-family: var(--mono); font-size: 10px; letter-spacing: .13em;
-  text-transform: uppercase; color: var(--mut); white-space: nowrap;
+  font-family: var(--body); font-size: 11.5px; letter-spacing: 0;
+  color: var(--mut); white-space: nowrap;
   flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis;
 }
 .dock-v {
@@ -655,6 +663,15 @@ details.more[open] > div { animation: rise .28s var(--ease) both; }
  * KPI row this design exists to avoid. */
 .stats {
   display: grid; grid-template-columns: 1.14fr 1.14fr .86fr .86fr;
+  /* Label, figure, interval, rail. Declared on the plate rather than left to
+   * each cell so the cells can adopt them as a subgrid: the four figures then
+   * sit on one line across the bank instead of landing wherever their own
+   * trailing content leaves them. Measured before: 510 / 510 / 481 / 529, a
+   * 48px spread, because the third cell's caption runs three lines against
+   * one and only the first two carry an interval rail. This is one plate
+   * divided by hairlines, not four tiles, and a plate whose numerals do not
+   * line up is read as four tiles however it is drawn. */
+  grid-template-rows: auto auto auto auto;
   background: var(--panel); border: 1px solid var(--rule);
   border-radius: 14px; box-shadow: var(--shadow); overflow: hidden;
   margin-bottom: 12px;
@@ -680,7 +697,13 @@ details.more[open] > div { animation: rise .28s var(--ease) both; }
  * cells to equal height, so the numbers line up across the row either way. */
 .stat {
   padding: 16px 18px 17px; border-left: 1px solid var(--rule);
-  display: flex; flex-direction: column;
+  /* Spans the plate's four rows and inherits their sizing, so every cell
+   * agrees on where the label ends and the figure begins. Every cell carries
+   * the same padding, so the offset the padding introduces is the same in all
+   * four and the alignment survives it. Cells with no interval rail simply
+   * leave the fourth row empty. */
+  display: grid; grid-template-rows: subgrid; grid-row: span 4;
+  align-content: start;
   /* Without this a cell cannot shrink below the min-content width of its own
    * label, so the two supporting cells stopped being equal once the bank got
    * tight and the divider between the pair and the counts drifted off centre. */
@@ -714,7 +737,12 @@ details.more[open] > div { animation: rise .28s var(--ease) both; }
 .stat .k {
   font-family: var(--body); font-size: 11.5px; letter-spacing: 0;
   color: var(--mut); line-height: 1.35;
-  display: block; flex: 1;
+  /* No flex:1 here any more. Growing the label to push the figure down only
+   * ever bottom-aligned the label; what sits under the figure differs cell to
+   * cell, so the figure still landed at four different heights. The plate's
+   * shared row does that job now, and does it across cells rather than within
+   * one. */
+  display: block;
 }
 /* The four figures resimulate on every parameter change: they are readouts,
  * not headlines, and they are set in the instrument's own face. Monospace
@@ -743,6 +771,32 @@ details.more[open] > div { animation: rise .28s var(--ease) both; }
  * ceiling belongs to the figure, not to one breakpoint. Measured Width still
  * holds: the SVG's laid-out box is now 900, so 900 is what gets drawn. */
 .chart { width: 100%; max-width: 900px; display: block; }
+
+/* A panel whose numbers are being recomputed. The metric toggle is the only
+ * control on the page with no fast pass behind it — see heavy() in js/app.js —
+ * so this stands in for the sub-frame response every other control gives for
+ * free. Dimmed rather than blanked: a reader who just switched metric is
+ * comparing the two readings, and the previous one has to stay legible while
+ * the new one computes. aria-busy on the panel is the semantic half of this;
+ * the label is decorative reinforcement for readers who can see the dimming,
+ * which is why it is generated content and carries nothing not already said. */
+/* No transition, in either direction, and that is the considered choice
+ * rather than the lazy one. A 180ms fade IN never advanced: the settle seizes
+ * the main thread within a frame of the class landing, and the transition was
+ * measured still `running` with the element at full opacity 600ms after the
+ * press — the same nothing the reader was already complaining about. A fade
+ * OUT is worse, because it depends on frames this page cannot promise: with
+ * the tab backgrounded requestAnimationFrame does not fire at all, and a
+ * restore that never runs leaves a panel dimmed over numbers that are
+ * finished. An instant mark answers an instant press, and an instant restore
+ * cannot get stuck. */
+.panel.pending .chart, .panel.pending .acts { opacity: .38; }
+.panel.pending .tools::after {
+  content: 'recomputing';
+  font-family: var(--mono); font-size: 10px; letter-spacing: .14em;
+  text-transform: uppercase; color: var(--mut);
+  align-self: center; margin-left: 2px; white-space: nowrap;
+}
 /* No font-family rule here on purpose. js/charts.js sets the family as an
  * attribute on every <text> node, because a chart is rasterised for PNG export
  * inside an <img> where no stylesheet applies. A CSS rule would win on screen

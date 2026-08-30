@@ -66,8 +66,9 @@
       <h1>Which clock does an autonomous adversary <em>actually</em> move?</h1>
       <p class="sub">A Monte Carlo model of exploit availability against remediation, resimulated
       on every change. The adversary timeline is <b>measured, not assumed</b>: days from CVE
-      publication to public exploit code. That clock has sat at the floor since 2015.
-      <b>Three other mechanisms have not.</b></p>
+      publication to public exploit code. That clock has sat at its floor &mdash; a median under
+      one day &mdash; in every settled year since 2015. <b>Three other mechanisms have not:
+      weaponised share, post-exploitation tempo, and vulnerability discovery rate.</b></p>
     </div>
 
     <!-- The thesis in three measured figures, read off the vendored snapshot at
@@ -107,19 +108,24 @@
       <div class="band" id="s-p-band" aria-hidden="true"></div>
     </div>
     <div class="stat">
+      <!-- Containment is rolled on EVERY intrusion, not once on the first of
+           the year, so this figure means what its label says: at least one
+           compromise in the window that detection and response did not
+           contain. Rolling it once made the number a description of the first
+           intrusion only, which on a busy estate understated it by more than
+           half while the label promised the whole year. -->
       <span class="k">Probability of an incident, 12-month window</span>
       <div class="v" id="s-i">…</div><div class="ci" id="s-i-ci"></div>
       <div class="band" id="s-i-band" aria-hidden="true"></div>
     </div>
-    <!-- "systems" was wrong on two of the three routes. Mass exploitation
-         compromises a COUNT of systems and is tallied as one; a targeted
-         campaign and a supply-chain hit are each tallied as one whatever they
-         reach, because the model does not simulate how far either spreads
-         inside an estate. At the top attention rung that made three quarters
-         of a figure labelled "systems" not a system count. The label now names
-         what is actually counted, and the caption names the mix. -->
+    <!-- "systems" was wrong on two of the three routes, and "events" was a sum
+         of two different units: mass exploitation added one per compromised
+         SYSTEM while every other route added one per INTRUSION, so the figure
+         could not be read as either. It counts intrusions now — one adversary,
+         one response, however many systems a single campaign takes — and the
+         systems reached across them are named in the caption beside it. -->
     <div class="stat plain">
-      <span class="k">Expected compromise events per year</span>
+      <span class="k">Expected intrusions per year</span>
       <div class="v" id="s-n">…</div><div class="ci" id="s-n-ci"></div>
     </div>
     <div class="stat plain">
@@ -271,7 +277,7 @@
       <div class="legend">
         <span><i class="sw-def"></i>remediation complete</span>
         <span><i class="sw-att"></i>exploit available</span>
-        <span><i class="sw-zero"></i>pre-disclosure</span>
+        <span><i class="sw-zero"></i>public before the CVE record</span>
         <span><i class="sw-hatch"></i>unremediated exposure</span>
       </div>
       <svg id="race" class="chart" height="396" role="img" aria-label="Exploit availability against remediation completion"></svg>
@@ -287,9 +293,14 @@
       <details class="more">
         <summary>How to read this chart</summary>
         <div>
-          <p class="lead">The horizontal axis is days from patch availability. Day 0 is the
-          vertical rule, and the shaded <b>pre-disclosure</b> band to its left is time when no fix
-          existed at all.</p>
+          <p class="lead">The horizontal axis is days from CVE publication. Day 0 is the
+          vertical rule, and the shaded band to its left is time when <b>no CVE record existed
+          yet</b>. Most of that band is not a zero-day: it is publication lag, with exploit code
+          already public and mass scanning already following it, which is why the model gives it
+          full hazard rather than the discount a genuinely pre-disclosure exploit gets. The same
+          measured series reports the share negative at 98.5% in 2000, on medians of tens of days
+          before publication — impossible as a claim about adversaries, unremarkable as one about
+          NVD.</p>
 
           <p class="lead">Two distributions mirror off the centre line. Above it,
           <b>remediation complete</b> is when your remediation lands, day by day. Below it,
@@ -302,8 +313,9 @@
           share of the remediation curve that lost the race.</p>
 
           <p class="lead">The two large figures answer different questions. The marker on the
-          cumulative curve at day 0 is the share of exploits that arrive <b>before the patch
-          does</b>. The badge is the share that arrive <b>before your remediation completes</b>,
+          cumulative curve at day 0 is the share of exploits that are <b>already public when the
+          CVE record lands</b>. The badge is the share that arrive <b>before your remediation
+          completes</b>,
           which is always the later test of the two and therefore always the larger number. The
           percentages at the edges are exploit or remediation mass falling outside the drawn
           window, labelled there rather than folded into the end bins, which would invent a spike
@@ -318,9 +330,14 @@
         <div class="ph-copy">
           <span class="ord">02</span>
           <h3>Attrition from publication to compromise</h3>
-          <p class="lead">Each stage is a subset of the one above it. The two largest reductions
-          occur outside the remediation process: most published criticals affect software not
-          present in the estate, and most of the remainder never receive public exploit code.</p>
+          <p class="lead">Each stage is a subset of the one above it. The stream entering the top
+          is every severity band, not just Critical: you set the critical count and the model derives
+          the High, Medium and Low volume beside it from the published corpus ratios, each carrying
+          its own arming and exploitation rate. Counting criticals alone would discard
+          <b>two thirds</b> of everything known to be exploited. The two largest reductions then
+          occur outside the remediation process — most published vulnerabilities land on a version
+          or configuration that is not exposed to them, and most of the remainder never acquire a
+          working exploit.</p>
         </div>
         <div class="tools">
           <button class="icon-btn" data-copy="funnel" type="button">Copy</button>
@@ -345,7 +362,10 @@
           ratio between bars: length depends on the range chosen for each parameter. Detection
           sits flat against compromise <i>by construction</i>, being modelled only after a
           foothold exists, so controls that block exploitation outright are outside the model
-          rather than measured at zero.</p>
+          rather than measured at zero. Headcount is a scale term, not a lever: the routes that
+          scale with people do so <i>sub-linearly</i>, because one lure reaches every mailbox in a
+          single event, and a bar that long would otherwise read as advice to employ fewer
+          people.</p>
         </div>
         <div class="tools">
           <div class="switch" role="group" aria-label="Metric">
@@ -426,13 +446,13 @@
           evidence and different consequences, so each takes its own dial on one axis.
           <button type="button" class="ctl-link" data-ctl="ai">Arrival speed<span class="vh">, go to this dial in the console</span></button> is the one the phrase usually means, and the flattest curve here: the
           measured median has <b>not exceeded one day in any settled year since 2015</b>, and the
-          pre-disclosure share has fallen rather than risen. <button type="button" class="ctl-link" data-ctl="weap">Weaponised share<span class="vh">, go to this dial in the console</span></button> is worth
+          share arriving ahead of the CVE record has fallen rather than risen. <button type="button" class="ctl-link" data-ctl="weap">Weaponised share<span class="vh">, go to this dial in the console</span></button> is worth
           several times as much, because breadth has room left where speed does not.
           <button type="button" class="ctl-link" data-ctl="tempo">Post-exploitation tempo<span class="vh">, go to this dial in the console</span></button> is flat here <i>by construction</i>: speed from foothold
           to objective cannot change whether you were breached, only whether anyone reached it in
           time. Switch the readout to incidents and it lifts off the floor. Even there the curve
           understates where it bites: against a 24/7 SOC, full tempo removes roughly
-          <b>three quarters</b> of the margin detection buys over having none. A faster adversary
+          <b>half</b> of the margin detection buys over having none. A faster adversary
           does not beat detection on any single intrusion; it devalues the investment.</p>
           <p class="lead">The steepest curve here is the last one, and it is not a clock at all.
           <button type="button" class="ctl-link" data-ctl="discovery">Discovery rate<span class="vh">, go to this dial in the console</span></button> asks how many
@@ -598,11 +618,20 @@
         <p>Breakout timing from the CrowdStrike Global Threat
         Report 2026 (29-minute average eCrime breakout, fastest observed 27 seconds); dwell and
         notification-path timings from Mandiant M-Trends 2026 (14-day global median, 10 days when an
-        organisation finds it itself against 26 when somebody else tells them); containment
-        corroborated against Sophos State of Ransomware 2026 (44% of attacks stopped before
-        encryption). These are vendor incident-response populations, which skew toward organisations
-        that required incident response. Read them as the shape of the distribution rather than as a
-        population baseline.</p>
+        organisation finds it itself against 26 when somebody else tells them); remediation velocity
+        against the Verizon DBIR 2026 edge-device series (a median around a month to full
+        remediation, with roughly half never fully remediated) and the Edgescan and Cyentia
+        vulnerability-management series; containment bounded by Sophos State of Ransomware 2026 (44%
+        of attacks stopped before encryption — a <i>per-attack</i> rate, so the quantity read
+        against it is containment per intrusion rather than the chance every intrusion in a year was
+        contained).</p>
+        <p>These are vendor incident-response and survey populations, which skew toward
+        organisations that needed help, and none of them is reproducible from the data vendored in
+        this repository the way the CVE corpus is. They are cited and dated so a reader can go and
+        look; the coefficients drawn from them carry wide declared ranges, and none of them is
+        load-bearing on the ordering this page argues for. Everything in the
+        <span class="tag m">measured</span> tier is regenerated from the snapshot and checked in
+        CI.</p>
       </div>
     </footer>
 

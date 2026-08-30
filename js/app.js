@@ -835,7 +835,14 @@
     }
     setStat('s-p', r.p, fmtPct, 'of years', lastBand.p, false, bandP);
     setStat('s-i', r.incident, fmtPct, 'of years', lastBand.i, false, bandI);
-    setStat('s-n', r.events, fmtEvents, 'events', 'mass exploitation counts systems; every other route counts events');
+    /* One unit. This used to add one per compromised SYSTEM on the mass
+     * exploitation route and one per INTRUSION on every other, so the figure
+     * was a sum of two different quantities and the caption had to say so.
+     * Systems are reported beside it instead of mixed into it. */
+    setStat('s-n', r.events, fmtEvents, 'intrusions',
+      r.systems > r.events * 1.05
+        ? fmtEvents(r.systems) + ' systems reached across them'
+        : 'one response each, however many systems a campaign takes');
     /* A bare rule in the value slot reads as a failed render, not as "this does
      * not happen inside the window". Give it an actual bound. */
     setStat('s-t', r.med == null ? null : r.med, fmtDaysN,
@@ -971,11 +978,59 @@
     return null;
   }
 
+  /* Every control in the console reports within a frame, because schedule()
+   * runs a 4,000-trial fast pass on the next rAF and only then queues the
+   * settle. The metric toggle is the one control with nothing to put in that
+   * frame: compromise and incident differ ONLY in the sensitivity bars, the
+   * prioritised actions and the sweep, and all three are computed at the very
+   * end of a settle — measured at 6.0s for the bars and 9.2s for the sweep.
+   * Everything the fast pass would repaint is metric-independent and repaints
+   * identically, so for six seconds the page answered a press with nothing at
+   * all and the toggle was reported as a dead button. What it can honestly
+   * offer in that frame is the fact that it heard the press. */
+  function pendingHost(id) {
+    var el = $(id);
+    return el ? el.closest('.panel') : null;
+  }
+  function markPending(ids) {
+    ids.forEach(function (id) {
+      var p = pendingHost(id);
+      if (!p || p.classList.contains('pending')) return;
+      p.classList.add('pending');
+      p.setAttribute('aria-busy', 'true');
+    });
+  }
+  function clearPending(ids) {
+    ids.forEach(function (id) {
+      var p = pendingHost(id);
+      if (!p) return;
+      p.classList.remove('pending');
+      p.removeAttribute('aria-busy');
+    });
+  }
+
   /* A queued MessageChannel task cannot be cancelled, so the generation
    * counter is what actually stops a superseded pass: a stale stage sees a
    * gen that no longer matches and returns without doing any work. The timer
    * handle is cleared too, for the fallback path. */
   var heavyGen = 0, heavyTimer = null;
+  /* Held so a reader who presses both buttons in quick succession queues one
+   * pass rather than two: the second press cancels the first press's waiting
+   * frame instead of letting it start a settle that cancelHeavy would then
+   * immediately abandon.
+   *
+   * Two handles, not one, for the reason schedule() carries two: a frame is
+   * the right moment to start, but requestAnimationFrame does not fire at all
+   * in a tab the browser is not painting. Gated on the frame alone, a metric
+   * pressed in a background tab never started its pass — and the mark it had
+   * already set stayed on three dimmed panels indefinitely, while the button
+   * claimed a reading the charts below it were not showing. */
+  var metricRaf = 0, metricTimer = null;
+  function runMetricPass() {
+    if (metricRaf) { cancelAnimationFrame(metricRaf); metricRaf = 0; }
+    if (metricTimer) { clearTimeout(metricTimer); metricTimer = null; }
+    heavy({ keepRun: true });
+  }
   function cancelHeavy() {
     heavyGen++;
     if (heavyTimer) { clearTimeout(heavyTimer); heavyTimer = null; }
@@ -987,9 +1042,17 @@
    * run and a whole one visit the same trials in the same order. */
   var HEAVY_CHUNK = 10000;
 
-  function heavy() {
+  function heavy(opts) {
     cancelHeavy();
     var gen = heavyGen;
+    /* A metric change moves nothing the main run reports. renderHead and
+     * drawMain read no metric at all, so re-running 60,000 trials to arrive
+     * at the same four headline figures spent 560ms of an already-long wait
+     * and then re-tweened the stats to the values they were already showing —
+     * motion in the one place that had not changed, while the three panels
+     * that had sat untouched. Reuse the run and go straight to the arithmetic
+     * the toggle actually alters. */
+    var keepRun = !!(opts && opts.keepRun) && !!lastRun;
 
     /* One coherent estate for the whole pass. Every stage reads this rather
      * than the live parameters: a control moved mid-pass abandons the pass
@@ -1002,20 +1065,27 @@
      * another, in a function whose stated discipline is that no stage can
      * answer half about one reading and half about another. */
     var metric = METRIC;
-    var run = M.createRun(snap, N_HEAVY, SEED, { surv: true, spread: 1 });
+    var run = keepRun ? null : M.createRun(snap, N_HEAVY, SEED, { surv: true, spread: 1 });
 
     var base = null, rows = [], sweepSeries = [];
     var stages = [];
-    for (var c = 0; c < N_HEAVY; c += HEAVY_CHUNK) {
-      stages.push(function () { run.advance(HEAVY_CHUNK); });
+    if (keepRun) {
+      /* The URL is still stamped: the metric is part of the shared link, so a
+       * reader who hands a colleague the address bar has to hand them the
+       * reading they were looking at. */
+      stages.push(function () { pushURL(); });
+    } else {
+      for (var c = 0; c < N_HEAVY; c += HEAVY_CHUNK) {
+        stages.push(function () { run.advance(HEAVY_CHUNK); });
+      }
+      stages.push(function () {
+        var r = run.result();
+        lastRun = r;
+        renderHead(r);
+        drawMain(r);
+        pushURL();
+      });
     }
-    stages.push(function () {
-      var r = run.result();
-      lastRun = r;
-      renderHead(r);
-      drawMain(r);
-      pushURL();
-    });
 
     /* Baseline computed with EXACTLY the seed and trial count the bars use, so
      * a bar can never be offset against a mismatched base. */
@@ -1027,6 +1097,17 @@
       rows.sort(function (x, y) { return y.span - x.span; });
       CH.tornado($('torn'), width('torn'), rows, base, palette());
       renderActions(rows, base, metric);
+      /* Cleared per panel as that panel's own numbers land, not once at the
+       * end of the pass: the bars are ready a full three seconds before the
+       * sweep is, and holding the mark on a panel that is already showing the
+       * new reading would teach the reader to ignore it.
+       *
+       * Guarded on the metric this pass was computed for. The mark belongs to
+       * a metric change, but ANY pass repaints these panels — so an in-flight
+       * pass that predates the press, finishing on the old metric, used to
+       * clear a mark it had not answered and leave the page claiming one
+       * reading while showing the other. */
+      if (metric === METRIC) clearPending(['torn', 'acts']);
       /* Published with the bars, not eleven stages later with the sweep. A
        * redraw in that gap — a theme toggle, the resize debounce, beforeprint —
        * read lastSens and repainted the tornado with the PREVIOUS estate's
@@ -1057,6 +1138,7 @@
       sweepSeries.forEach(function (s2) { s2.curY = base; });
       lastSens = { base: base, rows: rows, sweep: sweepSeries };
       CH.sweep($('sweep'), width('sweep'), sweepSeries, palette());
+      if (metric === METRIC) clearPending(['sweep']);
     });
 
     var i = 0;
@@ -1079,14 +1161,22 @@
         }
       }
       if (i < stages.length) heavyTimer = yieldTo(step);
+      /* The mark is cleared by the stage that repaints each panel, and that
+       * stage can throw — the catch above keeps the pass alive, which would
+       * otherwise leave a panel dimmed and aria-busy with nothing left to
+       * come. A pass that reaches its end owes the reader an un-marked page
+       * whether or not every stage in it succeeded. */
+      else if (metric === METRIC) clearPending(['torn', 'acts', 'sweep']);
     };
     heavyTimer = yieldTo(step);
   }
 
   function updateWild(r) {
     var n = empty($('wild-note'));
-    add(n, 'Of the ', b(num(r.fn[2], 2)), ' vulnerabilities a year that receive public exploit code, ', b(num(r.wild, 2)),
-      ' (' + pctS(r.wildShare) + ') are confirmed exploited against live targets. The remainder still attract ' +
+    add(n, 'Of the ', b(num(r.fn[2], 2)), ' vulnerabilities a year in your stack that acquire a working exploit, ',
+      b(num(r.wild, 2)), ' (' + pctS(r.wildShare) + ') are confirmed exploited against live targets. ',
+      b(num(r.critWild, 2)), ' of those are Critical-rated — the band this page cites its arming and ' +
+      'exploitation rates for, and roughly a third of what is actually exploited. The remainder still attract ' +
       'opportunistic traffic at a fraction of the hazard rate.');
   }
 
@@ -1223,7 +1313,8 @@
      * inside the image it captions. */
     if (id === 'race') return lastDens
       ? pctS(lastDens.pLate) + ' have public exploit code before remediation completes' : '';
-    if (id === 'funnel') return num(r.fn[0]) + ' criticals a year become ' + num(r.fn[5], 2) + ' compromises';
+    if (id === 'funnel') return num(r.fn[0]) + ' published vulnerabilities a year become ' +
+      num(r.fn[5], 2) + ' compromises';
     if (id === 'routes') return 'first compromise of the year, by route';
     if (id === 'surv') return pctS(r.p) + ' chance of compromise within 12 months';
     if (id === 'torn') return 'ranked by effect on the ' + (METRIC === 'p' ? 'compromise' : 'incident') + ' rate';
@@ -1501,8 +1592,11 @@
       num(sw.medianDays, 1) + ' d',
       'CyberMon · ' + sw.years[0] + '–' + sw.years[sw.years.length - 1] +
       ' settled years pooled, n=' + thou(sw.n) + ', 90-day horizon');
-    anchorRow(host, 'Exploits that appear before the patch does', 'measured',
-      num(sw.pctBefore, 1) + '%', 'CyberMon · same pooled window');
+    anchorRow(host, 'Exploits already public when the CVE record lands', 'measured',
+      num(sw.pctBefore, 1) + '%',
+      'CyberMon · same pooled window · mostly NVD publication lag, not pre-disclosure: the same series reads ' +
+      C.pocTiming.recordLag.firstPctBefore + '% in ' + C.pocTiming.recordLag.firstYear +
+      ' at a median of ' + Math.abs(C.pocTiming.recordLag.worstMedianDays) + ' days before publication');
     anchorRow(host, 'Most recent year, still collecting exploits', 'measured',
       C.pocTiming.latest.medianDays + ' d median · ' + C.pocTiming.latest.pctBefore + '% before',
       'CyberMon · ' + C.pocTiming.latest.year + ', n=' +
@@ -1564,7 +1658,8 @@
     add(f, b(num(C.exploitation.kevBelowCritical) + '%'),
       ' of confirmed-exploited vulnerabilities are rated below Critical, and ',
       b(C.exploitation.criticalEpssBelow1pct + '%'),
-      ' of Critical-rated CVEs carry less than a 1% chance of exploitation. Critical is only ',
+      ' of Critical-rated CVEs carry an EPSS score below 1% — that is a probability of exploitation ' +
+      'activity in the next 30 days, not over the life of the vulnerability. Critical is only ',
       b(C.exploitation.criticalVsHigh + '×'),
       ' High. That is a weak signal, not a filter, which is why this model is driven by exploit availability rather than by severity band.');
   }
@@ -1588,10 +1683,20 @@
     clockRow(host, 'Median days from publication to public exploit code, ' +
       sw.years[0] + '–' + sw.years[sw.years.length - 1],
       num(sw.medianDays, 1) + ' d');
-    clockRow(host, 'Exploits that arrive before the patch does',
+    /* NOT "before the patch does". This is the share of the arming series with
+     * a negative publication-to-exploit interval, and most of it is a late CVE
+     * record standing in front of exploit code that is already public — the
+     * same series reads 98.5% negative in 2000, at a median of 44 days before
+     * publication, which is impossible as a statement about adversaries and
+     * unremarkable as one about NVD. The masthead is where the page makes its
+     * three strongest claims, so it is the last place to leave that reading
+     * standing. See MODEL.MEASURED.preIsRecordLag. */
+    clockRow(host, 'Exploits already public when the CVE record lands',
       num(sw.pctBefore, 1) + '%');
-    clockRow(host, 'Criticals that ever get a public working exploit',
-      C.armed.pPoCCritical + '%');
+    /* A floor, and labelled as one: measured against three catalogues whose
+     * dated sample fell from 1,019 CVEs a year to 94 while publication tripled. */
+    clockRow(host, 'Criticals with public exploit code in three catalogues',
+      C.armed.pPoCCritical + '% or more');
   }
 
   /* ── reveal, dock and contents ─────────────────────────────────────────── */
@@ -1678,9 +1783,24 @@
     });
     document.querySelectorAll('[data-metric]').forEach(function (btn) {
       btn.addEventListener('click', function () {
+        if (btn.dataset.metric === METRIC) return;
         METRIC = btn.dataset.metric;
         syncMetric();
-        heavy();
+        markPending(['torn', 'acts', 'sweep']);
+        /* Marked, then given a frame to be SEEN before the settle takes the
+         * thread. heavy() reaches its first 12,000-trial stage through a
+         * MessageChannel task, which is soon enough to starve the rendering
+         * update that would have painted the mark — so the class landed, the
+         * button lit, and the three panels it describes went on looking
+         * exactly as they had. Two frames: the first schedules the paint, the
+         * second runs after it. The pass a reader is waiting on is six
+         * seconds long; it can start 16ms later. */
+        if (metricRaf) cancelAnimationFrame(metricRaf);
+        if (metricTimer) clearTimeout(metricTimer);
+        metricRaf = requestAnimationFrame(function () {
+          metricRaf = requestAnimationFrame(runMetricPass);
+        });
+        metricTimer = setTimeout(runMetricPass, 90);
       });
     });
     $('theme-btn').addEventListener('click', function () {
