@@ -63,7 +63,7 @@ It is calibrated against a dated, public corpus rather than against vendor
 narrative — and the first thing that corpus says is that the obvious way to
 build this model would have been wrong.
 
-**[▶ Open the live page](https://devko.github.io/AISIM/)** ·
+**[▶ Open the live page](https://exposure.einblick.dev/)** ·
 [single-file build](dist/exposure-race.html) ·
 [![model](https://github.com/Devko/AISIM/actions/workflows/test.yml/badge.svg)](https://github.com/Devko/AISIM/actions/workflows/test.yml)
 
@@ -309,7 +309,7 @@ marked provisional, where a reader can see it without it calibrating anything.
 The page will not pretend they are the same, and tags each one.
 
 **`measured`** — read directly off the vendored
-[CyberMon](https://devko.github.io/CyberMon/) snapshot in `data/cybermon/`, and
+[CyberMon](https://cybermon.einblick.dev/) snapshot in `data/cybermon/`, and
 reproducible offline: exploit availability by severity band, confirmed
 exploitation rates, the publication-to-exploit distribution, CVE volume, KEV
 additions, NVD analysis status.
@@ -975,6 +975,6 @@ and wants re-deriving on the narrower definition.
 ## Credits
 
 Vulnerability, exploit-catalogue, EPSS and KEV data from
-[CyberMon](https://devko.github.io/CyberMon/), which does the hard part —
+[CyberMon](https://cybermon.einblick.dev/), which does the hard part —
 maintaining a nightly pipeline over cvelistV5, EPSS, CISA KEV, NVD status and
 the public exploit catalogues. Model and page MIT licensed.

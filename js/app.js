@@ -1494,7 +1494,7 @@
     return {
       title: title, subtitle: subtitle, scale: 2,
       bg: pal.ink, fg: pal.txt, mut: pal.mut,
-      source: 'Exposure Race · calibrated to CyberMon ' + C.snapshot.cvelist + ' · devko.github.io/CyberMon',
+      source: 'Exposure Race · calibrated to CyberMon ' + C.snapshot.cvelist + ' · cybermon.einblick.dev',
     };
   }
   function subtitleFor(id) {

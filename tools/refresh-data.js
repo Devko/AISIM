@@ -13,7 +13,7 @@ const fs = require('fs');
 const path = require('path');
 const https = require('https');
 
-const BASE = 'https://devko.github.io/CyberMon/data/';
+const BASE = 'https://cybermon.einblick.dev/data/';
 const OUT = path.join(__dirname, '..', 'data', 'cybermon');
 
 /* The snapshot is refreshed as a whole, not file by file as the model happens

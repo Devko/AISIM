@@ -53,7 +53,7 @@ function ctxFor(run, over) {
     cal: CAL, run: run, metric: 'p', scope: M.SCOPE,
     estate: '100 exposed systems · 25% appliances',
     dateLabel: '30 August 2026',
-    url: 'https://devko.github.io/AISIM/?exposed=100&cadence=14',
+    url: 'https://exposure.einblick.dev/?exposed=100&cadence=14',
     config: [
       { l: 'What strangers can reach', v: 'Internet-facing product' },
       { l: 'Adversary attention', v: 'Named-target interest' },

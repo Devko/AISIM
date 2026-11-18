@@ -22,7 +22,7 @@ const poc = load('time_to_poc');
 const kevLat = load('kev_latency');
 const decay = load('nvd_decay');
 
-const CM = 'https://devko.github.io/CyberMon/';
+const CM = 'https://cybermon.einblick.dev/';
 const r2 = (x) => Math.round(x * 100) / 100;
 const r3 = (x) => Math.round(x * 1000) / 1000;
 

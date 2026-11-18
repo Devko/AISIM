@@ -20,7 +20,7 @@
   },
   "currentYear": 2026,
   "yearElapsed": 0.879,
-  "source": "https://devko.github.io/CyberMon/",
+  "source": "https://cybermon.einblick.dev/",
   "volume": {
     "prevYear": {
       "year": 2025,
@@ -59,7 +59,7 @@
       "medium": 1.85
     },
     "note": "Run-rate is linear extrapolation of a partial year — calendar arithmetic, not a forecast.",
-    "src": "https://devko.github.io/CyberMon/cve.html#flood"
+    "src": "https://cybermon.einblick.dev/cve.html#flood"
   },
   "exploitation": {
     "bands": [
@@ -96,7 +96,7 @@
     "criticalVsHigh": 2.51,
     "kevBelowCritical": 64.795,
     "criticalEpssBelow1pct": 65.4,
-    "src": "https://devko.github.io/CyberMon/cve.html#reality"
+    "src": "https://cybermon.einblick.dev/cve.html#reality"
   },
   "armed": {
     "window": 2025,
@@ -153,7 +153,7 @@
       "dated_cves": 25095,
       "matched_in_corpus": 25968
     },
-    "src": "https://devko.github.io/CyberMon/exploits.html"
+    "src": "https://cybermon.einblick.dev/exploits.html"
   },
   "inWild": {
     "pKevCritical": 2.553,
@@ -163,7 +163,7 @@
     "kevAddedPrevYear": 245,
     "kevAddedCurYTD": 297,
     "kevAddedRunRate": 338,
-    "src": "https://devko.github.io/CyberMon/kev.html"
+    "src": "https://cybermon.einblick.dev/kev.html"
   },
   "pocTiming": {
     "observedThrough": "2026-08-19",
@@ -354,7 +354,7 @@
         "n": 83
       }
     ],
-    "src": "https://devko.github.io/CyberMon/exploits.html"
+    "src": "https://cybermon.einblick.dev/exploits.html"
   },
   "kevLatency": {
     "byYear": [
@@ -440,7 +440,7 @@
     ],
     "within7d": 42.6,
     "cisaDeadlineDays": 3,
-    "src": "https://devko.github.io/CyberMon/kev.html"
+    "src": "https://cybermon.einblick.dev/kev.html"
   },
   "nvd": {
     "statuses": [
@@ -488,7 +488,7 @@
       "awaiting_analysis": 11616
     },
     "backlogGrowth": 8.13,
-    "src": "https://devko.github.io/CyberMon/cve.html#decay"
+    "src": "https://cybermon.einblick.dev/cve.html#decay"
   }
 };
 });

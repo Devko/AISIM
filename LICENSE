@@ -23,6 +23,6 @@ SOFTWARE.
 ---
 
 Vulnerability, exploit-catalogue, EPSS and KEV figures under data/cybermon/ are
-snapshots of the CyberMon project (https://devko.github.io/CyberMon/) and carry
+snapshots of the CyberMon project (https://cybermon.einblick.dev/) and carry
 that project's licensing. Underlying sources — cvelistV5 (MITRE), EPSS
 (FIRST.org), CISA KEV, NVD — are the property of their respective maintainers.
