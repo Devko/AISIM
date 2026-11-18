@@ -27,14 +27,15 @@
    * README's opening section argued at length that a criticals-only model is
    * the wrong instrument because it discards 65% of everything known to be
    * exploited. The argument and the implementation contradicted each other,
-   * and the implementation was the one producing the numbers: 584 of the 1,682
-   * entries in the confirmed-exploited catalogue are Critical, so the
-   * simulation covered 34.7% of known exploitation and reported it as the
-   * whole.
+   * and the implementation was the one producing the numbers: about a third of
+   * the entries in the confirmed-exploited catalogue are Critical (627 of 1,781
+   * on the 2026-11 snapshot), so the simulation covered a third of known
+   * exploitation and reported it as the whole.
    *
    * A reader could not fix that by raising `stackVulns` either. The two
-   * conditionals are band-conditional — 8.2% public-exploit and 2.87%
-   * confirmed-exploited for Critical, against 2.1% and 1.20% for High — so
+   * conditionals are band-conditional — 5.0% public-exploit and 2.55%
+   * confirmed-exploited for Critical, against 1.2% and 1.02% for High on the
+   * 2026-11 snapshot — so
    * inflating the critical count applies critical coefficients to a population
    * that does not carry them.
    *
@@ -64,15 +65,15 @@
      *
      * Scaled together by ASSUMED.subCritImpact, so a reader who disagrees has
      * one coefficient to move and it lands in the credible interval. */
-    var foothold = { '9.0-10.0': 1, '7.0-8.9': 0.85, '4.0-6.9': 0.45, '0.1-3.9': 0.20 };
-    return ['9.0-10.0', '7.0-8.9', '4.0-6.9', '0.1-3.9'].map(function (key) {
+    var foothold = { '9.0-10.0': 1, '7.0-8.9': 0.85, '4.0-6.9': 0.45, '0.0-3.9': 0.20 };
+    return ['9.0-10.0', '7.0-8.9', '4.0-6.9', '0.0-3.9'].map(function (key) {
       var pPoC = armed[key].pct / 100;
       var pKev = kev[key].pExploited / 100;
       /* The same algebraic decomposition the Critical band already used,
        * applied to every band from the same two published rates. For Critical
-       * it reproduces the snapshot's own published conditionals exactly (28.4%
-       * and 0.6%), which is the check that this is a re-derivation rather than
-       * a fresh set of assumptions. */
+       * it reproduces the snapshot's own published conditionals exactly
+       * (C.inWild.pInWildGivenPoC and pInWildNoPoC), which is the check that
+       * this is a re-derivation rather than a fresh set of assumptions. */
       return {
         key: key,
         label: kev[key].band,
@@ -100,11 +101,14 @@
      * are an algebraic residual:
      *
      *     pWildGivenPoC = pKevCritical x pctPoCFirst / pPoCCritical
-     *                   = 2.869%       x 81.2%       / 8.2%        = 28.4%
+     *                   = 2.553%       x 56.2%       / 5.0%        = 28.7%
+     *                   (2026-11 snapshot; 2.869 x 81.2 / 8.2 = 28.4 before
+     *                    CyberMon stopped dating exploits by Metasploit
+     *                    disclosure dates)
      *
-     * The numerator is an all-time corpus rate — 20,355 scored criticals with
+     * The numerator is an all-time corpus rate — 24,564 scored criticals with
      * up to a decade to reach KEV. The denominator is a single-year cohort —
-     * 4,110 criticals published in 2025 with about one year to acquire exploit
+     * 4,112 criticals published in 2025 with about one year to acquire exploit
      * code. Different populations over different exposure horizons, and the
      * one-year PoC rate is truncated because exploit code keeps arriving, so
      * dividing by it inflates the conditional.
@@ -113,7 +117,7 @@
      * this cannot be re-derived here against a matched population. What it can
      * do is stop claiming to be measured and carry the uncertainty explicitly:
      * ASSUMED.wildRate scales both conditionals together, preserving their
-     * ratio — and therefore the measured 81.2% PoC-first share — while letting
+     * ratio — and therefore the measured PoC-first share — while letting
      * the confirmed-exploitation rate move across a range that spans both known
      * biases. At spread 0 it is the identity, so the model still reproduces the
      * corpus exactly. */
@@ -123,20 +127,19 @@
      *
      * Read off the POOLED SETTLED years, not `latest`. The model used to
      * calibrate to the most recent row in the series, which is the most
-     * heavily right-censored one in it: 2026, n=94, observed through May, and
-     * the only row in twelve years reporting a median above one day (3.5).
-     * The page's own headline claim — that this median has not exceeded a day
-     * in any settled year since 2015 — was therefore contradicted by the number
-     * the simulation ran on, and the calibration file's own caveat says
-     * provisional years are biased. Calibrating to data the page calls
-     * unreliable, while arguing from data it calls settled, is not a
-     * conservative choice; it is two different clocks in one document.
+     * heavily right-censored one in it (then 2026, n=94, observed through
+     * May). Calibrating to data the page calls unreliable, while arguing from
+     * data it calls settled, is not a conservative choice; it is two different
+     * clocks in one document. Against the pooled anchor the dial starts where
+     * the evidence does.
      *
-     * It also quietly inflated the scenario dial. At a 3.5-day baseline the
-     * "Exploit arrival speed" slider spent 55 of its 100 points returning to
-     * what the settled record already measured, on a page whose whole argument
-     * is that this clock has no room left to compress. Against the pooled
-     * anchor the dial starts where the evidence does.
+     * The anchor itself moved with the 2026-11 recalibration. Until CyberMon's
+     * 2026-09 correction, Metasploit `disclosure_date` — the vulnerability's
+     * disclosure, not the module's publication — dated exploit code, and the
+     * pooled median read 0.64 days. Dated by Exploit-DB alone it reads about
+     * six days, with per-year medians of 4.5 to 11 over 2020-2024. The page
+     * used to argue that this clock was "already at zero"; it is not, and the
+     * copy now argues from the measured value instead.
      *
      * `latest` is still exported and the page still shows it — a reader should
      * see the most recent row and see it marked provisional. It just does not
@@ -169,23 +172,30 @@
      * publication-to-exploit interval, and it was read here as "a working
      * exploit existed before the patch did". The same series says:
      *
-     *     2000   n=273   median -44 d   pct_negative 98.5%
-     *     2005  n=1173   median  -2 d   pct_negative 85.8%
-     *     2020   n=354   median  +1 d   pct_negative 35.6%
+     *     2000   n=270   median -44 d   pct_negative 98.5%
+     *     2005  n=1161   median  -2 d   pct_negative 84.7%
+     *     2020   n=252   median +4.5 d  pct_negative 11.9%
      *
      * An exploit cannot exist forty-four days before the vulnerability does.
      * The quantity is `exploit_catalogue_date - nvd_publication_date`, and a
      * negative value means the CVE RECORD was published late — for backfilled
-     * early-2000s records, by years. The smooth decay from 98.5% to 36% is CVE
-     * assignment latency improving, not adversary capability collapsing by two
-     * thirds.
+     * early-2000s records, by years. The decay from 98.5% to around a fifth is
+     * CVE assignment latency improving, not adversary capability collapsing.
      *
-     * The residual in modern years is real and it is growing again: this
-     * snapshot reports 44,050 deferred NVD records, 11.5% of the corpus, and a
-     * 3.87x backlog growth inside seven weeks. But it is PUBLICATION lag, not
-     * adversary pre-disclosure. Google and Mandiant between them track roughly
-     * 75 to 100 exploited-in-the-wild zero-days a year across all software;
-     * 36.5% of the armed critical stream alone would be about 124.
+     * The residual in modern years is real and it is growing again: the
+     * 2026-11 snapshot reports 63,314 deferred NVD records, 14.9% of the
+     * corpus, and the analysis backlog roughly doubling in under three months.
+     * But it is PUBLICATION lag, not adversary pre-disclosure, and the exploit
+     * code in this series is public by construction — Exploit-DB published it.
+     *
+     * The count used to settle this on its own: before CyberMon's 2026-09
+     * correction the pooled pre-publication share read 36.5%, which applied to
+     * the armed critical stream gave about 124 a year in that band alone,
+     * against the 75 to 100 exploited-in-the-wild zero-days Google and Mandiant
+     * track across ALL software. Dated by Exploit-DB alone it reads 17.8% — 37
+     * a year in the critical band, about 83 across every band — which no
+     * longer refutes the zero-day reading by magnitude. What still refutes it
+     * is what the instrument measures: catalogued, public exploit code.
      *
      * So the negative mass is kept — it is measured, and the exposure it
      * describes is real — and split into the two mechanisms it actually
@@ -455,6 +465,18 @@
    *
    * If you disagree with one, this is the only block you need to edit.
    * ═══════════════════════════════════════════════════════════════════════ */
+  /* The dated exploit sample at its peak and in its latest settled year, read
+   * off the snapshot so the two `why` strings below that quote it cannot go
+   * stale when the data does. They were typed in once, as 1,019 and 146, and
+   * both were wrong within a refresh. */
+  var DATED_SAMPLE = (function () {
+    var trend = C.pocTiming.sampleTrend;
+    var peak = trend.reduce(function (a, y) { return y.n > a.n ? y : a; }, trend[0]);
+    var settled = C.pocTiming.series.filter(function (r) { return !r.provisional; });
+    return { peak: peak, last: settled[settled.length - 1] };
+  })();
+  var PRE_PCT = Math.round(C.pocTiming.settled.pctBefore);
+
   var ASSUMED = {
     /* days before publication that a pre-disclosure exploit appears (median) */
     preMedian:      { l: 'Days a pre-disclosure exploit precedes publication (median)', v: 7,    lo: 3,    hi: 21,   why: 'No public measurement of how long a pre-disclosure exploit exists before the CVE record. The spread around the median is assumed rather than measured.' },
@@ -592,8 +614,14 @@
      *
      * DOWN: the conditional is an all-time KEV rate over a one-year PoC rate.
      * Exploit code keeps arriving for a cohort, so the true all-time critical
-     * PoC rate is above the 8.2% measured at one year; at a plausible 15% the
-     * conditional falls to 0.55x what it is stated as.
+     * PoC rate is above the rate measured at one year. The 0.55 floor was set
+     * when that rate read 8.2% (8.2 / a plausible 15 = 0.55). Since the
+     * 2026-09 CyberMon correction it reads 5.0% on a narrower definition —
+     * Nuclei detection templates and Metasploit auxiliary modules no longer
+     * count — so the "plausible all-time rate" it was set against needs the
+     * same narrowing before this floor is re-derived. Left at 0.55 and flagged
+     * rather than moved here, because the recalibration changed the data, not
+     * the argument for the range.
      *
      * UP: KEV is a US federal remediation list, curated for operational reasons,
      * not a census of exploitation. It is a floor on what is exploited, and
@@ -602,12 +630,14 @@
      * correlation this conditional is measuring. */
     wildRate:       { l: 'Scaling on the measured confirmed-exploitation rate', v: 1, lo: 0.55, hi: 1.6,
       why: 'The confirmed-exploitation rate is derived across populations that do not match each other exactly, and KEV undercounts real exploitation. The range spans both.' },
-    /* What the three public catalogues cannot see.
+    /* What the public catalogues cannot see.
      *
-     * `pPoC` is measured against ExploitDB, Metasploit and Nuclei, and the
-     * calibration file's own coverageCaveat says plainly that it is a FLOOR:
-     * the dated sample fell from 1,019 CVEs in 2017 to 146 in 2024 while CVE
-     * publication nearly tripled. Exploit code did not become rarer over that decade.
+     * `pPoC` is measured against Exploit-DB and Metasploit exploit modules —
+     * since CyberMon's 2026-09 correction Nuclei counts as detection, not
+     * exploit coverage — and the calibration file's own coverageCaveat says
+     * plainly that it is a FLOOR: the dated sample fell from 996 CVEs in 2017
+     * to 42 in 2024 while CVE publication nearly tripled (2026-11 snapshot;
+     * DATED_SAMPLE reads them live). Exploit code did not become rarer over that decade.
      * It moved to GitHub, to private tooling, and to commercial kits that index
      * nowhere. Taking a number the file itself calls a floor and running it as
      * the value is the one place this model was quietly optimistic.
@@ -619,16 +649,18 @@
      * exactly at every setting. More bugs have public code than the catalogues
      * see; the same number reach KEV; so the conditionals move by exactly the
      * factors that keep both counts. The corpus anchor does not move, and
-     * neither does the 81.2% PoC-first share. */
+     * neither does the measured PoC-first share. */
     pocCoverage:    { l: 'True public-exploit availability against what the catalogues index', v: 1.6, lo: 1.0, hi: 3.0,
-      why: 'The dated catalogue sample fell from 1,019 CVEs a year to 146 in the latest complete year while publication nearly tripled; exploit code moved to GitHub rather than becoming rarer. 1.0 is the floor the catalogues can see, and the measured confirmed-exploitation rate is held fixed across the range.' },
+      why: 'The dated catalogue sample fell from ' + DATED_SAMPLE.peak.n.toLocaleString('en-US') + ' CVEs in ' + DATED_SAMPLE.peak.year + ' to ' + DATED_SAMPLE.last.n.toLocaleString('en-US') + ' in ' + DATED_SAMPLE.last.year + ', the latest complete year, while publication nearly tripled; exploit code moved to GitHub rather than becoming rarer. 1.0 is the floor the catalogues can see, and the measured confirmed-exploitation rate is held fixed across the range.' },
     /* How much of the measured pre-publication mass is a genuine zero-day
-     * rather than a late CVE record. See MEASURED.preIsRecordLag for why the
-     * measured 36.5% cannot be read as an adversary capability. The rest of
-     * that mass carries FULL hazard, because public exploit code draws mass
-     * scanning whether or not NVD has caught up. */
+     * rather than a late CVE record. A share OF that mass — the trial loop
+     * rolls it only where an exploit lands before publication — not a share
+     * of all exploits. See MEASURED.preIsRecordLag for why the measured share
+     * cannot be read as an adversary capability. The rest of that mass carries
+     * FULL hazard, because public exploit code draws mass scanning whether or
+     * not NVD has caught up. */
     zeroDayShare:   { l: 'Share of the pre-publication window that is a genuine zero-day', v: 0.07, lo: 0.02, hi: 0.18,
-      why: 'Published zero-day counts run to 75-100 a year across all software. The measured 36.5% pre-publication share would put over a hundred in the critical band alone, so most of it is CVE-record lag rather than adversary pre-disclosure.' },
+      why: 'Every exploit in the measured series is public by construction: Exploit-DB published it. A public exploit that lands before the CVE record is a late record, not a secret, so most of the ' + PRE_PCT + '% pre-publication share is record lag. Published counts of exploited zero-days, 75-100 a year across all software, bound the rest.' },
     /* Impact scaling on the three sub-critical bands, together. See BANDS. */
     subCritImpact:  { l: 'Foothold value of a sub-critical exploited bug, against a critical', v: 1, lo: 0.65, hi: 1.35,
       why: 'Severity is a poor proxy for whether a bug is exploited and a fair one for what exploiting it gives you. No public measurement separates the two, so the value given to each severity band is judgement, and this scales all three together.' },
@@ -979,8 +1011,12 @@
        * separated because they are not the same claim and do not carry the same
        * evidence. Bundled into one dial they were indistinguishable, and the
        * bundle was named after the weakest of the three. The page's own thesis
-       * — that the clock everyone watches was already at the floor — is only
-       * visible once the three move independently.
+       * — that the clock everyone watches is not the one that decides the
+       * race — is only visible once the three move independently. (It used to
+       * read "was already at the floor"; on Exploit-DB-dated exploits the
+       * measured median is days, not zero, and the dial is weakest for a
+       * different reason: at the measured speed exploit code already beats
+       * most remediation, so a faster clock reorders races it was winning.)
        *
        * No point values are quoted here any more. Three sets of them were
        * written into this comment over its life and every one went stale within
@@ -991,7 +1027,7 @@
        * configured. */
       { k: 'ai',        l: 'Exploit arrival speed',      min: 0,   max: 100,  step: 1,   v: 0,
         f: function (v) { return v === 0 ? 'as measured' : 'x' + (1 / clockScale(v)).toFixed(1) + ' sooner'; },
-        h: 'Compresses the publication-to-exploit clock. Zero is the measured record (' + C.pocTiming.settled.years[0] + '-' + C.pocTiming.settled.years[C.pocTiming.settled.years.length - 1] + ' pooled, ' + C.pocTiming.settled.n.toLocaleString('en-US') + ' records), whose median is already under a day. This is the clock with the least room left to compress.' },
+        h: 'Compresses the publication-to-exploit clock. Zero is the measured record (' + C.pocTiming.settled.years[0] + '-' + C.pocTiming.settled.years[C.pocTiming.settled.years.length - 1] + ' pooled, ' + C.pocTiming.settled.n.toLocaleString('en-US') + ' records), a median of ' + C.pocTiming.settled.medianDays.toFixed(1) + ' days. That is already faster than most remediation, so compressing it mostly speeds up races the exploit was winning anyway.' },
       { k: 'weap',      l: 'Share of bugs weaponised',   min: 0,   max: 100,  step: 1,   v: 0,
         f: function (v) { return v === 0 ? 'as measured' : 'x' + weapMult(v).toFixed(1) + ' armed'; },
         h: 'How many published vulnerabilities acquire working exploit code at all, and how many arrive before disclosure. Measured today at ' + C.armed.pPoCCritical.toFixed(1) + '% of criticals. Breadth, not speed.' },
@@ -1829,7 +1865,7 @@
      * conditional. The product — the unconditional confirmed-exploitation rate
      * measured against the full corpus — is therefore invariant in it, which is
      * the property that lets the correction be applied at all. `wildRate`
-     * scales both conditionals together and so preserves the measured 81.2%
+     * scales both conditionals together and so preserves the measured
      * PoC-first share, which is what the calibration test checks. */
     k.bands = MEASURED.bands.map(function (b) {
       /* The catalogue-visible armed share under this scenario, and the true
@@ -2545,7 +2581,7 @@
         wild: wildN / trials,
         wildShare: armedN ? wildN / armedN : 0,
         /* The critical band alone, kept because every citation on the page is
-         * about it — the 8.2% arming rate, the 2.87% confirmed-exploitation
+         * about it — the critical arming rate, the critical confirmed-exploitation
          * rate, the 0.98-a-year calibration story. The model no longer runs on
          * this band alone, so a reader comparing the page's prose against the
          * simulation needs both figures side by side. */

@@ -1,281 +1,282 @@
 {
- "generated_at": "2026-08-27T04:29:47Z",
+ "generated_at": "2026-11-17T11:07:38Z",
  "hero": {
   "matched": {
-   "dated_cves": 26218,
-   "matched_cves": 26172,
-   "unmatched_cves": 46
+   "dated_cves": 25095,
+   "matched_cves": 25052,
+   "unmatched_cves": 43
   },
   "years": [
    {
     "year": 1999,
-    "n": 109,
-    "median_days": -800.0,
-    "p25_days": -961.0,
-    "p75_days": -279.0,
-    "pct_negative": 98.2,
-    "pct_within_week": 98.2
+    "n": 107,
+    "median_days": -765.0,
+    "p25_days": -959.5,
+    "p75_days": -267.0,
+    "pct_negative": 97.2,
+    "pct_within_week": 97.2
    },
    {
     "year": 2000,
-    "n": 553,
-    "median_days": -88.0,
-    "p25_days": -192.0,
+    "n": 552,
+    "median_days": -87.0,
+    "p25_days": -186.5,
     "p75_days": -42.0,
-    "pct_negative": 97.6,
-    "pct_within_week": 97.8
+    "pct_negative": 96.9,
+    "pct_within_week": 97.1
    },
    {
     "year": 2001,
-    "n": 431,
+    "n": 430,
     "median_days": -118.0,
-    "p25_days": -314.0,
-    "p75_days": -64.5,
-    "pct_negative": 98.4,
-    "pct_within_week": 98.6
+    "p25_days": -317.0,
+    "p75_days": -64.2,
+    "pct_negative": 97.9,
+    "pct_within_week": 98.1
    },
    {
     "year": 2002,
     "n": 430,
-    "median_days": -101.0,
-    "p25_days": -288.0,
-    "p75_days": -61.0,
-    "pct_negative": 96.3,
-    "pct_within_week": 96.5
-   },
-   {
-    "year": 2003,
-    "n": 384,
-    "median_days": -14.0,
-    "p25_days": -234.2,
-    "p75_days": -2.0,
-    "pct_negative": 91.7,
+    "median_days": -100.5,
+    "p25_days": -285.5,
+    "p75_days": -60.2,
+    "pct_negative": 95.3,
     "pct_within_week": 95.6
    },
    {
-    "year": 2004,
-    "n": 432,
-    "median_days": -21.5,
-    "p25_days": -296.8,
-    "p75_days": -6.0,
-    "pct_negative": 89.1,
-    "pct_within_week": 93.5
-   },
-   {
-    "year": 2005,
-    "n": 1957,
-    "median_days": -6.0,
-    "p25_days": -383.0,
-    "p75_days": -1.0,
-    "pct_negative": 87.7,
-    "pct_within_week": 94.5
-   },
-   {
-    "year": 2006,
-    "n": 2486,
-    "median_days": -3.0,
-    "p25_days": -5.0,
+    "year": 2003,
+    "n": 383,
+    "median_days": -14.0,
+    "p25_days": -233.0,
     "p75_days": -2.0,
-    "pct_negative": 88.0,
-    "pct_within_week": 94.0
-   },
-   {
-    "year": 2007,
-    "n": 2750,
-    "median_days": -3.0,
-    "p25_days": -6.0,
-    "p75_days": -1.0,
-    "pct_negative": 91.3,
-    "pct_within_week": 97.2
-   },
-   {
-    "year": 2008,
-    "n": 2556,
-    "median_days": -5.0,
-    "p25_days": -10.0,
-    "p75_days": -2.0,
-    "pct_negative": 94.6,
-    "pct_within_week": 96.9
-   },
-   {
-    "year": 2009,
-    "n": 2640,
-    "median_days": -22.0,
-    "p25_days": -119.0,
-    "p75_days": -5.0,
-    "pct_negative": 95.1,
-    "pct_within_week": 97.1
-   },
-   {
-    "year": 2010,
-    "n": 1367,
-    "median_days": -8.0,
-    "p25_days": -47.0,
-    "p75_days": -3.0,
-    "pct_negative": 90.8,
-    "pct_within_week": 94.4
-   },
-   {
-    "year": 2011,
-    "n": 719,
-    "median_days": -19.0,
-    "p25_days": -351.0,
-    "p75_days": -3.0,
-    "pct_negative": 86.8,
-    "pct_within_week": 91.9
-   },
-   {
-    "year": 2012,
-    "n": 867,
-    "median_days": -30.0,
-    "p25_days": -205.5,
-    "p75_days": -5.0,
-    "pct_negative": 88.6,
+    "pct_negative": 90.3,
     "pct_within_week": 94.8
    },
    {
-    "year": 2013,
-    "n": 593,
-    "median_days": -13.0,
-    "p25_days": -69.0,
+    "year": 2004,
+    "n": 427,
+    "median_days": -21.0,
+    "p25_days": -263.0,
+    "p75_days": -5.0,
+    "pct_negative": 85.7,
+    "pct_within_week": 91.3
+   },
+   {
+    "year": 2005,
+    "n": 1954,
+    "median_days": -6.0,
+    "p25_days": -382.8,
     "p75_days": -1.0,
-    "pct_negative": 77.9,
-    "pct_within_week": 85.3
+    "pct_negative": 86.4,
+    "pct_within_week": 93.4
+   },
+   {
+    "year": 2006,
+    "n": 2484,
+    "median_days": -3.0,
+    "p25_days": -5.0,
+    "p75_days": -1.0,
+    "pct_negative": 86.8,
+    "pct_within_week": 92.9
+   },
+   {
+    "year": 2007,
+    "n": 2745,
+    "median_days": -3.0,
+    "p25_days": -5.0,
+    "p75_days": -1.0,
+    "pct_negative": 90.3,
+    "pct_within_week": 96.2
+   },
+   {
+    "year": 2008,
+    "n": 2550,
+    "median_days": -5.0,
+    "p25_days": -10.0,
+    "p75_days": -2.0,
+    "pct_negative": 93.6,
+    "pct_within_week": 96.0
+   },
+   {
+    "year": 2009,
+    "n": 2634,
+    "median_days": -21.0,
+    "p25_days": -119.0,
+    "p75_days": -4.0,
+    "pct_negative": 93.2,
+    "pct_within_week": 95.5
+   },
+   {
+    "year": 2010,
+    "n": 1362,
+    "median_days": -8.0,
+    "p25_days": -45.0,
+    "p75_days": -3.0,
+    "pct_negative": 87.4,
+    "pct_within_week": 91.0
+   },
+   {
+    "year": 2011,
+    "n": 709,
+    "median_days": -16.0,
+    "p25_days": -354.0,
+    "p75_days": -2.0,
+    "pct_negative": 81.0,
+    "pct_within_week": 86.7
+   },
+   {
+    "year": 2012,
+    "n": 854,
+    "median_days": -28.0,
+    "p25_days": -204.0,
+    "p75_days": -4.0,
+    "pct_negative": 82.9,
+    "pct_within_week": 88.8
+   },
+   {
+    "year": 2013,
+    "n": 577,
+    "median_days": -7.0,
+    "p25_days": -57.0,
+    "p75_days": 7.0,
+    "pct_negative": 67.1,
+    "pct_within_week": 75.2
    },
    {
     "year": 2014,
-    "n": 864,
-    "median_days": -9.0,
-    "p25_days": -125.8,
-    "p75_days": -1.0,
-    "pct_negative": 79.3,
-    "pct_within_week": 84.6
+    "n": 837,
+    "median_days": -8.0,
+    "p25_days": -101.0,
+    "p75_days": 0.0,
+    "pct_negative": 74.7,
+    "pct_within_week": 80.3
    },
    {
     "year": 2015,
-    "n": 697,
-    "median_days": -2.0,
-    "p25_days": -17.0,
-    "p75_days": 6.0,
-    "pct_negative": 61.7,
-    "pct_within_week": 77.2
+    "n": 683,
+    "median_days": -1.0,
+    "p25_days": -15.0,
+    "p75_days": 11.0,
+    "pct_negative": 55.3,
+    "pct_within_week": 71.9
    },
    {
     "year": 2016,
-    "n": 461,
-    "median_days": -1.0,
-    "p25_days": -13.0,
-    "p75_days": 7.0,
-    "pct_negative": 53.6,
-    "pct_within_week": 76.1
+    "n": 452,
+    "median_days": 0.0,
+    "p25_days": -9.0,
+    "p75_days": 12.0,
+    "pct_negative": 48.2,
+    "pct_within_week": 71.2
    },
    {
     "year": 2017,
-    "n": 1346,
-    "median_days": -2.0,
-    "p25_days": -28.8,
-    "p75_days": 3.0,
-    "pct_negative": 55.8,
-    "pct_within_week": 83.5
+    "n": 1297,
+    "median_days": -1.0,
+    "p25_days": -13.0,
+    "p75_days": 5.0,
+    "pct_negative": 51.7,
+    "pct_within_week": 80.6
    },
    {
     "year": 2018,
-    "n": 1100,
-    "median_days": 0.0,
-    "p25_days": -5.2,
-    "p75_days": 6.0,
-    "pct_negative": 46.4,
-    "pct_within_week": 79.3
+    "n": 1066,
+    "median_days": 1.0,
+    "p25_days": -3.0,
+    "p75_days": 7.0,
+    "pct_negative": 41.0,
+    "pct_within_week": 75.3
    },
    {
     "year": 2019,
-    "n": 828,
-    "median_days": -2.0,
-    "p25_days": -62.0,
-    "p75_days": 5.0,
-    "pct_negative": 53.6,
-    "pct_within_week": 79.6
+    "n": 780,
+    "median_days": 0.0,
+    "p25_days": -36.0,
+    "p75_days": 9.2,
+    "pct_negative": 46.0,
+    "pct_within_week": 73.2
    },
    {
     "year": 2020,
-    "n": 645,
-    "median_days": -2.0,
-    "p25_days": -1987.0,
-    "p75_days": 6.0,
-    "pct_negative": 54.6,
-    "pct_within_week": 76.6
+    "n": 526,
+    "median_days": 1.0,
+    "p25_days": -2142.8,
+    "p75_days": 22.8,
+    "pct_negative": 43.5,
+    "pct_within_week": 65.6
    },
    {
     "year": 2021,
-    "n": 336,
-    "median_days": 1.0,
-    "p25_days": -2.0,
-    "p75_days": 25.2,
-    "pct_negative": 31.8,
-    "pct_within_week": 64.9
+    "n": 247,
+    "median_days": 8.0,
+    "p25_days": 1.0,
+    "p75_days": 76.0,
+    "pct_negative": 12.6,
+    "pct_within_week": 48.6
    },
    {
     "year": 2022,
-    "n": 308,
-    "median_days": 4.0,
-    "p25_days": -8.0,
-    "p75_days": 64.0,
-    "pct_negative": 38.3,
-    "pct_within_week": 56.8
+    "n": 220,
+    "median_days": 20.0,
+    "p25_days": 4.0,
+    "p75_days": 171.0,
+    "pct_negative": 16.4,
+    "pct_within_week": 35.9
    },
    {
     "year": 2023,
-    "n": 393,
-    "median_days": 1.0,
-    "p25_days": -4.0,
-    "p75_days": 32.0,
-    "pct_negative": 34.9,
-    "pct_within_week": 62.1
+    "n": 270,
+    "median_days": 15.5,
+    "p25_days": 1.0,
+    "p75_days": 69.8,
+    "pct_negative": 22.6,
+    "pct_within_week": 41.1
    },
    {
     "year": 2024,
-    "n": 262,
-    "median_days": 2.5,
-    "p25_days": -1.8,
-    "p75_days": 163.8,
-    "pct_negative": 30.2,
-    "pct_within_week": 51.5
+    "n": 155,
+    "median_days": 169.0,
+    "p25_days": 54.0,
+    "p75_days": 278.5,
+    "pct_negative": 7.7,
+    "pct_within_week": 12.9
    },
    {
     "year": 2025,
-    "n": 503,
-    "median_days": -12.0,
-    "p25_days": -4450.0,
-    "p75_days": 7.0,
-    "pct_negative": 55.5,
-    "pct_within_week": 75.1
+    "n": 197,
+    "median_days": 38.0,
+    "p25_days": 7.0,
+    "p75_days": 127.0,
+    "pct_negative": 4.1,
+    "pct_within_week": 25.9
    },
    {
     "year": 2026,
-    "n": 155,
-    "median_days": 8.0,
-    "p25_days": 0.0,
-    "p75_days": 47.5,
-    "pct_negative": 23.9,
-    "pct_within_week": 49.7
+    "n": 124,
+    "median_days": 41.0,
+    "p25_days": 16.0,
+    "p75_days": 80.8,
+    "pct_negative": 13.7,
+    "pct_within_week": 16.9
    }
   ],
   "headline": {
    "latest_year": 2025,
-   "median_days_latest": -12.0,
-   "pct_negative_latest": 55.5,
+   "median_days_latest": 38.0,
+   "pct_negative_latest": 4.1,
    "baseline_year": 2015,
-   "median_days_baseline": -2.0
+   "median_days_baseline": -1.0
   }
  },
  "arming": {
   "horizon_days": 90,
   "ingestion_allowance_days": 365,
-  "observed_through": "2026-05-29",
+  "observed_through": "2026-08-19",
+  "min_n": 30,
   "years": [
    {
     "year": 2000,
-    "n": 273,
+    "n": 270,
     "median_days": -44.0,
     "pct_within_week": 98.9,
     "pct_negative": 98.5,
@@ -283,269 +284,269 @@
    },
    {
     "year": 2001,
-    "n": 152,
-    "median_days": -51.0,
+    "n": 150,
+    "median_days": -51.5,
     "pct_within_week": 99.3,
     "pct_negative": 98.7,
     "provisional": false
    },
    {
     "year": 2002,
-    "n": 184,
-    "median_days": -57.0,
+    "n": 182,
+    "median_days": -57.5,
     "pct_within_week": 96.2,
-    "pct_negative": 95.7,
+    "pct_negative": 95.6,
     "provisional": false
    },
    {
     "year": 2003,
-    "n": 223,
+    "n": 221,
     "median_days": -3.0,
-    "pct_within_week": 96.0,
-    "pct_negative": 89.2,
+    "pct_within_week": 95.5,
+    "pct_negative": 87.8,
     "provisional": false
    },
    {
     "year": 2004,
-    "n": 278,
+    "n": 274,
     "median_days": -8.0,
-    "pct_within_week": 93.9,
-    "pct_negative": 87.1,
+    "pct_within_week": 92.3,
+    "pct_negative": 83.6,
     "provisional": false
    },
    {
     "year": 2005,
-    "n": 1173,
+    "n": 1161,
     "median_days": -2.0,
-    "pct_within_week": 97.0,
-    "pct_negative": 85.8,
+    "pct_within_week": 96.5,
+    "pct_negative": 84.7,
     "provisional": false
    },
    {
     "year": 2006,
-    "n": 2330,
+    "n": 2311,
     "median_days": -3.0,
-    "pct_within_week": 97.5,
-    "pct_negative": 91.1,
+    "pct_within_week": 97.2,
+    "pct_negative": 90.7,
     "provisional": false
    },
    {
     "year": 2007,
-    "n": 2428,
+    "n": 2405,
     "median_days": -3.0,
-    "pct_within_week": 98.3,
-    "pct_negative": 91.6,
+    "pct_within_week": 98.1,
+    "pct_negative": 91.4,
     "provisional": false
    },
    {
     "year": 2008,
-    "n": 2377,
+    "n": 2354,
     "median_days": -5.0,
-    "pct_within_week": 98.3,
-    "pct_negative": 95.8,
+    "pct_within_week": 98.1,
+    "pct_negative": 95.5,
     "provisional": false
    },
    {
     "year": 2009,
-    "n": 1750,
+    "n": 1711,
     "median_days": -8.0,
-    "pct_within_week": 97.9,
-    "pct_negative": 94.9,
+    "pct_within_week": 97.5,
+    "pct_negative": 93.9,
     "provisional": false
    },
    {
     "year": 2010,
-    "n": 1062,
+    "n": 1036,
     "median_days": -6.0,
-    "pct_within_week": 95.2,
-    "pct_negative": 90.6,
+    "pct_within_week": 93.4,
+    "pct_negative": 88.6,
     "provisional": false
    },
    {
     "year": 2011,
-    "n": 421,
-    "median_days": -7.0,
-    "pct_within_week": 94.1,
-    "pct_negative": 85.3,
+    "n": 405,
+    "median_days": -6.0,
+    "pct_within_week": 88.4,
+    "pct_negative": 78.3,
     "provisional": false
    },
    {
     "year": 2012,
-    "n": 493,
+    "n": 467,
     "median_days": -6.0,
-    "pct_within_week": 95.9,
-    "pct_negative": 85.0,
+    "pct_within_week": 89.1,
+    "pct_negative": 78.4,
     "provisional": false
    },
    {
     "year": 2013,
-    "n": 433,
-    "median_days": -6.0,
-    "pct_within_week": 88.7,
-    "pct_negative": 78.5,
+    "n": 410,
+    "median_days": -5.0,
+    "pct_within_week": 78.3,
+    "pct_negative": 66.8,
     "provisional": false
    },
    {
     "year": 2014,
-    "n": 599,
+    "n": 579,
     "median_days": -5.0,
-    "pct_within_week": 84.5,
-    "pct_negative": 76.8,
+    "pct_within_week": 79.8,
+    "pct_negative": 71.7,
     "provisional": false
    },
    {
     "year": 2015,
-    "n": 542,
-    "median_days": -2.0,
-    "pct_within_week": 82.8,
-    "pct_negative": 62.9,
+    "n": 539,
+    "median_days": -1.0,
+    "pct_within_week": 77.6,
+    "pct_negative": 56.6,
     "provisional": false
    },
    {
     "year": 2016,
-    "n": 397,
+    "n": 378,
     "median_days": -1.0,
-    "pct_within_week": 80.9,
-    "pct_negative": 54.7,
+    "pct_within_week": 78.8,
+    "pct_negative": 51.3,
     "provisional": false
    },
    {
     "year": 2017,
-    "n": 1019,
+    "n": 996,
     "median_days": 0.0,
-    "pct_within_week": 85.5,
-    "pct_negative": 48.9,
+    "pct_within_week": 83.4,
+    "pct_negative": 45.8,
     "provisional": false
    },
    {
     "year": 2018,
-    "n": 925,
-    "median_days": 0.0,
-    "pct_within_week": 83.6,
-    "pct_negative": 44.4,
+    "n": 902,
+    "median_days": 1.0,
+    "pct_within_week": 80.8,
+    "pct_negative": 40.2,
     "provisional": false
    },
    {
     "year": 2019,
-    "n": 584,
+    "n": 557,
     "median_days": 0.0,
-    "pct_within_week": 85.8,
-    "pct_negative": 49.0,
+    "pct_within_week": 80.1,
+    "pct_negative": 42.0,
     "provisional": false
    },
    {
     "year": 2020,
-    "n": 354,
-    "median_days": 1.0,
-    "pct_within_week": 75.7,
-    "pct_negative": 35.6,
+    "n": 252,
+    "median_days": 4.5,
+    "pct_within_week": 57.9,
+    "pct_negative": 11.9,
     "provisional": false
    },
    {
     "year": 2021,
-    "n": 267,
-    "median_days": 1.0,
-    "pct_within_week": 74.5,
-    "pct_negative": 33.0,
+    "n": 186,
+    "median_days": 4.5,
+    "pct_within_week": 59.1,
+    "pct_negative": 11.3,
     "provisional": false
    },
    {
     "year": 2022,
-    "n": 205,
-    "median_days": 1.0,
-    "pct_within_week": 69.3,
-    "pct_negative": 41.5,
+    "n": 134,
+    "median_days": 7.0,
+    "pct_within_week": 53.7,
+    "pct_negative": 21.6,
     "provisional": false
    },
    {
     "year": 2023,
-    "n": 326,
-    "median_days": 0.0,
-    "pct_within_week": 67.5,
-    "pct_negative": 34.7,
+    "n": 213,
+    "median_days": 7.0,
+    "pct_within_week": 50.2,
+    "pct_negative": 26.8,
     "provisional": false
    },
    {
     "year": 2024,
-    "n": 146,
-    "median_days": 0.0,
-    "pct_within_week": 80.1,
-    "pct_negative": 41.8,
+    "n": 42,
+    "median_days": 11.0,
+    "pct_within_week": 42.9,
+    "pct_negative": 23.8,
     "provisional": false
    },
    {
     "year": 2025,
-    "n": 220,
-    "median_days": 1.0,
-    "pct_within_week": 67.3,
-    "pct_negative": 22.3,
+    "n": 134,
+    "median_days": 10.0,
+    "pct_within_week": 36.6,
+    "pct_negative": 4.5,
     "provisional": true
    },
    {
     "year": 2026,
-    "n": 94,
-    "median_days": 3.5,
-    "pct_within_week": 53.2,
-    "pct_negative": 21.3,
+    "n": 83,
+    "median_days": 34.0,
+    "pct_within_week": 12.0,
+    "pct_negative": 9.6,
     "provisional": true
    }
   ]
  },
  "kev_preempt": {
   "cutoff": "2023-01-01",
-  "total_kev": 1682,
+  "total_kev": 1781,
   "trend": {
-   "with_poc_date": 239,
-   "preempted": 194,
-   "pct_preempted": 81.2
+   "with_poc_date": 128,
+   "preempted": 72,
+   "pct_preempted": 56.2
   },
   "seeding": {
-   "with_poc_date": 412,
-   "preempted": 407,
-   "pct_preempted": 98.8
+   "with_poc_date": 329,
+   "preempted": 318,
+   "pct_preempted": 96.7
   },
   "years": [
    {
     "year": 2021,
     "total_added": 311,
-    "with_poc_date": 143,
-    "preempted": 142,
-    "pct_preempted": 99.3
+    "with_poc_date": 107,
+    "preempted": 104,
+    "pct_preempted": 97.2
    },
    {
     "year": 2022,
     "total_added": 555,
-    "with_poc_date": 269,
-    "preempted": 265,
-    "pct_preempted": 98.5
+    "with_poc_date": 222,
+    "preempted": 214,
+    "pct_preempted": 96.4
    },
    {
     "year": 2023,
     "total_added": 187,
-    "with_poc_date": 66,
-    "preempted": 58,
-    "pct_preempted": 87.9
+    "with_poc_date": 27,
+    "preempted": 16,
+    "pct_preempted": 59.3
    },
    {
     "year": 2024,
     "total_added": 186,
-    "with_poc_date": 65,
-    "preempted": 51,
-    "pct_preempted": 78.5
+    "with_poc_date": 33,
+    "preempted": 18,
+    "pct_preempted": 54.5
    },
    {
     "year": 2025,
     "total_added": 245,
-    "with_poc_date": 60,
-    "preempted": 47,
-    "pct_preempted": 78.3
+    "with_poc_date": 39,
+    "preempted": 22,
+    "pct_preempted": 56.4
    },
    {
     "year": 2026,
-    "total_added": 198,
-    "with_poc_date": 48,
-    "preempted": 38,
-    "pct_preempted": 79.2
+    "total_added": 297,
+    "with_poc_date": 29,
+    "preempted": 16,
+    "pct_preempted": 55.2
    }
   ]
  },
@@ -553,55 +554,64 @@
   "window_year": 2025,
   "buckets": [
    {
-    "bucket": "0.1-3.9",
+    "bucket": "0.0-3.9",
     "total": 1603,
-    "with_poc": 11,
-    "pct": 0.7
+    "with_poc": 4,
+    "pct": 0.2,
+    "with_detection": 8
    },
    {
     "bucket": "4.0-6.9",
-    "total": 23721,
-    "with_poc": 250,
-    "pct": 1.1
+    "total": 23719,
+    "with_poc": 72,
+    "pct": 0.3,
+    "with_detection": 186
    },
    {
     "bucket": "7.0-8.9",
-    "total": 15765,
-    "with_poc": 336,
-    "pct": 2.1
+    "total": 15761,
+    "with_poc": 182,
+    "pct": 1.2,
+    "with_detection": 146
    },
    {
     "bucket": "9.0-10.0",
-    "total": 4110,
-    "with_poc": 339,
-    "pct": 8.2
+    "total": 4112,
+    "with_poc": 206,
+    "pct": 5.0,
+    "with_detection": 188
    }
   ],
   "unscored": {
    "total": 2955,
    "with_poc": 1,
-   "pct": 0.0
+   "pct": 0.0,
+   "with_detection": 0
   }
  },
  "catalog": {
   "exploitdb": {
-   "entries": 47136,
-   "with_cve": 27402,
-   "cves": 25058,
-   "dated_cves": 25058
+   "entries": 47182,
+   "with_cve": 27434,
+   "cves": 25095,
+   "dated_cves": 25095
   },
   "metasploit": {
-   "modules": 7158,
-   "with_cve": 3101,
-   "cves": 3195,
-   "dated_cves": 3033
+   "modules": 7267,
+   "with_cve": 3145,
+   "exploit_modules_with_cve": 2431,
+   "cves": 2601,
+   "other_cves": 645,
+   "dated_cves": 0,
+   "disclosure_dated_cves": 3082
   },
   "nuclei": {
-   "templates": 4355,
-   "cves": 4355
+   "templates": 4668,
+   "cves": 4668
   },
-  "union_cves": 29507,
-  "dated_cves": 26218,
-  "matched_in_corpus": 29455
+  "exploit_cves": 26014,
+  "union_cves": 29854,
+  "dated_cves": 25095,
+  "matched_in_corpus": 25968
  }
 }

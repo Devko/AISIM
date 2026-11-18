@@ -4,10 +4,14 @@ An interactive Monte Carlo model of one question: **when a vulnerability lands i
 something you expose, does a working exploit exist before you have closed it?**
 
 The AI framing of that question turns out to be aimed at the wrong clock. The
-one everyone expects AI to have collapsed was already at zero: measured median
-time from CVE publication to public exploit code has **not exceeded one day in
-any settled year since 2015**. Compression is available here as an explicit
-scenario dial, not as a baseline assumption.
+one everyone expects AI to collapse — time from CVE publication to public
+exploit code — is already shorter than the remediation it races: a pooled median
+of **5.9 days** over the five most recent settled years, and **under a fortnight
+in every settled year since 2015**, against remediation measured in weeks.
+It is not at zero, and this page used to say it was; the exploit dates behind
+that claim were partly vulnerability-disclosure dates (see
+[The 2026-11 recalibration](#the-2026-11-recalibration)). Compression is
+available here as an explicit scenario dial, not as a baseline assumption.
 
 That is not the same as saying an autonomous adversary changes nothing. "AI" is
 several separate claims, they carry different evidence, and the page gives each
@@ -32,8 +36,12 @@ stale within a few commits of being written. The page draws the same four
 sweeps against whatever estate you have configured, which is where the numbers
 belong.
 
-The dial the phrase usually means is the weakest of the four, which is the
-argument this page was already making in prose and can now make on one axis.
+The dial the phrase usually means is still the weakest of the four, but no
+longer for the reason this page first gave. It is not that the clock has nowhere
+left to go: the measured median is days, not zero. It is that at the measured
+speed public exploit code already arrives before the fix in about two races in
+three on the default estate, so a faster clock mostly shortens races the exploit
+was already winning — while weaponised share adds races, and discovery adds bugs.
 
 The tempo dial is the one worth sitting with. It cannot change whether you were
 compromised — only whether anyone reached it in time. Against a reported-tempo
@@ -75,14 +83,14 @@ confirmed-exploited catalogue:
 
 | CVSS band | Scored CVEs | Confirmed exploited | Rate |
 |---|---:|---:|---:|
-| Critical 9.0–10.0 | 20,355 | 584 | **2.87%** |
-| High 7.0–8.9 | 74,163 | 888 | 1.20% |
-| Medium 4.0–6.9 | 91,045 | 203 | 0.22% |
-| Low 0.1–3.9 | 8,576 | 7 | 0.08% |
+| Critical 9.0–10.0 | 24,564 | 627 | **2.55%** |
+| High 7.0–8.9 | 91,568 | 932 | 1.02% |
+| Medium 4.0–6.9 | 107,262 | 212 | 0.20% |
+| Low 0.0–3.9 | 10,271 | 10 | 0.10% |
 
-Critical is **2.4× High**. That is a nudge, not a filter. And a criticals-only
-model throws away the 888 confirmed-exploited bugs rated High plus the 210 rated
-below it — **65% of everything known to be exploited**. Meanwhile 63% of
+Critical is **2.5× High**. That is a nudge, not a filter. And a criticals-only
+model throws away the 932 confirmed-exploited bugs rated High plus the 222 rated
+below it — **65% of everything known to be exploited**. Meanwhile 65% of
 Critical-rated CVEs score below 1% on EPSS, which is a probability of
 exploitation activity *in the next 30 days* rather than over the life of the
 vulnerability — a distinction the earlier phrasing here dropped, and one that
@@ -91,12 +99,13 @@ turns a 30-day hazard into a lifetime claim.
 That criticism used to land on this model too. It ran on the Critical band
 alone: `stackVulns` asked for criticals, `pPoC` was the critical arming rate and
 the in-the-wild conditional came off the critical KEV rate, so the simulation
-covered the 584 confirmed-exploited criticals and none of the 1,098 below them.
+covered the confirmed-exploited criticals and none of the bugs below them — 627
+against 1,154 on the current snapshot.
 The argument in this section and the implementation underneath it contradicted
 each other, and the implementation was the one producing the numbers. Raising
 `stackVulns` could not fix it either, because the coefficients are
-band-conditional — 8.2% arming and 2.87% exploitation for Critical against 2.1%
-and 1.20% for High.
+band-conditional — 5.0% arming and 2.55% exploitation for Critical against 1.2%
+and 1.02% for High.
 
 The stream is now derived across every band. You still set the critical count,
 because that is the number anyone can estimate about their own estate, and the
@@ -108,15 +117,15 @@ Critical band the derivation reproduces the snapshot's own published
 conditionals exactly, which is the check that it is a re-derivation rather than
 a fresh set of assumptions.
 
-The label is also inflating. Criticals are on track to grow **2.4×** against
-**1.8×** for total CVE volume — a run-rate extrapolated from a partial year set
+The label is also inflating. Criticals are on track to grow **3.0×** against
+**2.3×** for total CVE volume — a run-rate extrapolated from a partial year set
 against a completed one, which is calendar arithmetic rather than a measured
 year-over-year figure, and CVE publication is not uniform across a year. The
 direction is not in doubt; the multiplier is provisional. A large part of it is
 scoring policy:
 CNAs assign their own scores, and the share they rate 9.0+ ranges from near zero
-to roughly two in five for the same scale. NVD has stopped analysing 44,050
-records outright — 11.5% of the corpus.
+to roughly two in five for the same scale. NVD has stopped analysing 63,314
+records outright — 14.9% of the corpus.
 
 So this model runs on **whether a working exploit exists**, measured directly,
 and treats severity as the unreliable proxy it is.
@@ -140,7 +149,7 @@ four, and CVSS is not used to compute it.
 The directive's published heuristic for *automatable* is worth quoting: a public
 proof-of-concept that achieves remote code execution and reliably executes
 against a vulnerable system. That is the same primitive this model measures, via
-ExploitDB, Metasploit and Nuclei — arrived at independently, from the other
+Exploit-DB and Metasploit exploit modules — arrived at independently, from the other
 direction. The directive also names the reason: adversary "use of AI may further
 narrow the time defenders have to react between patch release and possible
 exploitation".
@@ -152,12 +161,14 @@ what mandating it does to an estate.
 
 Calibrating the naive version is instructive. The obvious defaults — 14
 criticals a year in your stack, 7% of them exploited — give 0.98 exploited
-criticals a year. Re-derived properly from current data — 34 criticals (the
-volume has grown) at the measured 2.9% rate — gives **0.98**. Identical.
+criticals a year. Re-derived properly from the data this section was first
+written against — 34 criticals (the volume has grown) at the 2.9% rate measured
+then — gives **0.98**. Identical.
 
 Two independent errors of the same size in opposite directions. A model can be
 right for entirely wrong reasons, and this one would have drifted the moment
-either input moved alone. Which is happening now.
+either input moved alone. It has: on the 2026-11 snapshot the measured rate is
+2.55%, and the same 34 criticals give **0.87**.
 
 There is a third version of the same lesson, and this repository shipped it for
 a while. That 0.98 described the model's *inputs* rather than its behaviour: the
@@ -166,26 +177,29 @@ product?" of a slider whose own label already said *criticals in your stack*.
 The funnel named the same set twice in consecutive stages and nobody read it
 that way, so the simulation ran on 0.45 while the prose beside it claimed 0.98.
 The stage now asks the question that genuinely remains — whether the version and
-configuration you run are actually vulnerable — and the model produces **0.84**
-criticals confirmed exploited a year: short of 0.98 by exactly that filter, and
-no longer short of its own documentation.
+configuration you run are actually vulnerable — and the model produces **0.75**
+criticals confirmed exploited a year: short of the 0.87 that arithmetic gives by
+exactly that filter, and no longer short of its own documentation.
 
 Note which number that is. It is the *Critical band*, reported separately for
 exactly this reason — every citation on the page is about that band, so the
 prose and the simulation have to be comparable. Across all four bands the model
-now carries **2.6** confirmed-exploited vulnerabilities a year against the same
-stack, and the ratio between the two is the 65% this section opened with.
+now carries **2.2** confirmed-exploited vulnerabilities a year against the same
+stack, and the two thirds of that sitting below Critical is the 65% this section
+opened with.
 ---
 
 ## The two clocks
 
 The model separates two things that are usually conflated:
 
-- **A working exploit exists** — public exploit code, measured against
-  ExploitDB, Metasploit and Nuclei. 8.2% of criticals, ever — and that is a
-  *floor*, not a value. The dated sample in those three catalogues fell from
-  1,019 CVEs in 2017 to 146 in 2024, the latest complete year, while CVE
-  publication nearly tripled; exploit code
+- **A working exploit exists** — public exploit code: an Exploit-DB entry or a
+  Metasploit *exploit* module. 5.0% of the criticals published in 2025 — and
+  that is a *floor*, not a value. Nuclei used to count here as a third
+  catalogue; it ships detection templates, not exploits, and CyberMon now keeps
+  it as a separate detection tally. Only Exploit-DB dates exploit code, and its
+  dated sample fell from 996 CVEs in 2017 to 42 in 2024, the latest complete
+  year, while CVE publication nearly tripled; exploit code
   moved to GitHub and to private tooling rather than becoming rarer. The
   calibration file has always said so in its own `coverageCaveat`, and the model
   used to run the floor as though it were the measurement. `ASSUMED.pocCoverage`
@@ -196,7 +210,7 @@ The model separates two things that are usually conflated:
   reach the catalogue, so the conditional falls by the same factor. A test
   asserts that invariance.
 - **It is used against real targets** — the confirmed-exploited catalogue.
-  2.87% of criticals.
+  2.55% of criticals.
 
 These are not sequential gates. A bug can be exploited in the wild with no
 public code, and public code often goes unused. Either arms it; only the second
@@ -205,35 +219,52 @@ detection actually live.
 
 The **attacker clock** is not a curve someone drew. It is sampled from the
 measured distribution of days between CVE publication and public exploit code,
-pooled over the five most recent **settled** years (2020–2024, n=1,298): median
-**0.64 days**, **36% with a negative interval**, 73% within a week, and a long
-tail that the chart labels rather than hides.
+pooled over the five most recent **settled** years (2020–2024, n=827, dated by
+Exploit-DB alone): median **5.9 days**, **18% with a negative interval**, 55%
+within a week, and a long tail that the chart labels rather than hides. The
+per-year medians in that window are 4.5, 4.5, 7, 7 and 11 days, and the pooled
+figure is an n-weighted mean of them — only per-year summaries are published —
+so that range, not the decimal, is what the evidence supports. The 2024 cohort
+is 42 CVEs.
 
-That third figure used to read "36% before the patch exists at all", and it was
-wrong. The same series reports:
+The negative-interval figure used to read "36% before the patch exists at all",
+and it was wrong twice: in its reading, for the reason below, and in its size,
+because until CyberMon's 2026-09 correction Metasploit's vulnerability
+*disclosure* dates were standing in for exploit dates. The same series reports:
 
 | year | n | median | share negative |
 |---|---:|---:|---:|
-| 2000 | 273 | **−44 d** | 98.5% |
-| 2002 | 184 | **−57 d** | 95.7% |
-| 2005 | 1,173 | −2 d | 85.8% |
-| 2020 | 354 | +1 d | 35.6% |
+| 2000 | 270 | **−44 d** | 98.5% |
+| 2002 | 182 | **−57.5 d** | 95.6% |
+| 2005 | 1,161 | −2 d | 84.7% |
+| 2020 | 252 | +4.5 d | 11.9% |
 
 An exploit cannot exist fifty-seven days before the vulnerability does. The
 quantity is *exploit-catalogue date minus NVD publication date*, and a negative
 value means the CVE **record** was late — for backfilled early-2000s entries, by
-years. The smooth decay from 98.5% to the mid thirties is CVE assignment latency
-improving, not adversary capability collapsing by two thirds. Read as a zero-day
-rate it is off by about an order of magnitude: Google and Mandiant between them
-track roughly 75 to 100 exploited-in-the-wild zero-days a year across all
-software, and 36.5% of the armed critical stream alone would be about 124.
+years. The decay from 98.5% to around a fifth is CVE assignment latency
+improving, not adversary capability collapsing.
+
+This paragraph used to clinch the point by magnitude: 36.5% of the armed
+critical stream was about 124 a year, above the roughly 75 to 100
+exploited-in-the-wild zero-days Google and Mandiant between them track across
+*all* software. On Exploit-DB dating it is 17.8% of 206, about 37 a year in the
+critical band and 83 across every band — inside that count rather than above
+it, so magnitude no longer settles it on its own. What does is the instrument:
+every exploit in this series is catalogued, public code, and a public exploit
+that lands before its CVE record is a late record, not a secret.
 
 The negative mass is kept, because it is measured and the exposure it describes
 is real, and split into the two mechanisms it actually contains:
 
 - **a genuine zero-day** — nobody outside the adversary knows. Targeted activity
-  only, discounted by `preHazard`. Sized by `ASSUMED.zeroDayShare`, whose whole
-  declared range sits below the measured share.
+  only, discounted by `preHazard`. Sized by `ASSUMED.zeroDayShare` — a share
+  *of* the negative mass, not of all exploits — whose whole declared range
+  reads most of that mass as record lag, and whose top end still implies fewer
+  genuine zero-days than are published. Both are asserted in CI. (This used to
+  say the range "sits below the measured share", which compared a conditional
+  with a marginal; it held by margin until the corrected data brought the two
+  within a hair of each other.)
 - **record lag** — exploit code is public, the CVE record is not yet. This
   carries **full** mass-scanning hazard, because public exploit code draws
   scanning whether or not NVD has caught up. The defender is late to know; the
@@ -245,19 +276,28 @@ record had not landed. The evidence for the split is generated from the snapshot
 rather than asserted here, and a test reads it.
 
 Pooled, and settled, for a reason. The model used to calibrate to the newest row
-in the series, which is also the most right-censored one in it — 2026, n=94,
-observed through May, and the only row in twelve years reporting a median above
-one day. That put two different clocks in one document: the prose argued from
-the settled record while the simulation ran on a row the same file marks
-provisional. It also handed the compression slider 55 of its 100 points of
-travel just to get back to what the settled years already measured, on a page
-whose entire argument is that this clock has nowhere left to go. Against the
-pooled anchor the dial starts where the evidence does, and weaponised share now
-outruns arrival speed **six to one** rather than three.
+in the series, which is also the most right-censored one in it — at the time
+2026, n=94, observed through May. That put two different clocks in one
+document: the prose argued from the settled record while the simulation ran on a
+row the same file marks provisional. Against the pooled anchor the dial starts
+where the evidence does. (On the 2026-11 snapshot the newest row is still 2026,
+now n=83 with a 34-day median, and it still calibrates nothing.)
+
+Weaponised share outran arrival speed about five to one at full travel on the
+pre-correction anchor. On the corrected one it is about **two and a half to
+one** (+4.7 points against +1.9, at the recipe above): the arrival dial has
+more room to work with against a six-day median than it had against a
+sub-day one, and the weaponisation dial multiplies a smaller measured armed
+share. The ordering held; the margin did not.
 
 Note what the record does *not* show: compression. Across the settled series the
-public-exploit clock has not visibly accelerated, and the pre-publication share
-has fallen. The page therefore **defaults to the settled record** and puts
+public-exploit clock has not accelerated — per-year medians went from 0–1 day in
+2015–2019 to 4.5–11 days in 2020–2024 — and the pre-publication share is well
+below where it was a decade ago, although it has risen again from its 2021 low.
+Read the lengthening with care: it coincides with the dated cohort shrinking from
+hundreds a year to 42, and some of it may be what Exploit-DB still receives
+rather than how fast exploit code arrives. What it cannot be read as is
+acceleration. The page therefore **defaults to the settled record** and puts
 acceleration behind an explicit what-if slider, rather than baking an assumption
 into the baseline. The most recent year is still shown in the anchors panel,
 marked provisional, where a reader can see it without it calibrating anything.
@@ -370,12 +410,13 @@ Three results that hold across most settings:
 
 1. **No single lever you control moves the compromise rate more than a few
    points.** Reducing what you expose is the only large one. Patch cadence has a
-   floor because a fifth of exploitation predates the patch. Read this alongside
+   floor because nearly a fifth of public exploit code is out before the CVE
+   record lands, before any remediation clock starts. Read this alongside
    the scope limits below: the finding holds *within the routes that are
    modelled*, and it holds partly because the two routes the remediation
    process cannot touch — supply chain, and campaigns that need no vulnerability — carry
-   about a quarter of first compromises at the baseline estate (14% targeted,
-   11% supply) and roughly half at the `sector` rung.
+   about a quarter of first compromises at the baseline estate (12% targeted,
+   12% supply) and roughly half at the `sector` rung.
 2. **Detection changes nothing about being compromised and everything about
    whether it matters.** It is flat on one metric and among the largest terms on
    the other. The page has a toggle for exactly this.
@@ -560,13 +601,18 @@ literature it cites, and fifteen things did not survive. Four were defects, six
 were calibration or provenance errors, and five were claims stated more strongly
 than the construction supports.
 
+The tables in this section and the two passes after it record figures as they
+were measured at the time, on the snapshot then vendored. Where a later change
+moved one, the row says so; [The 2026-11 recalibration](#the-2026-11-recalibration)
+below is the latest such change.
+
 | | was | is |
 |---|---|---|
 | Appliance exploit clock | `tX *= 0.6` on a **signed** time, so pre-disclosure exploits arrived *later* on appliances (6.6 d lead) than on ordinary software (10.9 d) | scales magnitude, so appliances lead on both sides of zero (18.2 d) |
 | Binomial sampler | Poisson substituted for any `p`; `binom(1, 0.9)` returned a mean of 0.60 against a true 0.90 | exact below n=32; approximations kept only where valid |
 | Vulnerability stream | discounted twice — the trial loop asked "do you run this product?" of a slider labelled *criticals in your stack* | stage 1 asks the question that actually remains, version and configuration applicability |
 | `Expected systems per year` | counted compromises past day 365, and two of three routes were not system counts | bounded to the horizon, relabelled to what it counts |
-| Attacker clock | calibrated to 2026, n=94, provisional, right-censored — the only row in twelve years above a one-day median | pooled over the five settled years, n=1,298 |
+| Attacker clock | calibrated to 2026, n=94, provisional, right-censored — then the only row in twelve years above a one-day median | pooled over the five most recent settled years (n=1,298 then; n=827 since the 2026-11 recalibration) |
 | In-the-wild conditional | tagged `measured`; actually an all-time KEV rate divided by a one-year PoC rate | tagged for what it is, with `wildRate` carrying the mismatch as a drawn range |
 | `p75` clock knot | quoted from a different series than the three knots below it | declared assumed, bounded by the horizon of the series it belongs to |
 | Detection rungs | `SIEM, untuned` named the 26-day external median and produced 51 days; `No detection` produced 113 days with nothing behind it | `detect` is the internal dwell throughout, so the external figure falls out of `blindMult` instead of being typed in twice |
@@ -580,8 +626,11 @@ than the construction supports.
 
 Two of these moved the argument rather than just the arithmetic. Calibrating to
 the settled clock **strengthened** the page's central claim — weaponised share
-now outruns arrival speed by a wide margin, because the settled median has even
-less room to compress than the censored one did. And declaring the structural
+outran arrival speed by a wide margin, because the settled median then had even
+less room to compress than the censored one did. (The 2026-11 recalibration took
+most of that back: dated by Exploit-DB alone, the settled median is longer than
+the censored row it replaced, and the margin is about two and a half to one.)
+And declaring the structural
 constants roughly doubled the credible interval, from twelve points to
 twenty-three — and the third pass below widened it again, to thirty-four. That
 uncertainty was always in the model. It simply was not being reported.
@@ -638,7 +687,7 @@ model does what the model says, and a mechanism that is coherently wrong answers
 | Severity coverage | the Critical band alone — 35% of confirmed exploitation — under a README whose opening section argues at length that exactly this is the wrong instrument | every band, derived from the corpus ratios, each with its own arming rate, exploitation rate and foothold weight |
 | Pre-publication window | `pctBefore` read as "an exploit existed before the patch did", from a series that reports −57-day medians and 98.5% negative for years when that is impossible | split into a small genuine zero-day share at targeted hazard and a CVE-record-lag remainder at **full** hazard, with the evidence generated from the snapshot |
 | Targeted route | `agentSkill` bit-identical at `mfa=0` and `mfa=100`, while its own description named phishing, credential abuse, misconfiguration and service-desk social engineering | gated by the same four controls at a lower ceiling; origin-bound authentication is now worth ~10 points against a named target instead of ~1 |
-| Remediation velocity | a "Typical" estate fixed an armed critical at a **5.5-day** median with 89% inside a fortnight; "Mature" managed 1.0 day | 26 days typical, 6 mature, 81 sprawling — inside the published range, where only the rung named for failure used to be |
+| Remediation velocity | a "Typical" estate fixed an armed critical at a **5.5-day** median with 89% inside a fortnight; "Mature" managed 1.0 day | 26 days typical, 6 mature, 78 sprawling — inside the published range, where only the rung named for failure used to be |
 | Unfixed systems | every in-inventory system was eventually remediated; only the 4% inventory gap could carry an open window | `neverFixShare`, because the published measurement is that roughly half of edge KEV vulnerabilities are never fully remediated on estates that *have* a process |
 | Headcount scaling | strictly linear, so any estate above ~5,000 people read ~100% compromise whatever its controls said, and `staff` topped the sensitivity chart | `headExp`, the people-side twin of `crowdExp` — one lure reaches every mailbox in a single event |
 | `incident` | one containment roll on the **first** compromise of the year, under a label reading "probability of an incident, 12-month window"; on a 13-intrusion estate it reported 43% where the model's own containment rate implies 99.6% | rolled per intrusion, so the label is true |
@@ -653,8 +702,10 @@ model does what the model says, and a mechanism that is coherently wrong answers
 Two things are worth saying about what this pass did **not** overturn.
 
 The central claim held. The ordering — discovery rate above weaponised share
-above post-exploitation tempo above arrival speed — survives every correction,
-and weaponisation still outruns arrival speed about six to one. So does the
+above post-exploitation tempo above arrival speed — survived every correction,
+and weaponisation still outran arrival speed about five to one (two and a half
+to one since the 2026-11 recalibration, with weaponised share and tempo now
+close on the incident metric). So does the
 finding that remediation cadence is a weak lever: re-measured from a
 published-rate baseline rather than the model's own optimistic one, patch speed
 still moves the answer by a few points where reducing exposed surface moves it
@@ -680,6 +731,89 @@ rate that reproduces the *same* anchored mix falls by roughly that product. The
 aggregate it is held to has not moved. What moved is how much of it this one
 number was quietly doing.
 
+### The 2026-11 recalibration
+
+The vendored snapshot moved from `cve_2026-08-27` to `cve_2026-11-17`, and in
+between CyberMon corrected what its exploit series measures (CyberMon commit
+`2a8a8be`, 2026-09-21). Metasploit's `disclosure_date` is the date the
+*vulnerability* was disclosed, not the date the module was published, and it had
+been dating exploit code; Exploit-DB is now the only source that dates exploit
+code. Only Metasploit *exploit* modules count as exploit code, and Nuclei
+templates are a detection tally rather than exploit coverage. The same commit
+relabelled the lowest CVSS band from `0.1–3.9` to `0.0–3.9`, which the model,
+the anchors panel and the band chart were all keyed on — the model would not
+load against the new snapshot until they were renamed.
+
+| | 2026-08 snapshot | 2026-11 snapshot | why |
+|---|---:|---:|---|
+| Settled clock, 2020–2024 pooled | n=1,298 · **0.64 d** | n=827 · **5.9 d** (per-year 4.5–11) | correction |
+| Negative interval | 36.5% | 17.8% | correction |
+| Within a week | 72.9% | 54.7% | correction |
+| 2024 cohort | n=146 · 0 d | n=42 · 11 d | correction |
+| Criticals with public exploit code, 2025 | 8.2% | 5.0% | correction |
+| KEV entries whose exploit predates the listing | 81.2% | 56.2% | correction |
+| Criticals confirmed exploited | 2.87% | 2.55% | three more months of data |
+| Exploit ahead of the fix, default estate | 75% | 68% | both |
+| Baseline compromise, default estate | 66.7% | 64.7% | both |
+| Arrival speed / weaponised share, full travel | +1.6 / +8.2 pt | +1.9 / +4.7 pt | both |
+
+Four findings changed meaning, not just value.
+
+1. **"The clock was already at zero" is withdrawn.** It was the page's lead
+   claim, and it rested on Metasploit disclosure dates standing in for exploit
+   dates. Dated by the one source that dates the artifact, the public-exploit
+   clock runs in days. The masthead, the sweep chapter and this file now argue
+   from that.
+2. **Arrival speed is still the weakest dial, for a different reason.** The
+   ordering — discovery above weaponised share above tempo above arrival speed —
+   holds at the recipe on the default estate, and the CI assertions on it pass.
+   But the old reason was "no room left to compress", and the corrected clock
+   has room. The new reason is that at the measured speed exploit code already
+   beats remediation in two races in three, so compressing it mostly speeds up
+   races already lost. The margins are thinner: weaponised share over arrival
+   speed went from about five to one to about two and a half at the recipe, and
+   from 11× to 2.2× at the CI assertion's own settings, against a threshold of
+   1.5×. On the incident metric weaponised share and tempo are now within a
+   point of each other (+5.2 against +4.3).
+3. **The zero-day rebuttal no longer works by magnitude.** The pre-publication
+   share, applied to the armed stream, used to exceed the world's published
+   zero-day count several times over. It now lands inside it. The record-lag
+   reading still holds — the series is catalogued, public exploit code by
+   construction — but the argument for it is the instrument, not the count.
+4. **Public exploit code is a weaker leading indicator of exploitation.** Four
+   in five KEV entries with a dated exploit used to have it published first;
+   now it is just over half. The model carries this through its in-the-wild
+   decomposition, which moves weight to the path with no public code (0.6% to
+   1.2% of criticals), and that path is timed at the earliest onset the evidence
+   supports, as `SCOPE.wildTimingNote` already declares.
+
+What held: discovery remains the largest dial and outweighs the other three
+together; full tempo still removes about half (56%) of what a 24/7 SOC buys over
+no detection; the exposure ladder still spans about forty points while patch
+cadence moves a few; the initial-access mix stays inside its CI tolerance.
+
+Three test assertions had been encoding the old snapshot rather than the
+method, and were rewritten to state what they were for. *The settled median
+agrees with every year it pools* asserted [0, 1] days, which was true of the old
+data, not of the method; it now asserts the range of the pooled per-year
+medians. *The measured median sits below the within-week knot* was reading
+`latest` (2026, 34 days, provisional), which has not calibrated anything since
+the clock moved to the pooled anchor; it now reads the median the sampler runs
+on. *zeroDayShare is far below the measured pre-publication mass* compared a
+share of the negative mass with a share of all draws; it is now two assertions,
+that the range reads most of the negative mass as record lag and that its top
+end implies fewer zero-days than are published. None of the three was loosened
+to pass: each now fails on the case it was written to catch.
+
+**Next to break.** When the 2025 cohort settles — around a snapshot dated
+2027-03-31, at the current 90-day horizon and 365-day ingestion allowance — it
+enters the pool at a 10-day median (n=134 today), and the pooled median lands
+near 7.1 days. `drawPoCTime` hardcodes a 7-day knot after the median, so the
+knot test will fail on that refresh. That is the test doing its job; the fix is
+a sampler whose median knot is not assumed to sit inside the first week.
+`ASSUMED.wildRate`'s 0.55 floor was also derived against the 8.2% arming rate
+and wants re-deriving on the narrower definition.
+
 ## Scope and honest limits
 
 - **Eight access classes, and the five newest are the least evidenced.**
@@ -700,8 +834,8 @@ number was quietly doing.
   is falsifiable, and one block in `js/model.js` is the only thing to edit if
   you disagree.
 - **The addition raised the number, and that is the finding.** Counting five
-  more classes moved the baseline compromise rate from roughly 42% to the high
-  sixties. The old figure was not conservative, it was incomplete — and the
+  more classes moved the baseline compromise rate from roughly 42% to around two
+  thirds. The old figure was not conservative, it was incomplete — and the
   recommendation ranking reordered with it: phishing-resistant authentication
   now ranks above patch cadence and exposed footprint on most estates. That
   reordering is the point of having done this.
@@ -740,10 +874,10 @@ number was quietly doing.
 
   | rung | campaigns/yr | success without a vuln | compromise | via targeted route |
   |---|---:|---:|---:|---:|
-  | Opportunistic only | 1 | 0.5% | 61.3% | 2% |
-  | Ordinary interest | 6 | 1% | 67.1% | 14% |
-  | Sector under pressure | 15 | 2.5% | 79.3% | 33% |
-  | A named target | 30 | 4% | 92.2% | 52% |
+  | Opportunistic only | 1 | 0.5% | 59.2% | 2% |
+  | Ordinary interest | 6 | 1% | 64.7% | 12% |
+  | Sector under pressure | 15 | 2.5% | 77.3% | 31% |
+  | A named target | 30 | 4% | 90.7% | 51% |
 
   `campaigns` came *down* on the upper rungs (4x to 2.5x, 9x to 5x) to pay for
   it, because those multipliers were calibrated with the non-vulnerability route
@@ -761,9 +895,12 @@ number was quietly doing.
   column came *down* in the third pass, because that route now answers to the
   identity and filtering controls the baseline estate already has switched on —
   which is the correction, not a weakening of the claim. The mix still opens up
-  by a factor of twenty-five across the ladder.
+  by a factor of more than twenty across the ladder.
 
-  Re-measure this table before quoting it. Four versions of it have gone stale.
+  Re-measured on the 2026-11 snapshot at the recipe at the top of this file;
+  every compromise figure fell by one to two points, because the corrected
+  exploit data arms fewer vulnerabilities. Re-measure it before quoting it. Five
+  versions of it have now gone stale.
 - **The widest assumption is the campaign arrival rate**, and the answer is
   sensitive to it. The tornado will usually rank the things it is least sure
   about near the top. That is the honest failure mode, stated rather than hidden.
@@ -775,7 +912,7 @@ number was quietly doing.
 - **Remediation velocity is anchored to published measurement, not to
   aspiration.** A "Typical" estate here fixes an armed critical at about a
   twenty-six-day median with roughly half done inside a month; "Mature" manages
-  six days, "Sprawling" eighty-one. Those brackets come from the Verizon
+  six days, "Sprawling" seventy-eight. Those brackets come from the Verizon
   edge-device series, Edgescan MTTR and the Cyentia remediation curves. For most
   of this model's life the same rungs read 5.5, 1.0 and 20 days, which is faster
   than any published measurement of enterprise patching, and it mattered: a
@@ -790,30 +927,37 @@ number was quietly doing.
   arithmetic, not a forecast.
 - **Recent exploit-timing years are right-censored** and marked provisional in
   the anchors panel.
-- **The exploit-timing instrument is losing coverage, and this bounds the
-  page's central claim.** The clock is measured on CVEs that appear in
-  ExploitDB, Metasploit or Nuclei. The dated sample per year peaked above a
-  thousand in 2017 and is down to the low hundreds, while CVE publication
-  roughly tripled over the same span. Exploit code did not become five times
-  rarer as vulnerability volume tripled — the catalogues stopped being where it
-  lands, and it now appears predominantly in ad-hoc repositories, private
-  channels and commercial brokerages that this corpus cannot see. Two
-  consequences, and the second is the sharper one. The measured weaponised
-  share is a **floor**, not an estimate, which means the weaponisation dial may
-  be closer to describing the present than the future. And a shrinking sample
-  selects for high-profile vulnerabilities, which are exactly the ones that
-  acquire exploit code fastest — so this instrument would report a near-zero
-  median whether or not the broad population had moved. It establishes that the
-  fast tail is already at the floor. It cannot, on its own, establish that no
-  compression is available anywhere in the distribution. The claim this page
-  leads with survives that, because "the clock everyone watches is already at
-  zero" is a statement about the fast tail. The stronger reading — that there
-  is no room left anywhere — is not supported by this instrument and is not
-  made here.
+- **The exploit-timing instrument rests on one catalogue, and its recent
+  cohorts are small. This bounds the page's central claim.** The clock is dated
+  by **Exploit-DB alone**. Metasploit's `disclosure_date` is the date of the
+  vulnerability's disclosure, not of the module, and until CyberMon's 2026-09
+  correction it stood in for an exploit date — which is what put the median
+  under a day. Nuclei ships detection templates, not exploits, and dates
+  nothing. Coverage still counts a Metasploit exploit module as exploit code;
+  timing does not.
+
+  That one dated source is shrinking. Its sample peaked at 996 CVEs in 2017 and
+  the latest settled cohort, 2024, is **42**; the five years the model pools
+  hold 827 between them, while CVE publication nearly tripled. Exploit code did
+  not become twenty times rarer — the catalogue stopped being where it lands,
+  and it now appears predominantly in ad-hoc repositories, private channels and
+  commercial brokerages that this corpus cannot see.
+
+  Three consequences. The measured weaponised share is a **floor**, not an
+  estimate, which means the weaponisation dial may be closer to describing the
+  present than the future. The per-year medians are medians of whatever
+  Exploit-DB still receives, a self-selected cohort rather than a sample of the
+  population, so the lengthening from 0–1 days before 2020 to 4.5–11 days since
+  may be partly a change in that selection rather than in the world. And a
+  cohort of 42 moves by days on noise alone: the pooled 5.9 days is an
+  n-weighted mean of five per-year medians, bounded by their 4.5 to 11 day range
+  rather than measured to a decimal. What this instrument supports is that the
+  public-exploit clock runs in days and has not visibly accelerated. It does not
+  support any claim about the population of exploit code it cannot see.
 - **In-the-wild exposure is timed from when exploit code exists**, which is the
   earliest onset the evidence supports rather than the expected one. The same
   snapshot carries a KEV-latency series that is far slower — 12 to 26 day
-  medians, with roughly a quarter of entries added more than a year after
+  medians, with roughly a fifth of entries added more than a year after
   publication — and the model does not use it, because KEV latency measures
   when CISA *catalogued* exploitation rather than when it began. Both series
   bound the truth from opposite sides; this model takes the near one. Every

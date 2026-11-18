@@ -716,8 +716,8 @@
      * this maximum, so an all-zero band set would divide by zero and hand the
      * renderer width="NaN" rather than an empty chart. */
     var max = Math.max.apply(null, bands.map(function (b) { return b.pExploited; }).concat([1e-3]));
-    var names = { '9.0-10.0': 'Critical', '7.0-8.9': 'High', '4.0-6.9': 'Medium', '0.1-3.9': 'Low' };
-    var order = ['9.0-10.0', '7.0-8.9', '4.0-6.9', '0.1-3.9'];
+    var names = { '9.0-10.0': 'Critical', '7.0-8.9': 'High', '4.0-6.9': 'Medium', '0.0-3.9': 'Low' };
+    var order = ['9.0-10.0', '7.0-8.9', '4.0-6.9', '0.0-3.9'];
 
     /* Captions about the whole figure are set flush with the column's text
      * edge, not with the plot area, so they line up with the chapter's prose

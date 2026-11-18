@@ -7,7 +7,7 @@
 <meta name="description" content="A Monte Carlo model of exploit availability against remediation, calibrated to measured CVE, exploit-catalogue and KEV data. Exploit-clock compression is modelled as an explicit scenario rather than baked into the baseline.">
 <meta name="color-scheme" content="dark light">
 <meta property="og:title" content="Exposure Race: which clock does an autonomous adversary move?">
-<meta property="og:description" content="The clock AI is supposed to have collapsed was already at zero: median time from CVE publication to public exploit code has not exceeded one day in any complete year since 2015. Three other clocks are not at the floor, and the five access classes that need no vulnerability are simulated beside the three that do.">
+<meta property="og:description" content="The clock AI is supposed to collapse is not the one that decides the race: public exploit code has trailed the CVE by under a fortnight at the median in every complete year since 2015, already faster than most estates remediate. Three other clocks are modelled beside it, and the five access classes that need no vulnerability are simulated beside the three that do.">
 <meta property="og:type" content="article">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -64,9 +64,9 @@
   <div class="mast">
     <div class="mast-copy">
       <h1>The autonomous adversary is not a forecast</h1>
-      <p class="sub">The speed it promises is already the record: public exploit code has
-      trailed the CVE by <b>a day or less, at the median, in every complete year since
-      2015</b>. The discovery it promises exists now: machine-found vulnerabilities in real
+      <p class="sub">The speed it promises already outruns most defenders: public exploit code
+      has trailed the CVE by <b>under a fortnight, at the median, in every complete year since
+      2015</b>, while most estates take weeks to remediate. The discovery it promises exists now: machine-found vulnerabilities in real
       codebases are a present-tense capability, and on most estates that dial outweighs the
       other three together. The rest, the share of bugs weaponised and the tempo past the
       foothold, runs on dials rather than baked-in assumptions. Set your estate against all
@@ -485,10 +485,14 @@
           the measured record.</p>
 
           <p class="lead">
-          <button type="button" class="ctl-link" data-ctl="ai">Arrival speed<span class="vh">, go to this dial in the console</span></button> is the one the phrase usually means, and the curve with the least room left. The
-          measured median has <b>not exceeded one day in any complete year since 2015</b>, and the
-          share arriving ahead of the CVE record has fallen rather than risen. <button type="button" class="ctl-link" data-ctl="weap">Weaponised share<span class="vh">, go to this dial in the console</span></button> is worth
-          several times as much, because breadth has room left where speed does not.</p>
+          <button type="button" class="ctl-link" data-ctl="ai">Arrival speed<span class="vh">, go to this dial in the console</span></button> is the one the phrase usually means, and of the three that can move
+          compromise at all it moves it least. Not because the clock has nowhere left to go: the
+          measured median has <b>stayed under a fortnight in every complete year since 2015</b>,
+          and it has lengthened rather than shortened, on a sample small enough that the direction
+          is as much as it can show. Because at that speed exploit code is already ahead of most
+          remediation, so a faster clock mostly shortens races the exploit was winning. <button type="button" class="ctl-link" data-ctl="weap">Weaponised share<span class="vh">, go to this dial in the console</span></button> is worth
+          more than twice as much on the default estate, because breadth adds races where speed
+          only shortens them.</p>
 
           <p class="lead">
           <button type="button" class="ctl-link" data-ctl="tempo">Post-exploitation tempo<span class="vh">, go to this dial in the console</span></button> is flat against compromise because speed from foothold to

@@ -297,9 +297,15 @@ section('Corpus figures still trace to calibration');
   c.exploitation.bands.forEach((b) => { if (b.band === '9.0-10.0') b.pExploited = 77.77; });
   const fake = textOf(DECK._slides(ctxFor(RUN_A, { cal: c })));
 
+  /* The real-side expectations are read off CAL, as the snapshot row always
+   * was. They were typed in as '1,682' and '2.87%' and failed on the first
+   * corpus refresh — with the deck itself correct, since the doctored-corpus
+   * half of each pair passed. A checker that goes stale on refresh is the
+   * failure it exists to catch in the copy. */
+  const critKev = CAL.exploitation.bands.find((b) => b.band === '9.0-10.0').pExploited;
   [['corpus snapshot', CAL.snapshot.cvelist, 'cve_1999-01-01_0000Z'],
-   ['KEV catalogue size', '1,682', '4,321'],
-   ['confirmed-exploited rate', '2.87%', '77.77%']].forEach(([what, inReal, inFake]) => {
+   ['KEV catalogue size', CAL.snapshot.kevCount.toLocaleString('en-US'), '4,321'],
+   ['confirmed-exploited rate', critKev.toFixed(2) + '%', '77.77%']].forEach(([what, inReal, inFake]) => {
     ok('quotes the ' + what + ' from calibration', real.indexOf(inReal) >= 0,
       'expected "' + inReal + '"');
     ok('the ' + what + ' moves when the corpus moves',

@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-08-27T04:29:47Z",
+ "generated_at": "2026-11-17T11:07:38Z",
  "min_n": 10,
  "months": [
   {
@@ -425,10 +425,26 @@
    "text": 3,
    "removed": 0,
    "total": 23
+  },
+  {
+   "month": "2026-09",
+   "due_date": 0,
+   "ransomware_flag": 9,
+   "text": 5,
+   "removed": 0,
+   "total": 14
+  },
+  {
+   "month": "2026-10",
+   "due_date": 2,
+   "ransomware_flag": 0,
+   "text": 1,
+   "removed": 0,
+   "total": 3
   }
  ],
  "flips": {
-  "total": 308,
+  "total": 317,
   "reversals": 0,
   "by_month": [
    {
@@ -595,13 +611,27 @@
     "month": "2026-08",
     "flips": 20,
     "cumulative": 308
+   },
+   {
+    "month": "2026-09",
+    "flips": 9,
+    "cumulative": 317
    }
   ],
   "lag": {
-   "n": 308,
+   "n": 317,
    "median_days": 626.0,
-   "p25_days": 377.0,
+   "p25_days": 363.0,
    "p75_days": 768.0
+  },
+  "step_month": "2023-12",
+  "step_month_flips": 206,
+  "total_after_step": 111,
+  "lag_post_step": {
+   "n": 111,
+   "median_days": 432.0,
+   "p25_days": 114.5,
+   "p75_days": 1098.0
   }
  },
  "board": {
@@ -758,18 +788,139 @@
   ]
  },
  "catalog": {
-  "entries": 1682,
+  "entries": 1781,
   "removed_total": 9,
-  "events_total": 4312,
-  "edits_total": 2932,
-  "additions_excluded": 1380,
+  "events_total": 4428,
+  "edits_total": 2949,
+  "additions_excluded": 1479,
   "first_observed": "2021-12-23",
-  "last_observed": "2026-08-27",
+  "last_observed": "2026-11-17",
   "backfill_captures": 53
  },
  "headline": {
-  "edits_total": 2932,
-  "edits_per_100_entries": 174.3,
-  "pct_flag_flips": 10.5
+  "edits_total": 2949,
+  "edits_per_100_entries": 165.6,
+  "pct_flag_flips": 4.0
+ },
+ "flag_lag": {
+  "step_month": "2023-12",
+  "excluded_step": 206,
+  "n_capture": 78,
+  "n_daily": 33,
+  "unusable": 0,
+  "went_back": 0,
+  "overall": {
+   "n": 111,
+   "median_days": 432.0,
+   "p25_days": 114.5,
+   "p75_days": 1098.0
+  },
+  "buckets": [
+   {
+    "label": "0-30d",
+    "lo": 0,
+    "hi": 30,
+    "capture": 5,
+    "daily": 4
+   },
+   {
+    "label": "31-90d",
+    "lo": 31,
+    "hi": 90,
+    "capture": 11,
+    "daily": 4
+   },
+   {
+    "label": "91-180d",
+    "lo": 91,
+    "hi": 180,
+    "capture": 10,
+    "daily": 2
+   },
+   {
+    "label": "181-365d",
+    "lo": 181,
+    "hi": 365,
+    "capture": 12,
+    "daily": 3
+   },
+   {
+    "label": "1-2y",
+    "lo": 366,
+    "hi": 730,
+    "capture": 17,
+    "daily": 4
+   },
+   {
+    "label": "2-4y",
+    "lo": 731,
+    "hi": 1460,
+    "capture": 21,
+    "daily": 3
+   },
+   {
+    "label": "4y+",
+    "lo": 1461,
+    "hi": null,
+    "capture": 2,
+    "daily": 13
+   }
+  ],
+  "by_year": [
+   {
+    "year": 2021,
+    "capture": 6,
+    "daily": 8,
+    "n": 14,
+    "median_days": 1721.0,
+    "p25_days": 1303.0,
+    "p75_days": 1746.0
+   },
+   {
+    "year": 2022,
+    "capture": 15,
+    "daily": 7,
+    "n": 22,
+    "median_days": 1183.0,
+    "p25_days": 1051.2,
+    "p75_days": 1498.0
+   },
+   {
+    "year": 2023,
+    "capture": 12,
+    "daily": 0,
+    "n": 12,
+    "median_days": 318.0,
+    "p25_days": 141.8,
+    "p75_days": 551.5
+   },
+   {
+    "year": 2024,
+    "capture": 25,
+    "daily": 2,
+    "n": 27,
+    "median_days": 400.0,
+    "p25_days": 271.0,
+    "p75_days": 516.5
+   },
+   {
+    "year": 2025,
+    "capture": 13,
+    "daily": 6,
+    "n": 19,
+    "median_days": 142.0,
+    "p25_days": 70.5,
+    "p75_days": 335.0
+   },
+   {
+    "year": 2026,
+    "capture": 7,
+    "daily": 10,
+    "n": 17,
+    "median_days": 34.0,
+    "p25_days": 24.0,
+    "p75_days": 53.0
+   }
+  ]
  }
 }

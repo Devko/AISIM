@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-08-27T04:29:47Z",
+ "generated_at": "2026-11-17T11:07:38Z",
  "min_n": 500,
  "years": [
   {
@@ -65,11 +65,11 @@
   {
    "year": 2006,
    "n": 6885,
-   "missing_cwe": 6861,
-   "pct_missing_cwe": 99.7,
-   "missing_cvss": 6849,
+   "missing_cwe": 6860,
+   "pct_missing_cwe": 99.6,
+   "missing_cvss": 6848,
    "pct_missing_cvss": 99.5,
-   "missing_affected": 6884,
+   "missing_affected": 6883,
    "pct_missing_affected": 100.0
   },
   {
@@ -115,62 +115,62 @@
   {
    "year": 2011,
    "n": 4150,
-   "missing_cwe": 4122,
+   "missing_cwe": 4121,
    "pct_missing_cwe": 99.3,
-   "missing_cvss": 4114,
+   "missing_cvss": 4113,
    "pct_missing_cvss": 99.1,
-   "missing_affected": 4146,
+   "missing_affected": 4144,
    "pct_missing_affected": 99.9
   },
   {
    "year": 2012,
    "n": 5288,
-   "missing_cwe": 5239,
+   "missing_cwe": 5238,
    "pct_missing_cwe": 99.1,
-   "missing_cvss": 5225,
+   "missing_cvss": 5224,
    "pct_missing_cvss": 98.8,
-   "missing_affected": 5268,
+   "missing_affected": 5267,
    "pct_missing_affected": 99.6
   },
   {
    "year": 2013,
    "n": 5187,
-   "missing_cwe": 5121,
-   "pct_missing_cwe": 98.7,
-   "missing_cvss": 5108,
-   "pct_missing_cvss": 98.5,
-   "missing_affected": 5167,
-   "pct_missing_affected": 99.6
+   "missing_cwe": 5116,
+   "pct_missing_cwe": 98.6,
+   "missing_cvss": 5103,
+   "pct_missing_cvss": 98.4,
+   "missing_affected": 5163,
+   "pct_missing_affected": 99.5
   },
   {
    "year": 2014,
    "n": 7928,
-   "missing_cwe": 7802,
+   "missing_cwe": 7800,
    "pct_missing_cwe": 98.4,
-   "missing_cvss": 7787,
+   "missing_cvss": 7785,
    "pct_missing_cvss": 98.2,
-   "missing_affected": 7840,
-   "pct_missing_affected": 98.9
+   "missing_affected": 7834,
+   "pct_missing_affected": 98.8
   },
   {
    "year": 2015,
    "n": 6494,
-   "missing_cwe": 6428,
-   "pct_missing_cwe": 99.0,
-   "missing_cvss": 6416,
+   "missing_cwe": 6425,
+   "pct_missing_cwe": 98.9,
+   "missing_cvss": 6413,
    "pct_missing_cvss": 98.8,
-   "missing_affected": 6472,
-   "pct_missing_affected": 99.7
+   "missing_affected": 6471,
+   "pct_missing_affected": 99.6
   },
   {
    "year": 2016,
    "n": 6457,
-   "missing_cwe": 6392,
-   "pct_missing_cwe": 99.0,
-   "missing_cvss": 6360,
-   "pct_missing_cvss": 98.5,
-   "missing_affected": 6166,
-   "pct_missing_affected": 95.5
+   "missing_cwe": 6387,
+   "pct_missing_cwe": 98.9,
+   "missing_cvss": 6356,
+   "pct_missing_cvss": 98.4,
+   "missing_affected": 6162,
+   "pct_missing_affected": 95.4
   },
   {
    "year": 2017,
@@ -179,98 +179,98 @@
    "pct_missing_cwe": 93.6,
    "missing_cvss": 14211,
    "pct_missing_cvss": 97.1,
-   "missing_affected": 8254,
-   "pct_missing_affected": 56.4
+   "missing_affected": 8246,
+   "pct_missing_affected": 56.3
   },
   {
    "year": 2018,
    "n": 16510,
    "missing_cwe": 13974,
    "pct_missing_cwe": 84.6,
-   "missing_cvss": 14768,
+   "missing_cvss": 14765,
    "pct_missing_cvss": 89.4,
-   "missing_affected": 8892,
-   "pct_missing_affected": 53.9
+   "missing_affected": 8884,
+   "pct_missing_affected": 53.8
   },
   {
    "year": 2019,
    "n": 17308,
-   "missing_cwe": 14923,
+   "missing_cwe": 14912,
    "pct_missing_cwe": 86.2,
-   "missing_cvss": 14676,
-   "pct_missing_cvss": 84.8,
-   "missing_affected": 9513,
-   "pct_missing_affected": 55.0
+   "missing_cvss": 14665,
+   "pct_missing_cvss": 84.7,
+   "missing_affected": 9463,
+   "pct_missing_affected": 54.7
   },
   {
    "year": 2020,
    "n": 18363,
-   "missing_cwe": 14623,
+   "missing_cwe": 14611,
    "pct_missing_cwe": 79.6,
-   "missing_cvss": 12291,
+   "missing_cvss": 12279,
    "pct_missing_cvss": 66.9,
-   "missing_affected": 9398,
-   "pct_missing_affected": 51.2
+   "missing_affected": 9354,
+   "pct_missing_affected": 50.9
   },
   {
    "year": 2021,
    "n": 20177,
-   "missing_cwe": 12972,
-   "pct_missing_cwe": 64.3,
-   "missing_cvss": 11798,
-   "pct_missing_cvss": 58.5,
-   "missing_affected": 9609,
-   "pct_missing_affected": 47.6
+   "missing_cwe": 12960,
+   "pct_missing_cwe": 64.2,
+   "missing_cvss": 11789,
+   "pct_missing_cvss": 58.4,
+   "missing_affected": 9572,
+   "pct_missing_affected": 47.4
   },
   {
    "year": 2022,
-   "n": 25000,
-   "missing_cwe": 10883,
+   "n": 24999,
+   "missing_cwe": 10870,
    "pct_missing_cwe": 43.5,
-   "missing_cvss": 10234,
+   "missing_cvss": 10221,
    "pct_missing_cvss": 40.9,
-   "missing_affected": 11781,
-   "pct_missing_affected": 47.1
+   "missing_affected": 11697,
+   "pct_missing_affected": 46.8
   },
   {
    "year": 2023,
    "n": 28847,
-   "missing_cwe": 7084,
-   "pct_missing_cwe": 24.6,
-   "missing_cvss": 5697,
+   "missing_cwe": 7079,
+   "pct_missing_cwe": 24.5,
+   "missing_cvss": 5689,
    "pct_missing_cvss": 19.7,
-   "missing_affected": 7391,
-   "pct_missing_affected": 25.6
+   "missing_affected": 7344,
+   "pct_missing_affected": 25.5
   },
   {
    "year": 2024,
-   "n": 39925,
-   "missing_cwe": 5367,
+   "n": 39924,
+   "missing_cwe": 5366,
    "pct_missing_cwe": 13.4,
    "missing_cvss": 2213,
    "pct_missing_cvss": 5.5,
-   "missing_affected": 2127,
+   "missing_affected": 2126,
    "pct_missing_affected": 5.3
   },
   {
    "year": 2025,
-   "n": 48154,
-   "missing_cwe": 5637,
+   "n": 48150,
+   "missing_cwe": 5626,
    "pct_missing_cwe": 11.7,
    "missing_cvss": 2955,
    "pct_missing_cvss": 6.1,
-   "missing_affected": 4961,
+   "missing_affected": 4954,
    "pct_missing_affected": 10.3
   },
   {
    "year": 2026,
-   "n": 56454,
-   "missing_cwe": 5425,
-   "pct_missing_cwe": 9.6,
-   "missing_cvss": 2978,
-   "pct_missing_cvss": 5.3,
-   "missing_affected": 2440,
-   "pct_missing_affected": 4.3
+   "n": 98175,
+   "missing_cwe": 7789,
+   "pct_missing_cwe": 7.9,
+   "missing_cvss": 5116,
+   "pct_missing_cvss": 5.2,
+   "missing_affected": 3318,
+   "pct_missing_affected": 3.4
   }
  ]
 }

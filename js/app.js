@@ -686,7 +686,13 @@
     edge:       ['Reduce or segment edge appliances', 'They remediate slower, support no endpoint agent, and are the asset class where mass exploitation begins at day zero.'],
     inventory:  ['Close the asset inventory gap', 'A system in no remediation cycle stays exposed for months rather than days.'],
     detect:     ['Reduce time to detect', 'This does not prevent compromise. It determines whether a compromise escalates to an incident, and no other parameter comes close on that metric.'],
-    cadence:    ['Shorten the routine remediation cycle', 'Effective, but floored: around a fifth of exploitation precedes patch availability entirely.'],
+    /* The share is read off the snapshot, not typed. "Around a fifth" was
+     * typed once against a provisional row, went stale when the anchor moved to
+     * 36%, and happened to come right again only because the 2026-09 CyberMon
+     * correction moved it back to 18%. It is also stated as what it measures —
+     * exploit code public before the CVE record — rather than as "before patch
+     * availability", which is the reading MEASURED.preIsRecordLag retired. */
+    cadence:    ['Shorten the routine remediation cycle', 'Effective, but floored: ' + Math.round(C.pocTiming.settled.pctBefore) + '% of public exploit code is already out when the CVE record lands, before any remediation clock has started.'],
     awareH:     ['Shorten triage to applicability', 'Once remediation runs in hours, triage is the entire timeline.'],
     emergH:     ['Establish an out-of-band remediation path', 'Without one, every urgent vulnerability inherits the routine cadence.'],
     emergHit:   ['Fix the trigger, not the speed', 'Remediating in hours has no effect if applicability is never established.'],
@@ -1782,7 +1788,7 @@
     var crit = C.exploitation.bands.filter(function (x) { return x.band === '9.0-10.0'; })[0];
     anchorRow(host, 'Criticals that ever get a public working exploit', 'measured',
       C.armed.pPoCCritical + '%',
-      'CyberMon · ExploitDB + Metasploit + Nuclei against cvelistV5, CY' + C.armed.window);
+      'CyberMon · Exploit-DB entries and Metasploit exploit modules against cvelistV5, CY' + C.armed.window);
     anchorRow(host, 'Criticals confirmed exploited in the wild', 'measured',
       crit.pExploited + '%', 'CyberMon · CISA KEV ' + C.snapshot.kev + ' against the scored population');
     /* Both rows report the pooled settled anchor, because that is what the
@@ -1793,7 +1799,7 @@
     anchorRow(host, 'Days from publication to a public exploit (median)', 'measured',
       num(sw.medianDays, 1) + ' d',
       'CyberMon · ' + sw.years[0] + '-' + sw.years[sw.years.length - 1] +
-      ' complete years pooled, ' + thou(sw.n) + ' records, 90-day window');
+      ' complete years pooled, ' + thou(sw.n) + ' records dated by Exploit-DB, 90-day window');
     anchorRow(host, 'Exploits already public when the CVE record lands', 'measured',
       num(sw.pctBefore, 1) + '%',
       'CyberMon · same pooled window. Mostly NVD publication lag rather than pre-disclosure exploitation: the same series reads ' +
@@ -1806,18 +1812,23 @@
       C.pocTiming.series[C.pocTiming.series.length - 1].n + ' records' +
       (C.pocTiming.latest.provisional ? '. Incomplete year, still collecting, not used to calibrate' : ''));
     /* The instrument's own coverage, stated beside what it measured. Every
-     * row above this one is read off a catalogue whose sample per year has
-     * fallen by roughly six sevenths since 2017 while CVE publication tripled,
-     * and a reader who takes "median under a day" away from this panel is
-     * entitled to know which population it is a median OF. This is the one
-     * caveat on the page that qualifies the argument rather than the estate. */
+     * timing row above this one is read off Exploit-DB alone — the only
+     * source that dates exploit code — whose sample per year has fallen by
+     * more than nine tenths since 2017 while CVE publication nearly tripled,
+     * and a reader who takes the median away from this panel is entitled to
+     * know which population it is a median OF. This is the one caveat on the
+     * page that qualifies the argument rather than the estate.
+     *
+     * The latest complete year is read off the series' own provisional flag.
+     * It was a hardcoded `<= 2024`, which would have kept naming 2024 after
+     * 2025 settled. */
     var trend = C.pocTiming.sampleTrend || [];
     var tPeak = trend.reduce(function (a, b) { return b.n > a.n ? b : a; }, trend[0] || { n: 0, year: 0 });
-    var tLast = trend.filter(function (y) { return y.year <= 2024; }).pop() || tPeak;
+    var tLast = C.pocTiming.series.filter(function (y) { return !y.provisional; }).pop() || tPeak;
     anchorRow(host, 'Exploit-catalogue coverage, peak year against latest complete year', 'measured',
       thou(tPeak.n) + ' → ' + thou(tLast.n) + ' CVEs a year',
       'CyberMon · ' + tPeak.year + ' vs ' + tLast.year +
-      '. The sample shrank as CVE volume grew, so the weaponised share above is a floor');
+      '. Exploit-DB is the only source that dates exploit code, and its sample shrank as CVE volume grew: the weaponised share above is a floor, and recent cohorts are small enough to move by days on noise');
     anchorRow(host, 'Criticals published worldwide, ' + C.volume.curYearRunRate.year + ' run-rate', 'measured',
       thou(C.volume.curYearRunRate.critical),
       'CyberMon · cvelistV5, ' + num(C.yearElapsed * 100) + '% of the year elapsed');
@@ -1855,7 +1866,7 @@
 
   function renderEvidence() {
     var body = empty($('ev-body'));
-    [['9.0-10.0', 'Critical'], ['7.0-8.9', 'High'], ['4.0-6.9', 'Medium'], ['0.1-3.9', 'Low']]
+    [['9.0-10.0', 'Critical'], ['7.0-8.9', 'High'], ['4.0-6.9', 'Medium'], ['0.0-3.9', 'Low']]
       .forEach(function (n) {
         var r = C.exploitation.bands.filter(function (y) { return y.band === n[0]; })[0];
         if (!r) return;
@@ -1905,9 +1916,12 @@
      * standing. See MODEL.MEASURED.preIsRecordLag. */
     clockRow(host, 'Exploits already public when the CVE record lands',
       num(sw.pctBefore, 1) + '%');
-    /* A floor, and labelled as one: measured against three catalogues whose
-     * dated sample fell from 1,019 CVEs a year to 94 while publication tripled. */
-    clockRow(host, 'Criticals with public exploit code in three catalogues',
+    /* A floor, and labelled as one: an Exploit-DB entry or a Metasploit exploit
+     * module. Nuclei used to be the third catalogue named here; since
+     * CyberMon's 2026-09 correction it counts as detection, not exploit code,
+     * and the one dated source's sample fell from 996 CVEs in 2017 to 42 in
+     * 2024 while publication nearly tripled. */
+    clockRow(host, 'Criticals with public exploit code in Exploit-DB or Metasploit',
       C.armed.pPoCCritical + '% or more');
   }
 

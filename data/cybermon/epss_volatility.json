@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-08-27T04:29:47Z",
+ "generated_at": "2026-11-17T11:07:38Z",
  "thresholds": {
   "lo": 0.001,
   "mid": 0.01,
@@ -23,10 +23,10 @@
    },
    {
     "week": "2026-W31",
-    "crossed_lo": 110,
-    "crossed_mid": 212,
-    "crossed_hi": 47,
-    "days": 6
+    "crossed_lo": 103,
+    "crossed_mid": 161,
+    "crossed_hi": 34,
+    "days": 5
    },
    {
     "week": "2026-W32",
@@ -44,24 +44,108 @@
    },
    {
     "week": "2026-W34",
-    "crossed_lo": 55,
-    "crossed_mid": 3229,
-    "crossed_hi": 1057,
-    "days": 7
+    "crossed_lo": 47,
+    "crossed_mid": 228,
+    "crossed_hi": 81,
+    "days": 6
    },
    {
     "week": "2026-W35",
-    "crossed_lo": 242,
-    "crossed_mid": 3360,
-    "crossed_hi": 1060,
+    "crossed_lo": 17,
+    "crossed_mid": 91,
+    "crossed_hi": 13,
+    "days": 2
+   },
+   {
+    "week": "2026-W36",
+    "crossed_lo": 47,
+    "crossed_mid": 185,
+    "crossed_hi": 24,
+    "days": 5
+   },
+   {
+    "week": "2026-W37",
+    "crossed_lo": 125,
+    "crossed_mid": 209,
+    "crossed_hi": 37,
+    "days": 5
+   },
+   {
+    "week": "2026-W38",
+    "crossed_lo": 69,
+    "crossed_mid": 237,
+    "crossed_hi": 46,
+    "days": 7
+   },
+   {
+    "week": "2026-W39",
+    "crossed_lo": 36,
+    "crossed_mid": 192,
+    "crossed_hi": 27,
+    "days": 4
+   },
+   {
+    "week": "2026-W40",
+    "crossed_lo": 15,
+    "crossed_mid": 119,
+    "crossed_hi": 38,
     "days": 3
+   },
+   {
+    "week": "2026-W41",
+    "crossed_lo": 195,
+    "crossed_mid": 304,
+    "crossed_hi": 74,
+    "days": 7
+   },
+   {
+    "week": "2026-W42",
+    "crossed_lo": 60,
+    "crossed_mid": 326,
+    "crossed_hi": 51,
+    "days": 7
+   },
+   {
+    "week": "2026-W43",
+    "crossed_lo": 41,
+    "crossed_mid": 147,
+    "crossed_hi": 20,
+    "days": 4
+   },
+   {
+    "week": "2026-W44",
+    "crossed_lo": 71,
+    "crossed_mid": 286,
+    "crossed_hi": 55,
+    "days": 7
+   },
+   {
+    "week": "2026-W45",
+    "crossed_lo": 114,
+    "crossed_mid": 206,
+    "crossed_hi": 36,
+    "days": 5
+   },
+   {
+    "week": "2026-W46",
+    "crossed_lo": 279,
+    "crossed_mid": 454,
+    "crossed_hi": 70,
+    "days": 4
+   },
+   {
+    "week": "2026-W47",
+    "crossed_lo": 117,
+    "crossed_mid": 241,
+    "crossed_hi": 36,
+    "days": 1
    }
   ]
  },
  "gap": {
   "min_days": 3,
-  "trend_days": 39,
-  "prob_moved_pct": 1.7,
+  "trend_days": 95,
+  "prob_moved_pct": 1.1,
   "pct_moved_pct": 97.3,
   "days": [
    {
@@ -133,11 +217,6 @@
     "date": "2026-07-31",
     "prob_moved": 0.9,
     "pct_moved": 98.1
-   },
-   {
-    "date": "2026-08-02",
-    "prob_moved": 1.5,
-    "pct_moved": 96.8
    },
    {
     "date": "2026-08-03",
@@ -240,16 +319,6 @@
     "pct_moved": 95.4
    },
    {
-    "date": "2026-08-23",
-    "prob_moved": 12.0,
-    "pct_moved": 98.9
-   },
-   {
-    "date": "2026-08-24",
-    "prob_moved": 15.6,
-    "pct_moved": 100.0
-   },
-   {
     "date": "2026-08-25",
     "prob_moved": 1.0,
     "pct_moved": 98.0
@@ -258,12 +327,328 @@
     "date": "2026-08-26",
     "prob_moved": 1.1,
     "pct_moved": 99.2
+   },
+   {
+    "date": "2026-08-31",
+    "prob_moved": 1.0,
+    "pct_moved": 94.7
+   },
+   {
+    "date": "2026-09-01",
+    "prob_moved": 1.0,
+    "pct_moved": 98.8
+   },
+   {
+    "date": "2026-09-02",
+    "prob_moved": 0.9,
+    "pct_moved": 97.8
+   },
+   {
+    "date": "2026-09-03",
+    "prob_moved": 1.1,
+    "pct_moved": 98.1
+   },
+   {
+    "date": "2026-09-04",
+    "prob_moved": 1.2,
+    "pct_moved": 98.9
+   },
+   {
+    "date": "2026-09-09",
+    "prob_moved": 0.9,
+    "pct_moved": 99.8
+   },
+   {
+    "date": "2026-09-10",
+    "prob_moved": 1.2,
+    "pct_moved": 98.5
+   },
+   {
+    "date": "2026-09-11",
+    "prob_moved": 1.1,
+    "pct_moved": 98.0
+   },
+   {
+    "date": "2026-09-12",
+    "prob_moved": 0.9,
+    "pct_moved": 98.5
+   },
+   {
+    "date": "2026-09-13",
+    "prob_moved": 1.0,
+    "pct_moved": 89.0
+   },
+   {
+    "date": "2026-09-14",
+    "prob_moved": 0.7,
+    "pct_moved": 99.2
+   },
+   {
+    "date": "2026-09-15",
+    "prob_moved": 0.9,
+    "pct_moved": 99.0
+   },
+   {
+    "date": "2026-09-16",
+    "prob_moved": 0.9,
+    "pct_moved": 99.8
+   },
+   {
+    "date": "2026-09-17",
+    "prob_moved": 1.0,
+    "pct_moved": 99.3
+   },
+   {
+    "date": "2026-09-18",
+    "prob_moved": 0.9,
+    "pct_moved": 99.3
+   },
+   {
+    "date": "2026-09-19",
+    "prob_moved": 1.3,
+    "pct_moved": 98.5
+   },
+   {
+    "date": "2026-09-20",
+    "prob_moved": 0.8,
+    "pct_moved": 83.5
+   },
+   {
+    "date": "2026-09-23",
+    "prob_moved": 1.0,
+    "pct_moved": 98.2
+   },
+   {
+    "date": "2026-09-25",
+    "prob_moved": 1.1,
+    "pct_moved": 98.3
+   },
+   {
+    "date": "2026-09-26",
+    "prob_moved": 1.0,
+    "pct_moved": 99.5
+   },
+   {
+    "date": "2026-09-27",
+    "prob_moved": 0.9,
+    "pct_moved": 97.8
+   },
+   {
+    "date": "2026-09-28",
+    "prob_moved": 1.0,
+    "pct_moved": 94.4
+   },
+   {
+    "date": "2026-10-03",
+    "prob_moved": 1.0,
+    "pct_moved": 98.9
+   },
+   {
+    "date": "2026-10-04",
+    "prob_moved": 0.8,
+    "pct_moved": 83.4
+   },
+   {
+    "date": "2026-10-05",
+    "prob_moved": 1.0,
+    "pct_moved": 97.5
+   },
+   {
+    "date": "2026-10-06",
+    "prob_moved": 0.9,
+    "pct_moved": 99.5
+   },
+   {
+    "date": "2026-10-07",
+    "prob_moved": 1.1,
+    "pct_moved": 99.6
+   },
+   {
+    "date": "2026-10-08",
+    "prob_moved": 1.2,
+    "pct_moved": 98.7
+   },
+   {
+    "date": "2026-10-09",
+    "prob_moved": 1.2,
+    "pct_moved": 99.2
+   },
+   {
+    "date": "2026-10-10",
+    "prob_moved": 0.8,
+    "pct_moved": 99.4
+   },
+   {
+    "date": "2026-10-11",
+    "prob_moved": 0.8,
+    "pct_moved": 98.5
+   },
+   {
+    "date": "2026-10-12",
+    "prob_moved": 0.9,
+    "pct_moved": 96.5
+   },
+   {
+    "date": "2026-10-13",
+    "prob_moved": 1.0,
+    "pct_moved": 99.4
+   },
+   {
+    "date": "2026-10-14",
+    "prob_moved": 1.2,
+    "pct_moved": 99.8
+   },
+   {
+    "date": "2026-10-15",
+    "prob_moved": 1.3,
+    "pct_moved": 98.8
+   },
+   {
+    "date": "2026-10-16",
+    "prob_moved": 1.0,
+    "pct_moved": 98.8
+   },
+   {
+    "date": "2026-10-17",
+    "prob_moved": 0.9,
+    "pct_moved": 97.6
+   },
+   {
+    "date": "2026-10-18",
+    "prob_moved": 1.0,
+    "pct_moved": 91.4
+   },
+   {
+    "date": "2026-10-19",
+    "prob_moved": 0.9,
+    "pct_moved": 98.7
+   },
+   {
+    "date": "2026-10-20",
+    "prob_moved": 0.9,
+    "pct_moved": 99.2
+   },
+   {
+    "date": "2026-10-21",
+    "prob_moved": 1.0,
+    "pct_moved": 99.5
+   },
+   {
+    "date": "2026-10-24",
+    "prob_moved": 0.8,
+    "pct_moved": 98.6
+   },
+   {
+    "date": "2026-10-26",
+    "prob_moved": 0.8,
+    "pct_moved": 95.4
+   },
+   {
+    "date": "2026-10-27",
+    "prob_moved": 1.0,
+    "pct_moved": 98.6
+   },
+   {
+    "date": "2026-10-28",
+    "prob_moved": 1.0,
+    "pct_moved": 99.0
+   },
+   {
+    "date": "2026-10-29",
+    "prob_moved": 0.9,
+    "pct_moved": 98.4
+   },
+   {
+    "date": "2026-10-30",
+    "prob_moved": 1.0,
+    "pct_moved": 98.8
+   },
+   {
+    "date": "2026-10-31",
+    "prob_moved": 1.2,
+    "pct_moved": 98.7
+   },
+   {
+    "date": "2026-11-01",
+    "prob_moved": 0.7,
+    "pct_moved": 82.3
+   },
+   {
+    "date": "2026-11-02",
+    "prob_moved": 1.0,
+    "pct_moved": 91.0
+   },
+   {
+    "date": "2026-11-03",
+    "prob_moved": 0.9,
+    "pct_moved": 99.5
+   },
+   {
+    "date": "2026-11-04",
+    "prob_moved": 1.1,
+    "pct_moved": 99.7
+   },
+   {
+    "date": "2026-11-05",
+    "prob_moved": 1.0,
+    "pct_moved": 96.8
+   },
+   {
+    "date": "2026-11-06",
+    "prob_moved": 1.2,
+    "pct_moved": 98.7
+   },
+   {
+    "date": "2026-11-12",
+    "prob_moved": 0.8,
+    "pct_moved": 98.4
+   },
+   {
+    "date": "2026-11-13",
+    "prob_moved": 1.8,
+    "pct_moved": 98.8
+   },
+   {
+    "date": "2026-11-14",
+    "prob_moved": 2.6,
+    "pct_moved": 99.3
+   },
+   {
+    "date": "2026-11-15",
+    "prob_moved": 3.8,
+    "pct_moved": 99.5
+   },
+   {
+    "date": "2026-11-16",
+    "prob_moved": 4.6,
+    "pct_moved": 99.5
    }
   ]
  },
  "movers": {
   "min_delta": 0.1,
   "entries": [
+   {
+    "cve": "CVE-2026-43284",
+    "observed_date": "2026-10-16",
+    "old": 0.0247,
+    "new": 0.94194,
+    "delta": 0.91724
+   },
+   {
+    "cve": "CVE-2026-71362",
+    "observed_date": "2026-09-25",
+    "old": 0.02335,
+    "new": 0.89616,
+    "delta": 0.87281
+   },
+   {
+    "cve": "CVE-2026-35273",
+    "observed_date": "2026-10-12",
+    "old": 0.09444,
+    "new": 0.96678,
+    "delta": 0.87234
+   },
    {
     "cve": "CVE-2026-48908",
     "observed_date": "2026-07-24",
@@ -272,11 +657,67 @@
     "delta": 0.86561
    },
    {
-    "cve": "CVE-2026-48908",
-    "observed_date": "2026-08-24",
-    "old": 0.8813,
-    "new": 0.14824,
-    "delta": -0.73306
+    "cve": "CVE-2026-35616",
+    "observed_date": "2026-10-21",
+    "old": 0.09098,
+    "new": 0.93983,
+    "delta": 0.84885
+   },
+   {
+    "cve": "CVE-2026-63077",
+    "observed_date": "2026-09-28",
+    "old": 0.09763,
+    "new": 0.8957,
+    "delta": 0.79807
+   },
+   {
+    "cve": "CVE-2026-50751",
+    "observed_date": "2026-10-08",
+    "old": 0.06416,
+    "new": 0.85338,
+    "delta": 0.78922
+   },
+   {
+    "cve": "CVE-2026-50522",
+    "observed_date": "2026-11-16",
+    "old": 0.03042,
+    "new": 0.8187,
+    "delta": 0.78828
+   },
+   {
+    "cve": "CVE-2026-72898",
+    "observed_date": "2026-10-15",
+    "old": 0.19048,
+    "new": 0.97335,
+    "delta": 0.78287
+   },
+   {
+    "cve": "CVE-2026-6875",
+    "observed_date": "2026-11-15",
+    "old": 0.01426,
+    "new": 0.78461,
+    "delta": 0.77035
+   },
+   {
+    "cve": "CVE-2026-61511",
+    "observed_date": "2026-11-12",
+    "old": 0.05607,
+    "new": 0.74266,
+    "delta": 0.68659
+   },
+   {
+    "cve": "CVE-2026-61511",
+    "observed_date": "2026-11-13",
+    "old": 0.05607,
+    "new": 0.74266,
+    "delta": 0.68659
+   },
+   {
+    "cve": "CVE-2026-61511",
+    "observed_date": "2026-11-14",
+    "old": 0.05607,
+    "new": 0.74266,
+    "delta": 0.68659
    },
    {
     "cve": "CVE-2026-42897",
@@ -293,6 +734,27 @@
     "delta": 0.63074
    },
    {
+    "cve": "CVE-2026-110447",
+    "observed_date": "2026-10-29",
+    "old": 0.11634,
+    "new": 0.73307,
+    "delta": 0.61673
+   },
+   {
+    "cve": "CVE-2026-73570",
+    "observed_date": "2026-10-06",
+    "old": 0.11946,
+    "new": 0.71663,
+    "delta": 0.59717
+   },
+   {
+    "cve": "CVE-2026-102764",
+    "observed_date": "2026-11-04",
+    "old": 0.1895,
+    "new": 0.77994,
+    "delta": 0.59044
+   },
+   {
     "cve": "CVE-2024-57726",
     "observed_date": "2026-08-17",
     "old": 0.088,
@@ -305,118 +767,109 @@
     "old": 0.12685,
     "new": 0.69969,
     "delta": 0.57284
-   },
-   {
-    "cve": "CVE-2016-3251",
-    "observed_date": "2026-08-23",
-    "old": 0.58073,
-    "new": 0.03429,
-    "delta": -0.54644
-   },
-   {
-    "cve": "CVE-2026-0770",
-    "observed_date": "2026-07-22",
-    "old": 0.10371,
-    "new": 0.54503,
-    "delta": 0.44132
-   },
-   {
-    "cve": "CVE-2020-10221",
-    "observed_date": "2026-08-26",
-    "old": 0.36754,
-    "new": 0.80221,
-    "delta": 0.43467
-   },
-   {
-    "cve": "CVE-2026-58644",
-    "observed_date": "2026-08-15",
-    "old": 0.06372,
-    "new": 0.45478,
-    "delta": 0.39106
-   },
-   {
-    "cve": "CVE-2026-34486",
-    "observed_date": "2026-08-05",
-    "old": 0.42627,
-    "new": 0.8116,
-    "delta": 0.38533
-   },
-   {
-    "cve": "CVE-2026-61511",
-    "observed_date": "2026-08-25",
-    "old": 0.33995,
-    "new": 0.70766,
-    "delta": 0.36771
-   },
-   {
-    "cve": "CVE-2007-2815",
-    "observed_date": "2026-07-26",
-    "old": 0.71905,
-    "new": 0.39208,
-    "delta": -0.32697
-   },
-   {
-    "cve": "CVE-2018-11714",
-    "observed_date": "2026-08-19",
-    "old": 0.35365,
-    "new": 0.68053,
-    "delta": 0.32688
-   },
-   {
-    "cve": "CVE-2025-11953",
-    "observed_date": "2026-08-08",
-    "old": 0.61921,
-    "new": 0.9398,
-    "delta": 0.32059
-   },
-   {
-    "cve": "CVE-2026-20896",
-    "observed_date": "2026-08-20",
-    "old": 0.31809,
-    "new": 0.62381,
-    "delta": 0.30572
-   },
-   {
-    "cve": "CVE-2025-6389",
-    "observed_date": "2026-08-04",
-    "old": 0.44442,
-    "new": 0.73089,
-    "delta": 0.28647
-   },
-   {
-    "cve": "CVE-2025-22037",
-    "observed_date": "2026-07-30",
-    "old": 0.37115,
-    "new": 0.65736,
-    "delta": 0.28621
-   },
-   {
-    "cve": "CVE-2026-12569",
-    "observed_date": "2026-08-02",
-    "old": 0.02263,
-    "new": 0.30198,
-    "delta": 0.27935
-   },
-   {
-    "cve": "CVE-2025-49132",
-    "observed_date": "2026-07-28",
-    "old": 0.13105,
-    "new": 0.40019,
-    "delta": 0.26914
    }
   ]
  },
  "catalog": {
   "state_model_version": "v2026.06.15",
-  "state_score_date": "2026-08-26",
-  "state_size": 365017,
-  "days_observed": 39,
-  "trend_days": 39,
+  "state_score_date": "2026-11-16",
+  "state_size": 406741,
+  "days_observed": 111,
+  "trend_days": 95,
   "resets_quarantined": 0,
+  "gaps_quarantined": 6,
+  "anomalies_quarantined": 10,
+  "anomaly_rule": {
+   "factor": 5.0,
+   "min_share_pct": 5.0,
+   "min_nights": 5
+  },
+  "quarantined": [
+   {
+    "date": "2026-08-02",
+    "reason": "gap",
+    "prob_moved_pct": 1.5
+   },
+   {
+    "date": "2026-08-23",
+    "reason": "anomaly",
+    "prob_moved_pct": 12.0
+   },
+   {
+    "date": "2026-08-24",
+    "reason": "anomaly",
+    "prob_moved_pct": 15.6
+   },
+   {
+    "date": "2026-08-29",
+    "reason": "anomaly",
+    "prob_moved_pct": 14.0
+   },
+   {
+    "date": "2026-08-30",
+    "reason": "anomaly",
+    "prob_moved_pct": 11.8
+   },
+   {
+    "date": "2026-09-05",
+    "reason": "anomaly",
+    "prob_moved_pct": 11.9
+   },
+   {
+    "date": "2026-09-06",
+    "reason": "anomaly",
+    "prob_moved_pct": 11.7
+   },
+   {
+    "date": "2026-09-08",
+    "reason": "gap",
+    "prob_moved_pct": 1.0
+   },
+   {
+    "date": "2026-09-21",
+    "reason": "anomaly",
+    "prob_moved_pct": 11.5
+   },
+   {
+    "date": "2026-09-22",
+    "reason": "anomaly",
+    "prob_moved_pct": 11.7
+   },
+   {
+    "date": "2026-09-24",
+    "reason": "anomaly",
+    "prob_moved_pct": 12.8
+   },
+   {
+    "date": "2026-10-02",
+    "reason": "gap",
+    "prob_moved_pct": 3.8
+   },
+   {
+    "date": "2026-10-23",
+    "reason": "gap",
+    "prob_moved_pct": 2.4
+   },
+   {
+    "date": "2026-10-25",
+    "reason": "anomaly",
+    "prob_moved_pct": 8.5
+   },
+   {
+    "date": "2026-11-08",
+    "reason": "gap",
+    "prob_moved_pct": 1.9
+   },
+   {
+    "date": "2026-11-11",
+    "reason": "gap",
+    "prob_moved_pct": 3.0
+   }
+  ],
   "crossed_totals": {
-   "lo": 733,
-   "mid": 7721,
-   "hi": 2408
+   "lo": 1662,
+   "mid": 4306,
+   "hi": 886
   },
   "first_observed": "2026-07-18"
  }

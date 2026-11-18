@@ -1,9 +1,9 @@
 {
- "generated_at": "2026-08-27T04:29:47Z",
+ "generated_at": "2026-11-17T11:07:38Z",
  "min_known_duration": 30,
  "queue": {
-  "median_days": 4.0,
-  "n_known_duration": 5439
+  "median_days": 5.0,
+  "n_known_duration": 17247
  },
  "history": [
   {
@@ -12,7 +12,8 @@
    "entered_awaiting": 0,
    "analyzed_from_awaiting": 0,
    "deferred_from_awaiting": 0,
-   "resweep": false
+   "resweep": false,
+   "after_resweep": false
   },
   {
    "date": "2026-07-13",
@@ -20,7 +21,8 @@
    "entered_awaiting": 0,
    "analyzed_from_awaiting": 0,
    "deferred_from_awaiting": 0,
-   "resweep": false
+   "resweep": false,
+   "after_resweep": false
   },
   {
    "date": "2026-07-14",
@@ -28,7 +30,8 @@
    "entered_awaiting": 58,
    "analyzed_from_awaiting": 104,
    "deferred_from_awaiting": 173,
-   "resweep": false
+   "resweep": false,
+   "after_resweep": false
   },
   {
    "date": "2026-07-15",
@@ -36,7 +39,8 @@
    "entered_awaiting": 659,
    "analyzed_from_awaiting": 141,
    "deferred_from_awaiting": 29,
-   "resweep": false
+   "resweep": false,
+   "after_resweep": false
   },
   {
    "date": "2026-07-16",
@@ -44,7 +48,8 @@
    "entered_awaiting": 768,
    "analyzed_from_awaiting": 146,
    "deferred_from_awaiting": 148,
-   "resweep": true
+   "resweep": true,
+   "after_resweep": false
   },
   {
    "date": "2026-07-17",
@@ -52,7 +57,8 @@
    "entered_awaiting": 66,
    "analyzed_from_awaiting": 0,
    "deferred_from_awaiting": 0,
-   "resweep": true
+   "resweep": true,
+   "after_resweep": true
   },
   {
    "date": "2026-07-18",
@@ -60,7 +66,8 @@
    "entered_awaiting": 75,
    "analyzed_from_awaiting": 333,
    "deferred_from_awaiting": 51,
-   "resweep": false
+   "resweep": false,
+   "after_resweep": true
   },
   {
    "date": "2026-07-19",
@@ -68,7 +75,8 @@
    "entered_awaiting": 0,
    "analyzed_from_awaiting": 0,
    "deferred_from_awaiting": 0,
-   "resweep": false
+   "resweep": false,
+   "after_resweep": false
   },
   {
    "date": "2026-07-20",
@@ -76,7 +84,8 @@
    "entered_awaiting": 0,
    "analyzed_from_awaiting": 15,
    "deferred_from_awaiting": 0,
-   "resweep": false
+   "resweep": false,
+   "after_resweep": false
   },
   {
    "date": "2026-07-21",
@@ -84,7 +93,8 @@
    "entered_awaiting": 14,
    "analyzed_from_awaiting": 180,
    "deferred_from_awaiting": 70,
-   "resweep": false
+   "resweep": false,
+   "after_resweep": false
   },
   {
    "date": "2026-07-22",
@@ -92,7 +102,8 @@
    "entered_awaiting": 135,
    "analyzed_from_awaiting": 174,
    "deferred_from_awaiting": 67,
-   "resweep": false
+   "resweep": false,
+   "after_resweep": false
   },
   {
    "date": "2026-07-23",
@@ -100,7 +111,8 @@
    "entered_awaiting": 92,
    "analyzed_from_awaiting": 133,
    "deferred_from_awaiting": 60,
-   "resweep": false
+   "resweep": false,
+   "after_resweep": false
   },
   {
    "date": "2026-07-24",
@@ -108,7 +120,8 @@
    "entered_awaiting": 11,
    "analyzed_from_awaiting": 0,
    "deferred_from_awaiting": 0,
-   "resweep": true
+   "resweep": true,
+   "after_resweep": false
   },
   {
    "date": "2026-07-25",
@@ -116,7 +129,8 @@
    "entered_awaiting": 502,
    "analyzed_from_awaiting": 193,
    "deferred_from_awaiting": 163,
-   "resweep": false
+   "resweep": false,
+   "after_resweep": true
   },
   {
    "date": "2026-07-26",
@@ -124,7 +138,8 @@
    "entered_awaiting": 0,
    "analyzed_from_awaiting": 0,
    "deferred_from_awaiting": 0,
-   "resweep": false
+   "resweep": false,
+   "after_resweep": false
   },
   {
    "date": "2026-07-27",
@@ -132,7 +147,8 @@
    "entered_awaiting": 0,
    "analyzed_from_awaiting": 0,
    "deferred_from_awaiting": 0,
-   "resweep": false
+   "resweep": false,
+   "after_resweep": false
   },
   {
    "date": "2026-07-28",
@@ -140,7 +156,8 @@
    "entered_awaiting": 257,
    "analyzed_from_awaiting": 229,
    "deferred_from_awaiting": 35,
-   "resweep": false
+   "resweep": false,
+   "after_resweep": false
   },
   {
    "date": "2026-07-29",
@@ -148,7 +165,8 @@
    "entered_awaiting": 97,
    "analyzed_from_awaiting": 173,
    "deferred_from_awaiting": 61,
-   "resweep": false
+   "resweep": false,
+   "after_resweep": false
   },
   {
    "date": "2026-07-30",
@@ -156,7 +174,8 @@
    "entered_awaiting": 0,
    "analyzed_from_awaiting": 206,
    "deferred_from_awaiting": 0,
-   "resweep": false
+   "resweep": false,
+   "after_resweep": false
   },
   {
    "date": "2026-07-31",
@@ -164,7 +183,8 @@
    "entered_awaiting": 8,
    "analyzed_from_awaiting": 0,
    "deferred_from_awaiting": 0,
-   "resweep": true
+   "resweep": true,
+   "after_resweep": false
   },
   {
    "date": "2026-08-01",
@@ -172,7 +192,8 @@
    "entered_awaiting": 534,
    "analyzed_from_awaiting": 273,
    "deferred_from_awaiting": 295,
-   "resweep": false
+   "resweep": false,
+   "after_resweep": true
   },
   {
    "date": "2026-08-03",
@@ -180,7 +201,8 @@
    "entered_awaiting": 0,
    "analyzed_from_awaiting": 27,
    "deferred_from_awaiting": 0,
-   "resweep": false
+   "resweep": false,
+   "after_resweep": false
   },
   {
    "date": "2026-08-04",
@@ -188,7 +210,8 @@
    "entered_awaiting": 43,
    "analyzed_from_awaiting": 418,
    "deferred_from_awaiting": 0,
-   "resweep": false
+   "resweep": false,
+   "after_resweep": false
   },
   {
    "date": "2026-08-05",
@@ -196,7 +219,8 @@
    "entered_awaiting": 23,
    "analyzed_from_awaiting": 105,
    "deferred_from_awaiting": 0,
-   "resweep": false
+   "resweep": false,
+   "after_resweep": false
   },
   {
    "date": "2026-08-06",
@@ -204,7 +228,8 @@
    "entered_awaiting": 0,
    "analyzed_from_awaiting": 178,
    "deferred_from_awaiting": 0,
-   "resweep": false
+   "resweep": false,
+   "after_resweep": false
   },
   {
    "date": "2026-08-07",
@@ -212,7 +237,8 @@
    "entered_awaiting": 105,
    "analyzed_from_awaiting": 283,
    "deferred_from_awaiting": 0,
-   "resweep": false
+   "resweep": false,
+   "after_resweep": false
   },
   {
    "date": "2026-08-08",
@@ -220,7 +246,8 @@
    "entered_awaiting": 5,
    "analyzed_from_awaiting": 0,
    "deferred_from_awaiting": 0,
-   "resweep": true
+   "resweep": true,
+   "after_resweep": false
   },
   {
    "date": "2026-08-09",
@@ -228,7 +255,8 @@
    "entered_awaiting": 4,
    "analyzed_from_awaiting": 158,
    "deferred_from_awaiting": 0,
-   "resweep": false
+   "resweep": false,
+   "after_resweep": true
   },
   {
    "date": "2026-08-10",
@@ -236,7 +264,8 @@
    "entered_awaiting": 0,
    "analyzed_from_awaiting": 12,
    "deferred_from_awaiting": 0,
-   "resweep": false
+   "resweep": false,
+   "after_resweep": false
   },
   {
    "date": "2026-08-11",
@@ -244,7 +273,8 @@
    "entered_awaiting": 0,
    "analyzed_from_awaiting": 106,
    "deferred_from_awaiting": 0,
-   "resweep": false
+   "resweep": false,
+   "after_resweep": false
   },
   {
    "date": "2026-08-12",
@@ -252,7 +282,8 @@
    "entered_awaiting": 222,
    "analyzed_from_awaiting": 139,
    "deferred_from_awaiting": 0,
-   "resweep": false
+   "resweep": false,
+   "after_resweep": false
   },
   {
    "date": "2026-08-13",
@@ -260,7 +291,8 @@
    "entered_awaiting": 210,
    "analyzed_from_awaiting": 180,
    "deferred_from_awaiting": 452,
-   "resweep": false
+   "resweep": false,
+   "after_resweep": false
   },
   {
    "date": "2026-08-14",
@@ -268,7 +300,8 @@
    "entered_awaiting": 32,
    "analyzed_from_awaiting": 329,
    "deferred_from_awaiting": 0,
-   "resweep": false
+   "resweep": false,
+   "after_resweep": false
   },
   {
    "date": "2026-08-15",
@@ -276,7 +309,8 @@
    "entered_awaiting": 89,
    "analyzed_from_awaiting": 158,
    "deferred_from_awaiting": 136,
-   "resweep": false
+   "resweep": false,
+   "after_resweep": false
   },
   {
    "date": "2026-08-16",
@@ -284,7 +318,8 @@
    "entered_awaiting": 2,
    "analyzed_from_awaiting": 0,
    "deferred_from_awaiting": 0,
-   "resweep": true
+   "resweep": true,
+   "after_resweep": false
   },
   {
    "date": "2026-08-17",
@@ -292,7 +327,8 @@
    "entered_awaiting": 0,
    "analyzed_from_awaiting": 0,
    "deferred_from_awaiting": 0,
-   "resweep": false
+   "resweep": false,
+   "after_resweep": true
   },
   {
    "date": "2026-08-18",
@@ -300,7 +336,8 @@
    "entered_awaiting": 1,
    "analyzed_from_awaiting": 230,
    "deferred_from_awaiting": 0,
-   "resweep": false
+   "resweep": false,
+   "after_resweep": false
   },
   {
    "date": "2026-08-19",
@@ -308,7 +345,8 @@
    "entered_awaiting": 60,
    "analyzed_from_awaiting": 108,
    "deferred_from_awaiting": 0,
-   "resweep": false
+   "resweep": false,
+   "after_resweep": false
   },
   {
    "date": "2026-08-20",
@@ -316,7 +354,8 @@
    "entered_awaiting": 0,
    "analyzed_from_awaiting": 222,
    "deferred_from_awaiting": 0,
-   "resweep": false
+   "resweep": false,
+   "after_resweep": false
   },
   {
    "date": "2026-08-21",
@@ -324,7 +363,8 @@
    "entered_awaiting": 308,
    "analyzed_from_awaiting": 48,
    "deferred_from_awaiting": 351,
-   "resweep": false
+   "resweep": false,
+   "after_resweep": false
   },
   {
    "date": "2026-08-22",
@@ -332,7 +372,8 @@
    "entered_awaiting": 26,
    "analyzed_from_awaiting": 222,
    "deferred_from_awaiting": 0,
-   "resweep": false
+   "resweep": false,
+   "after_resweep": false
   },
   {
    "date": "2026-08-23",
@@ -340,7 +381,8 @@
    "entered_awaiting": 0,
    "analyzed_from_awaiting": 0,
    "deferred_from_awaiting": 0,
-   "resweep": false
+   "resweep": false,
+   "after_resweep": false
   },
   {
    "date": "2026-08-24",
@@ -348,7 +390,8 @@
    "entered_awaiting": 1,
    "analyzed_from_awaiting": 0,
    "deferred_from_awaiting": 0,
-   "resweep": true
+   "resweep": true,
+   "after_resweep": false
   },
   {
    "date": "2026-08-25",
@@ -356,7 +399,8 @@
    "entered_awaiting": 57,
    "analyzed_from_awaiting": 309,
    "deferred_from_awaiting": 62,
-   "resweep": false
+   "resweep": false,
+   "after_resweep": true
   },
   {
    "date": "2026-08-26",
@@ -364,7 +408,8 @@
    "entered_awaiting": 0,
    "analyzed_from_awaiting": 274,
    "deferred_from_awaiting": 0,
-   "resweep": false
+   "resweep": false,
+   "after_resweep": false
   },
   {
    "date": "2026-08-27",
@@ -372,7 +417,967 @@
    "entered_awaiting": 204,
    "analyzed_from_awaiting": 168,
    "deferred_from_awaiting": 1113,
-   "resweep": false
+   "resweep": false,
+   "after_resweep": false
+  },
+  {
+   "date": "2026-08-30",
+   "received_new": 619,
+   "entered_awaiting": 584,
+   "analyzed_from_awaiting": 336,
+   "deferred_from_awaiting": 256,
+   "resweep": false,
+   "after_resweep": false
+  },
+  {
+   "date": "2026-08-31",
+   "received_new": 85,
+   "entered_awaiting": 0,
+   "analyzed_from_awaiting": 0,
+   "deferred_from_awaiting": 0,
+   "resweep": false,
+   "after_resweep": false
+  },
+  {
+   "date": "2026-09-01",
+   "received_new": 26,
+   "entered_awaiting": 1,
+   "analyzed_from_awaiting": 0,
+   "deferred_from_awaiting": 0,
+   "resweep": true,
+   "after_resweep": false
+  },
+  {
+   "date": "2026-09-02",
+   "received_new": 287,
+   "entered_awaiting": 348,
+   "analyzed_from_awaiting": 432,
+   "deferred_from_awaiting": 551,
+   "resweep": false,
+   "after_resweep": true
+  },
+  {
+   "date": "2026-09-03",
+   "received_new": 186,
+   "entered_awaiting": 90,
+   "analyzed_from_awaiting": 239,
+   "deferred_from_awaiting": 10,
+   "resweep": false,
+   "after_resweep": false
+  },
+  {
+   "date": "2026-09-04",
+   "received_new": 223,
+   "entered_awaiting": 165,
+   "analyzed_from_awaiting": 229,
+   "deferred_from_awaiting": 226,
+   "resweep": false,
+   "after_resweep": false
+  },
+  {
+   "date": "2026-09-05",
+   "received_new": 533,
+   "entered_awaiting": 0,
+   "analyzed_from_awaiting": 228,
+   "deferred_from_awaiting": 15,
+   "resweep": false,
+   "after_resweep": false
+  },
+  {
+   "date": "2026-09-06",
+   "received_new": 133,
+   "entered_awaiting": 0,
+   "analyzed_from_awaiting": 0,
+   "deferred_from_awaiting": 0,
+   "resweep": false,
+   "after_resweep": false
+  },
+  {
+   "date": "2026-09-07",
+   "received_new": 117,
+   "entered_awaiting": 0,
+   "analyzed_from_awaiting": 0,
+   "deferred_from_awaiting": 0,
+   "resweep": false,
+   "after_resweep": false
+  },
+  {
+   "date": "2026-09-08",
+   "received_new": 245,
+   "entered_awaiting": 0,
+   "analyzed_from_awaiting": 0,
+   "deferred_from_awaiting": 0,
+   "resweep": false,
+   "after_resweep": false
+  },
+  {
+   "date": "2026-09-09",
+   "received_new": 20,
+   "entered_awaiting": 6,
+   "analyzed_from_awaiting": 0,
+   "deferred_from_awaiting": 0,
+   "resweep": true,
+   "after_resweep": false
+  },
+  {
+   "date": "2026-09-10",
+   "received_new": 116,
+   "entered_awaiting": 1426,
+   "analyzed_from_awaiting": 129,
+   "deferred_from_awaiting": 1834,
+   "resweep": false,
+   "after_resweep": true
+  },
+  {
+   "date": "2026-09-11",
+   "received_new": 99,
+   "entered_awaiting": 228,
+   "analyzed_from_awaiting": 288,
+   "deferred_from_awaiting": 154,
+   "resweep": false,
+   "after_resweep": false
+  },
+  {
+   "date": "2026-09-12",
+   "received_new": 548,
+   "entered_awaiting": 21,
+   "analyzed_from_awaiting": 271,
+   "deferred_from_awaiting": 19,
+   "resweep": false,
+   "after_resweep": false
+  },
+  {
+   "date": "2026-09-13",
+   "received_new": 95,
+   "entered_awaiting": 0,
+   "analyzed_from_awaiting": 0,
+   "deferred_from_awaiting": 0,
+   "resweep": false,
+   "after_resweep": false
+  },
+  {
+   "date": "2026-09-14",
+   "received_new": 154,
+   "entered_awaiting": 0,
+   "analyzed_from_awaiting": 0,
+   "deferred_from_awaiting": 0,
+   "resweep": false,
+   "after_resweep": false
+  },
+  {
+   "date": "2026-09-15",
+   "received_new": 647,
+   "entered_awaiting": 27,
+   "analyzed_from_awaiting": 119,
+   "deferred_from_awaiting": 168,
+   "resweep": false,
+   "after_resweep": false
+  },
+  {
+   "date": "2026-09-16",
+   "received_new": 26,
+   "entered_awaiting": 9,
+   "analyzed_from_awaiting": 0,
+   "deferred_from_awaiting": 0,
+   "resweep": true,
+   "after_resweep": false
+  },
+  {
+   "date": "2026-09-17",
+   "received_new": 784,
+   "entered_awaiting": 986,
+   "analyzed_from_awaiting": 568,
+   "deferred_from_awaiting": 186,
+   "resweep": false,
+   "after_resweep": true
+  },
+  {
+   "date": "2026-09-18",
+   "received_new": 941,
+   "entered_awaiting": 0,
+   "analyzed_from_awaiting": 147,
+   "deferred_from_awaiting": 7,
+   "resweep": false,
+   "after_resweep": false
+  },
+  {
+   "date": "2026-09-19",
+   "received_new": 237,
+   "entered_awaiting": 369,
+   "analyzed_from_awaiting": 226,
+   "deferred_from_awaiting": 332,
+   "resweep": false,
+   "after_resweep": false
+  },
+  {
+   "date": "2026-09-20",
+   "received_new": 173,
+   "entered_awaiting": 0,
+   "analyzed_from_awaiting": 0,
+   "deferred_from_awaiting": 0,
+   "resweep": false,
+   "after_resweep": false
+  },
+  {
+   "date": "2026-09-21",
+   "received_new": 45,
+   "entered_awaiting": 0,
+   "analyzed_from_awaiting": 0,
+   "deferred_from_awaiting": 0,
+   "resweep": false,
+   "after_resweep": false
+  },
+  {
+   "date": "2026-09-22",
+   "received_new": 221,
+   "entered_awaiting": 11,
+   "analyzed_from_awaiting": 291,
+   "deferred_from_awaiting": 176,
+   "resweep": false,
+   "after_resweep": false
+  },
+  {
+   "date": "2026-09-23",
+   "received_new": 6,
+   "entered_awaiting": 73,
+   "analyzed_from_awaiting": 0,
+   "deferred_from_awaiting": 0,
+   "resweep": true,
+   "after_resweep": false
+  },
+  {
+   "date": "2026-09-24",
+   "received_new": 214,
+   "entered_awaiting": 553,
+   "analyzed_from_awaiting": 419,
+   "deferred_from_awaiting": 540,
+   "resweep": false,
+   "after_resweep": true
+  },
+  {
+   "date": "2026-09-25",
+   "received_new": 305,
+   "entered_awaiting": 334,
+   "analyzed_from_awaiting": 176,
+   "deferred_from_awaiting": 428,
+   "resweep": false,
+   "after_resweep": false
+  },
+  {
+   "date": "2026-09-26",
+   "received_new": 567,
+   "entered_awaiting": 67,
+   "analyzed_from_awaiting": 131,
+   "deferred_from_awaiting": 27,
+   "resweep": false,
+   "after_resweep": false
+  },
+  {
+   "date": "2026-09-27",
+   "received_new": 242,
+   "entered_awaiting": 0,
+   "analyzed_from_awaiting": 0,
+   "deferred_from_awaiting": 0,
+   "resweep": false,
+   "after_resweep": false
+  },
+  {
+   "date": "2026-09-28",
+   "received_new": 163,
+   "entered_awaiting": 0,
+   "analyzed_from_awaiting": 0,
+   "deferred_from_awaiting": 0,
+   "resweep": false,
+   "after_resweep": false
+  },
+  {
+   "date": "2026-09-29",
+   "received_new": 166,
+   "entered_awaiting": 86,
+   "analyzed_from_awaiting": 190,
+   "deferred_from_awaiting": 358,
+   "resweep": false,
+   "after_resweep": false
+  },
+  {
+   "date": "2026-10-03",
+   "received_new": 110,
+   "entered_awaiting": 867,
+   "analyzed_from_awaiting": 336,
+   "deferred_from_awaiting": 371,
+   "resweep": true,
+   "after_resweep": false
+  },
+  {
+   "date": "2026-10-04",
+   "received_new": 64,
+   "entered_awaiting": 0,
+   "analyzed_from_awaiting": 0,
+   "deferred_from_awaiting": 0,
+   "resweep": false,
+   "after_resweep": true
+  },
+  {
+   "date": "2026-10-05",
+   "received_new": 162,
+   "entered_awaiting": 0,
+   "analyzed_from_awaiting": 0,
+   "deferred_from_awaiting": 0,
+   "resweep": false,
+   "after_resweep": false
+  },
+  {
+   "date": "2026-10-06",
+   "received_new": 629,
+   "entered_awaiting": 0,
+   "analyzed_from_awaiting": 167,
+   "deferred_from_awaiting": 3,
+   "resweep": false,
+   "after_resweep": false
+  },
+  {
+   "date": "2026-10-07",
+   "received_new": 295,
+   "entered_awaiting": 735,
+   "analyzed_from_awaiting": 413,
+   "deferred_from_awaiting": 550,
+   "resweep": false,
+   "after_resweep": false
+  },
+  {
+   "date": "2026-10-08",
+   "received_new": 262,
+   "entered_awaiting": 21,
+   "analyzed_from_awaiting": 129,
+   "deferred_from_awaiting": 11,
+   "resweep": false,
+   "after_resweep": false
+  },
+  {
+   "date": "2026-10-09",
+   "received_new": 126,
+   "entered_awaiting": 402,
+   "analyzed_from_awaiting": 249,
+   "deferred_from_awaiting": 54,
+   "resweep": false,
+   "after_resweep": false
+  },
+  {
+   "date": "2026-10-10",
+   "received_new": 199,
+   "entered_awaiting": 94,
+   "analyzed_from_awaiting": 136,
+   "deferred_from_awaiting": 41,
+   "resweep": false,
+   "after_resweep": false
+  },
+  {
+   "date": "2026-10-11",
+   "received_new": 272,
+   "entered_awaiting": 11,
+   "analyzed_from_awaiting": 0,
+   "deferred_from_awaiting": 0,
+   "resweep": true,
+   "after_resweep": false
+  },
+  {
+   "date": "2026-10-12",
+   "received_new": 291,
+   "entered_awaiting": 0,
+   "analyzed_from_awaiting": 0,
+   "deferred_from_awaiting": 0,
+   "resweep": false,
+   "after_resweep": true
+  },
+  {
+   "date": "2026-10-13",
+   "received_new": 558,
+   "entered_awaiting": 0,
+   "analyzed_from_awaiting": 0,
+   "deferred_from_awaiting": 0,
+   "resweep": false,
+   "after_resweep": false
+  },
+  {
+   "date": "2026-10-14",
+   "received_new": 650,
+   "entered_awaiting": 1443,
+   "analyzed_from_awaiting": 205,
+   "deferred_from_awaiting": 719,
+   "resweep": false,
+   "after_resweep": false
+  },
+  {
+   "date": "2026-10-15",
+   "received_new": 591,
+   "entered_awaiting": 185,
+   "analyzed_from_awaiting": 512,
+   "deferred_from_awaiting": 77,
+   "resweep": false,
+   "after_resweep": false
+  },
+  {
+   "date": "2026-10-16",
+   "received_new": 373,
+   "entered_awaiting": 522,
+   "analyzed_from_awaiting": 149,
+   "deferred_from_awaiting": 186,
+   "resweep": false,
+   "after_resweep": false
+  },
+  {
+   "date": "2026-10-17",
+   "received_new": 73,
+   "entered_awaiting": 349,
+   "analyzed_from_awaiting": 378,
+   "deferred_from_awaiting": 652,
+   "resweep": false,
+   "after_resweep": false
+  },
+  {
+   "date": "2026-10-18",
+   "received_new": 57,
+   "entered_awaiting": 0,
+   "analyzed_from_awaiting": 0,
+   "deferred_from_awaiting": 0,
+   "resweep": false,
+   "after_resweep": false
+  },
+  {
+   "date": "2026-10-19",
+   "received_new": 913,
+   "entered_awaiting": 134,
+   "analyzed_from_awaiting": 0,
+   "deferred_from_awaiting": 0,
+   "resweep": true,
+   "after_resweep": false
+  },
+  {
+   "date": "2026-10-20",
+   "received_new": 577,
+   "entered_awaiting": 220,
+   "analyzed_from_awaiting": 181,
+   "deferred_from_awaiting": 53,
+   "resweep": false,
+   "after_resweep": true
+  },
+  {
+   "date": "2026-10-21",
+   "received_new": 1669,
+   "entered_awaiting": 163,
+   "analyzed_from_awaiting": 179,
+   "deferred_from_awaiting": 60,
+   "resweep": false,
+   "after_resweep": false
+  },
+  {
+   "date": "2026-10-22",
+   "received_new": 446,
+   "entered_awaiting": 1082,
+   "analyzed_from_awaiting": 265,
+   "deferred_from_awaiting": 70,
+   "resweep": false,
+   "after_resweep": false
+  },
+  {
+   "date": "2026-10-23",
+   "received_new": 543,
+   "entered_awaiting": 376,
+   "analyzed_from_awaiting": 283,
+   "deferred_from_awaiting": 187,
+   "resweep": false,
+   "after_resweep": false
+  },
+  {
+   "date": "2026-10-24",
+   "received_new": 59,
+   "entered_awaiting": 107,
+   "analyzed_from_awaiting": 99,
+   "deferred_from_awaiting": 156,
+   "resweep": false,
+   "after_resweep": false
+  },
+  {
+   "date": "2026-10-25",
+   "received_new": 65,
+   "entered_awaiting": 0,
+   "analyzed_from_awaiting": 0,
+   "deferred_from_awaiting": 0,
+   "resweep": false,
+   "after_resweep": false
+  },
+  {
+   "date": "2026-10-26",
+   "received_new": 111,
+   "entered_awaiting": 270,
+   "analyzed_from_awaiting": 371,
+   "deferred_from_awaiting": 523,
+   "resweep": true,
+   "after_resweep": false
+  },
+  {
+   "date": "2026-10-27",
+   "received_new": 472,
+   "entered_awaiting": 261,
+   "analyzed_from_awaiting": 156,
+   "deferred_from_awaiting": 145,
+   "resweep": false,
+   "after_resweep": true
+  },
+  {
+   "date": "2026-10-28",
+   "received_new": 376,
+   "entered_awaiting": 367,
+   "analyzed_from_awaiting": 205,
+   "deferred_from_awaiting": 83,
+   "resweep": false,
+   "after_resweep": false
+  },
+  {
+   "date": "2026-10-29",
+   "received_new": 368,
+   "entered_awaiting": 225,
+   "analyzed_from_awaiting": 371,
+   "deferred_from_awaiting": 176,
+   "resweep": false,
+   "after_resweep": false
+  },
+  {
+   "date": "2026-10-30",
+   "received_new": 252,
+   "entered_awaiting": 239,
+   "analyzed_from_awaiting": 334,
+   "deferred_from_awaiting": 102,
+   "resweep": false,
+   "after_resweep": false
+  },
+  {
+   "date": "2026-10-31",
+   "received_new": 162,
+   "entered_awaiting": 253,
+   "analyzed_from_awaiting": 230,
+   "deferred_from_awaiting": 63,
+   "resweep": false,
+   "after_resweep": false
+  },
+  {
+   "date": "2026-11-01",
+   "received_new": 66,
+   "entered_awaiting": 2,
+   "analyzed_from_awaiting": 0,
+   "deferred_from_awaiting": 0,
+   "resweep": false,
+   "after_resweep": false
+  },
+  {
+   "date": "2026-11-02",
+   "received_new": 151,
+   "entered_awaiting": 1,
+   "analyzed_from_awaiting": 0,
+   "deferred_from_awaiting": 0,
+   "resweep": true,
+   "after_resweep": false
+  },
+  {
+   "date": "2026-11-03",
+   "received_new": 240,
+   "entered_awaiting": 201,
+   "analyzed_from_awaiting": 242,
+   "deferred_from_awaiting": 260,
+   "resweep": false,
+   "after_resweep": true
+  },
+  {
+   "date": "2026-11-04",
+   "received_new": 209,
+   "entered_awaiting": 680,
+   "analyzed_from_awaiting": 337,
+   "deferred_from_awaiting": 41,
+   "resweep": false,
+   "after_resweep": false
+  },
+  {
+   "date": "2026-11-05",
+   "received_new": 251,
+   "entered_awaiting": 37,
+   "analyzed_from_awaiting": 283,
+   "deferred_from_awaiting": 62,
+   "resweep": false,
+   "after_resweep": false
+  },
+  {
+   "date": "2026-11-06",
+   "received_new": 231,
+   "entered_awaiting": 80,
+   "analyzed_from_awaiting": 221,
+   "deferred_from_awaiting": 40,
+   "resweep": false,
+   "after_resweep": false
+  },
+  {
+   "date": "2026-11-07",
+   "received_new": 135,
+   "entered_awaiting": 465,
+   "analyzed_from_awaiting": 72,
+   "deferred_from_awaiting": 103,
+   "resweep": false,
+   "after_resweep": false
+  },
+  {
+   "date": "2026-11-08",
+   "received_new": 183,
+   "entered_awaiting": 3,
+   "analyzed_from_awaiting": 0,
+   "deferred_from_awaiting": 0,
+   "resweep": false,
+   "after_resweep": false
+  },
+  {
+   "date": "2026-11-09",
+   "received_new": 24,
+   "entered_awaiting": 172,
+   "analyzed_from_awaiting": 0,
+   "deferred_from_awaiting": 0,
+   "resweep": true,
+   "after_resweep": false
+  },
+  {
+   "date": "2026-11-12",
+   "received_new": 1067,
+   "entered_awaiting": 1808,
+   "analyzed_from_awaiting": 674,
+   "deferred_from_awaiting": 105,
+   "resweep": false,
+   "after_resweep": true
+  },
+  {
+   "date": "2026-11-13",
+   "received_new": 309,
+   "entered_awaiting": 2122,
+   "analyzed_from_awaiting": 438,
+   "deferred_from_awaiting": 1366,
+   "resweep": false,
+   "after_resweep": false
+  },
+  {
+   "date": "2026-11-14",
+   "received_new": 593,
+   "entered_awaiting": 2286,
+   "analyzed_from_awaiting": 652,
+   "deferred_from_awaiting": 1366,
+   "resweep": false,
+   "after_resweep": false
+  },
+  {
+   "date": "2026-11-15",
+   "received_new": 647,
+   "entered_awaiting": 2288,
+   "analyzed_from_awaiting": 650,
+   "deferred_from_awaiting": 1366,
+   "resweep": false,
+   "after_resweep": false
+  },
+  {
+   "date": "2026-11-16",
+   "received_new": 697,
+   "entered_awaiting": 2334,
+   "analyzed_from_awaiting": 650,
+   "deferred_from_awaiting": 1366,
+   "resweep": true,
+   "after_resweep": false
+  },
+  {
+   "date": "2026-11-17",
+   "received_new": 487,
+   "entered_awaiting": 1253,
+   "analyzed_from_awaiting": 564,
+   "deferred_from_awaiting": 683,
+   "resweep": true,
+   "after_resweep": true
   }
- ]
+ ],
+ "queue_survival": {
+  "log_start": "2026-11-05",
+  "log_days": 12,
+  "min_exits": 30,
+  "min_log_days": 28,
+  "min_at_risk": 30,
+  "ready": false,
+  "exits": {
+   "analyzed": 1529,
+   "deferred": 0,
+   "other": 11
+  },
+  "censored": {
+   "waiting": 10426,
+   "requeued": 0
+  },
+  "horizon_days": 124,
+  "median_days": 56,
+  "checkpoints": [
+   {
+    "day": 7,
+    "pct_waiting": 79.9,
+    "at_risk": 1663
+   },
+   {
+    "day": 30,
+    "pct_waiting": 51.5,
+    "at_risk": 1421
+   },
+   {
+    "day": 90,
+    "pct_waiting": 47.9,
+    "at_risk": 188
+   }
+  ],
+  "curve": [
+   {
+    "day": 1,
+    "pct_waiting": 99.2,
+    "at_risk": 2729,
+    "exits": 21
+   },
+   {
+    "day": 2,
+    "pct_waiting": 96.4,
+    "at_risk": 3293,
+    "exits": 95
+   },
+   {
+    "day": 3,
+    "pct_waiting": 95.2,
+    "at_risk": 3388,
+    "exits": 41
+   },
+   {
+    "day": 5,
+    "pct_waiting": 85.8,
+    "at_risk": 3350,
+    "exits": 332
+   },
+   {
+    "day": 6,
+    "pct_waiting": 80.2,
+    "at_risk": 1560,
+    "exits": 102
+   },
+   {
+    "day": 7,
+    "pct_waiting": 79.9,
+    "at_risk": 1663,
+    "exits": 5
+   },
+   {
+    "day": 8,
+    "pct_waiting": 73.6,
+    "at_risk": 1884,
+    "exits": 148
+   },
+   {
+    "day": 9,
+    "pct_waiting": 71.4,
+    "at_risk": 1836,
+    "exits": 56
+   },
+   {
+    "day": 10,
+    "pct_waiting": 68.2,
+    "at_risk": 1983,
+    "exits": 89
+   },
+   {
+    "day": 11,
+    "pct_waiting": 67.9,
+    "at_risk": 1844,
+    "exits": 7
+   },
+   {
+    "day": 12,
+    "pct_waiting": 66.5,
+    "at_risk": 1788,
+    "exits": 37
+   },
+   {
+    "day": 13,
+    "pct_waiting": 63.2,
+    "at_risk": 1817,
+    "exits": 90
+   },
+   {
+    "day": 14,
+    "pct_waiting": 61.8,
+    "at_risk": 1867,
+    "exits": 42
+   },
+   {
+    "day": 15,
+    "pct_waiting": 60.6,
+    "at_risk": 2418,
+    "exits": 49
+   },
+   {
+    "day": 16,
+    "pct_waiting": 60.5,
+    "at_risk": 2525,
+    "exits": 4
+   },
+   {
+    "day": 17,
+    "pct_waiting": 60.4,
+    "at_risk": 2686,
+    "exits": 4
+   },
+   {
+    "day": 18,
+    "pct_waiting": 60.0,
+    "at_risk": 2443,
+    "exits": 14
+   },
+   {
+    "day": 19,
+    "pct_waiting": 59.9,
+    "at_risk": 2236,
+    "exits": 6
+   },
+   {
+    "day": 21,
+    "pct_waiting": 55.8,
+    "at_risk": 2364,
+    "exits": 159
+   },
+   {
+    "day": 22,
+    "pct_waiting": 55.4,
+    "at_risk": 2160,
+    "exits": 15
+   },
+   {
+    "day": 24,
+    "pct_waiting": 55.3,
+    "at_risk": 2194,
+    "exits": 4
+   },
+   {
+    "day": 26,
+    "pct_waiting": 53.1,
+    "at_risk": 1735,
+    "exits": 69
+   },
+   {
+    "day": 27,
+    "pct_waiting": 53.0,
+    "at_risk": 1286,
+    "exits": 4
+   },
+   {
+    "day": 28,
+    "pct_waiting": 52.0,
+    "at_risk": 1305,
+    "exits": 25
+   },
+   {
+    "day": 29,
+    "pct_waiting": 51.5,
+    "at_risk": 1145,
+    "exits": 10
+   },
+   {
+    "day": 32,
+    "pct_waiting": 51.5,
+    "at_risk": 1421,
+    "exits": 1
+   },
+   {
+    "day": 35,
+    "pct_waiting": 51.3,
+    "at_risk": 1205,
+    "exits": 4
+   },
+   {
+    "day": 40,
+    "pct_waiting": 51.3,
+    "at_risk": 986,
+    "exits": 1
+   },
+   {
+    "day": 45,
+    "pct_waiting": 51.1,
+    "at_risk": 1421,
+    "exits": 4
+   },
+   {
+    "day": 49,
+    "pct_waiting": 51.0,
+    "at_risk": 1100,
+    "exits": 3
+   },
+   {
+    "day": 54,
+    "pct_waiting": 50.9,
+    "at_risk": 1122,
+    "exits": 1
+   },
+   {
+    "day": 56,
+    "pct_waiting": 49.2,
+    "at_risk": 892,
+    "exits": 30
+   },
+   {
+    "day": 58,
+    "pct_waiting": 48.7,
+    "at_risk": 1380,
+    "exits": 13
+   },
+   {
+    "day": 67,
+    "pct_waiting": 48.7,
+    "at_risk": 1027,
+    "exits": 2
+   },
+   {
+    "day": 68,
+    "pct_waiting": 48.3,
+    "at_risk": 1048,
+    "exits": 8
+   },
+   {
+    "day": 69,
+    "pct_waiting": 48.1,
+    "at_risk": 573,
+    "exits": 2
+   },
+   {
+    "day": 83,
+    "pct_waiting": 47.9,
+    "at_risk": 223,
+    "exits": 1
+   },
+   {
+    "day": 107,
+    "pct_waiting": 46.0,
+    "at_risk": 225,
+    "exits": 9
+   },
+   {
+    "day": 108,
+    "pct_waiting": 43.7,
+    "at_risk": 218,
+    "exits": 11
+   },
+   {
+    "day": 112,
+    "pct_waiting": 38.1,
+    "at_risk": 172,
+    "exits": 22
+   },
+   {
+    "day": 124,
+    "pct_waiting": 38.1,
+    "at_risk": 84,
+    "exits": 0
+   }
+  ]
+ }
 }

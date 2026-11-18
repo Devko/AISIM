@@ -242,9 +242,20 @@ console.log('\n══ Exposure Race — model tests ═════════�
   ok('the pooled anchor is a stronger base than the row it replaced',
     C.pocTiming.settled.n > 4 * (C.pocTiming.series[C.pocTiming.series.length - 1].n),
     `n=${C.pocTiming.settled.n} vs latest n=${C.pocTiming.series[C.pocTiming.series.length - 1].n}`);
+  /* The pooled median is an n-weighted mean of per-year medians, because only
+   * per-year summaries are published. A weighted mean always lands inside the
+   * range of what it averages, and so does the true pooled median of a
+   * mixture, so that range is the honest bound on the approximation. This
+   * used to assert [0, 1] d, which was a property of the pre-2026-09 snapshot
+   * (every pooled year then read 0 or 1 day, partly because Metasploit's
+   * disclosure dates were dating exploit code) rather than of the method. */
+  const pooledMedians = C.pocTiming.series
+    .filter((r) => C.pocTiming.settled.years.indexOf(r.year) >= 0)
+    .map((r) => r.medianDays);
   ok('the settled median agrees with every year it pools',
-    C.pocTiming.settled.medianDays >= 0 && C.pocTiming.settled.medianDays <= 1,
-    `${C.pocTiming.settled.medianDays} d`);
+    C.pocTiming.settled.medianDays >= Math.min(...pooledMedians) &&
+    C.pocTiming.settled.medianDays <= Math.max(...pooledMedians),
+    `${C.pocTiming.settled.medianDays} d within ${Math.min(...pooledMedians)}-${Math.max(...pooledMedians)} d`);
   /* every sample must land in a bin: the normalised arrays cannot be all-zero
    * and the bin count must match B */
   ok('attacker density has full support', d.A.length === d.B && d.A.some(v => v > 0));
@@ -282,12 +293,21 @@ console.log('\n══ Exposure Race — model tests ═════════�
  * drawCoeffs() clamps the probability side, and says why: pBefore is measured
  * data times a slider, and the 2015 row of the same series reads 62.9%, so a
  * snapshot refresh could push it past the median knot. The TIME side has no
- * such guard and the same exposure. `median` is read straight off
- * C.pocTiming.latest.medianDays — 3.5 days today, fixed by nothing. A year
- * whose median exceeded 7 would put the second and third knots out of order
- * and the sampler would return times that DECREASE as u rises across that
- * segment: a silently misshapen exploit clock, in the one distribution this
- * whole page is an argument about.
+ * such guard and the same exposure. `median` is read straight off the pooled
+ * settled anchor, MEASURED.pocMedian — 5.9 days on the 2026-11 snapshot, fixed
+ * by nothing. (This test used to read C.pocTiming.latest, which stopped
+ * calibrating anything when the clock moved to the pooled anchor; on the
+ * 2026-11 snapshot `latest` reads 34 d and would fail a test whose subject is
+ * not in use.) A pool whose median exceeded 7 would put the second and third
+ * knots out of order and the sampler would return times that DECREASE as u
+ * rises across that segment: a silently misshapen exploit clock, in the one
+ * distribution this whole page is an argument about.
+ *
+ * The margin is now small. When the 2025 cohort settles (median 10 d, n=134
+ * on the 2026-11 snapshot) and the window moves to 2021-2025, the n-weighted
+ * pool lands near 7.1 d and this fails. That is the test doing its job: the
+ * fix is a sampler whose median knot is not assumed to sit inside the first
+ * week, not a looser assertion.
  *
  * The knots are asserted directly. Sampling cannot stand in for this: a
  * reversed segment still yields a valid distribution, just the wrong one, and
@@ -297,7 +317,7 @@ console.log('\n══ Exposure Race — model tests ═════════�
  * to catch.
  * ───────────────────────────────────────────────────────────────────────── */
 {
-  const medianDays = C.pocTiming.latest.medianDays;
+  const medianDays = M.MEASURED.pocMedian;
   /* 7 is the hardcoded within-week knot in drawPoCTime. */
   ok('the measured median sits below the within-week knot',
     medianDays <= 7, `median ${medianDays}d against the 7d knot`);
@@ -1575,9 +1595,27 @@ console.log('\n══ Exposure Race — model tests ═════════�
     `${C.pocTiming.recordLag.firstYear} reads ${C.pocTiming.recordLag.firstPctBefore}% before publication`);
   ok('zeroDayShare is a declared, drawn coefficient',
     !!A.zeroDayShare && A.zeroDayShare.lo < A.zeroDayShare.hi, A.zeroDayShare.l);
-  ok('and it is far below the measured pre-publication mass',
-    A.zeroDayShare.hi < M.MEASURED.pocBefore,
-    `${fmt(A.zeroDayShare.v)} against a measured ${fmt(M.MEASURED.pocBefore)}`);
+  /* zeroDayShare is a share OF the pre-publication draws — the trial loop
+   * rolls it only where tX < 0 — so it is a conditional. This used to assert
+   * its upper bound against `pocBefore`, which is a share of ALL draws: two
+   * different units. It held by margin on the pre-2026-09 snapshot (0.18
+   * against 0.365) and failed by a hair on the corrected one (0.18 against
+   * 0.178) with nothing about the coefficient having changed. The range makes
+   * two claims, and these are they. */
+  ok('its whole range reads most of the pre-publication mass as record lag',
+    A.zeroDayShare.hi < 0.5,
+    `${fmt(A.zeroDayShare.lo)}-${fmt(A.zeroDayShare.hi)} of the pre-publication draws`);
+  /* Published in-the-wild zero-day counts run to 75-100 a year across all
+   * software. The genuine zero-days the range implies — the catalogue-seen
+   * armed stream, raised to the top of the coverage correction, times the
+   * pre-publication share, times the top of this range — must stay below the
+   * floor of that count, or the coefficient is claiming more zero-days than
+   * the world records. */
+  const impliedZeroDays = C.armed.worldwidePoCPerYear * M.ASSUMED.pocCoverage.hi *
+    M.MEASURED.pocBefore * A.zeroDayShare.hi;
+  ok('and even at the top of its range it implies fewer zero-days than are published',
+    impliedZeroDays < 75,
+    `${impliedZeroDays.toFixed(0)} a year against 75-100 published`);
 
   /* The mechanism: at zeroDayShare = 1 every pre-publication window is targeted
    * activity and carries `preHazard`; at 0 it is all public exploit code that

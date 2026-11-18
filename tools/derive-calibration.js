@@ -68,30 +68,35 @@ const armLatest = arming[arming.length - 1];
 const armSolid = [...arming].reverse().find((y) => !y.provisional);
 /* Pooled settled anchor — what the model actually runs on.
  *
- * A single year is a thin base: the settled rows run from n=146 to n=1019 and
- * their pre-publication share swings 33-42% on sampling noise alone. Pooling
- * the most recent settled years gives a base an order of magnitude larger
- * without reaching back into an era whose publication practice was different
- * (2015 reads 62.9% pre-publication against 41.8% in 2024 — that is a change in
- * how CVEs are published, not in how fast exploits arrive).
+ * A single year is a thin base, and the recent ones are thinner every year:
+ * on the 2026-11 snapshot the settled rows in the window run from n=42 (2024)
+ * to n=252 (2020). Pooling the most recent settled years gives a base several
+ * times larger without reaching back into an era whose publication practice
+ * was different (2015 reads 56.6% pre-publication against 23.8% in 2024 — that
+ * is a change in how CVEs are published, not in how fast exploits arrive).
  *
  * The three statistics are pooled by n-weighting. For the two shares that is
  * exact. For the median it is not — a weighted mean of medians is not a median
- * — but only per-year summaries are published, and every year in the window
- * reports 0 or 1 day, so the pooled anchor cannot land outside that range and
- * the approximation cannot move it by as much as a day. Stated here rather than
- * hidden because it is the one derived figure in this file that is not exact. */
+ * — but only per-year summaries are published. Both the weighted mean and the
+ * true pooled median of a mixture lie inside the range of the per-year
+ * medians, so that range bounds the approximation; the note below states it
+ * from the data. Until the 2026-09 CyberMon correction every year in the
+ * window read 0 or 1 day and the bound was under a day; it is now several
+ * days wide. Stated here rather than hidden because it is the one derived
+ * figure in this file that is not exact. */
 const SETTLED_WINDOW = 5;
 const settledYears = arming.filter((y) => !y.provisional).slice(-SETTLED_WINDOW);
 const settledN = settledYears.reduce((a, y) => a + y.n, 0);
 const wmean = (f) => r3(settledYears.reduce((a, y) => a + f(y) * y.n, 0) / settledN);
+const settledMedians = settledYears.map((y) => y.median_days);
 const armPooled = {
   years: settledYears.map((y) => y.year),
   n: settledN,
   medianDays: wmean((y) => y.median_days),
   pctWithinWeek: wmean((y) => y.pct_within_week),
   pctBefore: wmean((y) => y.pct_negative),
-  note: 'n-weighted over the settled years listed. Shares pool exactly; the median is a weighted mean of per-year medians, which is an approximation forced by the published summaries — every year in the window reports 0 or 1 day.',
+  note: 'n-weighted over the settled years listed. Shares pool exactly; the median is a weighted mean of per-year medians, which is an approximation forced by the published summaries. The per-year medians in the window run from ' +
+    Math.min(...settledMedians) + ' to ' + Math.max(...settledMedians) + ' days, and the true pooled median lies in the same range.',
 };
 
 /* ── KEV additions per year, and how many were preceded by a public PoC ── */
@@ -100,9 +105,13 @@ const kevCur = kevYears.find((y) => y.year === CUR);
 const kevPrev = kevYears.find((y) => y.year === PREV);
 const pctPreempted = poc.kev_preempt.trend.pct_preempted / 100;
 
-/* Decompose P(in the wild | critical) into the PoC-first and no-PoC paths.
- * Measured: 8.2% of criticals get a public PoC; 2.87% reach KEV; 79.2% of KEV
- * entries with a known PoC date had the PoC published first. */
+/* Decompose P(in the wild | critical) into the PoC-first and no-PoC paths,
+ * from three measured inputs: the share of criticals with public exploit code
+ * (an Exploit-DB entry or a Metasploit exploit module), the share that reach
+ * KEV, and the share of KEV entries with an Exploit-DB-dated exploit whose
+ * exploit was published strictly before the KEV listing. Since the 2026-09
+ * CyberMon correction the last of these is dated by Exploit-DB alone, which
+ * moved it from about four in five to just over half. */
 const pInWildGivenPoC = r3((pKevCritical * pctPreempted) / pPoCCritical);
 const pInWildNoPoC = r3((pKevCritical * (1 - pctPreempted)) / (1 - pPoCCritical));
 
@@ -229,8 +238,9 @@ const out = {
      *
      * Emitted rather than left in the raw snapshot so the claim the page makes
      * about its own data is generated from that data, and so a test can assert
-     * it. The decay from 98.5% to the mid thirties is CVE assignment latency
-     * improving; it is not adversary capability collapsing by two thirds. */
+     * it. The decay from 98.5% to around a fifth in the recent settled years
+     * is CVE assignment latency improving; it is not adversary capability
+     * collapsing. */
     recordLag: (() => {
       const worst = arming.reduce((a, y) => (y.median_days < a.median_days ? y : a), arming[0]);
       const early = arming.filter((y) => y.median_days < -7);
@@ -248,25 +258,36 @@ const out = {
     /* The second caveat, and the one that cuts deeper than censoring, because
      * it is a property of the INSTRUMENT rather than of the window.
      *
-     * This series is measured on CVEs that appear in ExploitDB, Metasploit or
-     * Nuclei. The dated sample per year peaked above a thousand in 2017 and is
-     * down to the low hundreds, while CVE publication roughly tripled over the
-     * same span. Exploit code did not become five times rarer as vulnerability
-     * volume tripled; the catalogues stopped being where it lands. Public
-     * exploit code now appears predominantly in ad-hoc repositories, private
-     * channels and commercial brokerages, none of which this corpus can see,
-     * and one of the three sources counted here ships detection templates
-     * rather than exploits.
+     * Since the 2026-09 CyberMon correction this series is dated by Exploit-DB
+     * alone. Metasploit's `disclosure_date` is the date of the vulnerability's
+     * disclosure, not of the module, and used to stand in for an exploit date;
+     * Nuclei ships detection templates, not exploits, and never dated anything.
+     * Coverage (`armed`) still counts a Metasploit exploit module as exploit
+     * code; timing does not.
      *
-     * Two consequences, and the second is the one that matters for the page's
-     * argument. The share of criticals recorded as acquiring exploit code is
-     * a floor rather than an estimate. And a shrinking sample selects for
-     * high-profile vulnerabilities, which are exactly the ones that acquire
-     * exploit code fastest — so this instrument would hold a near-zero median
-     * whether or not the broad population had moved. It can establish that
-     * the fast tail is already at the floor. It cannot, on its own, establish
-     * that no compression is available anywhere in the distribution. */
-    coverageCaveat: 'The dated sample fell from over a thousand CVEs a year to the low hundreds while CVE publication tripled. Exploit code moved off the public catalogues rather than becoming rarer, so the weaponised share is a floor, and the near-zero median describes the fast tail this instrument can still see.',
+     * The dated sample per year peaked near a thousand in 2017 and the latest
+     * settled cohort is a few dozen, while CVE publication nearly tripled over
+     * the same span. Exploit code did not become twenty times rarer; the one
+     * dated catalogue stopped being where it lands. Public exploit code now
+     * appears predominantly in ad-hoc repositories, private channels and
+     * commercial brokerages, none of which this corpus can see.
+     *
+     * Two consequences. The share of criticals recorded as acquiring exploit
+     * code is a floor rather than an estimate. And a shrinking sample selects
+     * for whatever Exploit-DB still receives, which is not a random draw from
+     * the population — so the per-year medians describe that selection, and a
+     * cohort of a few dozen can move by days on noise alone. The caveat string
+     * is generated from the series so it cannot outlive the numbers in it. */
+    coverageCaveat: (() => {
+      const trend = arming.filter((y) => y.year >= 2015);
+      const peak = trend.reduce((a, y) => (y.n > a.n ? y : a), trend[0]);
+      const pubAt = (yr) => (volume.years.find((v) => v.year === yr) || {}).published;
+      const growth = pubAt(peak.year) && pubAt(armSolid.year)
+        ? (pubAt(armSolid.year) / pubAt(peak.year)).toFixed(1) + 'x' : 'several times over';
+      return 'Exploit-DB is the only source that dates exploit code. Its dated sample fell from ' +
+        peak.n.toLocaleString('en-US') + ' CVEs in ' + peak.year + ' to ' + armSolid.n + ' in ' + armSolid.year +
+        ' while CVE publication grew ' + growth + '. Exploit code moved off the public catalogues rather than becoming rarer, so the weaponised share is a floor, and the timing describes the small, self-selected cohort this instrument can still see.';
+    })(),
     sampleTrend: arming.filter((y) => y.year >= 2015).map((y) => ({ year: y.year, n: y.n })),
     src: CM + 'exploits.html',
   },

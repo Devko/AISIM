@@ -1,37 +1,37 @@
 {
- "generated_at": "2026-08-27T04:29:47Z",
+ "generated_at": "2026-11-17T11:07:38Z",
  "current": {
   "statuses": [
    {
     "status": "Modified",
-    "n": 243358
+    "n": 245714
    },
    {
     "status": "Analyzed",
-    "n": 69269
+    "n": 79901
    },
    {
     "status": "Deferred",
-    "n": 44050
+    "n": 63314
    },
    {
     "status": "Rejected",
-    "n": 18075
-   },
-   {
-    "status": "Received",
-    "n": 5274
+    "n": 19175
    },
    {
     "status": "Awaiting Analysis",
-    "n": 2720
+    "n": 11616
+   },
+   {
+    "status": "Received",
+    "n": 5215
    },
    {
     "status": "Undergoing Analysis",
-    "n": 674
+    "n": 1387
    }
   ],
-  "backlog_total": 8668
+  "backlog_total": 18218
  },
  "history": [
   {
@@ -278,6 +278,381 @@
    "date": "2026-08-27",
    "backlog_total": 8668,
    "awaiting_analysis": 2720
+  },
+  {
+   "date": "2026-08-30",
+   "backlog_total": 8831,
+   "awaiting_analysis": 3213
+  },
+  {
+   "date": "2026-08-31",
+   "backlog_total": 8916,
+   "awaiting_analysis": 3213
+  },
+  {
+   "date": "2026-09-01",
+   "backlog_total": 8949,
+   "awaiting_analysis": 3138
+  },
+  {
+   "date": "2026-09-02",
+   "backlog_total": 8342,
+   "awaiting_analysis": 3352
+  },
+  {
+   "date": "2026-09-03",
+   "backlog_total": 8315,
+   "awaiting_analysis": 3270
+  },
+  {
+   "date": "2026-09-04",
+   "backlog_total": 8092,
+   "awaiting_analysis": 3227
+  },
+  {
+   "date": "2026-09-05",
+   "backlog_total": 8380,
+   "awaiting_analysis": 3044
+  },
+  {
+   "date": "2026-09-06",
+   "backlog_total": 8513,
+   "awaiting_analysis": 3044
+  },
+  {
+   "date": "2026-09-07",
+   "backlog_total": 8630,
+   "awaiting_analysis": 3044
+  },
+  {
+   "date": "2026-09-08",
+   "backlog_total": 8875,
+   "awaiting_analysis": 3044
+  },
+  {
+   "date": "2026-09-09",
+   "backlog_total": 8898,
+   "awaiting_analysis": 2762
+  },
+  {
+   "date": "2026-09-10",
+   "backlog_total": 8374,
+   "awaiting_analysis": 4146
+  },
+  {
+   "date": "2026-09-11",
+   "backlog_total": 8145,
+   "awaiting_analysis": 4322
+  },
+  {
+   "date": "2026-09-12",
+   "backlog_total": 8419,
+   "awaiting_analysis": 4286
+  },
+  {
+   "date": "2026-09-13",
+   "backlog_total": 8514,
+   "awaiting_analysis": 4286
+  },
+  {
+   "date": "2026-09-14",
+   "backlog_total": 8668,
+   "awaiting_analysis": 4286
+  },
+  {
+   "date": "2026-09-15",
+   "backlog_total": 9046,
+   "awaiting_analysis": 4231
+  },
+  {
+   "date": "2026-09-16",
+   "backlog_total": 9075,
+   "awaiting_analysis": 3940
+  },
+  {
+   "date": "2026-09-17",
+   "backlog_total": 9938,
+   "awaiting_analysis": 4825
+  },
+  {
+   "date": "2026-09-18",
+   "backlog_total": 10723,
+   "awaiting_analysis": 4698
+  },
+  {
+   "date": "2026-09-19",
+   "backlog_total": 10508,
+   "awaiting_analysis": 4968
+  },
+  {
+   "date": "2026-09-20",
+   "backlog_total": 10681,
+   "awaiting_analysis": 4964
+  },
+  {
+   "date": "2026-09-21",
+   "backlog_total": 10726,
+   "awaiting_analysis": 4960
+  },
+  {
+   "date": "2026-09-22",
+   "backlog_total": 10484,
+   "awaiting_analysis": 4769
+  },
+  {
+   "date": "2026-09-23",
+   "backlog_total": 10494,
+   "awaiting_analysis": 4529
+  },
+  {
+   "date": "2026-09-24",
+   "backlog_total": 10147,
+   "awaiting_analysis": 5038
+  },
+  {
+   "date": "2026-09-25",
+   "backlog_total": 9939,
+   "awaiting_analysis": 5285
+  },
+  {
+   "date": "2026-09-26",
+   "backlog_total": 10368,
+   "awaiting_analysis": 5303
+  },
+  {
+   "date": "2026-09-27",
+   "backlog_total": 10610,
+   "awaiting_analysis": 5300
+  },
+  {
+   "date": "2026-09-28",
+   "backlog_total": 10773,
+   "awaiting_analysis": 5300
+  },
+  {
+   "date": "2026-09-29",
+   "backlog_total": 10400,
+   "awaiting_analysis": 5314
+  },
+  {
+   "date": "2026-10-03",
+   "backlog_total": 10551,
+   "awaiting_analysis": 5789
+  },
+  {
+   "date": "2026-10-04",
+   "backlog_total": 10615,
+   "awaiting_analysis": 5789
+  },
+  {
+   "date": "2026-10-05",
+   "backlog_total": 10777,
+   "awaiting_analysis": 5789
+  },
+  {
+   "date": "2026-10-06",
+   "backlog_total": 11236,
+   "awaiting_analysis": 5700
+  },
+  {
+   "date": "2026-10-07",
+   "backlog_total": 10955,
+   "awaiting_analysis": 6166
+  },
+  {
+   "date": "2026-10-08",
+   "backlog_total": 11089,
+   "awaiting_analysis": 6023
+  },
+  {
+   "date": "2026-10-09",
+   "backlog_total": 11105,
+   "awaiting_analysis": 6272
+  },
+  {
+   "date": "2026-10-10",
+   "backlog_total": 11193,
+   "awaiting_analysis": 6208
+  },
+  {
+   "date": "2026-10-11",
+   "backlog_total": 11483,
+   "awaiting_analysis": 5926
+  },
+  {
+   "date": "2026-10-12",
+   "backlog_total": 11774,
+   "awaiting_analysis": 5926
+  },
+  {
+   "date": "2026-10-13",
+   "backlog_total": 12331,
+   "awaiting_analysis": 5925
+  },
+  {
+   "date": "2026-10-14",
+   "backlog_total": 13534,
+   "awaiting_analysis": 7353
+  },
+  {
+   "date": "2026-10-15",
+   "backlog_total": 13586,
+   "awaiting_analysis": 7392
+  },
+  {
+   "date": "2026-10-16",
+   "backlog_total": 13749,
+   "awaiting_analysis": 7849
+  },
+  {
+   "date": "2026-10-17",
+   "backlog_total": 12858,
+   "awaiting_analysis": 7702
+  },
+  {
+   "date": "2026-10-18",
+   "backlog_total": 12915,
+   "awaiting_analysis": 7702
+  },
+  {
+   "date": "2026-10-19",
+   "backlog_total": 13707,
+   "awaiting_analysis": 7380
+  },
+  {
+   "date": "2026-10-20",
+   "backlog_total": 14243,
+   "awaiting_analysis": 7555
+  },
+  {
+   "date": "2026-10-21",
+   "backlog_total": 15784,
+   "awaiting_analysis": 7652
+  },
+  {
+   "date": "2026-10-22",
+   "backlog_total": 15933,
+   "awaiting_analysis": 8667
+  },
+  {
+   "date": "2026-10-23",
+   "backlog_total": 16049,
+   "awaiting_analysis": 8937
+  },
+  {
+   "date": "2026-10-24",
+   "backlog_total": 15872,
+   "awaiting_analysis": 9010
+  },
+  {
+   "date": "2026-10-25",
+   "backlog_total": 15937,
+   "awaiting_analysis": 9010
+  },
+  {
+   "date": "2026-10-26",
+   "backlog_total": 15187,
+   "awaiting_analysis": 8524
+  },
+  {
+   "date": "2026-10-27",
+   "backlog_total": 15461,
+   "awaiting_analysis": 8784
+  },
+  {
+   "date": "2026-10-28",
+   "backlog_total": 15621,
+   "awaiting_analysis": 9143
+  },
+  {
+   "date": "2026-10-29",
+   "backlog_total": 15526,
+   "awaiting_analysis": 9319
+  },
+  {
+   "date": "2026-10-30",
+   "backlog_total": 15489,
+   "awaiting_analysis": 9443
+  },
+  {
+   "date": "2026-10-31",
+   "backlog_total": 15476,
+   "awaiting_analysis": 9635
+  },
+  {
+   "date": "2026-11-01",
+   "backlog_total": 15544,
+   "awaiting_analysis": 9636
+  },
+  {
+   "date": "2026-11-02",
+   "backlog_total": 15696,
+   "awaiting_analysis": 9387
+  },
+  {
+   "date": "2026-11-03",
+   "backlog_total": 15515,
+   "awaiting_analysis": 9514
+  },
+  {
+   "date": "2026-11-04",
+   "backlog_total": 15711,
+   "awaiting_analysis": 9964
+  },
+  {
+   "date": "2026-11-05",
+   "backlog_total": 15653,
+   "awaiting_analysis": 9689
+  },
+  {
+   "date": "2026-11-06",
+   "backlog_total": 15741,
+   "awaiting_analysis": 9693
+  },
+  {
+   "date": "2026-11-07",
+   "backlog_total": 16065,
+   "awaiting_analysis": 10074
+  },
+  {
+   "date": "2026-11-08",
+   "backlog_total": 16251,
+   "awaiting_analysis": 10076
+  },
+  {
+   "date": "2026-11-09",
+   "backlog_total": 16371,
+   "awaiting_analysis": 9832
+  },
+  {
+   "date": "2026-11-12",
+   "backlog_total": 18501,
+   "awaiting_analysis": 11362
+  },
+  {
+   "date": "2026-11-13",
+   "backlog_total": 18136,
+   "awaiting_analysis": 12241
+  },
+  {
+   "date": "2026-11-14",
+   "backlog_total": 18214,
+   "awaiting_analysis": 12181
+  },
+  {
+   "date": "2026-11-15",
+   "backlog_total": 18239,
+   "awaiting_analysis": 12182
+  },
+  {
+   "date": "2026-11-16",
+   "backlog_total": 18259,
+   "awaiting_analysis": 11624
+  },
+  {
+   "date": "2026-11-17",
+   "backlog_total": 18218,
+   "awaiting_analysis": 11616
   }
  ]
 }
